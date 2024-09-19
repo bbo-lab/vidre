@@ -1,0 +1,8 @@
+/**@addtogroup api-base
+ * @{
+ * @}
+ * */
+
+/**@defgroup api-base-details Implementation details.
+ * @ingroup api-base
+ */

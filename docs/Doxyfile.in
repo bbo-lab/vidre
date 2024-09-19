@@ -21,9 +21,10 @@ ALWAYS_DETAILED_SEC    = YES
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
 STRIP_FROM_PATH        = \
-                         @PROJECT_SOURCE_DIR@/src/base \
+                         @PROJECT_SOURCE_DIR@/src/libs/base \
                          @PROJECT_SOURCE_DIR@/src 
-STRIP_FROM_INC_PATH    = @PROJECT_SOURCE_DIR@/src/base \
+STRIP_FROM_INC_PATH    = \
+                         @PROJECT_SOURCE_DIR@/src/libs/base \
                          @PROJECT_SOURCE_DIR@/src
 SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = YES
@@ -130,7 +131,7 @@ RECURSIVE              = YES
 EXCLUDE                = 
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = *.in.*
-EXCLUDE_SYMBOLS        = \
+EXCLUDE_SYMBOLS        = VIDRE_*_HH
 EXAMPLE_PATH           = @PROJECT_SOURCE_DIR@/examples
 EXAMPLE_PATTERNS       = *.cc
 EXAMPLE_RECURSIVE      = YES

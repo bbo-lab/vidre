@@ -26,7 +26,7 @@
 
 #include <vidre/config.hh>
 
-/**@addtogroup api-base
+/**@addtogroup api-base-details
  * @details
  * @fileinfo
  * 

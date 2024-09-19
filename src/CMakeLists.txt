@@ -1,8 +1,7 @@
 include(vidre/config.cmake)
 
 add_subdirectory(vidre)
-add_subdirectory(base)
+add_subdirectory(libs)
 # ...
 
-# install(TARGETS FIXME)
 
