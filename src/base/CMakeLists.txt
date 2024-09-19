@@ -46,8 +46,8 @@ add_library(${ALIAS} ALIAS ${TARGET})
 set_target_properties(${TARGET}
     PROPERTIES
         OUTPUT_NAME     ${TARGET}
-        VERSION         ${vidre-service_VERSION}
-        SOVERSION       ${vidre-service_VERSION_MAJOR}.${vidre-service_VERSION_MINOR}
+        VERSION         ${vidre_VERSION}
+        SOVERSION       ${vidre_VERSION_MAJOR}.${vidre_VERSION_MINOR}
 )
 
 target_link_libraries(${TARGET} ${TARGET_LINK_LIBRARIES})
@@ -66,8 +66,8 @@ add_library(${ALIAS}::Static ALIAS ${TARGET}-static)
 set_target_properties(${TARGET}-static
     PROPERTIES
         OUTPUT_NAME     ${TARGET}
-        VERSION         ${vidre-service_VERSION}
-        SOVERSION       ${vidre-service_VERSION_MAJOR}.${vidre-service_VERSION_MINOR}
+        VERSION         ${vidre_VERSION}
+        SOVERSION       ${vidre_VERSION_MAJOR}.${vidre_VERSION_MINOR}
 )
 
 target_link_libraries(${TARGET}-static ${TARGET_LINK_LIBRARIES})

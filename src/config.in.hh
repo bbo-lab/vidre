@@ -20,10 +20,10 @@
 #define VIDRE_CONFIG_HH
 
 /** Major version. */
-#define VIDRE_VERSION_MAJOR @vidre-service_VERSION_MAJOR@
+#define VIDRE_VERSION_MAJOR @vidre_VERSION_MAJOR@
 
 /** Minor version. */
-#define VIDRE_VERSION_MINOR @vidre-service_VERSION_MINOR@
+#define VIDRE_VERSION_MINOR @vidre_VERSION_MINOR@
 
 /** Import library symbols. */
 #define VIDRE_API_IMPORT /* FIXME */

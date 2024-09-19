@@ -11,11 +11,11 @@ endif()
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "VidreInitFlags.cmake")
 
-project(vidre-service
+project(vidre
     VERSION 0.0.0
     LANGUAGES CXX
     DESCRIPTION "VidRe Recording Daemon."
-    HOMEPAGE_URL https://github.com/bbo-lab/vidre-service
+    HOMEPAGE_URL https://github.com/bbo-lab/vidre
 )
 
 include(CheckIncludeFile)
