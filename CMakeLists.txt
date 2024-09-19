@@ -17,3 +17,31 @@ project(vidre-service
     DESCRIPTION "VidRe Recording Daemon."
     HOMEPAGE_URL https://github.com/bbo-lab/vidre-service
 )
+
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
+
+# COMPILER ####################################################################
+
+add_compile_options(-Wzero-as-null-pointer-constant)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wno-vla-cxx-extension -ferror-limit=512)
+endif()
+
+# DEPENDENCIES ################################################################
+
+# Threads
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads)
+
+# UUID
+check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
+if(NOT HAVE_LIBUUID)
+    message(FATAL "Could not find <uuid/uuid.h>")
+endif()
+set(UUIDLIB uuid)
+
+# BUILD #######################################################################
+
+add_subdirectory(docs)
