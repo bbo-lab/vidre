@@ -53,4 +53,13 @@ set(UUIDLIB uuid)
 # BUILD #######################################################################
 
 add_subdirectory(src)
+add_subdirectory(examples)
 add_subdirectory(docs)
+
+# TEST ########################################################################
+
+# TODO 
+# - setup dart
+# - setup CMake for testing
+
+add_subdirectory(tests)

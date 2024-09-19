@@ -1,0 +1,12 @@
+/** 
+@defgroup api API
+@brief The application programming interface
+@details
+*/
+
+/**@defgroup api-config Configuration.
+ * @ingroup api
+ */
+/**@defgroup api-base Base library.
+ * @ingroup api
+ */

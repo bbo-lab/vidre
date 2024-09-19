@@ -1,5 +1,10 @@
 /* VidRe
  * Copyright (C) 2024 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Author(s):
+ *      Jürgen "George" Sawinski¹
+ * 
+ * Affiliations:
+ * ¹ MPI f. Neurobiol. of Behavior — caesar, Bonn, Germany
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +26,12 @@
 
 #include <vidre/config.hh>
 
-/**@defgroup api.base Base library.
- * @ingroup api
+/**@addtogroup api-base
  * @details
  * @fileinfo
+ * 
+ * TODO
+ * 
  * */
 ///@{
 

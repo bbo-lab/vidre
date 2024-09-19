@@ -1,8 +1,8 @@
-# VidRe (Recording service)
+# VidRe
 
-> "vidre": Catalan for "glass" (from Latin vitrum)
+> vidre: Catalan for "glass" (from Latin 'vitrum')
 
-Video recording software for scientific purposes — recording service.
+Video recording software for scientific purposes.
 
-(User-interface see https://github.com/bbo-lab/vidre-gui)
+
 
