@@ -21,6 +21,14 @@ project(vidre-service
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 
+if(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
+    set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+endif(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
+
+if(NOT DEFINED LIBRARY_OUTPUT_PATH)
+    set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
+
 # COMPILER ####################################################################
 
 add_compile_options(-Wzero-as-null-pointer-constant)
@@ -44,4 +52,5 @@ set(UUIDLIB uuid)
 
 # BUILD #######################################################################
 
+add_subdirectory(src)
 add_subdirectory(docs)

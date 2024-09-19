@@ -1,0 +1,78 @@
+﻿---
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 132
+---
+Language: Cpp
+# Standard: c++20
+
+DerivePointerAlignment: false
+PointerAlignment: Right
+AccessModifierOffset: -4
+
+# Includes
+IncludeBlocks: Preserve
+SortIncludes: false
+# IncludeCategories:
+
+# Namespaces
+NamespaceIndentation: All
+FixNamespaceComments: true
+
+# Preprocessor
+AlignConsecutiveMacros: true
+AttributeMacros:
+    [
+        "uOE_GLUE_LIBRARY_VISIBILITY",
+        "uOE_BASE_LIBRARY_VISIBILITY",
+        "uOE_VM_LIBRARY_VISIBILITY",
+        "uOE_SOURCE_LIBRARY_VISIBILITY",
+        "uOE_UNICODE_LIBRARY_VISIBILITY",
+        "uOE_FORMAT_LIBRARY_VISIBILITY",
+        "uOE_APPLICATION_LIBRARY_VISIBILITY",
+        "uOE_API_EXPORT",
+        "uOE_API_IMPORT",
+        "uOE_API_IMPORT",
+        "uOE_API_C",
+        "__uoe_always_inline__",
+        "__uoe_noinline__",
+        "__uoe_packed_begin__",
+        "__uoe_packed_end__",
+        "__uoe_weak__",
+    ]
+StatementAttributeLikeMacros: []
+IndentPPDirectives: AfterHash
+
+# Requires statement
+RequiresClausePosition: OwnLine
+IndentRequires: false
+
+# Parens
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+    AfterRequiresInClause: true
+    AfterRequiresInExpression: true
+
+# Braces
+BreakBeforeBraces: Custom
+BraceWrapping:
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
+    AfterControlStatement: MultiLine
+    BeforeElse: true
+
+# Other
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: false
+BreakBeforeConceptDeclarations: true
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+# QualifierAlignment: Leave
+#   QualifierOrder: ['static', 'inline', 'type', 'const', 'volatile' ]
