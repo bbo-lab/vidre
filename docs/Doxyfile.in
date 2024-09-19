@@ -4,9 +4,9 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = VidRe-Service
-PROJECT_NUMBER         = @PACKAGE_VERSION_MAJOR@.@PACKAGE_VERSION_MINOR@
-PROJECT_BRIEF          = "Video recording software for scientific purposes — recording service."
+PROJECT_NAME           = VidRe
+PROJECT_NUMBER         = @vidre_VERSION_MAJOR@.@vidre_VERSION_MINOR@
+PROJECT_BRIEF          = "Video recording software for scientific purposes."
 PROJECT_LOGO           = 
 PROJECT_ICON           = 
 OUTPUT_DIRECTORY       =
@@ -15,16 +15,18 @@ CREATE_SUBDIRS_LEVEL   = 8
 ALLOW_UNICODE_NAMES    = NO
 OUTPUT_LANGUAGE        = English
 BRIEF_MEMBER_DESC      = YES
-REPEAT_BRIEF           = NO
+REPEAT_BRIEF           = YES
 ABBREVIATE_BRIEF       = YES
 ALWAYS_DETAILED_SEC    = YES
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
-STRIP_FROM_PATH        = @PROJECT_SOURCE_DIR@/src \
+STRIP_FROM_PATH        = \
+                         @PROJECT_SOURCE_DIR@/src/base \
+                         @PROJECT_SOURCE_DIR@/src \
                          @PROJECT_BINARY_DIR@ \
                          @PROJECT_BINARY_DIR@/include 
 STRIP_FROM_INC_PATH    = @PROJECT_BINARY_DIR@/include \
-                         @PROJECT_SOURCE_DIR@/src/libs
+                         @PROJECT_SOURCE_DIR@/src/base
 SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = YES
 JAVADOC_BANNER         = NO
@@ -118,10 +120,10 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = @PROJECT_BINARY_DIR@/include \
-                         @PROJECT_SOURCE_DIR@/src/libs \
-                         @PROJECT_SOURCE_DIR@/examples \
-                         @PROJECT_SOURCE_DIR@/docs
+INPUT                  = @PROJECT_SOURCE_DIR@/docs \
+                         @PROJECT_BINARY_DIR@/include \
+                         @PROJECT_SOURCE_DIR@/src \
+                         @PROJECT_SOURCE_DIR@/examples 
 INPUT_ENCODING         = UTF-8
 INPUT_FILE_ENCODING    =
 FILE_PATTERNS          = *.hh \

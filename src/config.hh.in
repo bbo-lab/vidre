@@ -16,13 +16,26 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_HH
-#define VIDRE_BASE_HH
+#ifndef VIDRE_CONFIG_HH
+#define VIDRE_CONFIG_HH
 
-#include <vidre/config.hh>
+/**@defgroup api.config Configuration
+ * @ingroup api
+ * */
+///@
 
-#if not defined(VIDRE_BASE_VISIBILITY)
-#define VIDRE_BASE_VISIBILITY VIDRE_API_IMPORT
-#endif
+/** Major version. */
+#define VIDRE_VERSION_MAJOR @vidre_VERSION_MAJOR@
 
-#endif // VIDRE_BASE_HH
+/** Minor version. */
+#define VIDRE_VERSION_MINOR @vidre_VERSION_MINOR@
+
+/** Import library symbols. */
+#define VIDRE_API_IMPORT /* FIXME */
+
+/** Export library symbols. */
+#define VIDRE_API_EXPORT /* FIXME */
+
+///@
+
+#endif // VIDRE_CONFIG_HH
