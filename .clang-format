@@ -24,25 +24,10 @@ FixNamespaceComments: true
 AlignConsecutiveMacros: true
 AttributeMacros:
     [
-        "uOE_GLUE_LIBRARY_VISIBILITY",
-        "uOE_BASE_LIBRARY_VISIBILITY",
-        "uOE_VM_LIBRARY_VISIBILITY",
-        "uOE_SOURCE_LIBRARY_VISIBILITY",
-        "uOE_UNICODE_LIBRARY_VISIBILITY",
-        "uOE_FORMAT_LIBRARY_VISIBILITY",
-        "uOE_APPLICATION_LIBRARY_VISIBILITY",
-        "uOE_API_EXPORT",
-        "uOE_API_IMPORT",
-        "uOE_API_IMPORT",
-        "uOE_API_C",
-        "__uoe_always_inline__",
-        "__uoe_noinline__",
-        "__uoe_packed_begin__",
-        "__uoe_packed_end__",
-        "__uoe_weak__",
+        "VIDRE_BASE_VISIBILITY"
     ]
 StatementAttributeLikeMacros: []
-IndentPPDirectives: AfterHash
+IndentPPDirectives: None
 
 # Requires statement
 RequiresClausePosition: OwnLine

@@ -1,5 +1,6 @@
 /**@addtogroup api-base
  * @{
+ * @defgroup api-base-util Utilities.
  * @}
  * */
 

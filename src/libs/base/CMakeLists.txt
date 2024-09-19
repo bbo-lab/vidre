@@ -3,7 +3,9 @@ set(TARGET vidrebase)
 set(ALIAS Vidre::Base)
 set(SOURCES
     ${vidre_config_hh}
+    vidre/base.cc
     vidre/base/config.hh vidre/base/config.cc
+    vidre/util/uuid.hh vidre/util/uuid.cc
 )
 
 # OPTIONS #####################################################################
