@@ -50,6 +50,10 @@ if(NOT HAVE_LIBUUID)
 endif()
 set(UUIDLIB uuid)
 
+# JSON
+find_package(nlohmann_json REQUIRED)
+# FIXME Fetch if not available on system
+
 # BUILD #######################################################################
 
 add_subdirectory(src)
