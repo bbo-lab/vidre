@@ -43,11 +43,15 @@ namespace vidre {
     /** UUIDs.
      *
      * This class wraps the [uuid](https://www.man7.org/linux/man-pages/man3/uuid.3.html) library.
-     *
+     * 
+     * @see
+     *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
      * */
     class VIDRE_BASE_VISIBILITY UUID {
     public:
         /** UUID variant.
+         * @see
+         *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
          * */
         enum class Variant {
             NCS = UUID_VARIANT_NCS,              ///< Apollo NCS variant (backwards compatibility).
@@ -58,9 +62,10 @@ namespace vidre {
 
         /** DCE variant type.
          * @see
-         * https://datatracker.ietf.org/doc/html/rfc4122
+         *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
          * */
         enum class Type {
+            NIL = UUID_TYPE_DCE_NIL,            ///< "NIL" (refers to the ["Nil UUID"](https://en.wikipedia.org/wiki/Universally_unique_identifier#Nil_UUID)).
             Time = UUID_TYPE_DCE_TIME,          ///< Time-/MAC-based.
             Security = UUID_TYPE_DCE_SECURITY,  ///< Security version, with embedded POSIX UIDs.
             MD5 = UUID_TYPE_DCE_MD5,            ///< Name-based with MD5 hashing.
@@ -69,11 +74,14 @@ namespace vidre {
         };
 
         /** Generate random or time-based UUID.
+         * 
          * This function generates a random UUID if a high-quality random
          * source is available, a time-/MAC-based UUID otherwise.
+         * 
          * @see
-         *      UUID::makeTime() <br>
-         *      UUID::makeTimeSafe()
+         *      UUID::makeTime() <br/>
+         *      UUID::makeTimeSafe() <br/>
+         *      UUID::makeRandom()
          * */
         static UUID make() noexcept {
             UUID result;
@@ -88,11 +96,9 @@ namespace vidre {
          * > This algorithm used to be the default one used to generate UUIDs,
          * > but because of the use of the ethernet MAC address, it can leak
          * > information about when and where the UUID was generated.
-         * > [...]
-         * > If neither of these two synchronization mechanisms can be used, it
-         * > is theoretically possible that two concurrently running processes
-         * > obtain the same UUID(s).
-         * [man uuid_generate](https://www.man7.org/linux/man-pages/man3/uuid_generate.3.html)
+         * (see [uuid_generate_time man-page](https://www.man7.org/linux/man-pages/man3/uuid_generate.3.html))
+         * 
+         * Note, however, that uniqueness of UUIDs is not guaranteed.
          *
          * @see
          *      UUID::makeTimeSafe()
@@ -105,10 +111,11 @@ namespace vidre {
 
         /** Safely create a time- and MAC-based UUID.
          *
-         * This function uses synchronization mechanisms to avoid that identical
-         * UUIDs are generated on a local machine.
-         *
          * @throws std::runtime_error() if synchronization fails
+         * 
+         * This function uses synchronization mechanisms to ensure uniqueness 
+         * of time-based UUIDs
+         *
          * @see
          *      UUID::makeTime()
          * */
@@ -154,13 +161,24 @@ namespace vidre {
         void parse(const std::string &s);
 
     public:
-        /** Get variant.
+        /** Implicit variant conversion.
+         * 
+         * Usage:
+         * @code
+         * void fn(const UUID &uuid) {
+         *     if (uuid == UUID::Variant::DCE) {
+         *         // ...
+         *     }
+         * }
+         * @endcode
          * */
         operator Variant() const noexcept {
             return static_cast<Variant>(uuid_variant(uuid_));
         }
 
-        /** Get DCE type.
+        /** Implicit DCE type conversion.
+         * @see
+         *     `UUID::operator Variant()`
          * */
         operator Type() const noexcept {
             return static_cast<Type>(uuid_type(uuid_));
