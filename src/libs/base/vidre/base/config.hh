@@ -36,6 +36,19 @@
 ///@{
 
 /** Declaration specification for import/export for the base library.
+ * 
+ * This macro is needed for compiling on Windows®.
+ * 
+ * Usage:
+ * @code
+ * class VIDRE_BASE_VISIBILITY MyClass {
+ * public:
+ *     MyClass() = default;
+ * };
+ * @endcode
+ * 
+ * @see
+ *      [dllexport,dllimport](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170)
  * */
 #if not defined(VIDRE_BASE_VISIBILITY)
 #define VIDRE_BASE_VISIBILITY VIDRE_API_IMPORT
