@@ -44,4 +44,8 @@
 
 ///@}
 
+/** General namespace.
+ * @ingroup api */
+namespace vidre {}
+
 #endif // VIDRE_CONFIG_HH

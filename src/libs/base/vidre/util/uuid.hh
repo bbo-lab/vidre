@@ -26,46 +26,122 @@
 
 #include <vidre/config.hh>
 
-/**@defgroup api-base-util-uuid UUID
- * @ingroup api-base-util
- * @details
- * @fileinfo
- *
- * TODO
- *
- * */
-///@{
-
 #include <uuid/uuid.h>
 #include <string>
+#include <stdexcept>
 
 namespace vidre {
-
-    /** UUIDs.
+    /**@defgroup api-base-util-uuid UUID
+     * @ingroup api-base-util
+     * @details
+     * @fileinfo
      * @see
      * https://en.wikipedia.org/wiki/Universally_unique_identifier
+     * */
+    ///@{
+
+    /** UUIDs.
+     *
+     * This class wraps the [uuid](https://www.man7.org/linux/man-pages/man3/uuid.3.html) library.
+     *
      * */
     class VIDRE_BASE_VISIBILITY UUID {
     public:
         /** UUID variant.
          * */
         enum class Variant {
-            NCS = UUID_VARIANT_NCS,
-            DCE = UUID_VARIANT_DCE,
-            Microsoft = UUID_VARIANT_MICROSOFT,
-            Other = UUID_VARIANT_OTHER
+            NCS = UUID_VARIANT_NCS,              ///< Apollo NCS variant (backwards compatibility).
+            DCE = UUID_VARIANT_DCE,              ///< DCE 1.1 UUIDs (see [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)).
+            Microsoft = UUID_VARIANT_MICROSOFT,  ///< Microsoft COM/DCOM variant (compatibility).
+            Other = UUID_VARIANT_OTHER           ///< Reserved.
         };
 
         /** DCE variant type.
+         * @see
+         * https://datatracker.ietf.org/doc/html/rfc4122
          * */
         enum class Type {
-            NIL = UUID_TYPE_DCE_NIL,
-            Time = UUID_TYPE_DCE_TIME,
-            Security = UUID_TYPE_DCE_SECURITY,
-            MD5 = UUID_TYPE_DCE_MD5,
-            Random = UUID_TYPE_DCE_RANDOM,
-            SHA1 = UUID_TYPE_DCE_SHA1
+            Time = UUID_TYPE_DCE_TIME,          ///< Time-/MAC-based.
+            Security = UUID_TYPE_DCE_SECURITY,  ///< Security version, with embedded POSIX UIDs.
+            MD5 = UUID_TYPE_DCE_MD5,            ///< Name-based with MD5 hashing.
+            Random = UUID_TYPE_DCE_RANDOM,      ///< Random or pseudo-random.
+            SHA1 = UUID_TYPE_DCE_SHA1           ///< Name-based with SHA1 hashing.
         };
+
+        /** Generate random or time-based UUID.
+         * This function generates a random UUID if a high-quality random
+         * source is available, a time-/MAC-based UUID otherwise.
+         * @see
+         *      UUID::makeTime() <br>
+         *      UUID::makeTimeSafe()
+         * */
+        static UUID make() noexcept {
+            UUID result;
+            uuid_generate(result.uuid_);
+            return result;
+        }
+
+        /** Create a time- and MAC-based UUID.
+         *
+         * > This function forces the use of the alternative algorithm which uses
+         * > the current time and the local ethernet MAC address (if available).
+         * > This algorithm used to be the default one used to generate UUIDs,
+         * > but because of the use of the ethernet MAC address, it can leak
+         * > information about when and where the UUID was generated.
+         * > [...]
+         * > If neither of these two synchronization mechanisms can be used, it
+         * > is theoretically possible that two concurrently running processes
+         * > obtain the same UUID(s).
+         * [man uuid_generate](https://www.man7.org/linux/man-pages/man3/uuid_generate.3.html)
+         *
+         * @see
+         *      UUID::makeTimeSafe()
+         * */
+        static UUID makeTime() noexcept {
+            UUID result;
+            uuid_generate_time(result.uuid_);
+            return result;
+        }
+
+        /** Safely create a time- and MAC-based UUID.
+         *
+         * This function uses synchronization mechanisms to avoid that identical
+         * UUIDs are generated on a local machine.
+         *
+         * @throws std::runtime_error() if synchronization fails
+         * @see
+         *      UUID::makeTime()
+         * */
+        static UUID makeTimeSafe() {
+            UUID result;
+            if (not uuid_generate_time_safe(result.uuid_))
+                throw std::runtime_error("synchronization failed");
+            return result;
+        }
+
+        /** Create a random or pseudo-random UUID.
+         * */
+        static UUID makeRandom() noexcept {
+            UUID result;
+            uuid_generate_random(result.uuid_);
+            return result;
+        }
+
+        /** Create a name-based UUID with MD5 hashing.
+         * */
+        static UUID makeMD5(const UUID ns, const std::string &name) noexcept {
+            UUID result;
+            uuid_generate_md5(result.uuid_, ns.uuid_, name.data(), name.size());
+            return result;
+        }
+
+        /** Create a name-based UUID with SHA-1 hashing.
+         * */
+        static UUID makeSHA1(const UUID ns, const std::string &name) noexcept {
+            UUID result;
+            uuid_generate_sha1(result.uuid_, ns.uuid_, name.data(), name.size());
+            return result;
+        }
 
     public:
         UUID() = default;
@@ -111,8 +187,7 @@ namespace vidre {
         }
     };
 
+    ///@}
 }  // namespace vidre
-
-///@}
 
 #endif  // VIDRE_BASE_CONFIG_HH
