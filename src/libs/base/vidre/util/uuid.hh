@@ -21,8 +21,8 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_CONFIG_HH
-#define VIDRE_BASE_CONFIG_HH
+#ifndef VIDRE_BASE_UTIL_UUID_HH
+#define VIDRE_BASE_UTIL_UUID_HH
 
 #include <vidre/config.hh>
 
@@ -208,4 +208,4 @@ namespace vidre {
     ///@}
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_CONFIG_HH
+#endif  // VIDRE_BASE_UTIL_UUID_HH

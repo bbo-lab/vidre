@@ -1,4 +1,8 @@
 {
     "cmake.configureSettings": {},
     "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "*.dox": "cpp",
+        "string": "cpp"
+    }
 }

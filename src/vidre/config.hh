@@ -42,6 +42,9 @@
 /** Export library symbols. */
 #define VIDRE_API_EXPORT …
 
+/** Export library symbols. */
+#define VIDRE_API_MODULE …
+
 ///@}
 
 /** General namespace.

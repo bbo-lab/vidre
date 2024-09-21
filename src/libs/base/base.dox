@@ -1,4 +1,15 @@
 /**@addtogroup api-base
+ * @details
+ *
+ * The base library provides fundamental features for the VidRe framework.
+ * This includes, for example, configuration languages (such as JSON),
+ * basic networking, module loading, etc. 
+ * 
+ * Note, that even so the GUI uses Qt which provides numerous equivalent 
+ * abstractions, the recording deamon or service, respectively, is ultimately 
+ * expected to run on a headless machine - and, therefore, should not depend
+ * on Qt.
+ * 
  * @{
  * @defgroup api-base-util Utilities.
  * @}
