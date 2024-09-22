@@ -20,3 +20,4 @@ std::string vidre::UUID::tostring(bool lowercase) const noexcept {
 
     return result;
 }
+

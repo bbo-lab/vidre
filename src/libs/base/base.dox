@@ -11,10 +11,11 @@
  * on Qt.
  * 
  * @{
- * @defgroup api-base-util Utilities.
+ * @defgroup api-base-module    Dynamic module loading.
+ * @defgroup api-base-util      Utilities.
  * @}
  * */
 
-/**@defgroup api-base-details Implementation details.
+/**@defgroup api-base-details   Implementation details.
  * @ingroup api-base
  */

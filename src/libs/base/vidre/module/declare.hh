@@ -21,39 +21,22 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_UTIL_MODULE_HH
-#define VIDRE_BASE_UTIL_MODULE_HH
-
-/**@defgroup api-base-util-module Dynamic module loading
- * @ingroup api-base-util
- * @details
- * @fileinfo
- *
- * This header provides an implementation to declare, load and deal
- * with dynamic modules. It's implementation takes into account, that
- * not all libraries, specifically proprietry software, is and will
- * not be distributed with VidRe.
- *
- * TODO future versions should support scripted modules, eg. with python
- *
- * */
+#ifndef VIDRE_BASE_MODULE_DECLARE_HH
+#define VIDRE_BASE_MODULE_DECLARE_HH
 
 #include <vidre/config.hh>
 
 namespace vidre {
 
-    /** Dynamic modules.
-     * @ingroup api-base-util-module
-     * */
     namespace module {
-        /**@addtogroup api-base-util-module
+        /**@addtogroup api-base-module
          * */
         ///@{
 
         /* TODO
          *  - decide on a config file format (JSON)
          *    -> must list, e.g. for proprietry software, were to download to enable the feature
-         *  - decide directory structure, e.g.
+         *  - decide category/directory structure, e.g.
          *    device/
          *        pylon/
          *        onsemi/
@@ -80,6 +63,8 @@ namespace vidre {
 
             const char *brief;             ///< Brief description of the module.
             const char *description = {};  ///< Detailed description of the module.
+
+            const char *category;  ///< Module category (see FIXME).
         };
 
         /** Symbol name of the information structure.
@@ -112,4 +97,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_UTIL_MODULE_HH
+#endif  // VIDRE_BASE_MODULE_DECLARE_HH

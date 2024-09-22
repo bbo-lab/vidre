@@ -1,0 +1,9 @@
+set(Vidre_VERSION_MAJOR @Vidre_VERSION_MAJOR@)
+set(Vidre_VERSION_MINOR @Vidre_VERSION_MINOR@)
+set(Vidre_VERSION_PATCH @Vidre_VERSION_PATCH@)
+
+set(Vidre_RELEASE @Vidre_VERSION_MAJOR@.@Vidre_VERSION_MINOR@)
+
+# Targets
+list(APPEND CMAKE_MODULE_PATH "@CMAKE_INSTALL_PREFIX@/share/cmake/Vidre-@Vidre_RELEASE@")
+include(VidreTargets-${Vidre_VERSION_MAJOR}.${Vidre_VERSION_MINOR})
