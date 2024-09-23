@@ -29,9 +29,9 @@
  * @fileinfo
  *
  * This header provides an implementation to declare, load and deal
- * with plugins, specifically but not limited to dynamic modules. 
- * It's implementation takes into account, that not all libraries, 
- * specifically proprietry software, are and will be distributed along 
+ * with plugins, specifically but not limited to dynamic modules.
+ * It's implementation takes into account, that not all libraries,
+ * specifically proprietry software, are and will be distributed along
  * VidRe.
  *
  * */
@@ -45,7 +45,7 @@ namespace vidre {
     /** Plugins.
      * @ingroup api-core-plugin
      * */
-    namespace plugin {}  // namespace module
+    namespace plugin {}  // namespace plugin
 
 }  // namespace vidre
 

@@ -25,8 +25,9 @@ vidre_library(vidrecore SHARED
     SOURCES
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
-        vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/plugin.hh 
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
+        vidre/util/uuid.hh vidre/util/uuid.cc
+        vidre/util/json.hh
 )

@@ -49,7 +49,7 @@ namespace vidre {
 
         /** Module information.
          *
-         * TBD
+         * TBD maybe it's better, to just hold an JSON string
          *
          * */
         struct VIDRE_CORE_VISIBILITY information {

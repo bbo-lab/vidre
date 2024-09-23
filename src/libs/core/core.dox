@@ -7,15 +7,14 @@
  * 
  * Note, that even so the GUI uses Qt which provides numerous equivalent 
  * abstractions, the recording deamon or service, respectively, is ultimately 
- * expected to run on a headless machine - and, therefore, should not depend
+ * expected to run on a headless machine - and, therefore, should/will not depend
  * on Qt.
  * 
  * @{
- * @defgroup api-core-plugin    Plugins.
- * @defgroup api-core-util      Utilities.
+ * @defgroup api-core-exception     Errors and exceptions.
+ * @defgroup api-core-memory        Memory hanling.
+ * @defgroup api-core-plugin        Plugins.
+ * @defgroup api-core-util          Utilities.
+ * @defgroup api-core-details       Implementation details.
  * @}
  * */
-
-/**@defgroup api-core-details   Implementation details.
- * @ingroup api-core
- */

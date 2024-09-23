@@ -21,8 +21,8 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_CORE_PLUGIN_LOADER_HH
-#define VIDRE_CORE_PLUGIN_LOADER_HH
+#ifndef VIDRE_CORE_PLUGIN_DYNAMIC_HH
+#define VIDRE_CORE_PLUGIN_DYNAMIC_HH
 
 #include <vidre/core/config.hh>
 
@@ -37,12 +37,58 @@ namespace vidre {
         ///@{
 
         /** Dynamically linked object plugin loader.
+         *
+         * TBD there will also be a plugin::python and maybe others,
+         *     so, this class should actually be derived from a virtual
+         *     loader class (and register itself as a loader in some other
+         *     handler class, that find, list, searches, etc... all
+         *     available modules)
+         *
          * */
         class VIDRE_CORE_VISIBILITY dynamic {
         public:
             static constexpr const char *extension = VIDRE_DLL_EXTENSION;
 
             /** DLL handler abstraction.
+             *
+             * This class should serve as an abstraction of dlopen (or the
+             * respective OS equivalent). It's purpose is not only to load
+             * modules, but may be also used for modules that depend on
+             * proprietry libraries which are not distributed together with
+             * VidRe.
+             *
+             * @hidden
+             * In the case of propriertry libraries the module should not
+             * just fail to load. Instead, it should, itself, be able to
+             * detect, if it is required and instead of failing report
+             * detailed instructions on how to install the correction version
+             * of the proprietry software VidRe was compiled for. This
+             * can be for example achieved by using the pattern:
+             * @code
+             * const char * (*foreign_version_function)() = {};
+             * //...
+             * void *foreign_lib = {};
+             *
+             * void init() {
+             *     foreign_lib = dlopen("libforeign" VIDRE_DLL_EXTENSION);
+             *     if (not foreign_lib) {
+             *         // ... report ..
+             *         return;
+             *     }
+             *     foreign_version_function = (const char *(*)()) dlsym(foreign_lib, "version_function");
+             *     if (not foreign_version_function) {
+             *         // ... report ..
+             *         return;
+             *     }
+             *
+             *     // ... check version ...
+             *     // etc.
+             * }
+             * @endcode
+             * Another method would be to provide a secondary "analysis module".
+             * A third method could be to have two plugins, the first loads the
+             * the actual plugin.
+             *
              * */
             class VIDRE_CORE_VISIBILITY library {
             public:
@@ -69,41 +115,6 @@ namespace vidre {
             // FIXME
 
         public:
-#if 0 
-            /** Check if valid.
-             * */
-            bool valid() const noexcept {
-                return dll_ != nullptr;
-            }
-
-            /** Open share library.
-             * */
-            std::error_code open(const char *name, options opt = lazy) {
-                if (dll_)
-                    return std::make_error_code(std::errc::already_connected);
-
-                dll_ = dlopen(name, opt);
-                if (dll_)
-                    return {};
-                else
-                    return std::make_error_code(std::errc(errno));
-            }
-
-            /** Close shared library.
-             * */
-            void close() {
-                if (dll_)
-                    dlclose(dll_);
-                dll_ = nullptr;
-            }
-
-            /** Retrieve a symbol.
-             * */
-            template <typename T>
-            T *get(const char *name) {
-                return reinterpret_cast<T *>(dlsym(dll_, name));
-            }
-#endif
         };
 
         ///@}
@@ -111,4 +122,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_PLUGIN_LOADER_HH
+#endif  // VIDRE_CORE_PLUGIN_DYNAMIC_HH
