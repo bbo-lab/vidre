@@ -27,7 +27,7 @@ vidre_library(vidrebase SHARED
         vidre/base.cc
         vidre/base/config.hh vidre/base/config.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
-        vidre/module.hh 
-            vidre/module/plugin.hh
-            vidre/module/module.cc
+        vidre/plugin.hh 
+            vidre/plugin/information.hh
+            vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
 )

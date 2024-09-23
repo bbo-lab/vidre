@@ -21,15 +21,15 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_MODULE_PLUGIN_HH
-#define VIDRE_BASE_MODULE_PLUGIN_HH
+#ifndef VIDRE_BASE_PLUGIN_INFORMATION_HH
+#define VIDRE_BASE_PLUGIN_INFORMATION_HH
 
 #include <vidre/base/config.hh>
 
 namespace vidre {
 
-    namespace module {
-        /**@addtogroup api-base-module
+    namespace plugin {
+        /**@addtogroup api-base-plugin
          * */
         ///@{
 
@@ -52,7 +52,7 @@ namespace vidre {
          * TBD
          *
          * */
-        struct VIDRE_BASE_VISIBILITY Information {
+        struct VIDRE_BASE_VISIBILITY information {
             const char *name;     ///< Name of the module.
             const char *version;  ///< Module version.
 
@@ -69,7 +69,7 @@ namespace vidre {
 
         /** Symbol name of the information structure.
          * */
-#define VIDRE_MODULE_INFO VidRePlugin
+#define VIDRE_PLUGIN_INFO VidRePlugin
 
         /** Declare a module.
          *
@@ -88,8 +88,8 @@ namespace vidre {
          *
          */
 #define VIDRE_MODULE(...)                                                 \
-    VIDRE_API_MODULE struct vidre::module::Information VIDRE_MODULE_INFO; \
-    struct vidre::module::Information VIDRE_MODULE_INFO {                 \
+    VIDRE_API_MODULE struct vidre::plugin::information VIDRE_MODULE_INFO; \
+    struct vidre::plugin::information VIDRE_MODULE_INFO {                 \
         __VA_ARGS__                                                       \
     }
 
@@ -99,4 +99,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_MODULE_PLUGIN_HH
+#endif  // VIDRE_BASE_PLUGIN_INFORMATION_HH

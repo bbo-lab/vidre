@@ -45,6 +45,9 @@
 /** Export library symbols. */
 #define VIDRE_API_MODULE …
 
+/** File extension for dynamically linked libraries.  */
+#define VIDRE_DLL_EXTENSION "…"
+
 ///@}
 
 /** General namespace.

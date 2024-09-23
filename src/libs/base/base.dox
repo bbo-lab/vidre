@@ -11,7 +11,7 @@
  * on Qt.
  * 
  * @{
- * @defgroup api-base-module    Dynamic module loading.
+ * @defgroup api-base-plugin    Plugins.
  * @defgroup api-base-util      Utilities.
  * @}
  * */

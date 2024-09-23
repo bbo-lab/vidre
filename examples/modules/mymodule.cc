@@ -1,4 +1,4 @@
-#include <vidre/module.hh>
+#include <vidre/plugin.hh>
 
 // clang-format off
 VIDRE_MODULE(

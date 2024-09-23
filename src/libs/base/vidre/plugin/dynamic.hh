@@ -21,8 +21,8 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_MODULE_LOADER_HH
-#define VIDRE_BASE_MODULE_LOADER_HH
+#ifndef VIDRE_BASE_PLUGIN_LOADER_HH
+#define VIDRE_BASE_PLUGIN_LOADER_HH
 
 #include <vidre/base/config.hh>
 
@@ -31,30 +31,45 @@
 
 namespace vidre {
 
-    namespace module {
-        /**@addtogroup api-base-module
+    namespace plugin {
+        /**@addtogroup api-base-plugin
          * */
         ///@{
 
-        /** Shared object (module).
+        /** Dynamically linked object plugin loader.
          * */
-        class VIDRE_BASE_VISIBILITY shared {
+        class VIDRE_BASE_VISIBILITY dynamic {
         public:
-            enum options {
-                lazy = RTLD_LAZY,
-                now = RTLD_NOW
+            static constexpr const char *extension = VIDRE_DLL_EXTENSION;
+
+            /** DLL handler abstraction.
+             * */
+            class VIDRE_BASE_VISIBILITY library {
+            public:
+                library() = default;
+                ~library();
+
+            protected:
+                void *handle_ = {};
+                std::error_code ecode_ = {};
+
+            public:
+                /** Check if valid. */
+                bool isvalid() const noexcept {
+                    return handle_ != nullptr;
+                }
+
+                // ...
             };
 
         public:
-            shared() = default;
-            shared(const char *name, options opt = lazy) {
-                open(name, opt);
-            }
+            dynamic() = default;
 
         protected:
-            void *dll_ = {};
+            // FIXME
 
         public:
+#if 0 
             /** Check if valid.
              * */
             bool valid() const noexcept {
@@ -88,14 +103,12 @@ namespace vidre {
             T *get(const char *name) {
                 return reinterpret_cast<T *>(dlsym(dll_, name));
             }
+#endif
         };
 
-
-#define VIDRE_SHARED_MODULE(name) #name ".so"
-
         ///@}
-    }  // namespace module
+    }  // namespace plugin
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_MODULE_LOADER_HH
+#endif  // VIDRE_BASE_PLUGIN_LOADER_HH

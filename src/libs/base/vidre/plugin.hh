@@ -21,10 +21,10 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_MODULE_HH
-#define VIDRE_BASE_MODULE_HH
+#ifndef VIDRE_BASE_PLUGIN_HH
+#define VIDRE_BASE_PLUGIN_HH
 
-/**@addtogroup api-base-module
+/**@addtogroup api-base-plugin
  * @details
  * @fileinfo
  *
@@ -34,21 +34,19 @@
  * specifically proprietry software, are and will be distributed along 
  * VidRe.
  *
- * TODO future versions should support scripted plugins, eg. with python
- *
  * */
 
 #include <vidre/config.hh>
-#include <vidre/module/plugin.hh>
-#include <vidre/module/loader.hh>
+#include <vidre/plugin/information.hh>
+#include <vidre/plugin/dynamic.hh>
 
 namespace vidre {
 
-    /** Dynamic modules.
-     * @ingroup api-base-module
+    /** Plugins.
+     * @ingroup api-base-plugin
      * */
-    namespace module {}  // namespace module
+    namespace plugin {}  // namespace module
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_MODULE_HH
+#endif  // VIDRE_BASE_PLUGIN_HH
