@@ -6,10 +6,10 @@ configure_file(VidreConfigVersion.in.cmake ${VIDRE_CONFIG_VERSION_CMAKE} @ONLY)
 
 if(NOT Vidre_PARENT_DIR)
     install(FILES ${VIDRE_CONFIG_CMAKE}
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre-${Vidre_RELEASE}
+        DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
         COMPONENT "development")
     install(FILES ${VIDRE_CONFIG_VERSION_CMAKE}
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre-${Vidre_RELEASE}
+        DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
         COMPONENT "development")
 endif()
 
@@ -26,6 +26,6 @@ endif()
 
 install(FILES  VidreMacros.cmake
     COMPONENT development
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre-${Vidre_RELEASE}
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
 )
 

@@ -24,7 +24,7 @@
 #ifndef VIDRE_BASE_MODULE_DECLARE_HH
 #define VIDRE_BASE_MODULE_DECLARE_HH
 
-#include <vidre/config.hh>
+#include <vidre/base/config.hh>
 
 namespace vidre {
 

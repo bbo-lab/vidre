@@ -47,16 +47,8 @@ function(vidre_build_options TARGET)
     endif()
 endfunction()
 
-function(vidre_install TARGET)
-    message("INSTALL: ${TARGET} ${ARGN}")
-    install(TARGETS ${TARGET}
-        ${EXPORT_OPTIONS}
-        ${ARGN}
-    )
-endfunction()
-
 function(vidre_library TARGET)
-    cmake_parse_arguments(vidre "SHARED;STATIC" "EXPORT;ALIAS" "SOURCES;BUILD;INSTALL" ${ARGN})
+    cmake_parse_arguments(vidre "SHARED;STATIC" "EXPORT;ALIAS" "SOURCES;PROPERTIES;BUILD;INSTALL" ${ARGN})
 
     if(vidre_SHARED AND vidre_STATIC)
         set(OPTIONS ALIAS ${vidre_ALIAS} SOURCES ${vidre_SOURCES})
@@ -107,9 +99,10 @@ function(vidre_library TARGET)
     set_target_properties(${vidre_TARGET}
         PROPERTIES
             OUTPUT_NAME     ${TARGET}
-            ${vidre_EXPORT_NAME}
             VERSION         ${vidre_VERSION}
             SOVERSION       ${vidre_RELEASE}
+            ${vidre_EXPORT_NAME}
+            ${vidre_PROPERTIES}
     )
     if(vidre_ALIAS)
         add_library(${vidre_ALIAS} ALIAS ${vidre_TARGET})
@@ -118,6 +111,30 @@ function(vidre_library TARGET)
         vidre_build_options(${vidre_TARGET} ${vidre_BUILD})
     endif()
     if(vidre_INSTALL)
-        vidre_install(${vidre_TARGET} ${vidre_EXPORT} ${vidre_INSTALL})
+        install(TARGETS ${vidre_TARGET} ${vidre_EXPORT} ${vidre_INSTALL})
     endif()
+endfunction()
+
+function(vidre_module TARGET)
+    cmake_parse_arguments(vidre "" "" "SOURCES;PROPERTIES;BUILD;INSTALL" ${ARGN})
+
+    add_library(${TARGET} MODULE ${vidre_SOURCES})
+    set_target_properties(${TARGET}
+        PROPERTIES
+            OUTPUT_NAME     ${TARGET}
+            PREFIX          ""
+            ${vidre_PROPERTIES}
+    )
+    if(vidre_BUILD)
+        vidre_build_options(${TARGET} ${vidre_BUILD})
+    endif()
+    if(vidre_INSTALL)
+        install(TARGETS ${TARGET} ${vidre_EXPORT} ${vidre_INSTALL})
+    endif()
+endfunction()
+
+function(vidre_executable TARGET)
+endfunction()
+
+function(vidre_unit_test TARGET)
 endfunction()

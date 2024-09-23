@@ -46,6 +46,7 @@ endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
 
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/vidre)
+set(CMAKE_INSTALL_CMAKEDIR share/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
 
 include(VidreMacros)
 
@@ -68,12 +69,12 @@ find_package(nlohmann_json REQUIRED)
 
 add_subdirectory(cmake)
 add_subdirectory(src)
-# add_subdirectory(examples)
+add_subdirectory(examples)
 add_subdirectory(docs)
 
 install(EXPORT VidreTargets-${Vidre_RELEASE}
     COMPONENT "development"
-    DESTINATION share/cmake/vidre-${Vidre_RELEASE} 
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
 )
 
 # TEST ########################################################################

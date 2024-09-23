@@ -1,3 +1,12 @@
-add_library(mymodule MODULE mymodule.cc)
-set_target_properties(mymodule PROPERTIES PREFIX "")
-target_link_libraries(mymodule Vidre::Base)
+vidre_module(mymodule
+    SOURCES 
+        mymodule.cc
+    BUILD
+        INCLUDE_DIRECTORIES
+            PRIVATE
+                ${PROJECT_BINARY_DIR}/include 
+                ${PROJECT_SOURCE_DIR}/src/libs/base
+        LINK_LIBRARIES
+            Vidre::Base
+)
+
