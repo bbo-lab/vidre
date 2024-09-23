@@ -4,4 +4,4 @@ set(vidre_config_hh ${vidre_build_include_dir}/vidre/config.hh)
 # API
 set(vidre_API_IMPORT "" CACHE STRING "Symbol import visibility.") # TODO
 set(vidre_API_EXPORT "" CACHE STRING "Symbol export visibility.") # TODO
-set(vidre_API_MODULE "VIDRE_API_EXPORT" CACHE STRING "Module symbol visibility.") # TODO
+set(vidre_API_MODULE "extern \"C\" VIDRE_API_EXPORT" CACHE STRING "Module symbol visibility.") # TODO

@@ -21,8 +21,8 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_MODULE_DECLARE_HH
-#define VIDRE_BASE_MODULE_DECLARE_HH
+#ifndef VIDRE_BASE_MODULE_PLUGIN_HH
+#define VIDRE_BASE_MODULE_PLUGIN_HH
 
 #include <vidre/base/config.hh>
 
@@ -69,7 +69,7 @@ namespace vidre {
 
         /** Symbol name of the information structure.
          * */
-#define VIDRE_MODULE_INFO VidReModule
+#define VIDRE_MODULE_INFO VidRePlugin
 
         /** Declare a module.
          *
@@ -81,14 +81,16 @@ namespace vidre {
          *     .organization = {
          *         .name = "George"
          *     },
-         *     .brief = "Example module that does nothing."
+         *     .brief = "Example module that does nothing.",
+         *     .category = "example"
          * );
          * @endcode
          *
          */
-#define VIDRE_MODULE(...)                                                  \
-    VIDRE_API_MODULE struct vidre::module::Information VIDRE_MODULE_INFO { \
-        __VA_ARGS__                                                        \
+#define VIDRE_MODULE(...)                                                 \
+    VIDRE_API_MODULE struct vidre::module::Information VIDRE_MODULE_INFO; \
+    struct vidre::module::Information VIDRE_MODULE_INFO {                 \
+        __VA_ARGS__                                                       \
     }
 
         ///@}
@@ -97,4 +99,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_MODULE_DECLARE_HH
+#endif  // VIDRE_BASE_MODULE_PLUGIN_HH

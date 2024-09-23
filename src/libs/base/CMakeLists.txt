@@ -13,9 +13,11 @@ vidre_library(vidrebase SHARED
         INCLUDE_DIRECTORIES
             PUBLIC
                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}>
-            PRIVATE
                 $<BUILD_INTERFACE:${vidre_build_include_dir}>
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        LINK_LIBRARIES
+            PUBLIC
+                ${UUIDLIB}
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development
@@ -26,6 +28,6 @@ vidre_library(vidrebase SHARED
         vidre/base/config.hh vidre/base/config.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/module.hh 
-            vidre/module/declare.hh
+            vidre/module/plugin.hh
             vidre/module/module.cc
 )

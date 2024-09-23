@@ -3,6 +3,7 @@
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
         "*.dox": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "system_error": "cpp"
     }
 }

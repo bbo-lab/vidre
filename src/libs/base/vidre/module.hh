@@ -29,16 +29,18 @@
  * @fileinfo
  *
  * This header provides an implementation to declare, load and deal
- * with dynamic modules. It's implementation takes into account, that
- * not all libraries, specifically proprietry software, are and will
- * be distributed along VidRe.
+ * with plugins, specifically but not limited to dynamic modules. 
+ * It's implementation takes into account, that not all libraries, 
+ * specifically proprietry software, are and will be distributed along 
+ * VidRe.
  *
- * TODO future versions should support scripted modules, eg. with python
+ * TODO future versions should support scripted plugins, eg. with python
  *
  * */
 
 #include <vidre/config.hh>
-#include <vidre/module/declare.hh>
+#include <vidre/module/plugin.hh>
+#include <vidre/module/loader.hh>
 
 namespace vidre {
 

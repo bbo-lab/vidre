@@ -134,6 +134,21 @@ function(vidre_module TARGET)
 endfunction()
 
 function(vidre_executable TARGET)
+    cmake_parse_arguments(vidre "" "" "SOURCES;PROPERTIES;BUILD;INSTALL" ${ARGN})
+
+    add_executable(${TARGET} ${vidre_SOURCES})
+    if(vidre_PROPERTIES)
+        set_target_properties(${TARGET}
+            PROPERTIES
+                ${vidre_PROPERTIES}
+        )
+    endif()
+    if(vidre_BUILD)
+        vidre_build_options(${TARGET} ${vidre_BUILD})
+    endif()
+    if(vidre_INSTALL)
+        install(TARGETS ${TARGET} ${vidre_EXPORT} ${vidre_INSTALL})
+    endif()
 endfunction()
 
 function(vidre_unit_test TARGET)

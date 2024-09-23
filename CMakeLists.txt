@@ -67,6 +67,8 @@ find_package(nlohmann_json REQUIRED)
 
 # BUILD #######################################################################
 
+add_definitions("-DCMAKE_BINARY_DIR=\"${CMAKE_BINARY_DIR}\"")
+
 add_subdirectory(cmake)
 add_subdirectory(src)
 add_subdirectory(examples)
