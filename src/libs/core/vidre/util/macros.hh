@@ -21,11 +21,11 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_UTIL_MODULE_HH
-#define VIDRE_BASE_UTIL_MODULE_HH
+#ifndef VIDRE_CORE_UTIL_MODULE_HH
+#define VIDRE_CORE_UTIL_MODULE_HH
 
-/**@defgroup api-base-util-macro Macro utilities.
- * @ingroup api-base-util
+/**@defgroup api-core-util-macro Macro utilities.
+ * @ingroup api-core-util
  * @details
  * @fileinfo
  * */
@@ -57,4 +57,4 @@
 
 ///@}
 
-#endif  // VIDRE_BASE_UTIL_MODULE_HH
+#endif  // VIDRE_CORE_UTIL_MODULE_HH

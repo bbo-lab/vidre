@@ -1,12 +1,12 @@
-vidre_library(vidrebase SHARED
-    ALIAS Vidre::Base 
+vidre_library(vidrecore SHARED
+    ALIAS Vidre::Core
     EXPORT VidreTargets-${Vidre_RELEASE}
     VERSION ${Vidre_VERSION}
     RELEASE ${Vidre_RELEASE}
     BUILD
         COMPILE_DEFINITIONS
             PRIVATE 
-                VIDRE_BASE_VISIBILITY=VIDRE_API_EXPORT
+                VIDRE_CORE_VISIBILITY=VIDRE_API_EXPORT
         COMPILE_FEATURES
             PUBLIC 
                 cxx_std_23
@@ -24,8 +24,7 @@ vidre_library(vidrebase SHARED
         PUBLIC_HEADER COMPONENT development        
     SOURCES
         ${vidre_config_hh}
-        vidre/base.cc
-        vidre/base/config.hh vidre/base/config.cc
+        vidre/core/config.hh vidre/core/config.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/plugin.hh 
             vidre/plugin/information.hh

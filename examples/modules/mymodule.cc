@@ -12,9 +12,3 @@ VIDRE_MODULE(
 );
 // clang-format on
 
-extern "C" void init();
-extern "C" void depinit();
-
-void init() {
-    depinit();
-}

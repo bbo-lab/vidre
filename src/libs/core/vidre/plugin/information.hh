@@ -21,15 +21,15 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_PLUGIN_INFORMATION_HH
-#define VIDRE_BASE_PLUGIN_INFORMATION_HH
+#ifndef VIDRE_CORE_PLUGIN_INFORMATION_HH
+#define VIDRE_CORE_PLUGIN_INFORMATION_HH
 
-#include <vidre/base/config.hh>
+#include <vidre/core/config.hh>
 
 namespace vidre {
 
     namespace plugin {
-        /**@addtogroup api-base-plugin
+        /**@addtogroup api-core-plugin
          * */
         ///@{
 
@@ -52,7 +52,7 @@ namespace vidre {
          * TBD
          *
          * */
-        struct VIDRE_BASE_VISIBILITY information {
+        struct VIDRE_CORE_VISIBILITY information {
             const char *name;     ///< Name of the module.
             const char *version;  ///< Module version.
 
@@ -99,4 +99,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_PLUGIN_INFORMATION_HH
+#endif  // VIDRE_CORE_PLUGIN_INFORMATION_HH

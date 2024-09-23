@@ -2,7 +2,7 @@
  * Copyright (C) 2024 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
- *
+ * 
  * Affiliations:
  * ¹ MPI f. Neurobiol. of Behavior — caesar, Bonn, Germany
  *
@@ -21,32 +21,39 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_PLUGIN_HH
-#define VIDRE_BASE_PLUGIN_HH
-
-/**@addtogroup api-base-plugin
- * @details
- * @fileinfo
- *
- * This header provides an implementation to declare, load and deal
- * with plugins, specifically but not limited to dynamic modules. 
- * It's implementation takes into account, that not all libraries, 
- * specifically proprietry software, are and will be distributed along 
- * VidRe.
- *
- * */
+#ifndef VIDRE_CORE_CONFIG_HH
+#define VIDRE_CORE_CONFIG_HH
 
 #include <vidre/config.hh>
-#include <vidre/plugin/information.hh>
-#include <vidre/plugin/dynamic.hh>
 
-namespace vidre {
+/**@addtogroup api-core-details
+ * @details
+ * @fileinfo
+ * 
+ * TODO
+ * 
+ * */
+///@{
 
-    /** Plugins.
-     * @ingroup api-base-plugin
-     * */
-    namespace plugin {}  // namespace module
+/** Declaration specification for import/export for the base library.
+ * 
+ * This macro is needed for compiling on Windows®.
+ * 
+ * Usage:
+ * @code
+ * class VIDRE_CORE_VISIBILITY MyClass {
+ * public:
+ *     MyClass() = default;
+ * };
+ * @endcode
+ * 
+ * @see
+ *      [dllexport,dllimport](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170)
+ * */
+#if not defined(VIDRE_CORE_VISIBILITY)
+#define VIDRE_CORE_VISIBILITY VIDRE_API_IMPORT
+#endif
 
-}  // namespace vidre
+///@}
 
-#endif  // VIDRE_BASE_PLUGIN_HH
+#endif // VIDRE_CORE_CONFIG_HH

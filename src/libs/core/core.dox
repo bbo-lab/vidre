@@ -1,4 +1,4 @@
-/**@addtogroup api-base
+/**@addtogroup api-core
  * @details
  *
  * The base library provides fundamental features for the VidRe framework.
@@ -11,11 +11,11 @@
  * on Qt.
  * 
  * @{
- * @defgroup api-base-plugin    Plugins.
- * @defgroup api-base-util      Utilities.
+ * @defgroup api-core-plugin    Plugins.
+ * @defgroup api-core-util      Utilities.
  * @}
  * */
 
-/**@defgroup api-base-details   Implementation details.
- * @ingroup api-base
+/**@defgroup api-core-details   Implementation details.
+ * @ingroup api-core
  */

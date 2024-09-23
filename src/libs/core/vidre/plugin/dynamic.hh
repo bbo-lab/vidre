@@ -21,10 +21,10 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_PLUGIN_LOADER_HH
-#define VIDRE_BASE_PLUGIN_LOADER_HH
+#ifndef VIDRE_CORE_PLUGIN_LOADER_HH
+#define VIDRE_CORE_PLUGIN_LOADER_HH
 
-#include <vidre/base/config.hh>
+#include <vidre/core/config.hh>
 
 #include <system_error>
 #include <dlfcn.h>
@@ -32,19 +32,19 @@
 namespace vidre {
 
     namespace plugin {
-        /**@addtogroup api-base-plugin
+        /**@addtogroup api-core-plugin
          * */
         ///@{
 
         /** Dynamically linked object plugin loader.
          * */
-        class VIDRE_BASE_VISIBILITY dynamic {
+        class VIDRE_CORE_VISIBILITY dynamic {
         public:
             static constexpr const char *extension = VIDRE_DLL_EXTENSION;
 
             /** DLL handler abstraction.
              * */
-            class VIDRE_BASE_VISIBILITY library {
+            class VIDRE_CORE_VISIBILITY library {
             public:
                 library() = default;
                 ~library();
@@ -111,4 +111,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_PLUGIN_LOADER_HH
+#endif  // VIDRE_CORE_PLUGIN_LOADER_HH

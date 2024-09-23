@@ -21,8 +21,8 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_BASE_UTIL_UUID_HH
-#define VIDRE_BASE_UTIL_UUID_HH
+#ifndef VIDRE_CORE_UTIL_UUID_HH
+#define VIDRE_CORE_UTIL_UUID_HH
 
 #include <vidre/config.hh>
 
@@ -31,8 +31,8 @@
 #include <stdexcept>
 
 namespace vidre {
-    /**@defgroup api-base-util-uuid UUID
-     * @ingroup api-base-util
+    /**@defgroup api-core-util-uuid UUID
+     * @ingroup api-core-util
      * @details
      * @fileinfo
      * @see
@@ -47,7 +47,7 @@ namespace vidre {
      * @see
      *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
      * */
-    class VIDRE_BASE_VISIBILITY UUID {
+    class VIDRE_CORE_VISIBILITY UUID {
     public:
         /** UUID variant.
          * @see
@@ -208,4 +208,4 @@ namespace vidre {
     ///@}
 }  // namespace vidre
 
-#endif  // VIDRE_BASE_UTIL_UUID_HH
+#endif  // VIDRE_CORE_UTIL_UUID_HH
