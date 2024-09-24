@@ -53,6 +53,7 @@ include(VidreMacros)
 # COMPILER ####################################################################
 
 # DEPENDENCIES ################################################################
+include(FetchContent)
 
 # UUID
 check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
@@ -62,8 +63,13 @@ endif()
 set(UUIDLIB uuid)
 
 # JSON
-find_package(nlohmann_json REQUIRED)
-# FIXME Fetch if not available on system
+FetchContent_Declare(nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.11.3
+    GIT_PROGRESS   ON
+    FIND_PACKAGE_ARGS
+)
+FetchContent_MakeAvailable(nlohmann_json)
 
 # BUILD #######################################################################
 
@@ -84,5 +90,15 @@ install(EXPORT VidreTargets-${Vidre_RELEASE}
 # TODO 
 # - setup dart
 # - setup CMake for testing
+
+# Catch2
+# FIXME only if tests are enabled
+FetchContent_Declare(Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.7.1
+  GIT_PROGRESS   ON
+  FIND_PACKAGE_ARGS 3.7
+)
+FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(tests)

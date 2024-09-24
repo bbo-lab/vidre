@@ -1,0 +1,40 @@
+/** @page page-developer Developer information
+
+@section main-objective Objective
+
+The objective is to create a videography software suite, that allows to record 
+scientifically relevant data from different types of video sources including 
+supplemental information and data streams (such as timing, audio, etc.). 
+Ultimately we aim at a modular framework that allows to supplement real-time 
+features, such as object recognition combined with feedback.
+
+@subsection main-objective-lang Language(s) and configuration
+
+Core functionality should be provided in C++ (at least [C++20](https://en.cppreference.com/w/cpp/20)). 
+Note, however, that the software must be compilable on at least Linux® and 
+Windows®. For user-interface applications [Qt6](https://www.qt.io/product/framework) 
+forms the basis. 
+
+While the backend (the recording service or daemon, respectively) will rely
+on compiled code, interfaces to other languages (mainly Python, but also
+Matlab and more) will be provided. 
+The frontend (user interface), though, will be a mixture of Python and C++ 
+(see [Qt for Python](https://doc.qt.io/qtforpython-6/)). With respect to
+the backend, it should be discussed if a terminal UI should be provided
+to simplify configuration or supervision, especially on a headless, remote
+machine.
+
+For project configuration we use [CMake](https://cmake.org/cmake/help/latest/).
+
+@subsection main-objective-docs Documentation
+
+API documentation is generated using [Doxygen](https://doxygen.nl/manual/index.html).
+
+TODO use https://github.com/jothepro/doxygen-awesome-css
+     (maybe with FetchContent_Populate ?)
+
+@image html overview.svg
+
+
+
+*/

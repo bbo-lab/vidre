@@ -28,6 +28,10 @@
  * @details
  * @fileinfo
  *
+ * 
+ * @internal
+ * 
+ * @endinternal
  * */
 #include <vidre/config.hh>
 

@@ -47,7 +47,7 @@ namespace vidre {
      * @see
      *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
      * */
-    class VIDRE_CORE_VISIBILITY UUID {
+    class VIDRE_CORE_VISIBILITY uuid {
     public:
         /** UUID variant.
          * @see
@@ -79,12 +79,12 @@ namespace vidre {
          * source is available, a time-/MAC-based UUID otherwise.
          * 
          * @see
-         *      UUID::makeTime() <br/>
-         *      UUID::makeTimeSafe() <br/>
-         *      UUID::makeRandom()
+         *      uuid::makeTime() <br/>
+         *      uuid::makeTimeSafe() <br/>
+         *      uuid::makeRandom()
          * */
-        static UUID make() noexcept {
-            UUID result;
+        static uuid make() noexcept {
+            uuid result;
             uuid_generate(result.uuid_);
             return result;
         }
@@ -101,10 +101,10 @@ namespace vidre {
          * Note, however, that uniqueness of UUIDs is not guaranteed.
          *
          * @see
-         *      UUID::makeTimeSafe()
+         *      uuid::makeTimeSafe()
          * */
-        static UUID makeTime() noexcept {
-            UUID result;
+        static uuid makeTime() noexcept {
+            uuid result;
             uuid_generate_time(result.uuid_);
             return result;
         }
@@ -117,10 +117,10 @@ namespace vidre {
          * of time-based UUIDs
          *
          * @see
-         *      UUID::makeTime()
+         *      uuid::makeTime()
          * */
-        static UUID makeTimeSafe() {
-            UUID result;
+        static uuid makeTimeSafe() {
+            uuid result;
             if (not uuid_generate_time_safe(result.uuid_))
                 throw std::runtime_error("synchronization failed");
             return result;
@@ -128,31 +128,31 @@ namespace vidre {
 
         /** Create a random or pseudo-random UUID.
          * */
-        static UUID makeRandom() noexcept {
-            UUID result;
+        static uuid makeRandom() noexcept {
+            uuid result;
             uuid_generate_random(result.uuid_);
             return result;
         }
 
         /** Create a name-based UUID with MD5 hashing.
          * */
-        static UUID makeMD5(const UUID ns, const std::string &name) noexcept {
-            UUID result;
+        static uuid makeMD5(const uuid ns, const std::string &name) noexcept {
+            uuid result;
             uuid_generate_md5(result.uuid_, ns.uuid_, name.data(), name.size());
             return result;
         }
 
         /** Create a name-based UUID with SHA-1 hashing.
          * */
-        static UUID makeSHA1(const UUID ns, const std::string &name) noexcept {
-            UUID result;
+        static uuid makeSHA1(const uuid ns, const std::string &name) noexcept {
+            uuid result;
             uuid_generate_sha1(result.uuid_, ns.uuid_, name.data(), name.size());
             return result;
         }
 
     public:
-        UUID() = default;
-        UUID(const std::string &s);
+        uuid() = default;
+        uuid(const std::string &s);
 
     protected:
         uuid_t uuid_{};
@@ -165,8 +165,8 @@ namespace vidre {
          * 
          * Usage:
          * @code
-         * void fn(const UUID &uuid) {
-         *     if (uuid == UUID::Variant::DCE) {
+         * void fn(const uuid &uuid) {
+         *     if (uuid == uuid::Variant::DCE) {
          *         // ...
          *     }
          * }
@@ -178,7 +178,7 @@ namespace vidre {
 
         /** Implicit DCE type conversion.
          * @see
-         *     `UUID::operator Variant()`
+         *     `uuid::operator Variant()`
          * */
         operator Type() const noexcept {
             return static_cast<Type>(uuid_type(uuid_));
@@ -197,7 +197,7 @@ namespace vidre {
 
         /** Equality.
          * */
-        bool operator==(const UUID &other) const noexcept {
+        bool operator==(const uuid &other) const noexcept {
             return uuid_compare(uuid_, other.uuid_) == 0;
         }
         bool operator==(const std::string &s) const noexcept {

@@ -34,7 +34,24 @@
  * specifically proprietry software, are and will be distributed along
  * VidRe.
  *
+ * @internal
+ *
+ * @endinternal
  * */
+
+/* TODO
+ *  - decide on a config file format (JSON)
+ *    -> must list, e.g. for proprietry software, were to download to enable the feature
+ *  - decide category/directory structure, e.g.
+ *    device/
+ *        pylon/
+ *        onsemi/
+ *    filter/
+ *    endcode/
+ *        lossless/
+ *        mp4/
+ *    etc.
+ */
 
 #include <vidre/config.hh>
 #include <vidre/plugin/information.hh>

@@ -4,12 +4,12 @@
 
 using namespace vidre;
 
-void vidre::UUID::parse(const std::string &s) {
+void vidre::uuid::parse(const std::string &s) {
     if (uuid_parse(s.c_str(), uuid_) != 0)
         throw std::runtime_error("not a UUID");
 }
 
-std::string vidre::UUID::tostring(bool lowercase) const noexcept {
+std::string vidre::uuid::tostring(bool lowercase) const noexcept {
     std::string result;
     result.resize(UUID_STR_LEN-1);
 

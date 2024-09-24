@@ -35,7 +35,7 @@
  * */
 ///@{
 
-/** Declaration specification for import/export for the base library.
+/** Declaration specification for import/export for the core library.
  * 
  * This macro is needed for compiling on Windows®.
  * 

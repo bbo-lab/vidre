@@ -1,17 +1,27 @@
 find_package(Doxygen)
 
-set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+if(Doxygen_FOUND)
+    # FIXME
+    # FetchContent_Populate(doxygen_awesome_css
+    #     GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
+    #     GIT_TAG        v2.3.3
+    #     GIT_PROGRESS   ON
+    # )
 
-configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+    set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-add_custom_target(docs
-    COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen"
-    DEPENDS ${doxyfile_in}
-    VERBATIM)
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
-    COMPONENT "documentation"
-    DESTINATION share/doc/vidre-service)
+    add_custom_target(docs
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        DEPENDS ${doxyfile_in}
+        VERBATIM)
+
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
+        COMPONENT "documentation"
+        DESTINATION share/doc/vidre-service)
+
+endif()

@@ -2,6 +2,7 @@
 @defgroup api C++-API
 @brief The C++ application programming interface.
 @details
+
 */
 
 /**@defgroup api-config Configuration.

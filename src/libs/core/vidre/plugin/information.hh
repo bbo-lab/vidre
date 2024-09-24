@@ -33,20 +33,6 @@ namespace vidre {
          * */
         ///@{
 
-        /* TODO
-         *  - decide on a config file format (JSON)
-         *    -> must list, e.g. for proprietry software, were to download to enable the feature
-         *  - decide category/directory structure, e.g.
-         *    device/
-         *        pylon/
-         *        onsemi/
-         *    filter/
-         *    endcode/
-         *        lossless/
-         *        mp4/
-         *    etc.
-         */
-
         /** Module information.
          *
          * TBD maybe it's better, to just hold an JSON string
