@@ -31,9 +31,6 @@
 *.out
 *.app
 
-# Documentation
-doxygen-awesome-css/
-
 # Build
 build/
 

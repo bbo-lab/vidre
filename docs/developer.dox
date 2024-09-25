@@ -1,6 +1,6 @@
-/** @page page-developer Developer information
+/** @page dev Development
 
-@section main-objective Objective
+@section dev-objective Objective
 
 The objective is to create a videography software suite, that allows to record 
 scientifically relevant data from different types of video sources including 
@@ -8,7 +8,63 @@ supplemental information and data streams (such as timing, audio, etc.).
 Ultimately we aim at a modular framework that allows to supplement real-time 
 features, such as object recognition combined with feedback.
 
-@subsection main-objective-lang Language(s) and configuration
+
+
+
+@section dev-design Design
+
+To facilitate remote data acquisition, which may happen on a headless system,
+recording and displaying data are separated into a backend (the recording 
+service or daemon, respectively) and the frontend (the user interface). The 
+following diagram gives an idea of the components and the acquisition data flow: 
+
+@image html overview.svg
+
+
+@subsection dev-backend Backend
+
+The backend must—with high reliability and speed—record video frames and 
+additional data from various sources. It should be implemented in the sense
+of a system service (which also means, it should automatically start on system
+boot). The service must not crash on partial failures (such as device errors) 
+but continue to operate.
+
+@subsubsection dev-backend-monitoring Monitoring
+
+<b>Requires</b>:<br/>
+@ref core-logging<br/>
+@ref core-sysinfo<br/>
+
+@subsubsection dev-backend-devices Devices
+
+<b>Requires</b>:<br/>
+@ref core-plugins<br/>
+
+@subsubsection dev-backend-storage Storage
+
+<b>Requires</b>:<br/>
+@ref core-storage<br/>
+
+@subsubsection dev-backend-realtime Real-time interface
+
+
+@subsubsection dev-backend-transport Transport
+
+
+@subsubsection dev-backend-settings Settings
+
+
+@subsection dev-frontend Frontend
+
+
+
+
+
+
+@section dev-impl Implementation
+
+
+@subsection dev-lang Language(s) and configuration
 
 Core functionality should be provided in C++ (at least [C++20](https://en.cppreference.com/w/cpp/20)). 
 Note, however, that the software must be compilable on at least Linux® and 
@@ -26,15 +82,56 @@ machine.
 
 For project configuration we use [CMake](https://cmake.org/cmake/help/latest/).
 
-@subsection main-objective-docs Documentation
 
-API documentation is generated using [Doxygen](https://doxygen.nl/manual/index.html).
+@subsection dev-git Version control
 
-TODO use https://github.com/jothepro/doxygen-awesome-css
-     (maybe with FetchContent_Populate ?)
+The "main" branch remains in the hands of BBO authors. External developers may 
+not without explicit permission commit there. Instead, they must either use an 
+arranged (read "agreed upon") branch or use github's pull-request feature.
 
-@image html overview.svg
+@TBD{make user-interface independent (see vidre-gui on github)?}
 
 
+@subsection dev-docs Documentation
+
+API documentation is generated using [Doxygen](https://doxygen.nl/manual/index.html)
+and published regularly on https://bbo-lab.github.io/vidre.
+
+Documentation is, however, not limited to the source code. @TBD
+
+Document as much as necessary, but not more (in case of doubt, follow
+[XKCD 1343](https://xkcd.com/1343/) but not [XKCD 1481](https://xkcd.com/1481/)).
+
+
+
+@section dev-libs Libraries
+
+@subsection dev-core Core library
+
+@subsubsection core-exception Error handling
+
+FIXME
+
+@subsubsection core-logging Logging
+
+FIXME
+
+@subsubsection core-plugins Plugins
+
+@TBD
+
+@subsubsection core-sysinfo System information
+
+- hard disk status
+- CPU status
+@TBD
+
+@subsubsection core-plugins Plugins
+
+TODO
+
+@subsubsection core-storage Storage
+
+TODO
 
 */

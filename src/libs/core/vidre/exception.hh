@@ -28,19 +28,37 @@
  * @details
  * @fileinfo
  *
- * 
- * @internal
- * 
- * @endinternal
+ * @TBD{needs a pulled-in version of https://www.boost.org/doc/libs/1_75_0/libs/exception/doc/tutorial_transporting_data.html}
+ *
  * */
 #include <vidre/config.hh>
+
+#include <boost/exception/all.hpp>
+
+#include <source_location>
 
 namespace vidre {
     /**@addtogroup api-core-exception
      * */
     ///@{
 
-    //
+    template <class Tag, class T>
+    using error_info = boost::error_info<Tag, T>;
+
+    /// ...
+
+    /** Default VidRe exception.
+     *
+     * @TBD{add std::source_location}
+     * */
+    class VIDRE_CORE_VISIBILITY exception
+        : virtual boost::exception
+        , virtual std::exception {
+    public:
+        exception(const std::source_location location = std::source_location::current()) {
+            throw_function_ = location.function_name();
+        }
+    };
 
     ///@}
 }  // namespace vidre

@@ -11,10 +11,10 @@
  * on Qt.
  * 
  * @{
- * @defgroup api-core-exception     Errors and exceptions.
- * @defgroup api-core-memory        Memory hanling.
- * @defgroup api-core-plugin        Plugins.
- * @defgroup api-core-util          Utilities.
- * @defgroup api-core-details       Implementation details.
+ * @defgroup api-core-exception     Errors and exceptions
+ * @defgroup api-core-storage       Storage
+ * @defgroup api-core-plugin        Plugins
+ * @defgroup api-core-util          Utilities
+ * @defgroup api-core-details       Implementation details
  * @}
  * */

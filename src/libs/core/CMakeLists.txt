@@ -18,6 +18,7 @@ vidre_library(vidrecore SHARED
         LINK_LIBRARIES
             PUBLIC
                 ${UUIDLIB}
+                ${Boost_LIBRARIES}
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development
@@ -25,6 +26,8 @@ vidre_library(vidrecore SHARED
     SOURCES
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
+        vidre/exception.hh
+        vidre/storage.hh
         vidre/plugin.hh 
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc

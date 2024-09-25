@@ -21,10 +21,10 @@
  */
 // @file
 #pragma once
-#ifndef VIDRE_CORE_MEMORY_HH
-#define VIDRE_CORE_MEMORY_HH
+#ifndef VIDRE_CORE_STORAGE_HH
+#define VIDRE_CORE_STORAGE_HH
 
-/**@addtogroup api-core-memory
+/**@addtogroup api-core-storage
  * @details
  * @fileinfo
  *
@@ -38,7 +38,7 @@
 #include <vidre/config.hh>
 
 namespace vidre {
-    /**@addtogroup api-core-memory
+    /**@addtogroup api-core-storage
      * */
     ///@{
 
@@ -47,4 +47,4 @@ namespace vidre {
     ///@}
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_MEMORY_HH
+#endif  // VIDRE_CORE_STORAGE_HH

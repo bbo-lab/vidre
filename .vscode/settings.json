@@ -4,6 +4,7 @@
     "files.associations": {
         "*.dox": "cpp",
         "string": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "source_location": "cpp"
     }
 }

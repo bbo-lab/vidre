@@ -55,6 +55,9 @@ include(VidreMacros)
 # DEPENDENCIES ################################################################
 include(FetchContent)
 
+# Boost
+find_package(Boost CONFIG REQUIRED COMPONENTS exception) 
+
 # UUID
 check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
 if(NOT HAVE_LIBUUID)

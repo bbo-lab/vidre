@@ -36,6 +36,8 @@ INHERIT_DOCS           = YES
 SEPARATE_MEMBER_PAGES  = NO
 TAB_SIZE               = 4
 ALIASES                = 
+ALIASES               += TBD="<span style=\"color: orange\"><b>TBD</b>"
+ALIASES               += TBD{1}="<span style=\"color: orange\"><b>TBD</b>:</br> \1</span>"
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
 OPTIMIZE_FOR_FORTRAN   = NO
@@ -169,8 +171,8 @@ HTML_HEADER            =
 HTML_FOOTER            =
 HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = \
-    @PROJECT_SOURCE_DIR@/docs/doxygen-awesome-css/doxygen-awesome.css \
-    @PROJECT_SOURCE_DIR@/docs/doxygen-awesome-css/doxygen-awesome-sidebar-only.css 
+    @PROJECT_BINARY_DIR@/docs/doxygen-awesome-css/doxygen-awesome.css \
+    @PROJECT_BINARY_DIR@/docs/doxygen-awesome-css/doxygen-awesome-sidebar-only.css 
 HTML_EXTRA_FILES       = 
 HTML_COLORSTYLE        = AUTO_LIGHT
 HTML_COLORSTYLE_HUE    = 177
