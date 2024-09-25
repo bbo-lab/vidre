@@ -24,7 +24,7 @@
 #ifndef VIDRE_CORE_UTIL_UUID_HH
 #define VIDRE_CORE_UTIL_UUID_HH
 
-#include <vidre/config.hh>
+#include <vidre/core/config.hh>
 
 #include <uuid/uuid.h>
 #include <string>
@@ -35,6 +35,10 @@ namespace vidre {
      * @ingroup api-core-util
      * @details
      * @fileinfo
+     * 
+     * <b>Example</b>:
+     * @include examples/core/uuid.cc
+     * 
      * @see
      * https://en.wikipedia.org/wiki/Universally_unique_identifier
      * */
@@ -53,7 +57,7 @@ namespace vidre {
          * @see
          *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
          * */
-        enum class Variant {
+        enum class variant {
             NCS = UUID_VARIANT_NCS,              ///< Apollo NCS variant (backwards compatibility).
             DCE = UUID_VARIANT_DCE,              ///< DCE 1.1 UUIDs (see [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)).
             Microsoft = UUID_VARIANT_MICROSOFT,  ///< Microsoft COM/DCOM variant (compatibility).
@@ -64,7 +68,7 @@ namespace vidre {
          * @see
          *      [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)
          * */
-        enum class Type {
+        enum class type {
             NIL = UUID_TYPE_DCE_NIL,            ///< "NIL" (refers to the ["Nil UUID"](https://en.wikipedia.org/wiki/Universally_unique_identifier#Nil_UUID)).
             Time = UUID_TYPE_DCE_TIME,          ///< Time-/MAC-based.
             Security = UUID_TYPE_DCE_SECURITY,  ///< Security version, with embedded POSIX UIDs.
@@ -172,16 +176,16 @@ namespace vidre {
          * }
          * @endcode
          * */
-        operator Variant() const noexcept {
-            return static_cast<Variant>(uuid_variant(uuid_));
+        operator variant() const noexcept {
+            return static_cast<variant>(uuid_variant(uuid_));
         }
 
         /** Implicit DCE type conversion.
          * @see
          *     `uuid::operator Variant()`
          * */
-        operator Type() const noexcept {
-            return static_cast<Type>(uuid_type(uuid_));
+        operator type() const noexcept {
+            return static_cast<type>(uuid_type(uuid_));
         }
 
         /** Convert to string.

@@ -35,7 +35,7 @@
  * 
  * */
 
-#include <vidre/config.hh>
+#include <vidre/core/config.hh>
 
 namespace vidre {
     /**@addtogroup api-core-storage

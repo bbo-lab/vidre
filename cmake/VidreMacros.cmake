@@ -23,8 +23,7 @@
 #
 # For more information, please refer to <https://unlicense.org>
 
-# TODO documentation
-
+# Helper for setting build options.
 function(vidre_build_options TARGET)
     cmake_parse_arguments(vidre "" "" "COMPILE_DEFINITIONS;COMPILE_FEATURES;COMPILE_OPTIONS;LINK_LIBRARIES;LINK_OPTIONS;INCLUDE_DIRECTORIES" ${ARGN})
     if(vidre_COMPILE_DEFINITIONS)
@@ -47,6 +46,7 @@ function(vidre_build_options TARGET)
     endif()
 endfunction()
 
+# Equivalent of add_library.
 function(vidre_library TARGET)
     cmake_parse_arguments(vidre "SHARED;STATIC" "EXPORT;ALIAS" "SOURCES;PROPERTIES;BUILD;INSTALL" ${ARGN})
 
@@ -115,6 +115,7 @@ function(vidre_library TARGET)
     endif()
 endfunction()
 
+# Equivalent of add_library(...MODULE...).
 function(vidre_module TARGET)
     cmake_parse_arguments(vidre "" "" "SOURCES;PROPERTIES;BUILD;INSTALL" ${ARGN})
 
@@ -129,10 +130,11 @@ function(vidre_module TARGET)
         vidre_build_options(${TARGET} ${vidre_BUILD})
     endif()
     if(vidre_INSTALL)
-        install(TARGETS ${TARGET} ${vidre_EXPORT} ${vidre_INSTALL})
+        install(TARGETS ${TARGET} ${vidre_INSTALL})
     endif()
 endfunction()
 
+# Equivalent of add_executable.
 function(vidre_executable TARGET)
     cmake_parse_arguments(vidre "" "" "SOURCES;PROPERTIES;BUILD;INSTALL" ${ARGN})
 
@@ -147,9 +149,53 @@ function(vidre_executable TARGET)
         vidre_build_options(${TARGET} ${vidre_BUILD})
     endif()
     if(vidre_INSTALL)
-        install(TARGETS ${TARGET} ${vidre_EXPORT} ${vidre_INSTALL})
+        install(TARGETS ${TARGET} ${vidre_INSTALL})
     endif()
 endfunction()
 
-function(vidre_unit_test TARGET)
+# Unit testing and examples.
+function(vidre_test TARGET)
+    cmake_parse_arguments(vidre "" "NAME" "SOURCES;BUILD;ARGUMENTS" ${ARGN})
+    if("${TARGET}" STREQUAL "DEFAULTS")
+        add_definitions(
+            "-DVidre_BINARY_DIR=\"${Vidre_BINARY_DIR}\""
+            "-DVidre_SOURCE_DIR=\"${DVidre_SOURCE_DIR}\""
+        )
+        if(vidre_NAME)
+            set(Vidre_TEST_PREFIX "${vidre_NAME}")
+        else()
+            set(Vidre_TEST_PREFIX "test")
+        endif()
+    elseif("${TARGET}" STREQUAL "GROUP")
+        if(vidre_NAME)
+            set(Vidre_TEST_PREFIX "${Vidre_TEST_PREFIX}.${vidre_NAME}")
+        endif()
+        if(vidre_SOURCES)
+            set(${Vidre_TEST_PREFIX}_TEST_SOURCES ${vidre_SOURCES} CACHE INTERNAL "Common test sources.")
+        endif()
+        if(vidre_BUILD)
+            set(${Vidre_TEST_PREFIX}_TEST_BUILD ${vidre_BUILD} CACHE INTERNAL "Common test build options.")
+        endif()
+    else()
+        set(EXECUTABLE ${Vidre_TEST_PREFIX}.${TARGET})
+        add_executable(${EXECUTABLE} ${vidre_SOURCES} ${${Vidre_TEST_PREFIX}_TEST_SOURCES})
+        vidre_build_options(${EXECUTABLE} ${${Vidre_TEST_PREFIX}_TEST_BUILD})
+        if(vidre_BUILD)
+            vidre_build_options(${EXECUTABLE} ${vidre_BUILD})
+        endif()
+
+        if(NOT CMAKE_MEMORYCHECK_COMMAND)
+            set(memcheck_command)
+        else()
+            set(memcheck_command "${CMAKE_MEMORYCHECK_COMMAND} --error-exitcode=1 --leak-check=full ${CMAKE_MEMORYCHECK_COMMAND_OPTIONS}")
+            separate_arguments(memcheck_command)
+        endif()
+
+        message(VERBOSE "testing ${__uoe_unit_test_name}")
+        add_test(NAME ${EXECUTABLE}
+                COMMAND ${memcheck_command} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${vidre_ARGUMENTS}
+                WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+    endif()
+
+    return(PROPAGATE Vidre_TEST_PREFIX)
 endfunction()

@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "exampe/modules/myloader",
+            "name": "test.core.exceptions",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/myloader",
+            "program": "${workspaceFolder}/build/bin/test.core.exceptions",
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"

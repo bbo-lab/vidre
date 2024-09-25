@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -6,21 +6,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 if(NOT DEFINED CMAKE_BUILD_TYPE_INIT)
-    set(CMAKE_BUILD_TYPE_INIT Debug)
+    set(CMAKE_BUILD_TYPE_INIT RelWithDebInfo)
 endif()
 
-set(VIDRE_ORGANIZATION_NAME "MPINB")
-set(VIDRE_ORGANIZATION_DOMAIN "org.mpg.mpinb")
+set(Vidre_ORGANIZATION_NAME "MPINB")
+set(Vidre_ORGANIZATION_DOMAIN "org.mpg.mpinb")
 
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
     if(WIN32)
-    set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${VIDRE_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
+    set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
     else()
-        set(CMAKE_INSTALL_PREFIX "/opt/${VIDRE_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
+        set(CMAKE_INSTALL_PREFIX "/opt/${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
     endif()
 endif()
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "VidreInitFlags.cmake")
+
+if(NOT DEFINED PROJECT_NAME)
+    set(Vidre_IS_SUBPROJECT OFF)
+else()
+    set(Vidre_IS_SUBPROJECT ON)
+endif()
 
 project(Vidre
     VERSION 0.0.0
@@ -76,32 +82,35 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 # BUILD #######################################################################
 
-add_definitions("-DCMAKE_BINARY_DIR=\"${CMAKE_BINARY_DIR}\"")
-
 add_subdirectory(cmake)
 add_subdirectory(src)
-add_subdirectory(examples)
-add_subdirectory(docs)
 
 install(EXPORT VidreTargets-${Vidre_RELEASE}
     COMPONENT "development"
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
 )
 
+add_subdirectory(docs)
+
 # TEST ########################################################################
 
-# TODO 
-# - setup dart
-# - setup CMake for testing
+if(NOT Vidre_IS_SUBPROJECT)
+    enable_testing()
+    find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
 
-# Catch2
-# FIXME only if tests are enabled
-FetchContent_Declare(Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.7.1
-  GIT_PROGRESS   ON
-  FIND_PACKAGE_ARGS 3.7
-)
-FetchContent_MakeAvailable(Catch2)
+    # TODO 
+    # - setup dart
 
-add_subdirectory(tests)
+    # Catch2
+    # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
+    FetchContent_Declare(Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.7.1
+        GIT_PROGRESS   ON
+        FIND_PACKAGE_ARGS 3.7
+    )
+    FetchContent_MakeAvailable(Catch2)
+
+    add_subdirectory(examples)
+    add_subdirectory(tests)
+endif()

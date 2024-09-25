@@ -27,11 +27,17 @@
 /**@addtogroup api-core-exception
  * @details
  * @fileinfo
- *
+ * 
+ * There are many pro's and con's for using exceptions versus error return 
+ * types—which we shall not repeat here. As a rule of thumb: do not use
+ * exceptions in fast computational paths (where stack unwinding is an 
+ * unpredictable cost), but use it whereever more information can be transmitted 
+ * with an exception than with a simple error code.
+ * 
  * @TBD{needs a pulled-in version of https://www.boost.org/doc/libs/1_75_0/libs/exception/doc/tutorial_transporting_data.html}
  *
  * */
-#include <vidre/config.hh>
+#include <vidre/core/config.hh>
 
 #include <boost/exception/all.hpp>
 
@@ -44,21 +50,23 @@ namespace vidre {
 
     template <class Tag, class T>
     using error_info = boost::error_info<Tag, T>;
-
     /// ...
 
     /** Default VidRe exception.
-     *
-     * @TBD{add std::source_location}
      * */
     class VIDRE_CORE_VISIBILITY exception
-        : virtual boost::exception
-        , virtual std::exception {
+        : public virtual boost::exception
+        , public virtual std::exception {
     public:
-        exception(const std::source_location location = std::source_location::current()) {
-            throw_function_ = location.function_name();
-        }
+        exception(const std::source_location location = std::source_location::current());
     };
+
+    inline exception::exception(const std::source_location location) : boost::exception(), std::exception() {
+        (*this)                                                 //
+            << boost::throw_function(location.function_name())  //
+            << boost::throw_file(location.file_name())          //
+            << boost::throw_line(location.line());
+    }
 
     ///@}
 }  // namespace vidre

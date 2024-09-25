@@ -29,34 +29,59 @@ of a system service (which also means, it should automatically start on system
 boot). The service must not crash on partial failures (such as device errors) 
 but continue to operate.
 
+
 @subsubsection dev-backend-monitoring Monitoring
+
+Monitoring refers to several aspects. One major aspect is hard-disk space which
+must be reported to the user interface regularly. For a remote system there are
+more things to consider, for exmaple temperature or battery status, etc.
 
 <b>Requires</b>:<br/>
 @ref core-logging<br/>
 @ref core-sysinfo<br/>
 
+
 @subsubsection dev-backend-devices Devices
+
+The major devices, that must be respresented initially are Basler USB3Vision 
+products (via [pylon Software](https://www.baslerweb.com/de-de/software/pylon/)) and
+OnSemi/Aptina Demo3 (via [DevWareX](https://aptina.atlassian.net/wiki/spaces/DEVS/pages/3244099/DevWareX)).
+Additionally, it appears favorable, also to support standard UVC cameras.
+
+Future development, might however, also require additional data, such as GNSS
+coordinates.
 
 <b>Requires</b>:<br/>
 @ref core-plugins<br/>
+@ref core-storage<br/>
+
 
 @subsubsection dev-backend-storage Storage
 
 <b>Requires</b>:<br/>
 @ref core-storage<br/>
 
+
 @subsubsection dev-backend-realtime Real-time interface
+
+@TBD{The "real-time interface" will probably only require storage access. 
+Implementation-wise we need to think if such access to the data must be granted
+also to external programs.}
 
 
 @subsubsection dev-backend-transport Transport
 
+<b>Requires</b>:<br/>
+@ref core-transport<br/>
 
 @subsubsection dev-backend-settings Settings
+
+FIXME
 
 
 @subsection dev-frontend Frontend
 
-
+FIXME
 
 
 
@@ -75,10 +100,10 @@ While the backend (the recording service or daemon, respectively) will rely
 on compiled code, interfaces to other languages (mainly Python, but also
 Matlab and more) will be provided. 
 The frontend (user interface), though, will be a mixture of Python and C++ 
-(see [Qt for Python](https://doc.qt.io/qtforpython-6/)). With respect to
+(see [Qt for Python](https://doc.qt.io/qtforpython-6/)). @TBD{With respect to
 the backend, it should be discussed if a terminal UI should be provided
 to simplify configuration or supervision, especially on a headless, remote
-machine.
+machine.}
 
 For project configuration we use [CMake](https://cmake.org/cmake/help/latest/).
 
@@ -95,9 +120,12 @@ arranged (read "agreed upon") branch or use github's pull-request feature.
 @subsection dev-docs Documentation
 
 API documentation is generated using [Doxygen](https://doxygen.nl/manual/index.html)
-and published regularly on https://bbo-lab.github.io/vidre.
+and published regularly on https://bbo-lab.github.io/vidre. The  
+@ref api-core-util-uuid documentation should serve as a reference for how to 
+document source code.
 
-Documentation is, however, not limited to the source code. @TBD
+Documentation is, however, not limited to the source code. @TBD{Run-time 
+documentation and help files are just as well required.}
 
 Document as much as necessary, but not more (in case of doubt, follow
 [XKCD 1343](https://xkcd.com/1343/) but not [XKCD 1481](https://xkcd.com/1481/)).
@@ -110,7 +138,8 @@ Document as much as necessary, but not more (in case of doubt, follow
 
 @subsubsection core-exception Error handling
 
-FIXME
+Error handling, depending on context, uses either standard error codes
+() or @ref api-core-exception.
 
 @subsubsection core-logging Logging
 

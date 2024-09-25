@@ -53,7 +53,7 @@
  *    etc.
  */
 
-#include <vidre/config.hh>
+#include <vidre/core/config.hh>
 #include <vidre/plugin/information.hh>
 #include <vidre/plugin/dynamic.hh>
 
