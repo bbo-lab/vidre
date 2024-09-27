@@ -34,7 +34,10 @@
  * unpredictable cost), but use it whereever more information can be transmitted 
  * with an exception than with a simple error code.
  * 
- * @TBD{needs a pulled-in version of https://www.boost.org/doc/libs/1_75_0/libs/exception/doc/tutorial_transporting_data.html}
+ * @TBD{Either we need a pulled-in version of https://www.boost.org/doc/libs/1_75_0/libs/exception/doc/tutorial_transporting_data.html
+ *      and the rest of it's exception interface, or we implement our own
+ *      "arbitrary data passing". I should note also, that after some trials
+ *      the Boost API seems quite cumbersome...}
  *
  * */
 #include <vidre/core/config.hh>
