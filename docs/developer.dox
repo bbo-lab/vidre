@@ -29,6 +29,18 @@ of a system service (which also means, it should automatically start on system
 boot). The service must not crash on partial failures (such as device errors) 
 but continue to operate.
 
+@TBD{
+Worst-case: error recovery.
+
+BBO had some issues with DevWareX software. The software records in MP4 format.
+The exact details are unknown, but it seems, that MP4 files can only be read
+when meta-information is written at the end of the recording. This was missing
+in some cases and recovery is only possible if the meta-information is known.
+Therefore, we suggest, that all necessary information, that is required to 
+recover data, is written immediately, and, when the service starts again, will
+"fix" the situation.
+}
+
 
 @subsubsection dev-backend-monitoring Monitoring
 
