@@ -57,6 +57,28 @@ set(CMAKE_INSTALL_CMAKEDIR share/cmake/vidre) # FIXME system dependent, see http
 include(VidreMacros)
 
 # COMPILER ####################################################################
+include(CheckCXXCompilerFlag)
+
+# sanitize undefined behavior (UB)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    # compile and link with sanitizer
+    check_cxx_compiler_flag(-fsanitize=undefined sanitize_undefind_behavior)
+    if(sanitize_undefind_behavior)
+        add_compile_options(-fsanitize=undefined -DSANITIZE_UB)
+        add_link_options(-fsanitize=undefined)
+    endif()
+
+    check_cxx_compiler_flag(-fsanitize-link-c++-runtime sanitize_link_runtime)
+    if(sanitize_link_runtime)
+        add_link_options(-fsanitize-link-c++-runtime)
+    endif()
+
+    # trap on UB
+    check_cxx_compiler_flag(-fno-sanitize-recover=undefined no_sanitize_recover)
+    if(no_sanitize_recover)
+        add_compile_options(-fno-sanitize-recover=undefined)
+    endif()
+endif()
 
 # DEPENDENCIES ################################################################
 include(FetchContent)
