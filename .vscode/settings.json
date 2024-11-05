@@ -32,6 +32,7 @@
         "cstdio": "cpp",
         "typeinfo": "cpp",
         "__config": "cpp",
-        "__verbose_abort": "cpp"
+        "__verbose_abort": "cpp",
+        "filesystem": "cpp"
     }
 }
