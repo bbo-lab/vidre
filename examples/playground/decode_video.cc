@@ -154,6 +154,8 @@ int main(int argc, char *argv[]) {
     enum AVHWDeviceType type;
     int i;
 
+    av_log_set_level(AV_LOG_VERBOSE);
+
     if (argc < 4) {
         fprintf(stderr, "Usage: %s <device type> <input file> <output file>\n", argv[0]);
         return -1;
@@ -217,6 +219,8 @@ int main(int argc, char *argv[]) {
 
     if (hw_decoder_init(decoder_ctx, type) < 0)
         return -1;
+
+    // av_set_options_string(decoder_ctx, "opts", "key-val", "paris");
 
     if ((ret = avcodec_open2(decoder_ctx, decoder, NULL)) < 0) {
         fprintf(stderr, "Failed to open codec for stream #%u\n", video_stream);
