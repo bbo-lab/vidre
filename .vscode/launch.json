@@ -19,9 +19,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/example.playground.decode_video",
             "args": [
-                "cuda",
                 "/home/sawinski/15_L_0-left.mp4",
-                "${workspaceFolder}/build/out.data"
             ],
             "environment": [],
             "cwd": "${workspaceFolder}"
