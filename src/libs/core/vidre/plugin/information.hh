@@ -35,8 +35,11 @@ namespace vidre {
 
         /** Module information.
          *
-         * TBD maybe it's better, to just hold an JSON string
-         *
+         * @TBD{maybe it's better, to just hold a JSON string}
+         * 
+         * @TBD{maybe put the module init function here, too}
+         * 
+         * @see VIDRE_MODULE
          * */
         struct VIDRE_CORE_VISIBILITY information {
             const char *name;     ///< Name of the module.
@@ -65,7 +68,8 @@ namespace vidre {
          *     .name = "MyModule",
          *     .version = "0.0",
          *     .organization = {
-         *         .name = "George"
+         *         .name = "MPINB",
+         *         .domain = "de.mpg.mpinb"
          *     },
          *     .brief = "Example module that does nothing.",
          *     .category = "example"

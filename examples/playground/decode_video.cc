@@ -1,3 +1,4 @@
+// file copied from ffmpeg/doc/examples/extract_mvs.c
 /*
  * Copyright (c) 2012 Stefano Sabatini
  * Copyright (c) 2014 Clément Bœsch
@@ -19,14 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- */
-
-/**
- * @file libavcodec motion vectors extraction API usage example
- * @example extract_mvs.c
- *
- * Read from input file, decode video stream and print a motion vectors
- * representation to stdout.
  */
 
 extern "C" {

@@ -10,19 +10,20 @@ vidre_test(GROUP
                 Vidre::Core
 )
 
-find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE REQUIRED) #add here the list of ffmpeg components required
-
-vidre_test(decode_video 
-    BUILD
-        COMPILE_DEFINITIONS
-            PRIVATE
-                ${FFMPEG_DEFINITIONS}
-        INCLUDE_DIRECTORIES
-            PUBLIC 
-                ${FFMPEG_INCLUDE_DIRS}
-        LINK_LIBRARIES 
-            PUBLIC
-                ${FFMPEG_LIBRARIES}
-    
-    SOURCES decode_video.cc
-)
+find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
+if(FFmpeg_FOUND)
+    vidre_test(decode_video 
+        BUILD
+            COMPILE_DEFINITIONS
+                PRIVATE
+                    ${FFMPEG_DEFINITIONS}
+            INCLUDE_DIRECTORIES
+                PUBLIC 
+                    ${FFMPEG_INCLUDE_DIRS}
+            LINK_LIBRARIES 
+                PUBLIC
+                    ${FFMPEG_LIBRARIES}
+        
+        SOURCES decode_video.cc
+    )
+endif()
