@@ -102,6 +102,14 @@ FetchContent_Declare(nlohmann_json
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+# pylon
+find_package(pylon)
+if(NOT pylon_FOUND)
+    message(AUTHOR_WARNING "Basler pylon SDK not found.")
+else()
+    message(STATUS "Using Basler pylon SDK")
+endif()
+
 # BUILD #######################################################################
 
 add_subdirectory(cmake)

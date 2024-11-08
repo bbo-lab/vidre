@@ -27,22 +27,64 @@
 #include <vidre/core/config.hh>
 
 #include <system_error>
+
+#if defined(_MSC_VER)
+#include <libloaderapi.h>
+#define VIDRE_USING_LIBLOADERAPI
+#else
 #include <dlfcn.h>
+#define VIDRE_USING_DLFCN
+#endif
 
 namespace vidre {
 
     namespace plugin {
+
+        namespace detail {
+            /**@addtogroup api-core-details
+             * */
+            ///@{
+
+#if defined VIDRE_USING_DLFCN
+            /// Operating system abstraction for DLL module handle.
+            using handle_type = void *;
+
+            /// Operating system abstraction for DLL symbol handle.
+            using symbol_type = void *;
+
+            /// Operating system abstraction for DLL module modes.
+            enum mode {
+                lazy = RTLD_LAZY,
+                now = RTLD_NOW,
+            };
+
+            // FIXME inline handle_type libopen(const char *filename, int flags) noexcept {}
+            // FIXME inline void libclose(handle_type handle) noexcept {}
+            // FIXME inline symbol_type libget(handle_type handle, const char *symbol) noexcept {}
+            // FIXME inline const char *liberror(handle_type handle); ???
+#elif defined(VIDRE_USING_LIBLOADERAPI)
+            using handle_type = HMODULE;
+
+            enum mode {
+                lazy = DONT_RESOLVE_DLL_REFERENCES,
+                now = 0
+            };
+#endif
+
+            ///@}
+        }  // namespace detail
+
         /**@addtogroup api-core-plugin
          * */
         ///@{
 
         /** Dynamically linked object plugin loader.
          *
-         * TBD there will also be a plugin::python and maybe others,
+         * @TBD{there will also be a plugin::python and maybe others,
          *     so, this class should actually be derived from a virtual
          *     loader class (and register itself as a loader in some other
-         *     handler class, that find, list, searches, etc... all
-         *     available modules)
+         *     handler class, that finds, lists, searches, etc... all
+         *     available modules)}
          *
          * */
         class VIDRE_CORE_VISIBILITY dynamic {
@@ -92,11 +134,22 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY library {
             public:
+                using handle_type = detail::handle_type;
+
+                enum mode {
+                    lazy = detail::mode::lazy,  ///< Perform lazy binding.
+                                                ///< Resolve symbols only as the code that references them is executed.
+                    now =
+                        detail::mode::now  ///< All undefined symbols in the shared object are resolved before constructor returns.
+                };
+
+            public:
                 library() = default;
+                library(const char *path, int flags = mode::lazy);
                 ~library();
 
             protected:
-                void *handle_ = {};
+                handle_type handle_ = {};
                 std::error_code ecode_ = {};
 
             public:

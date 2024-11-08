@@ -30,8 +30,6 @@
  * @details
  * @fileinfo
  * 
- * TODO
- * 
  * */
 ///@{
 

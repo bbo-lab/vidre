@@ -21,3 +21,33 @@
  */
 #include "information.hh"
 #include "dynamic.hh"
+
+using namespace vidre;
+
+#if defined VIDRE_USING_DLFCN
+
+plugin::dynamic::library::library(const char *path, int flags) {
+    handle_ = dlopen(path, flags);
+    if (not handle_)
+        ecode_ = std::make_error_code(static_cast<std::errc>(errno));
+}
+
+plugin::dynamic::library::~library() {
+    if (handle_)
+        dlclose(handle_);
+}
+
+#else
+
+plugin::dynamic::library::library(const char *path, int flags) {
+    handle_ = dlopen(path, flags);
+    if (not handle_)
+        ecode_ = std::make_error_code(static_cast<std::errc>(errno));
+}
+
+plugin::dynamic::library::~library() {
+    if (handle_)
+        dlclose(handle_);
+}
+
+#endif
