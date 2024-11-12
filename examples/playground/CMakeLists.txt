@@ -10,7 +10,6 @@ vidre_test(GROUP
                 Vidre::Core
 )
 
-find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
 if(FFmpeg_FOUND)
     vidre_test(decode_video 
         BUILD

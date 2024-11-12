@@ -103,12 +103,18 @@ FetchContent_Declare(nlohmann_json
 FetchContent_MakeAvailable(nlohmann_json)
 
 # pylon
-find_package(pylon)
-if(NOT pylon_FOUND)
+find_package(PYLON)
+if(NOT PYLON_FOUND)
     message(AUTHOR_WARNING "Basler pylon SDK not found.")
 else()
     message(STATUS "Using Basler pylon SDK")
 endif()
+
+# DevWareX
+# FIXME
+
+# ffmpeg
+find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
 
 # BUILD #######################################################################
 
