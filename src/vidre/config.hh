@@ -36,6 +36,9 @@
 /** Minor version. */
 #define VIDRE_VERSION_MINOR …
 
+/** Version string. */
+#define VIDRE_VERSION_S "….…"
+
 /** Import library symbols. */
 #define VIDRE_API_IMPORT …
 

@@ -31,19 +31,22 @@
 ///@{
 
 /** Major version. */
-#define VIDRE_VERSION_MAJOR @vidre_VERSION_MAJOR@
+#define VIDRE_VERSION_MAJOR @Vidre_VERSION_MAJOR@
 
 /** Minor version. */
-#define VIDRE_VERSION_MINOR @vidre_VERSION_MINOR@
+#define VIDRE_VERSION_MINOR @Vidre_VERSION_MINOR@
+
+/** Version string. */
+#define VIDRE_VERSION_S "@Vidre_VERSION_MAJOR@.@Vidre_VERSION_MINOR@"
 
 /** Import library symbols. */
-#define VIDRE_API_IMPORT @vidre_API_IMPORT@
+#define VIDRE_API_IMPORT @Vidre_API_IMPORT@
 
 /** Export library symbols. */
-#define VIDRE_API_EXPORT @vidre_API_EXPORT@
+#define VIDRE_API_EXPORT @Vidre_API_EXPORT@
 
 /** Export library symbols. */
-#define VIDRE_API_MODULE @vidre_API_MODULE@
+#define VIDRE_API_MODULE @Vidre_API_MODULE@
 
 /** File extension for dynamically linked libraries.  */
 #define VIDRE_DLL_EXTENSION "@vidre_DLL_EXTENSION@"
