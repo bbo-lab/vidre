@@ -50,12 +50,12 @@ namespace vidre {
             // TODO AVRegionOfInterest
 
         protected:
-            AVFrame *mem_ = {};
+            AVFrame *m_ = {};
 
         public:
             frame() noexcept = default;
             ~frame() {
-                if (mem_)
+                if (m_)
                     free();
             }
 
@@ -66,9 +66,9 @@ namespace vidre {
                 if (not allocate())
                     throw ffmpeg::exception() << boost::errinfo_errno(ENOMEM);  // FIXME
 
-                mem_->format = static_cast<int>(pix_fmt);
-                mem_->width = width;
-                mem_->height = height;
+                m_->format = static_cast<int>(pix_fmt);
+                m_->width = width;
+                m_->height = height;
 
                 auto ret = get_buffer(align);
                 if (ret != errc{})
@@ -76,47 +76,53 @@ namespace vidre {
             }
 
         public:
+            /** Dereference the internal AVFrame.
+             * */
+            AVFrame *operator->() noexcept {
+                return m_;
+            }
+            const AVFrame *operator->() const noexcept {
+                return m_;
+            }
+            AVFrame *operator&() noexcept {
+                return m_;
+            }
+            const AVFrame *operator&() const noexcept {
+                return m_;
+            }
+
             /** Allocate frame.
              * @returns ''true'' on success, ''false'' on allocation failure.
              * */
             bool allocate() noexcept {
-                mem_ = av_frame_alloc();
-                return !!mem_;
+                m_ = av_frame_alloc();
+                return !!m_;
             }
 
             /** Free frame.
              * This method is automatically called from the destructor.
              * */
             void free() noexcept {
-                av_frame_free(&mem_);
-            }
-
-            /** Dereference the internal AVFrame.
-             * */
-            AVFrame *operator->() noexcept {
-                return mem_;
-            }
-            const AVFrame *operator->() const noexcept {
-                return mem_;
+                av_frame_free(&m_);
             }
 
             /** Allocate new buffer(s) for audio or video data.
              * */
             errc get_buffer(int align = 0) noexcept {
-                assert(mem_ && (mem_->buf == nullptr));
-                return static_cast<errc>(av_frame_get_buffer(mem_, align));
+                assert(m_ && (m_->buf == nullptr));
+                return static_cast<errc>(av_frame_get_buffer(m_, align));
             }
 
             /** Check if the frame data is writable.
              * */
             bool is_writable() const noexcept {
-                return av_frame_is_writable(mem_);
+                return av_frame_is_writable(m_);
             }
 
             /** Ensure that the frame data is writable, avoiding data copy if possible.
              * */
             errc make_writable() noexcept {
-                return static_cast<errc>(av_frame_make_writable(mem_));
+                return static_cast<errc>(av_frame_make_writable(m_));
             }
         };
 

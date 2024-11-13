@@ -40,10 +40,13 @@ int main(int argc, char **argv) {
     parser.process(app);
 
     // === run
-    ffmpeg::dict dict = {{"keya", "valuea"}, {"keyb", "valueb"}};
+    ffmpeg::dictionary dict = {{"keya", "valuea"}, {"keyb", "valueb"}};
     try {
         // FIXME
         throw ffmpeg::exception() << ffmpeg::errc_info(static_cast<ffmpeg::errc>(AVERROR_BUG));
+
+        ffmpeg::format::context ctxt;
+        ctxt.write_header({{"key", "value"}});
 
     } catch (vidre::exception const &e) {
         std::cerr << boost::diagnostic_information(e) << std::endl;

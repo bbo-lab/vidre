@@ -31,6 +31,8 @@
  *
  * @{
  * @defgroup api-support-ffmpeg-overview Overview
+ * @defgroup api-support-ffmpeg-format Format
+ * @defgroup api-support-ffmpeg-format Codec
  * @defgroup api-support-ffmpeg-util Utilities
  * @defgroup api-support-ffmpeg-details Implementations details
  * @}
@@ -38,6 +40,7 @@
 
 #include <vidre/ffmpeg/config.hh>
 #include <vidre/ffmpeg/util.hh>
+#include <vidre/ffmpeg/format.hh>
 
 namespace vidre {
 

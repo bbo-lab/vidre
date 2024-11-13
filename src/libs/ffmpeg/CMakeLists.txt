@@ -33,6 +33,10 @@ vidre_library(vidreffmpeg SHARED
             vidre/ffmpeg/util/dictionary.hh
             vidre/ffmpeg/util/pixelformat.hh
             vidre/ffmpeg/util/frame.hh
+        vidre/ffmpeg/format.hh
+            vidre/ffmpeg/format/muxing.hh
+        vidre/ffmpeg/codec.hh
+            vidre/ffmpeg/codec/packet.hh
 )
 
 message("FFMPEG_LIBRARIES=${FFMPEG_LIBRARIES}")

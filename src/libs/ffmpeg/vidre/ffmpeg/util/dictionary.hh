@@ -41,7 +41,7 @@ namespace vidre {
         /** Dictionary.
          * @see [AVDictionary etal.](https://ffmpeg.org/doxygen/trunk/group__lavu__dict.html)
          * */
-        class VIDRE_FFMPEG_VISIBILITY dict {
+        class VIDRE_FFMPEG_VISIBILITY dictionary {
         public:
             /** Dictionary and method flags.
              * */
@@ -64,7 +64,7 @@ namespace vidre {
             using entry = AVDictionaryEntry;
 
             ///@cond
-            /** Helper for construction with initializer_list. 
+            /** Helper for construction with initializer_list.
              * */
             struct const_entry {
                 const char *key;
@@ -73,13 +73,13 @@ namespace vidre {
             ///@endcond
 
         protected:
-            AVDictionary *mem_ = {};
+            AVDictionary *m_ = {};
 
         public:
-            dict() noexcept = default;
-            ~dict() {
-                if (mem_)
-                    av_dict_free(&mem_);
+            dictionary() noexcept = default;
+            ~dictionary() {
+                if (m_)
+                    av_dict_free(&m_);
             }
 
             /** Constrution with elements.
@@ -88,24 +88,33 @@ namespace vidre {
              * ffmpeg::dict dict = {{"keya", "valuea"}, {"keyb", "valueb"}};
              * @endcode
              */
-            dict(std::initializer_list<const_entry> list) {
+            dictionary(std::initializer_list<const_entry> list) {
                 for (auto &e : list)
                     set(e.key, e.value);
             }
 
         public:
+            /** Dereference AVDictionary.
+             * */
+            AVDictionary *&operator&() noexcept {
+                return m_;
+            }
+            AVDictionary *const &operator&() const noexcept {
+                return m_;
+            }
+
             /** Assign dictionary entry.
              * */
             void set(const char *key, const char *value, flags flags_ = flags::normal) {
-                auto ecode = av_dict_set(&mem_, key, value, static_cast<int>(flags_));
+                auto ecode = av_dict_set(&m_, key, value, static_cast<int>(flags_));
                 if (ecode < 0) {
-                    throw ffmpeg::exception() << boost::errinfo_errno(errno);
+                    throw ffmpeg::exception() << ffmpeg::errc_info(static_cast<ffmpeg::errc>(AVERROR(ENOMEM)));
                 }
             }
 
             // TODO
             // av_dict_get
-            // av_dict_count 
+            // av_dict_count
             // av_dict_iterate
             // av_dict_set_int
             // av_dict_copy
