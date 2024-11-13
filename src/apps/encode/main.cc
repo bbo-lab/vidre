@@ -1,4 +1,5 @@
 #include <vidre/config.hh>
+#include <vidre/exception.hh>
 #include <vidre/ffmpeg.hh>
 
 #include "input/midraw.hh"
@@ -51,20 +52,40 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    auto infile = args[0].toStdString();
+    std::filesystem::path infile = args[0].toStdString();
 
     input::midraw in(infile);
-    in.setformat(parser.value("width").toUInt(), parser.value("height").toUInt(), parser.value("bpp").toUInt(),
-                 parser.value("mono").toInt());
-                 
+    in.setformat(parser.value("width").toUInt(), parser.value("height").toUInt(),  //
+                 parser.value("bpp").toUInt(), parser.value("mono").toInt());
+
     if (not in.check(parser.isSet("check"))) {
         qCritical("Input file check failed.\nExiting...");
         return 1;
     }
 
-    if (parser.isSet("check")) 
+    if (parser.isSet("check"))
         return 0;
 
+    auto outfile = infile;
+    if (args.size() > 1)
+        outfile = args[1].toStdString();
+    else {
+        outfile.replace_extension(".mp4");
+        qInfo("saving to %s", outfile.c_str());
+    }
+
+    try {
+        if (not in.open())
+            throw vidre::exception() << throw_message("opening input file failed");
+
+        while(not in.eof()) {
+            auto &src = in.get_frame();
+        }
+
+    } catch (vidre::exception const &e) {
+        std::cerr << boost::diagnostic_information(e) << std::endl;
+        return 1;
+    }
 
     // size_t fps = parser.value("fps").toULongLong();
 

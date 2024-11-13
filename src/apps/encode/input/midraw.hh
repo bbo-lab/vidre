@@ -24,20 +24,20 @@
 #pragma once
 
 #include <vidre/config.hh>
+#include <vidre/ffmpeg/util/frame.hh>
+
 #include <QFile>
 
 namespace vidre {
 
     namespace input {
 
-        class context {};  // should be somewhere else, probably in core ...
-
         /** Micron Imaging Device raw video reader.
          *
          * FIXME this is a very crude and quick implementation to read the MID/Aptina/OnSemi DevWareX raw videos!
          *
          */
-        class midraw : context {
+        class midraw {
         public:
             midraw() noexcept = default;
             midraw(const std::filesystem::path &filename) noexcept : file_(filename) {}
@@ -49,17 +49,16 @@ namespace vidre {
             unsigned width_ = 752;
             unsigned height_ = 480;
             unsigned bpp_ = 10;
+            bool packed_ = true;
             bool mono_ = true;
 
-            size_t frame_ = 0;
-            uint8_t *data_ = {};
+            size_t framesize_ = 0;
 
-            size_t framesize_ = {};
+            void (*decode_)(QFile &, AVFrame *, unsigned) = {};
+            ffmpeg::frame frame_ = {};
 
         public:
-            bool open() {
-                return file_.open(QIODevice::ReadOnly);
-            }
+            bool open();
 
             void close() {
                 file_.close();
@@ -77,6 +76,16 @@ namespace vidre {
             }
 
             bool check(bool full = false);
+
+            bool eof() const noexcept {
+                return file_.atEnd();
+            }
+
+            ffmpeg::frame &get_frame() {
+                frame_.make_writable();
+                decode_(file_, &frame_, framesize_);
+                return frame_;
+            }
         };
 
     }  // namespace input

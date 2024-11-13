@@ -62,9 +62,9 @@ namespace vidre {
             /** Construct video output frame (with buffers).
              * @see [ffmpeg exmample mux.c](https://git.ffmpeg.org/gitweb/ffmpeg.git/blob/HEAD:/doc/examples/mux.c)
              * */
-            frame(PixelFormat pix_fmt, int width, int height, int align = 0) {
+            frame(pixel_format pix_fmt, int width, int height, int align = 0) {
                 if (not allocate())
-                    throw ffmpeg::exception() << boost::errinfo_errno(ENOMEM);  // FIXME
+                    throw ffmpeg::exception() << errc_info(static_cast<errc>(AVERROR(ENOMEM)));
 
                 m_->format = static_cast<int>(pix_fmt);
                 m_->width = width;
@@ -99,6 +99,19 @@ namespace vidre {
                 return !!m_;
             }
 
+            /** Allocate frame and internal buffers.
+             * */
+            errc allocate(pixel_format pix_fmt, int width, int height, int align = 0) {
+                if (not allocate())
+                    return static_cast<errc>(AVERROR(ENOMEM));
+
+                m_->format = static_cast<int>(pix_fmt);
+                m_->width = width;
+                m_->height = height;
+
+                return get_buffer(align);
+            }
+
             /** Free frame.
              * This method is automatically called from the destructor.
              * */
@@ -109,7 +122,7 @@ namespace vidre {
             /** Allocate new buffer(s) for audio or video data.
              * */
             errc get_buffer(int align = 0) noexcept {
-                assert(m_ && (m_->buf == nullptr));
+                assert(m_ && (m_->buf[0] == nullptr));
                 return static_cast<errc>(av_frame_get_buffer(m_, align));
             }
 

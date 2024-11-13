@@ -41,7 +41,7 @@ namespace vidre {
         /** Pixel format.
          * @see [AVPixelFormat](https://ffmpeg.org/doxygen/trunk/pixfmt_8h.html)
          * */
-        enum class PixelFormat {
+        enum class pixel_format {
             none = -1,
             yuv420p = AV_PIX_FMT_YUV420P,
             yuyv422 = AV_PIX_FMT_YUYV422,

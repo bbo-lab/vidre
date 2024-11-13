@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "vidre-encode",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/vidre-encode",
+            "args": [
+                "${workspaceFolder}/tests/data/eyecam0001.raw"
+            ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "test.core.exceptions",
             "type": "cppdbg",
             "request": "launch",
