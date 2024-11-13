@@ -5,15 +5,18 @@
 
 */
 
-/**@defgroup api-config Configuration.
+/**@defgroup api-config Configuration
  * @ingroup api
  */
-/**@defgroup api-core Core library.
+/**@defgroup api-core Core library
  * @ingroup api
  */
-/**@defgroup api-device Device library.
+/**@defgroup api-device Device library
  * @ingroup api
  */
-/**@defgroup api-network Network library.
+/**@defgroup api-network Network library
+ * @ingroup api
+ */
+/**@defgroup api-support Other support libraries
  * @ingroup api
  */

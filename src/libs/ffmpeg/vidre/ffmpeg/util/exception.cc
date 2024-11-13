@@ -1,0 +1,39 @@
+/* VidRe
+ * Copyright (C) 2024 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include "exception.hh"
+
+using namespace vidre;
+
+const char *ffmpeg::exception::what() const noexcept {
+    return "ffmpeg";
+}
+
+const char *ffmpeg::error_category::name() const noexcept {
+    return "ffmpeg";
+}
+
+std::string ffmpeg::error_category::message(int errnum) const {
+    char errbuf[AV_ERROR_MAX_STRING_SIZE];
+    av_strerror(errnum, errbuf, AV_ERROR_MAX_STRING_SIZE);
+    return errbuf;
+}
+
+static const ffmpeg::error_category ffmpeg_error_category{};
+
+std::error_code ffmpeg::make_error_code(ffmpeg::errc e) {
+    return {static_cast<int>(e), ffmpeg_error_category};
+}

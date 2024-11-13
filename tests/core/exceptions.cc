@@ -4,7 +4,7 @@
 
 TEST_CASE("Exceptions", "[exception]") {
     try {
-        throw vidre::exception();
+        throw vidre::exception() << vidre::throw_message("additional information...");
     }
     catch(const vidre::exception &e) {
         REQUIRE(*boost::get_error_info<boost::throw_line>(e) == 7);

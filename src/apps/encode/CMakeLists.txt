@@ -7,6 +7,7 @@ vidre_executable(vidre-encode
         LINK_LIBRARIES
             PUBLIC 
                 Vidre::Core
+                Vidre::FFmpeg
                 Qt6::Core
         INCLUDE_DIRECTORIES
             PUBLIC

@@ -29,7 +29,7 @@
 #include <nlohmann/json.hpp>
 
 namespace vidre {
-    /**@defgroup api-core-util-json JSON.
+    /**@defgroup api-core-util-json JSON
      * @ingroup api-core-util
      * @details
      * @fileinfo

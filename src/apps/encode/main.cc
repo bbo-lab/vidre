@@ -1,7 +1,12 @@
 #include <vidre/config.hh>
+#include <vidre/ffmpeg.hh>
+
+using namespace vidre;
 
 #include <QCoreApplication>
 #include <QCommandLineParser>
+
+#include <iostream>
 
 #define tr(...) QCoreApplication::translate(__VA_ARGS__)
 
@@ -30,11 +35,20 @@ int main(int argc, char **argv) {
         {"codec", tr("main", "Output codec (default: h264)."), "codec", "h264"},
         {"quality", tr("main", "Output quality (default: 90)."), "quality", "90"},
     });
-    
+
     // Process the actual command line arguments given by the user
     parser.process(app);
 
     // === run
-    // FIXME
+    ffmpeg::dict dict = {{"keya", "valuea"}, {"keyb", "valueb"}};
+    try {
+        // FIXME
+        throw ffmpeg::exception() << ffmpeg::errc_info(static_cast<ffmpeg::errc>(AVERROR_BUG));
+
+    } catch (vidre::exception const &e) {
+        std::cerr << boost::diagnostic_information(e) << std::endl;
+        return -1;
+    }
+
     return 0;
 }

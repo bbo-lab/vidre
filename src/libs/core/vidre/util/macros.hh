@@ -24,7 +24,7 @@
 #define VIDRE_CORE_UTIL_MODULE_HH
 #pragma once
 
-/**@defgroup api-core-util-macro Macro utilities.
+/**@defgroup api-core-util-macro Macro utilities
  * @ingroup api-core-util
  * @details
  * @fileinfo

@@ -44,15 +44,25 @@
 
 #include <boost/exception/all.hpp>
 
+#include <string>
 #include <source_location>
 
 namespace vidre {
+
     /**@addtogroup api-core-exception
      * */
     ///@{
 
+    /** Exception info factory.
+     * FIXME 
+     * */
     template <class Tag, class T>
     using error_info = boost::error_info<Tag, T>;
+
+    /** C-string error message.
+     * */
+    using throw_message = error_info<struct throw_message_, const char *>;
+
     /// ...
 
     /** Default VidRe exception.
