@@ -14,6 +14,7 @@ vidre_executable(vidre-encode
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     SOURCES
         main.cc
+        input/midraw.hh input/midraw.cc
 )
 
 # message("QT_INCLUDES=${QT_INCLUDES}")

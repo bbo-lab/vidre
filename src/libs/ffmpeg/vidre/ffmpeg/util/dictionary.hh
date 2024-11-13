@@ -93,6 +93,8 @@ namespace vidre {
                     set(e.key, e.value);
             }
 
+            // FIXME need a vidre::options type and a constructor for it.
+
         public:
             /** Dereference AVDictionary.
              * */
