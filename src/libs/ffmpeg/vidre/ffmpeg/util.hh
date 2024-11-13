@@ -37,5 +37,6 @@
 #include <vidre/ffmpeg/config.hh>
 #include <vidre/ffmpeg/util/exception.hh>
 #include <vidre/ffmpeg/util/dictionary.hh>
+#include <vidre/ffmpeg/util/frame.hh>
 
 #endif  // VIDRE_FFMPEG_HH

@@ -31,6 +31,8 @@ vidre_library(vidreffmpeg SHARED
         vidre/ffmpeg/util.hh
             vidre/ffmpeg/util/exception.hh vidre/ffmpeg/util/exception.cc
             vidre/ffmpeg/util/dictionary.hh
+            vidre/ffmpeg/util/pixelformat.hh
+            vidre/ffmpeg/util/frame.hh
 )
 
 message("FFMPEG_LIBRARIES=${FFMPEG_LIBRARIES}")

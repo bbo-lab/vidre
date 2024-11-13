@@ -39,6 +39,7 @@ namespace vidre {
         ///@{
 
         /** Dictionary.
+         * @see [AVDictionary etal.](https://ffmpeg.org/doxygen/trunk/group__lavu__dict.html)
          * */
         class VIDRE_FFMPEG_VISIBILITY dict {
         public:
@@ -62,11 +63,14 @@ namespace vidre {
              * */
             using entry = AVDictionaryEntry;
 
-            /**@internal Helper for construction with initializer_list. */
+            ///@cond
+            /** Helper for construction with initializer_list. 
+             * */
             struct const_entry {
                 const char *key;
                 const char *value;
             };
+            ///@endcond
 
         protected:
             AVDictionary *mem_ = {};
@@ -114,4 +118,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_FFMPEG_HH
+#endif  // VIDRE_FFMPEG_UTIL_DICTIONARY_HH
