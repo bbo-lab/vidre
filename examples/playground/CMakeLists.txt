@@ -11,7 +11,7 @@ vidre_test(GROUP
 )
 
 if(FFmpeg_FOUND)
-    vidre_test(decode_video 
+    vidre_test(decode_video EXCLUDE
         BUILD
             COMPILE_DEFINITIONS
                 PRIVATE
