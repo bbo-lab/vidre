@@ -60,7 +60,8 @@ include(VidreMacros)
 include(CheckCXXCompilerFlag)
 
 # sanitize undefined behavior (UB)
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
+#if(CMAKE_BUILD_TYPE STREQUAL Debug)
+if (NOT)
     # compile and link with sanitizer
     check_cxx_compiler_flag(-fsanitize=undefined sanitize_undefind_behavior)
     if(sanitize_undefind_behavior)
