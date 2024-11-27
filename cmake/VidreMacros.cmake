@@ -155,7 +155,7 @@ endfunction()
 
 # Unit testing and examples.
 function(vidre_test TARGET)
-    cmake_parse_arguments(vidre "" "NAME" "SOURCES;BUILD;ARGUMENTS" ${ARGN})
+    cmake_parse_arguments(vidre "EXCLUDE" "NAME" "SOURCES;BUILD;ARGUMENTS" ${ARGN})
     if("${TARGET}" STREQUAL "DEFAULTS")
         add_definitions(
             "-DVidre_BINARY_DIR=\"${Vidre_BINARY_DIR}\""
@@ -191,10 +191,12 @@ function(vidre_test TARGET)
             separate_arguments(memcheck_command)
         endif()
 
-        message(VERBOSE "testing ${__uoe_unit_test_name}")
-        add_test(NAME ${EXECUTABLE}
-                COMMAND ${memcheck_command} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${vidre_ARGUMENTS}
-                WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+        if (NOT vidre_EXCLUDE)
+            message(VERBOSE "testing ${EXECUTABLE}")
+            add_test(NAME ${EXECUTABLE}
+                    COMMAND ${memcheck_command} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${vidre_ARGUMENTS}
+                    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+        endif()
     endif()
 
     return(PROPAGATE Vidre_TEST_PREFIX)
