@@ -18,5 +18,5 @@ public:
     void deallocate();
 
     unsigned int getNumFrameBuffers();
-    void *requestImageMemory(unsigned int frame_buffer_index);
+    void *requestImageMemory(uint64_t frame_buffer_index);
 };

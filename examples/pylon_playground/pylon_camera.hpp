@@ -39,6 +39,7 @@ public:
 
     // void setSharedImageMemoryController(SharedImageMemoryController shrImageMemoryController);
 
+    GenApi::INodeMap &getNodeMap();
     unsigned int getImageWidth();
     unsigned int getImageHeight();
 };
