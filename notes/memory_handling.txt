@@ -1,0 +1,8 @@
+- FrameProvider: Facilitating communication between the type of camera
+and how the memory is laid out
+- Camera: We need different subclasses of camera so vendor specific interfaces can be determined (might
+become obsolete due to GenICam) (need to compare Pylon and Aptina)
+- MemShare: We need different subclasses of memory share, especially if we would like to be platform
+agnostic. Shared memory is handled differently on Windows than e.g. on Linux. Eventually there might
+be subclasses that allow easy access of that memory via internet to e.g. enable low-priority real-time 
+monitoring and/or back-up.
