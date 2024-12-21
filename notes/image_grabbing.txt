@@ -1,2 +1,0 @@
-- CInstantCamera from Pylon has a way to set a custom BufferFactory. It seems that this way custom 
-memory allocation should be possible

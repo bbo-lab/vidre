@@ -1,12 +1,8 @@
 #include <iostream>
 
-#include <boost/circular_buffer.hpp>
-
 #include "pylon_camera.hpp"
 
 int main() {
-    boost::circular_buffer<int> cb();
-
     PylonCamera camera;
     camera.init();
     std::cout << "Resolution: (" << camera.getImageWidth() << ", " << camera.getImageHeight() << ")" << std::endl;

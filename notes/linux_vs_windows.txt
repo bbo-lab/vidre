@@ -1,8 +1,0 @@
-- In Top-Level CMakeLists.txt
-- libuuid is not directly available on Windows
-    * Using MySys2 there is a way to include it properly. Otherwise just manually
-    adding it might be possible.
-- Undefined Behaviour Sanitizer is not available on Windows
-    * There seems to be online discussion around making it available like ASAN.
-
-=> Vidre::Core is not configured properly. Dependants cannot be configured aswell.

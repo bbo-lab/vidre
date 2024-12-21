@@ -13,9 +13,9 @@ public:
     SharedImageMemoryController();
     ~SharedImageMemoryController();
 
-    void init();
-    void preallocate();
-    void deallocate();
+    void Init();
+    void Preallocate();
+    void Deallocate();
 
     unsigned int getNumFrameBuffers();
     void *requestImageMemory(uint64_t frame_buffer_index);

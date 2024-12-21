@@ -5,23 +5,22 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-if(NOT DEFINED CMAKE_BUILD_TYPE_INIT)
-    set(CMAKE_BUILD_TYPE_INIT RelWithDebInfo)
-endif()
+# if(NOT DEFINED CMAKE_BUILD_TYPE_INIT)
+# set(CMAKE_BUILD_TYPE_INIT RelWithDebInfo)
+# endif()
 
-set(Vidre_ORGANIZATION_NAME "MPINB")
-set(Vidre_ORGANIZATION_DOMAIN "org.mpg.mpinb")
+# set(Vidre_ORGANIZATION_NAME "MPINB")
+# set(Vidre_ORGANIZATION_DOMAIN "org.mpg.mpinb")
 
-if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-    if(WIN32)
-    set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
-    else()
-        set(CMAKE_INSTALL_PREFIX "/opt/${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
-    endif()
-endif()
+# if(NOT DEFINED CMAKE_INSTALL_PREFIX)
+# if(WIN32)
+# set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
+# else()
+# set(CMAKE_INSTALL_PREFIX "/opt/${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
+# endif()
+# endif()
 
-set(CMAKE_USER_MAKE_RULES_OVERRIDE "VidreInitFlags.cmake")
-
+# set(CMAKE_USER_MAKE_RULES_OVERRIDE "VidreInitFlags.cmake")
 if(NOT DEFINED PROJECT_NAME)
     set(Vidre_IS_SUBPROJECT OFF)
 else()
@@ -35,13 +34,12 @@ project(Vidre
     HOMEPAGE_URL https://github.com/bbo-lab/vidre
 )
 
-set(Vidre_RELEASE ${Vidre_VERSION_MAJOR}.${Vidre_VERSION_MINOR})
+# set(Vidre_RELEASE ${Vidre_VERSION_MAJOR}.${Vidre_VERSION_MINOR})
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-include(CheckIncludeFile)
-include(CheckIncludeFileCXX)
-
+# include(CheckIncludeFile)
+# include(CheckIncludeFileCXX)
 if(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
     set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 endif(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
@@ -50,132 +48,134 @@ if(NOT DEFINED LIBRARY_OUTPUT_PATH)
     set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
 
-include(GNUInstallDirs)
-set(CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/vidre)
-set(CMAKE_INSTALL_CMAKEDIR share/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
+# include(GNUInstallDirs)
+# set(CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/vidre)
+# set(CMAKE_INSTALL_CMAKEDIR share/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
 
-include(VidreMacros)
+# include(VidreMacros)
 
 # COMPILER ####################################################################
-include(CheckCXXCompilerFlag)
+# include(CheckCXXCompilerFlag)
 
 # sanitize undefined behavior (UB)
-#if(CMAKE_BUILD_TYPE STREQUAL Debug)
-if (NOT)
-    # compile and link with sanitizer
-    check_cxx_compiler_flag(-fsanitize=undefined sanitize_undefind_behavior)
-    if(sanitize_undefind_behavior)
-        add_compile_options(-fsanitize=undefined -DSANITIZE_UB)
-        add_link_options(-fsanitize=undefined)
-    endif()
+# if(CMAKE_BUILD_TYPE STREQUAL Debug)
+# # compile and link with sanitizer
+# check_cxx_compiler_flag(-fsanitize=undefined sanitize_undefind_behavior)
+# if(sanitize_undefind_behavior)
+# add_compile_options(-fsanitize=undefined -DSANITIZE_UB)
+# add_link_options(-fsanitize=undefined)
+# endif()
 
-    check_cxx_compiler_flag(-fsanitize-link-c++-runtime sanitize_link_runtime)
-    if(sanitize_link_runtime)
-        add_link_options(-fsanitize-link-c++-runtime)
-    endif()
+# check_cxx_compiler_flag(-fsanitize-link-c++-runtime sanitize_link_runtime)
+# if(sanitize_link_runtime)
+# add_link_options(-fsanitize-link-c++-runtime)
+# endif()
 
-    # trap on UB
-    check_cxx_compiler_flag(-fno-sanitize-recover=undefined no_sanitize_recover)
-    if(no_sanitize_recover)
-        add_compile_options(-fno-sanitize-recover=undefined)
-    endif()
-endif()
+# # trap on UB
+# check_cxx_compiler_flag(-fno-sanitize-recover=undefined no_sanitize_recover)
+# if(no_sanitize_recover)
+# add_compile_options(-fno-sanitize-recover=undefined)
+# endif()
+# endif()
 
 # DEPENDENCIES ################################################################
-include(FetchContent)
+# include(FetchContent)
 
 # Qt
-find_package(Qt6 6.0 REQUIRED
-    COMPONENTS Core Gui Network Widgets)
+# find_package(Qt6 6.0 REQUIRED
+# COMPONENTS Core Gui Network Widgets)
 
-set(CMAKE_AUTOMOC OFF)
-set(CMAKE_AUTORCC OFF)
-set(CMAKE_AUTOUIC OFF)
+# set(CMAKE_AUTOMOC OFF)
+# set(CMAKE_AUTORCC OFF)
+# set(CMAKE_AUTOUIC OFF)
 
 # Boost
-find_package(Boost CONFIG REQUIRED COMPONENTS exception) 
+# find_package(Boost CONFIG REQUIRED COMPONENTS exception)
 
 # UUID
-check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
-if(NOT HAVE_LIBUUID)
-    message(FATAL "Could not find <uuid/uuid.h>")
-endif()
-set(UUIDLIB uuid)
+# check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
+# if(NOT HAVE_LIBUUID)
+# message(FATAL "Could not find <uuid/uuid.h>")
+# endif()
+# set(UUIDLIB uuid)
 
-# JSON
-FetchContent_Declare(nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG        v3.11.3
-    GIT_PROGRESS   ON
-    FIND_PACKAGE_ARGS
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# # JSON
+# FetchContent_Declare(nlohmann_json
+# GIT_REPOSITORY https://github.com/nlohmann/json.git
+# GIT_TAG        v3.11.3
+# GIT_PROGRESS   ON
+# FIND_PACKAGE_ARGS
+# )
+# FetchContent_MakeAvailable(nlohmann_json)
 
 # pylon
-find_package(PYLON QUIET)
-if(PYLON_FOUND)
+find_package(Pylon 8.0.0 REQUIRED)
+
+if(pylon_FOUND)
+    set(PYLON_ENABLED ${pylon_FOUND})
     message(STATUS "Using pylon SDK (Basler AG)")
 endif()
 
 # DevWareX
-find_library(MIDLIB2_LIB
-    NAMES midlib2
-    HINTS
-        "/opt/Aptina_Imaging/lib"
-        "C:/Aptina_Imaging/lib"
-)
-if(MIDLIB2_LIB)
-    find_path(MIDLIB2_INC 
-        NAMES midlib2.h
-        HINTS
-            "/opt/Aptina_Imaging/include"
-            "C:/Aptina_Imaging/include"
-    )
+# find_library(MIDLIB2_LIB
+# NAMES midlib2
+# HINTS
+# "/opt/Aptina_Imaging/lib"
+# "C:/Aptina_Imaging/lib"
+# )
+# if(MIDLIB2_LIB)
+# find_path(MIDLIB2_INC
+# NAMES midlib2.h
+# HINTS
+# "/opt/Aptina_Imaging/include"
+# "C:/Aptina_Imaging/include"
+# )
 
-    if (MIDLIB2_INC)
-        add_library(midlib2 UNKNOWN IMPORTED GLOBAL)
-        add_library(devwarex::midlib2 ALIAS midlib2)
-        target_include_directories(midlib2
-            INTERFACE ${MIDLIB2_INC})
+# if (MIDLIB2_INC)
+# add_library(midlib2 UNKNOWN IMPORTED GLOBAL)
+# add_library(devwarex::midlib2 ALIAS midlib2)
+# target_include_directories(midlib2
+# INTERFACE ${MIDLIB2_INC})
 
-        message(STATUS "Using midlib2 (Micron Imaging Device LIBrary, DevWareX SDK, OnSemi).")
-        endif()
-endif()
+# message(STATUS "Using midlib2 (Micron Imaging Device LIBrary, DevWareX SDK, OnSemi).")
+# endif()
+# endif()
 
 # ffmpeg
-find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
+# find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
 
 # BUILD #######################################################################
 
-add_subdirectory(cmake)
-add_subdirectory(src)
+# add_subdirectory(cmake)
+add_subdirectory(src) # TODO for future: don't add if used as API
 
-install(EXPORT VidreTargets-${Vidre_RELEASE}
-    COMPONENT "development"
-    DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-)
+# install(EXPORT VidreTargets-${Vidre_RELEASE}
+# COMPONENT "development"
+# DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+# )
 
-add_subdirectory(docs)
+# add_subdirectory(docs)
 
 # TEST ########################################################################
 
-if(NOT Vidre_IS_SUBPROJECT)
-    enable_testing()
-    find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
+# if(NOT Vidre_IS_SUBPROJECT)
+# enable_testing()
+# find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
 
-    # TODO 
-    # - setup dart
+# # TODO
+# # - setup dart
 
-    # Catch2
-    # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
-    FetchContent_Declare(Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.7.1
-        GIT_PROGRESS   ON
-        FIND_PACKAGE_ARGS 3.7
-    )
-    FetchContent_MakeAvailable(Catch2)
+# # Catch2
+# # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
+# FetchContent_Declare(Catch2
+# GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+# GIT_TAG        v3.7.1
+# GIT_PROGRESS   ON
+# FIND_PACKAGE_ARGS 3.7
+# )
+# FetchContent_MakeAvailable(Catch2)
 
-    add_subdirectory(examples)
-    add_subdirectory(tests)
-endif()
+# add_subdirectory(examples)
+# add_subdirectory(tests)
+# endif()
+add_subdirectory(examples)
