@@ -7,12 +7,12 @@ install(TARGETS pylon_playground RUNTIME DESTINATION bin)
 # set_property(TARGET grab_and_save PROPERTY FOLDER "tools")
 
 # cmake_minimum_required(VERSION 3.25)
-#
+
 # project(PylonTest)
-#
+
 # find_package(Pylon 8.0.0 REQUIRED)
 # find_package(Boost 1.86 REQUIRED COMPONENTS ALL)
-#
+
 # add_executable(PylonTest
 # main.cpp
 # include/ConfigurationEventPrinter.h
@@ -21,7 +21,7 @@ install(TARGETS pylon_playground RUNTIME DESTINATION bin)
 # pylon_camera.cpp
 # pylon_shr_mem_buffer_factory.hpp
 # shared_image_header.hpp
-#
+
 # # shared_image_memory_controller.hpp
 # )
 # target_link_libraries(PylonTest PRIVATE pylon::pylon Boost::headers)

@@ -6,20 +6,23 @@ set(public_headers
     ../include/vidre/storage.h
     ../include/vidre/runtime.h
     ../include/vidre/pylon_camera.hpp
+    ../include/vidre/shared_image_memory_controller.hpp
 )
 
 source_group(public FILES ${public_headers})
 
-add_library(vidre SHARED ${public_headers})
+add_library(vidre STATIC ${public_headers})
 
 target_include_directories(vidre PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(vidre PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(vidre PUBLIC ${CMAKE_BINARY_DIR})
 
 if(PYLON_ENABLED)
-    message(STATUS "Using pylon SDK (Basler AG) 2222")
-    target_link_libraries(vidre PRIVATE pylon::pylon)
+    message(STATUS "Using pylon SDK (Basler AG)")
+    target_link_libraries(vidre PUBLIC pylon::pylon)
 endif()
+
+target_link_libraries(vidre PUBLIC Boost::headers)
 
 add_subdirectory(ring_buffer)
 add_subdirectory(runtime)

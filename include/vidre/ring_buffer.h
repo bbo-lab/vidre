@@ -1,7 +1,7 @@
+#pragma once
 #include "config.h"
 
-namespace vidre
-{
+namespace vidre {
     // class Config;
 
     // class RingBuffer
@@ -14,4 +14,4 @@ namespace vidre
     // private:
 
     // }
-}
+}  // namespace vidre

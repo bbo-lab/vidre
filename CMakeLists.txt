@@ -90,6 +90,8 @@ endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
 # set(CMAKE_AUTOUIC OFF)
 
 # Boost
+find_package(Boost CONFIG REQUIRED COMPONENTS ALL)
+
 # find_package(Boost CONFIG REQUIRED COMPONENTS exception)
 
 # UUID
@@ -109,7 +111,9 @@ endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
 # FetchContent_MakeAvailable(nlohmann_json)
 
 # pylon
-find_package(Pylon 8.0.0 REQUIRED)
+list(APPEND CMAKE_PREFIX_PATH $ENV{PYLON_ROOT})
+list(APPEND CMAKE_PREFIX_PATH $ENV{PYLON_DEV_DIR})
+find_package(pylon 8.0.0 REQUIRED)
 
 if(pylon_FOUND)
     set(PYLON_ENABLED ${pylon_FOUND})

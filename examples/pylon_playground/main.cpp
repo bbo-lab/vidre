@@ -1,23 +1,21 @@
 #include <iostream>
 
-#include "pylon_camera.hpp"
+#include "vidre/pylon_camera.hpp"
 
 int main() {
-    PylonCamera camera;
-    camera.init();
-    std::cout << "Resolution: (" << camera.getImageWidth() << ", " << camera.getImageHeight() << ")" << std::endl;
+    vidre::PylonCamera camera;
+    camera.Init();
+    std::cout << "Resolution: (" << camera.GetImageWidth() << ", " << camera.GetImageHeight() << ")" << std::endl;
 
     // Configure static camera parameters that are not changed during grabbing (e.g. resolution).
     // e.g. camera.setRaw(filepath_to_configuration);
 
-    camera.arm();
-    camera.start();
+    camera.Start();
     Pylon::WaitObject::Sleep(1000);
-    camera.stop();
+    camera.Stop();
     Pylon::WaitObject::Sleep(1000);
-    camera.start();
+    camera.Start();
     Pylon::WaitObject::Sleep(1000);
-    camera.stop();
-    camera.disarm();
+    camera.Stop();
     return 0;
 }

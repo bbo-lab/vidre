@@ -12,12 +12,24 @@
 #include <pylon/PylonGUI.h>
 #endif
 
-// Include files used by samples.
-// #include "include/ConfigurationEventPrinter.h"
-// #include "include/ImageEventPrinter.h"
-
 namespace vidre {
     class PylonCamera {
+    public:
+        PylonCamera();
+        ~PylonCamera();
+
+        void Init();
+        void Arm();
+        void Disarm();
+        void Start();
+        void Stop();
+
+        // void setSharedImageMemoryController(SharedImageMemoryController shrImageMemoryController);
+
+        GenApi::INodeMap &GetNodeMap();
+        unsigned int GetImageWidth();
+        unsigned int GetImageHeight();
+        
     private:
         // -------- Pylon specific --------
         Pylon::CInstantCamera camera;
@@ -26,21 +38,5 @@ namespace vidre {
 
         // SharedImageMemoryController shrImageMemoryController;
 
-        void *getSharedMemorySegment();
-
-    public:
-        PylonCamera();
-        ~PylonCamera();
-
-        void Init();
-        void Start();
-        void Stop();
-
-        // void setSharedImageMemoryController(SharedImageMemoryController shrImageMemoryController);
-
-        GenApi::INodeMap &getNodeMap();
-        unsigned int getImageWidth();
-        unsigned int getImageHeight();
     };
-
 }  // namespace vidre
