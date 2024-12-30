@@ -1,30 +1,27 @@
 #pragma once
-#include <string>
-#include <memory>
+#include "camera.hpp"
 
-#include <pylon/PylonIncludes.h>
-
-#include "pylon_shr_mem_buffer_factory.hpp"
-#include "shared_image_header.hpp"
-#include "shared_image_memory_controller.hpp"
-
-#ifdef PYLON_WIN_BUILD
+//#ifdef PYLON_WIN_BUILD
 #include <pylon/PylonGUI.h>
-#endif
+//#endif
+#include <pylon/PylonIncludes.h>
+#include "pylon_shr_mem_buffer_factory.hpp"
 
 namespace vidre {
-    class PylonCamera {
+    // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
+
+    class PylonCamera : public ICamera {
     public:
         PylonCamera();
         ~PylonCamera();
 
-        void Init();
-        void Arm();
-        void Disarm();
-        void Start();
-        void Stop();
+        virtual void Init();
+        virtual void Arm();
+        virtual void Disarm();
+        virtual void Start();
+        virtual void Stop();
 
-        // void setSharedImageMemoryController(SharedImageMemoryController shrImageMemoryController);
+        virtual SharedFrameHeader* RetrieveLatestFrame();
 
         GenApi::INodeMap &GetNodeMap();
         unsigned int GetImageWidth();
@@ -34,9 +31,7 @@ namespace vidre {
         // -------- Pylon specific --------
         Pylon::CInstantCamera camera;
         ShrBufferFactory shrBufferFactory;
+        std::atomic<SharedFrameHeader*> latestFrame;
         // --------------------------------
-
-        // SharedImageMemoryController shrImageMemoryController;
-
     };
 }  // namespace vidre

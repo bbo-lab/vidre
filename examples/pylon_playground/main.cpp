@@ -5,8 +5,6 @@
 int main() {
     vidre::PylonCamera camera;
     camera.Init();
-    std::cout << "Resolution: (" << camera.GetImageWidth() << ", " << camera.GetImageHeight() << ")" << std::endl;
-
     // Configure static camera parameters that are not changed during grabbing (e.g. resolution).
     // e.g. camera.setRaw(filepath_to_configuration);
 

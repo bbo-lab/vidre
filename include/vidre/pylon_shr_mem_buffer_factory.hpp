@@ -2,13 +2,9 @@
 #include <pylon/PylonIncludes.h>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
-#include "shared_image_header.hpp"
+#include "shared_frame_header.hpp"
 
-using namespace Pylon;
-using namespace std;
-using namespace boost::interprocess;
-
-class ShrBufferFactory : public IBufferFactory
+class ShrBufferFactory : public Pylon::IBufferFactory
 {
 public:
     ShrBufferFactory()
@@ -20,22 +16,16 @@ public:
     {
     }
 
-    void PreallocateBuffers(size_t headerSize, size_t dataSize, size_t N)
-    {
-        // Eventually will be delegated to an own management object.
-        shared_memory_object::remove("Pylon");
-        shared_memory = managed_shared_memory(open_or_create, "Pylon", N * (headerSize + dataSize));
-    }
     virtual void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext)
     {
         try
         {
             // Allocation should be delegated to a seperate object so that the data can be accessed by other resources.
-            *pCreatedBuffer = (void *)((SharedImageHeader *)(shared_memory.allocate(bufferSize + sizeof(SharedImageHeader))) + 1);
+            *pCreatedBuffer = (void *)((SharedFrameHeader *)(shared_memory.allocate(bufferSize + sizeof(SharedFrameHeader))) + 1);
 
             bufferContext = ++m_lastBufferContext;
 
-            cout << "Created buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << endl;
+            std::cout << "Created buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << std::endl;
         }
         catch (const std::exception &)
         {
@@ -49,7 +39,7 @@ public:
 
     virtual void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext)
     {
-        shared_memory.deallocate((SharedImageHeader *)(pCreatedBuffer)-1);
+        shared_memory.deallocate((SharedFrameHeader *)(pCreatedBuffer)-1);
         // shared_memory.deallocate(pCreatedBuffer);
         // cout << "Freed buffer " << bufferContext << ", " << pCreatedBuffer << endl;
     }
@@ -59,6 +49,6 @@ public:
     }
 
 protected:
-    managed_shared_memory shared_memory;
+    boost::interprocess::managed_shared_memory shared_memory;
     unsigned long m_lastBufferContext;
 };

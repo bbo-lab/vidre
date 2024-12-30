@@ -6,7 +6,9 @@ set(public_headers
     ../include/vidre/storage.h
     ../include/vidre/runtime.h
     ../include/vidre/pylon_camera.hpp
-    ../include/vidre/shared_image_memory_controller.hpp
+    ../include/vidre/shared_frame_buffer_controller.hpp
+    ../include/vidre/shared_frame_header.hpp
+    ../include/vidre/camera.hpp
 )
 
 source_group(public FILES ${public_headers})
