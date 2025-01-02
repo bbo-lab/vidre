@@ -5,10 +5,11 @@ namespace vidre
     class CSampleImageEventHandler : public Pylon::CImageEventHandler {
     public:
         virtual void OnImageGrabbed(Pylon::CInstantCamera & /*camera*/, const Pylon::CGrabResultPtr &ptrGrabResult) {
-            std::cout << ptrGrabResult->GetImageNumber() << std::endl;
+            //std::cout << ptrGrabResult->GetImageNumber() << std::endl;
+            std::cout << ptrGrabResult->GetBufferContext() << std::endl;
             SharedFrameHeader *header = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
             header->frame_id = ptrGrabResult->GetImageNumber();
-            header->time_stamp = ptrGrabResult->GetTimeStamp();
+            header->time_stamp = ptrGrabResult->GetTimeStamp(); // Time Stamp relies on running time of camera
 
     #ifdef PYLON_WIN_BUILD
             // Display the image
@@ -33,12 +34,9 @@ namespace vidre
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            // camera.RegisterConfiguration(new CSoftwareTriggerConfiguration, RegistrationMode_ReplaceAll, Cleanup_Delete);
-            // camera.RegisterConfiguration(new CConfigurationEventPrinter, RegistrationMode_Append, Cleanup_Delete);
-            // camera.RegisterImageEventHandler(new CImageEventPrinter, RegistrationMode_Append, Cleanup_Delete);
             camera.RegisterImageEventHandler(new CSampleImageEventHandler, Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
 
-            camera.MaxNumBuffer = 2;
+            camera.MaxNumBuffer = 5;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -54,7 +52,7 @@ namespace vidre
     }
     void PylonCamera::Start() {
         if (camera.CanWaitForFrameTriggerReady())
-            camera.StartGrabbing(Pylon::GrabStrategy_LatestImages, Pylon::GrabLoop_ProvidedByInstantCamera);
+            camera.StartGrabbing(Pylon::GrabStrategy_LatestImages, Pylon::GrabLoop_ProvidedByUser);
     }
     void PylonCamera::Stop() {
         camera.StopGrabbing();
@@ -65,7 +63,9 @@ namespace vidre
     }
 
     SharedFrameHeader* PylonCamera::RetrieveLatestFrame() {
-        return latestFrame.load();
+        Pylon::CGrabResultPtr ptrGrabResult;
+        camera.RetrieveResult(INFINITE, ptrGrabResult);
+        return (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
     }
 
     unsigned int PylonCamera::GetImageWidth() {

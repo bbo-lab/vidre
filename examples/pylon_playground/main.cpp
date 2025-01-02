@@ -3,17 +3,22 @@
 #include "vidre/pylon_camera.hpp"
 
 int main() {
-    vidre::PylonCamera camera;
-    camera.Init();
-    // Configure static camera parameters that are not changed during grabbing (e.g. resolution).
-    // e.g. camera.setRaw(filepath_to_configuration);
+    std::unique_ptr<vidre::ICamera> camera = std::make_unique<vidre::PylonCamera>(); // Or some factory class.
+    // Eventually add Aptina Camera support. AND/OR
+    // Eventually there might be a way to generalize all GenICam (or USB3Vision) cameras under one class using GenAPI.
 
-    camera.Start();
+    camera->Init();
+    camera->Start();
+    for (int i=0; i<=200; ++i) {
+        SharedFrameHeader* result = camera->RetrieveLatestFrame();
+        // Save
+    }
+    //std::cout << result->frame_id << " at time " << result->time_stamp / 1000000000 << std::endl;
+    Pylon::WaitObject::Sleep(500);
+    camera->Stop();
     Pylon::WaitObject::Sleep(1000);
-    camera.Stop();
+    camera->Start();
     Pylon::WaitObject::Sleep(1000);
-    camera.Start();
-    Pylon::WaitObject::Sleep(1000);
-    camera.Stop();
+    camera->Stop();
     return 0;
 }
