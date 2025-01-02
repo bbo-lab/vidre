@@ -24,8 +24,9 @@ namespace vidre {
         virtual SharedFrameHeader* RetrieveLatestFrame();
 
         GenApi::INodeMap &GetNodeMap();
-        unsigned int GetImageWidth();
-        unsigned int GetImageHeight();
+        unsigned int GetFrameWidth();
+        unsigned int GetFrameHeight();
+        unsigned int GetFrameOffsetX();
         
     private:
         // -------- Pylon specific --------

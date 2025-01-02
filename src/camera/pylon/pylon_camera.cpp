@@ -6,15 +6,10 @@ namespace vidre
     public:
         virtual void OnImageGrabbed(Pylon::CInstantCamera & /*camera*/, const Pylon::CGrabResultPtr &ptrGrabResult) {
             //std::cout << ptrGrabResult->GetImageNumber() << std::endl;
-            std::cout << ptrGrabResult->GetBufferContext() << std::endl;
+            //std::cout << ptrGrabResult->GetBufferContext() << std::endl;
             SharedFrameHeader *header = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
             header->frame_id = ptrGrabResult->GetImageNumber();
-            header->time_stamp = ptrGrabResult->GetTimeStamp(); // Time Stamp relies on running time of camera
-
-    #ifdef PYLON_WIN_BUILD
-            // Display the image
-            Pylon::DisplayImage(1, ptrGrabResult);
-    #endif
+            header->time_stamp = ptrGrabResult->GetTimeStamp();
         }
     };
 
@@ -44,7 +39,12 @@ namespace vidre
         }
         camera.Open();
     }
+    /// Executing Arm() "fixes" the camera configuration in place.
     void PylonCamera::Arm() {
+        shrBufferFactory.PreallocateFrameBuffers(
+            (sizeof(SharedFrameHeader) + GetFrameWidth() * GetFrameHeight() /* * PixelSize*/) * (camera.MaxNumBuffer.GetValue() + 1)
+            , "vidre");
+
         camera.SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
     }
     void PylonCamera::Disarm() {
@@ -52,31 +52,37 @@ namespace vidre
     }
     void PylonCamera::Start() {
         if (camera.CanWaitForFrameTriggerReady())
-            camera.StartGrabbing(Pylon::GrabStrategy_LatestImages, Pylon::GrabLoop_ProvidedByUser);
+            camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
     }
     void PylonCamera::Stop() {
         camera.StopGrabbing();
+    }
+
+    SharedFrameHeader* PylonCamera::RetrieveLatestFrame() {
+        Pylon::CGrabResultPtr ptrGrabResult;
+        camera.RetrieveResult(1000, ptrGrabResult);
+        return (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
     }
 
     GenApi::INodeMap &PylonCamera::GetNodeMap() {
         return camera.GetNodeMap();
     }
 
-    SharedFrameHeader* PylonCamera::RetrieveLatestFrame() {
-        Pylon::CGrabResultPtr ptrGrabResult;
-        camera.RetrieveResult(INFINITE, ptrGrabResult);
-        return (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
-    }
-
-    unsigned int PylonCamera::GetImageWidth() {
+    unsigned int PylonCamera::GetFrameWidth() {
         GenApi::INodeMap &nodemap = camera.GetNodeMap();
         Pylon::CIntegerParameter width(nodemap, "Width");
         return width.GetValue();
     }
 
-    unsigned int PylonCamera::GetImageHeight() {
+    unsigned int PylonCamera::GetFrameHeight() {
         GenApi::INodeMap &nodemap = camera.GetNodeMap();
         Pylon::CIntegerParameter height(nodemap, "Height");
         return height.GetValue();
+    }
+
+    unsigned int PylonCamera::GetFrameOffsetX() {
+        GenApi::INodeMap &nodemap = camera.GetNodeMap();
+        Pylon::CIntegerParameter offsetX(nodemap, "OffsetX");
+        return offsetX.GetValue();
     }
 }

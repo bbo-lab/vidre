@@ -17,5 +17,9 @@ namespace vidre {
         virtual void Stop() = 0;
 
         virtual SharedFrameHeader* RetrieveLatestFrame() = 0;
+
+        virtual unsigned int GetFrameWidth() = 0;
+        virtual unsigned int GetFrameHeight() = 0;
+        virtual unsigned int GetFrameOffsetX() = 0;
     };
 }  // namespace vidre

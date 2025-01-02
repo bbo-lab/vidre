@@ -1,4 +1,7 @@
 #pragma once
+
+#include <string>
+
 #include <pylon/PylonIncludes.h>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
@@ -9,11 +12,14 @@ class ShrBufferFactory : public Pylon::IBufferFactory
 public:
     ShrBufferFactory()
         : m_lastBufferContext(-1)
-    {
-    }
+    {}
 
     virtual ~ShrBufferFactory()
-    {
+    {}
+
+    void PreallocateFrameBuffers(size_t capacity, const char* memoryName) {
+        boost::interprocess::shared_memory_object::remove(memoryName);
+        shared_memory = {boost::interprocess::open_or_create, memoryName, capacity};
     }
 
     virtual void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext)
@@ -21,9 +27,8 @@ public:
         try
         {
             // Allocation should be delegated to a seperate object so that the data can be accessed by other resources.
-            *pCreatedBuffer = (void *)((SharedFrameHeader *)(shared_memory.allocate(bufferSize + sizeof(SharedFrameHeader))) + 1);
-
             bufferContext = ++m_lastBufferContext;
+            *pCreatedBuffer = (void *)((SharedFrameHeader *)(shared_memory.allocate(bufferSize + sizeof(SharedFrameHeader))) + 1);
 
             std::cout << "Created buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << std::endl;
         }
@@ -39,9 +44,7 @@ public:
 
     virtual void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext)
     {
-        shared_memory.deallocate((SharedFrameHeader *)(pCreatedBuffer)-1);
-        // shared_memory.deallocate(pCreatedBuffer);
-        // cout << "Freed buffer " << bufferContext << ", " << pCreatedBuffer << endl;
+        shared_memory.deallocate((SharedFrameHeader *)pCreatedBuffer-1);
     }
     virtual void DestroyBufferFactory()
     {
