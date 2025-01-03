@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <boost/asio.hpp>
+
 #include "vidre/pylon_camera.hpp"
 
 int main() {
@@ -11,30 +13,13 @@ int main() {
     // std::unique_ptr<vidre::ICamera> camera = std::make_unique<vidre::USB3VisionCamera>();
 
     camera->Init();
+
     camera->Arm();
-
     camera->Start();
-    for (int i=0; i<=200; ++i) {
-        // Frame Grabbing
-        SharedFrameHeader* result = camera->RetrieveLatestFrame();
 
-        // Display Frame Image
-#ifdef PYLON_WIN_BUILD
-            // Display the image
-            Pylon::CPylonImage image;
-            image.AttachUserBuffer(
-                (void*)(result + 1), 
-                camera->GetFrameWidth() * camera->GetFrameHeight(),
-                Pylon::EPixelType::PixelType_Mono8, 
-                camera->GetFrameWidth(), 
-                camera->GetFrameHeight(),
-                camera->GetFrameOffsetX());
-            Pylon::DisplayImage(1, image);
-#endif
+    std::cout << "Press Enter to stop.\n";
+    while(std::cin.get() != '\n') {};
 
-        // Save Frame Image
-        // ...
-    }
     camera->Stop();
     camera->Disarm();
 

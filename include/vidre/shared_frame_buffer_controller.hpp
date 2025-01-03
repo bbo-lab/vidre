@@ -16,10 +16,12 @@
 
 namespace vidre 
 {
+    // This class is not realy able to sit on SharedMemory. Explicitly make it more static and keep just the relevant
+    // data on SharedMemory.
     class SharedFrameBufferController {
     private:
         unsigned short maxNumFrames;
-        std::atomic<SharedFrameHeader*> latestFrame;
+        std::atomic<SharedFrameHeader*> latestFrame; // The pointer has to be replaced by boost::interprocess::offset_ptr
 
         SharedFrameBufferController() : 
             maxNumFrames(0),

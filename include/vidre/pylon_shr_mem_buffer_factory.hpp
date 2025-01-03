@@ -17,9 +17,9 @@ public:
     virtual ~ShrBufferFactory()
     {}
 
-    void PreallocateFrameBuffers(size_t capacity, const char* memoryName) {
-        boost::interprocess::shared_memory_object::remove(memoryName);
-        shared_memory = {boost::interprocess::open_or_create, memoryName, capacity};
+    void PreallocateFrameBuffers(size_t capacity, const char* newMemoryName) {
+        boost::interprocess::shared_memory_object::remove(newMemoryName);
+        shared_memory = {boost::interprocess::open_or_create, newMemoryName, capacity};
     }
 
     virtual void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext)
@@ -41,17 +41,18 @@ public:
             throw;
         }
     }
-
     virtual void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext)
     {
         shared_memory.deallocate((SharedFrameHeader *)pCreatedBuffer-1);
     }
     virtual void DestroyBufferFactory()
     {
+        boost::interprocess::shared_memory_object::remove(memoryName);
         delete this;
     }
 
 protected:
+    const char* memoryName;
     boost::interprocess::managed_shared_memory shared_memory;
     unsigned long m_lastBufferContext;
 };

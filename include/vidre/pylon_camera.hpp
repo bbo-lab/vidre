@@ -1,6 +1,8 @@
 #pragma once
 #include "camera.hpp"
 
+#include <thread>
+
 //#ifdef PYLON_WIN_BUILD
 #include <pylon/PylonGUI.h>
 //#endif
@@ -23,12 +25,20 @@ namespace vidre {
 
         virtual SharedFrameHeader* RetrieveLatestFrame();
 
+        // TODO
+        virtual bool LoadConfiguration(char* filepath);
+
         GenApi::INodeMap &GetNodeMap();
         unsigned int GetFrameWidth();
         unsigned int GetFrameHeight();
         unsigned int GetFrameOffsetX();
         
     private:
+        void run();
+
+        std::thread grabber;
+        std::atomic<bool> running;
+
         // -------- Pylon specific --------
         Pylon::CInstantCamera camera;
         ShrBufferFactory shrBufferFactory;

@@ -8,7 +8,7 @@
 namespace vidre {
     class ICamera {
     public:
-        ~ICamera() {};
+        virtual ~ICamera() {}
 
         virtual void Init() = 0;
         virtual void Arm() = 0;
@@ -17,6 +17,8 @@ namespace vidre {
         virtual void Stop() = 0;
 
         virtual SharedFrameHeader* RetrieveLatestFrame() = 0;
+
+        virtual bool LoadConfiguration(char* filepath) = 0;
 
         virtual unsigned int GetFrameWidth() = 0;
         virtual unsigned int GetFrameHeight() = 0;
