@@ -6,9 +6,10 @@
 #include "vidre/shared_frame_header.hpp"
 
 void presentationThread(vidre::ICamera* camera) {
+    while (!camera->IsRunning()) {}
     while (camera->IsRunning()) {
         vidre::SharedFrameHeader* result = camera->RetrieveLatestFrame();
-        if (!result) continue;
+        if (result == nullptr) continue;
 #ifdef PYLON_WIN_BUILD
         Pylon::CPylonImage image;
         image.AttachUserBuffer(
@@ -21,6 +22,7 @@ void presentationThread(vidre::ICamera* camera) {
         //std::cout << "ID: " << result->frame_id << "\t Address: " << result << '\n';
         Pylon::DisplayImage(1, image);
 #endif
+        // Save Image
     }
 }
 
@@ -34,37 +36,27 @@ int main() {
 
     // Initialize and start the camera
     camera->Init();
-    camera->Arm();
-    camera->Start();
+    std::thread presentation;
 
-    // Start thread to query the latest frames. Stops when camera is stopped.
-    std::thread presentation(presentationThread, camera.get());
-    presentation.detach();
+    for (int i=0; i<3; ++i) {
+        camera->Arm();
+        camera->Start();
 
-    std::cout << "Press Enter to stop.\n";
-    while(std::cin.get() != '\n') {};
+        // Start thread to query the latest frames. Stops when camera is stopped.
+        std::thread presentation(presentationThread, camera.get());
 
-    camera->Stop();
-    camera->Disarm();
+        std::cout << "Press Enter to stop.\n";
+        while(std::cin.get() != '\n') {};
 
-    Pylon::WaitObject::Sleep(1000);
-    // ---
-    // Change some parameters
-    // ---
+        camera->Stop();
+        presentation.join();
+        camera->Disarm();
 
-    camera->Arm();
-    camera->Start();
+        // Simulate change of parameters inbetween.
+        Pylon::WaitObject::Sleep(1000);
+    }
 
-    // Start thread to query the latest frames. Stops when camera is stopped.
-    presentation = std::thread(presentationThread, camera.get());
-    presentation.detach();
-
-    std::cout << "Press Enter to stop.\n";
-    while(std::cin.get() != '\n') {};
-
-    camera->Stop();
-    camera->Disarm();
-
-
+    // Dont know where this last PylonInit comes from.
+    Pylon::PylonTerminate();
     return 0;
 }

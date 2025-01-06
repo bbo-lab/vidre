@@ -8,7 +8,7 @@
 namespace vidre {
     class ICamera {
     public:
-        virtual ~ICamera() {}
+        //virtual ~ICamera() = default;
 
         virtual void Init() = 0;
         virtual void Arm() = 0;

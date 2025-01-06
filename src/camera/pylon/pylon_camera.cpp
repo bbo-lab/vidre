@@ -32,21 +32,17 @@ namespace vidre
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        latestFrame.store(nullptr);
-
-        Pylon::CGrabResultPtr previousPtrGrabResult;
         while (running.load()) {
             // Frame Grabbing
             Pylon::CGrabResultPtr currentPtrGrabResult;
-            if (!camera.RetrieveResult(1000, currentPtrGrabResult)) continue;
-            if (currentPtrGrabResult == previousPtrGrabResult) continue;
+            //camera.ExecuteSoftwareTrigger();
+            if (!camera.RetrieveResult(500, currentPtrGrabResult)) continue;
 
             SharedFrameHeader* result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
             result->frame_id = currentPtrGrabResult->GetImageNumber();
             result->time_stamp = currentPtrGrabResult->GetTimeStamp();
 
             latestFrame.store(result);
-            previousPtrGrabResult = currentPtrGrabResult;
         }
         camera.StopGrabbing();
     }
@@ -55,6 +51,7 @@ namespace vidre
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
             //camera.RegisterImageEventHandler(new CSampleImageEventHandler, Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
+            //camera.RegisterConfiguration(new Pylon::CSoftwareTriggerConfiguration, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_Delete);
 
             camera.MaxNumBuffer = 5;
         } catch (const Pylon::GenericException &e) {
@@ -81,9 +78,9 @@ namespace vidre
     }
     void PylonCamera::Start() {
         if (!armed.load()) return;
+        latestFrame.store(nullptr);
 
         grabber = std::thread(&PylonCamera::run, this);
-        //grabber.detach();
     }
     void PylonCamera::Stop() {
         running.store(false);

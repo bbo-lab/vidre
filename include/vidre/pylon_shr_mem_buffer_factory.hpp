@@ -20,7 +20,7 @@ public:
     void PreallocateFrameBuffers(size_t capacity, const char* newMemoryName) {
         boost::interprocess::shared_memory_object::remove(newMemoryName);
         shared_memory = {boost::interprocess::open_or_create, newMemoryName, capacity};
-        //m_lastBufferContext = -1;
+        m_lastBufferContext = -1;
     }
 
     virtual void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext)
@@ -31,7 +31,7 @@ public:
             bufferContext = ++m_lastBufferContext;
             *pCreatedBuffer = (void *)((vidre::SharedFrameHeader *)(shared_memory.allocate(bufferSize + sizeof(vidre::SharedFrameHeader))) + 1);
 
-            std::cout << "Created buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << std::endl;
+            std::cout << "Acquired buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << std::endl;
         }
         catch (const std::exception &)
         {
@@ -44,7 +44,7 @@ public:
     }
     virtual void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext)
     {
-        //shared_memory.deallocate((vidre::SharedFrameHeader *)pCreatedBuffer-1);
+        shared_memory.deallocate((vidre::SharedFrameHeader *)pCreatedBuffer-1);
     }
     virtual void DestroyBufferFactory()
     {
