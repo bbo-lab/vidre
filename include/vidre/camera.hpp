@@ -16,9 +16,11 @@ namespace vidre {
         virtual void Start() = 0;
         virtual void Stop() = 0;
 
+        virtual bool IsRunning() = 0;
+
         virtual SharedFrameHeader* RetrieveLatestFrame() = 0;
 
-        virtual bool LoadConfiguration(char* filepath) = 0;
+        virtual void LoadConfiguration(const char* filepath) = 0;
 
         virtual unsigned int GetFrameWidth() = 0;
         virtual unsigned int GetFrameHeight() = 0;

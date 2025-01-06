@@ -23,10 +23,12 @@ namespace vidre {
         virtual void Start();
         virtual void Stop();
 
+        virtual bool IsRunning();
+
         virtual SharedFrameHeader* RetrieveLatestFrame();
 
         // TODO
-        virtual bool LoadConfiguration(char* filepath);
+        virtual void LoadConfiguration(const char* filepath);
 
         GenApi::INodeMap &GetNodeMap();
         unsigned int GetFrameWidth();
@@ -39,10 +41,13 @@ namespace vidre {
         std::thread grabber;
         std::atomic<bool> running;
 
+        std::atomic<bool> armed;
+
+        std::atomic<SharedFrameHeader*> latestFrame;
+
         // -------- Pylon specific --------
         Pylon::CInstantCamera camera;
         ShrBufferFactory shrBufferFactory;
-        std::atomic<SharedFrameHeader*> latestFrame;
         // --------------------------------
     };
 }  // namespace vidre

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+namespace vidre {
 struct SharedFrameHeader {
     // Type/Tag
     uint64_t time_stamp;  // Timestamp data type as suggested by Pylon.
@@ -13,3 +14,4 @@ struct SharedFrameHeader {
     // Values
     // ...
 };
+}
