@@ -23,17 +23,22 @@ namespace vidre {
         virtual void Start();
         virtual void Stop();
 
+        virtual bool IsArmed();
         virtual bool IsRunning();
 
         virtual SharedFrameHeader* RetrieveLatestFrame();
 
-        // TODO
-        virtual void LoadConfiguration(const char* filepath);
+        virtual bool LoadConfiguration(const char* filepath);
+        virtual bool SaveConfiguration(const char* filepath);
 
         GenApi::INodeMap &GetNodeMap();
-        unsigned int GetFrameWidth();
-        unsigned int GetFrameHeight();
-        unsigned int GetFrameOffsetX();
+
+        // For convenience.
+        virtual unsigned int GetFrameWidth();
+        virtual unsigned int GetFrameHeight();
+        virtual unsigned int GetFrameOffsetX();
+        virtual double GetFrameRate();
+        virtual void SetFrameRate(double newFrameRate);
         
     private:
         void run();
@@ -47,6 +52,7 @@ namespace vidre {
 
         // -------- Pylon specific --------
         Pylon::CInstantCamera camera;
+        Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
         // --------------------------------
     };
