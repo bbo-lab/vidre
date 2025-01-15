@@ -3,9 +3,9 @@
 
 #include <thread>
 
-//#ifdef PYLON_WIN_BUILD
+// #ifdef PYLON_WIN_BUILD
 #include <pylon/PylonGUI.h>
-//#endif
+// #endif
 #include <pylon/PylonIncludes.h>
 #include "pylon_shr_mem_buffer_factory.hpp"
 
@@ -17,29 +17,34 @@ namespace vidre {
         PylonCamera();
         ~PylonCamera();
 
-        virtual void Init();
-        virtual void Arm();
-        virtual void Disarm();
-        virtual void Start();
-        virtual void Stop();
+        virtual void Init() override;
+        virtual void Arm() override;
+        virtual void Disarm() override;
+        virtual void Start() override;
+        virtual void Stop() override;
 
-        virtual bool IsArmed();
-        virtual bool IsRunning();
+        virtual bool IsArmed() override;
+        virtual bool IsRunning() override;
 
-        virtual SharedFrameHeader* RetrieveLatestFrame();
+        virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
-        virtual bool LoadConfiguration(const char* filepath);
-        virtual bool SaveConfiguration(const char* filepath);
+        virtual bool SaveConfiguration(const char *filepath) override;
+        virtual bool LoadConfiguration(const char *filepath) override;
 
-        GenApi::INodeMap &GetNodeMap();
+        GenApi::INodeMap &GetGenAPINodeMap();
 
         // For convenience.
-        virtual unsigned int GetFrameWidth();
-        virtual unsigned int GetFrameHeight();
-        virtual unsigned int GetFrameOffsetX();
-        virtual double GetFrameRate();
-        virtual void SetFrameRate(double newFrameRate);
-        
+        virtual unsigned int GetFrameWidth() override;
+        virtual unsigned int GetFrameHeight() override;
+        virtual unsigned int GetFrameOffsetX() override;
+        virtual unsigned int GetFrameOffsetY() override;
+        virtual double GetFrameRate() override;
+        virtual void SetFrameWidth(unsigned int newFrameWidth) override;
+        virtual void SetFrameHeight(unsigned int newFrameHeight) override;
+        virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) override;
+        virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) override;
+        virtual void SetFrameRate(double newFrameRate) override;
+
     private:
         void run();
 
@@ -48,7 +53,7 @@ namespace vidre {
 
         std::atomic<bool> armed;
 
-        std::atomic<SharedFrameHeader*> latestFrame;
+        std::atomic<SharedFrameHeader *> latestFrame;
 
         // -------- Pylon specific --------
         Pylon::CInstantCamera camera;

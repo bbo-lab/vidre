@@ -1,27 +1,23 @@
 #include "vidre/pylon_camera.hpp"
 
-namespace vidre 
-{
-    class CSampleImageEventHandler : public Pylon::CImageEventHandler {
-    public:
-        virtual void OnImageGrabbed(Pylon::CInstantCamera & /*camera*/, const Pylon::CGrabResultPtr &ptrGrabResult) {
-            SharedFrameHeader *header = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
-            header->frameID = ptrGrabResult->GetImageNumber();
-            header->timeStamp = ptrGrabResult->GetTimeStamp();
-        }
-    };
+namespace vidre {
+    // class CSampleImageEventHandler : public Pylon::CImageEventHandler {
+    // public:
+    //     virtual void OnImageGrabbed(Pylon::CInstantCamera & /*camera*/, const Pylon::CGrabResultPtr &ptrGrabResult) {
+    //         SharedFrameHeader *header = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
+    //         header->frameID = ptrGrabResult->GetImageNumber();
+    //         header->timeStamp = ptrGrabResult->GetTimeStamp();
+    //     }
+    // };
 
-    PylonCamera::PylonCamera() : 
-        running(false),
-        armed(false)
-    {}
+    PylonCamera::PylonCamera() : running(false), armed(false) {}
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
         if (camera.IsPylonDeviceAttached())
             camera.DestroyDevice();
-        
-        //Pylon::PylonTerminate();
+
+        // Pylon::PylonTerminate();
     }
 
     void PylonCamera::run() {
@@ -29,26 +25,30 @@ namespace vidre
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        // Might not be necessary because of the wait of RetrieveResult.
-        void* previousBuffer = nullptr;
-
+        // if (camera.WaitForFrameTriggerReady(1000, Pylon::TimeoutHandling_Return))
+        //     camera.ExecuteSoftwareTrigger();
         while (running.load()) {
             // Frame Grabbing
             Pylon::CGrabResultPtr currentPtrGrabResult;
-            //camera.ExecuteSoftwareTrigger();
-            if (!camera.RetrieveResult(100, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
+            if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
             }
-            //if (currentPtrGrabResult->GetBuffer() == previousBuffer) continue;
+            SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 
-            SharedFrameHeader* result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
+            // if (camera.WaitForFrameTriggerReady(1, Pylon::TimeoutHandling_Return))
+            //     camera.ExecuteSoftwareTrigger();
+            // else {
+            //     std::this_thread::yield();
+            //     continue;
+            // }
+
             result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
-            result->numSkippedBefore = currentPtrGrabResult->GetNumberOfSkippedImages(); // ! Does not account for camera internal skipped images.
+            result->numSkippedBefore =
+                currentPtrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
 
             latestFrame.store(result);
-            previousBuffer = currentPtrGrabResult->GetBuffer();
 
             // Simulate skipping images
             // Pylon::WaitObject::Sleep(500);
@@ -59,10 +59,12 @@ namespace vidre
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            //camera.RegisterImageEventHandler(new CSampleImageEventHandler, Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
-            //camera.RegisterConfiguration(new Pylon::CSoftwareTriggerConfiguration, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_Delete);
+            // camera.RegisterImageEventHandler(new CSampleImageEventHandler, Pylon::RegistrationMode_Append,
+            // Pylon::Cleanup_Delete);
+            // camera.RegisterConfiguration(new Pylon::CSoftwareTriggerConfiguration,
+            //                             Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_Delete);
 
-            camera.MaxNumBuffer = 5;
+            camera.MaxNumBuffer = 10;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -72,21 +74,22 @@ namespace vidre
     }
     /// Executing Arm() "fixes" the camera configuration in place.
     void PylonCamera::Arm() {
-        shrBufferFactory.PreallocateFrameBuffers(
-            (sizeof(SharedFrameHeader) + GetFrameWidth() * GetFrameHeight() /* * PixelSize*/) * (camera.MaxNumBuffer.GetValue() + 1)
-            , "vidre");
+        shrBufferFactory.PreallocateFrameBuffers((sizeof(SharedFrameHeader) + GetFrameWidth() * GetFrameHeight() /* * PixelSize*/) *
+                                                     (camera.MaxNumBuffer.GetValue() + 1),
+                                                 "vidre");
 
         camera.SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
-        camera.Close();
+        // camera.Close();
         armed.store(true);
     }
     void PylonCamera::Disarm() {
         // Free Shared Memory Buffers
         armed.store(false);
-        camera.Open();
+        // camera.Open();
     }
     void PylonCamera::Start() {
-        if (!armed.load()) return;
+        if (!armed.load())
+            return;
         latestFrame.store(nullptr);
 
         grabber = std::thread(&PylonCamera::run, this);
@@ -96,7 +99,7 @@ namespace vidre
         grabber.join();
     }
 
-    SharedFrameHeader* PylonCamera::RetrieveLatestFrame() {
+    const SharedFrameHeader *PylonCamera::RetrieveLatestFrame() {
         return latestFrame.load();
     }
     bool PylonCamera::IsArmed() {
@@ -106,47 +109,88 @@ namespace vidre
         return running.load();
     }
 
-
-
-
     /// --------------------------
     /// Camera parameter access
     /// --------------------------
 
-    GenApi::INodeMap &PylonCamera::GetNodeMap() {
+    GenApi::INodeMap &PylonCamera::GetGenAPINodeMap() {
         return camera.GetNodeMap();
     }
 
     unsigned int PylonCamera::GetFrameWidth() {
-        GenApi::INodeMap &nodemap = GetNodeMap();
-        Pylon::CIntegerParameter width(nodemap, "Width");
+        Pylon::CIntegerParameter width(GetGenAPINodeMap(), "Width");
 
         return width.GetValue();
     }
 
     unsigned int PylonCamera::GetFrameHeight() {
-        GenApi::INodeMap &nodemap = GetNodeMap();
-        Pylon::CIntegerParameter height(nodemap, "Height");
+        Pylon::CIntegerParameter height(GetGenAPINodeMap(), "Height");
 
         return height.GetValue();
     }
 
     unsigned int PylonCamera::GetFrameOffsetX() {
-        GenApi::INodeMap &nodemap = GetNodeMap();
-        Pylon::CIntegerParameter offsetX(nodemap, "OffsetX");
+        Pylon::CIntegerParameter offsetX(GetGenAPINodeMap(), "OffsetX");
 
         return offsetX.GetValue();
     }
 
+    unsigned int PylonCamera::GetFrameOffsetY() {
+        Pylon::CIntegerParameter offsetY(GetGenAPINodeMap(), "OffsetY");
+
+        return offsetY.GetValue();
+    }
+
     double PylonCamera::GetFrameRate() {
-        GenApi::INodeMap &nodemap = GetNodeMap();
-        Pylon::CFloatParameter frameRate(nodemap, "AcquisitionFrameRate");
+        Pylon::CFloatParameter frameRate(GetGenAPINodeMap(), "AcquisitionFrameRate");
 
         return frameRate.GetValue();
     }
 
+    void PylonCamera::SetFrameWidth(unsigned int newFrameWidth) {
+        if (!camera.IsOpen())
+            return;
+        Pylon::CIntegerParameter frameWidth(GetGenAPINodeMap(), "Width");
+
+        if (!frameWidth.TrySetValue(newFrameWidth)) {
+            std::cout << "Could not set frame width!" << std::endl;
+        }
+    }
+
+    void PylonCamera::SetFrameHeight(unsigned int newFrameHeight) {
+        if (!camera.IsOpen())
+            return;
+        Pylon::CIntegerParameter frameHeight(GetGenAPINodeMap(), "Height");
+
+        if (!frameHeight.TrySetValue(newFrameHeight)) {
+            std::cout << "Could not set frame height!" << std::endl;
+        }
+    }
+
+    void PylonCamera::SetFrameOffsetX(unsigned int newFrameOffsetX) {
+        if (!camera.IsOpen())
+            return;
+        Pylon::CIntegerParameter frameOffsetX(GetGenAPINodeMap(), "OffsetX");
+
+        if (!frameOffsetX.TrySetValue(newFrameOffsetX)) {
+            std::cout << "Could not set frame offset x!" << std::endl;
+        }
+    }
+
+    void PylonCamera::SetFrameOffsetY(unsigned int newFrameOffsetY) {
+        if (!camera.IsOpen())
+            return;
+        Pylon::CIntegerParameter frameOffsetY(GetGenAPINodeMap(), "OffsetY");
+
+        if (!frameOffsetY.TrySetValue(newFrameOffsetY)) {
+            std::cout << "Could not set frame offset y!" << std::endl;
+        }
+    }
+
     void PylonCamera::SetFrameRate(double newFrameRate) {
-        GenApi::INodeMap &nodemap = GetNodeMap();
+        if (!camera.IsOpen())
+            return;
+        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
         Pylon::CBooleanParameter frameRateEnable(nodemap, "AcquisitionFrameRateEnable");
         Pylon::CFloatParameter frameRate(nodemap, "AcquisitionFrameRate");
 
@@ -156,25 +200,23 @@ namespace vidre
         }
     }
 
-    bool PylonCamera::LoadConfiguration(const char* filepath) {
+    bool PylonCamera::LoadConfiguration(const char *filepath) {
         try {
-            Pylon::CFeaturePersistence::Load(filepath, &GetNodeMap(), true);
-        }
-        catch (const Pylon::GenericException &e) {
+            Pylon::CFeaturePersistence::Load(filepath, &GetGenAPINodeMap(), true);
+        } catch (const Pylon::GenericException &e) {
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             return false;
         }
         return true;
     }
 
-    bool PylonCamera::SaveConfiguration(const char* filepath) {
+    bool PylonCamera::SaveConfiguration(const char *filepath) {
         try {
-            Pylon::CFeaturePersistence::Save(filepath, &GetNodeMap());
-        }
-        catch (const Pylon::GenericException &e) {
+            Pylon::CFeaturePersistence::Save(filepath, &GetGenAPINodeMap());
+        } catch (const Pylon::GenericException &e) {
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             return false;
         }
         return true;
     }
-}
+}  // namespace vidre
