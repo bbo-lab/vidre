@@ -1,22 +1,22 @@
 #pragma once
 #include <pylon/PylonIncludes.h>
 #include <pylon/ImagePersistence.h>
-#include "vidre/storage.h"
+#include "storage.h"
+#include "camera.hpp"
 namespace vidre {
     struct Config;
 
     class RuntimeInstance {
     public:
-        RuntimeInstance();
+        RuntimeInstance() = default;
+        RuntimeInstance(std::string configuration);
         ~RuntimeInstance();
-        bool IsGrabbing();
-        void Retrieve();
-        Config GetResultConfig();
-        const void *GetBuffer();
-        size_t GetBufferSize();
+        
+        void presentationThread();
+        void run(int n_iter);
 
     private:
-        Pylon::CGrabResultPtr ptrGrabResult;
-        Pylon::CInstantCamera camera;
+        std::unique_ptr<ICamera> camera;
+        std::unique_ptr<Storage> storage;
     };
 }  // namespace vidre
