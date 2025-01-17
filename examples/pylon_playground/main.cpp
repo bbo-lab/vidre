@@ -44,8 +44,8 @@ void presentationThread(vidre::ICamera *camera) {
         std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
 
         // Save Image
-        // vidre::Save(cameraConfig, (const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
-        //             result->frameID);
+        vidre::Save(cameraConfig, (const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
+                    result->frameID);
 
         previousResult = result;
     }
@@ -66,7 +66,7 @@ int main() {
     if (!camera->LoadConfiguration(defaultConfigFilepath)) {
         std::cout << "Could not load configuration file \"" << defaultConfigFilepath << "\"" << std::endl;
     }
-    camera->SetFrameRate(10.0);
+    // camera->SetFrameRate(10.0);
 
     for (int i = 0; i < 1; ++i) {
         camera->Arm();

@@ -32,6 +32,8 @@ namespace vidre {
 
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
+        // Idea: Custom functions for different filetypes.
+        // Idea: Seperate object for configurations.
         virtual bool SaveConfiguration(const char *filepath) = 0;
         virtual bool LoadConfiguration(const char *filepath) = 0;
 
