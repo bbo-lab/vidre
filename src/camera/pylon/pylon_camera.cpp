@@ -64,7 +64,7 @@ namespace vidre {
             // camera.RegisterConfiguration(new Pylon::CSoftwareTriggerConfiguration,
             //                             Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_Delete);
 
-            camera.MaxNumBuffer = 10;
+            camera.MaxNumBuffer = 30;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;

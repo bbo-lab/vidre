@@ -41,11 +41,11 @@ void presentationThread(vidre::ICamera *camera) {
 #ifdef PYLON_WIN_BUILD
         presentFrame((void *)(result + 1), cameraConfig);
 #endif
-        std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
+        // std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
 
         // Save Image
-        vidre::Save(cameraConfig, (const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
-                    result->frameID);
+        // vidre::Save(cameraConfig, (const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
+        //             result->frameID);
 
         previousResult = result;
     }
