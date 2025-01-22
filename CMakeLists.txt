@@ -94,6 +94,15 @@ find_package(Boost CONFIG REQUIRED COMPONENTS ALL)
 
 # find_package(Boost CONFIG REQUIRED COMPONENTS exception)
 
+# YAML Parser
+include(FetchContent)
+
+FetchContent_Declare(
+    yaml-cpp
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
 # UUID
 # check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
 # if(NOT HAVE_LIBUUID)

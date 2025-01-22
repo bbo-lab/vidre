@@ -26,6 +26,8 @@ endif()
 
 target_link_libraries(vidre PUBLIC Boost::headers)
 
+target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
+
 add_subdirectory(ring_buffer)
 add_subdirectory(runtime)
 add_subdirectory(storage)
