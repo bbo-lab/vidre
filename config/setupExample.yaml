@@ -1,0 +1,34 @@
+---
+cam1:
+  type: pylon
+  address: 123456
+  config_file: ../default.config
+cam2:
+  type: pylon
+  address: 654321
+  config_file: ../default.config
+
+storage1:
+  type: storage
+  output_file: ../out/cam1.mp4
+storage2:
+  type: storage
+  output_file: ../out/cam2.mp4
+
+netSink1:
+  type: netSink
+  ip: 127.000.000
+  port: 25565
+netSource1:
+  type: netSource
+  ip: 127.000.001
+  port: 25565
+
+presentation:
+  type: imageMonitor
+
+pipes:
+  - cam1: storage1
+  - cam2: storage2
+  - cam1: netSink
+  - netSource: presentation
