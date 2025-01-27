@@ -1,12 +1,11 @@
 ---
 cam1:
   type: pylon
-  address: 123456
-  config_file: ../default.config
-cam2:
-  type: pylon
-  address: 654321
-  config_file: ../default.config
+  serial: 22343925
+  config_file: C:/Projects/vidre/defaultConfig.config
+#cam2:
+#  type: pylon
+# config_file: ../default.config
 
 storage1:
   type: storage
