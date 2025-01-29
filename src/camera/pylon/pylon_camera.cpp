@@ -17,7 +17,7 @@ namespace vidre {
         if (camera.IsPylonDeviceAttached())
             camera.DestroyDevice();
 
-        // Pylon::PylonTerminate();
+        Pylon::PylonTerminate();
     }
 
     void PylonCamera::run() {
