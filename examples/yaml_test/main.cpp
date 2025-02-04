@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <chrono>
 
 #include <boost/program_options.hpp>
 
@@ -39,20 +38,35 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
     for (auto it = cameras.begin(); it != cameras.end(); ++it) {
-        std::cout << it->first << " was " << (it->second ? "" : "not ") << "constructed.\n";
+        std::cout << "> " << it->first << " was " << (it->second ? "" : "not ") << "constructed.\n";
     }
     std::cout.flush();
 
-    cameras["camOverview"]->Arm();
-    cameras["camOverview"]->Start();
-    {
-        vidre::Presenter presenter(cameras["camOverview"].get());
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(3s);
+    // Arm and start all cameras
+    for (auto it = cameras.begin(); it != cameras.end(); ++it) {
+        if (!it->second)
+            continue;
+        it->second->Arm();
+        it->second->Start();
     }
 
-    cameras["camOverview"]->Stop();
-    cameras["camOverview"]->Disarm();
+    // Create presenter that presents the output of camOverview (i.e. piping camOverview output to presenter input)
+    // Run until Enter.
+    {
+        vidre::Presenter presenter(cameras["camOverview"].get());  // Starts thread on creation, ends on scoped deletion.
+
+        std::cout << "> \tPress Enter to stop.";
+        while (std::cin.get() != '\n') {
+        }
+    }
+
+    // Disarm and stop all cameras
+    for (auto it = cameras.begin(); it != cameras.end(); ++it) {
+        if (!it->second)
+            continue;
+        it->second->Stop();
+        it->second->Disarm();
+    }
 
     return 0;
 }

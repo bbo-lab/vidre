@@ -31,7 +31,8 @@ public:
                 bytePointer[i] = 0;
             }
 
-            std::cout << "Acquired buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << std::endl;
+            // std::cout << "Acquired buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize <<
+            // std::endl;
         } catch (const std::exception &) {
             if (*pCreatedBuffer != NULL) {
                 shared_memory.deallocate(pCreatedBuffer);
