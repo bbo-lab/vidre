@@ -5,6 +5,9 @@ namespace vidre {
         std::unique_ptr<vidre::ICamera> camera;
         if (cameraNode["vendor"] && cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
             camera = std::make_unique<vidre::PylonCamera>();
+            camera->Init();
+            if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str()))
+                std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
         }  // TODO: Delegate to Factory
         return camera;
     }
@@ -21,9 +24,12 @@ namespace vidre {
         // YAML File has a pipe between cam1 and storage1. Both are on the same node:
         // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
 
+        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras;
+        if (!boost::filesystem::exists(setupFilepath))
+            return cameras;
+
         YAML::Node config = YAML::LoadFile(setupFilepath);
 
-        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras;
         for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
             if (!it->second.IsMap())
                 continue;

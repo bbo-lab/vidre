@@ -26,6 +26,8 @@ if(PYLON_ENABLED)
 endif()
 
 target_link_libraries(vidre PUBLIC Boost::headers)
+target_link_libraries(vidre PUBLIC Boost::program_options)
+target_link_libraries(vidre PUBLIC Boost::filesystem)
 
 target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 

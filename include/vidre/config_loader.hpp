@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <boost/filesystem.hpp>
+
 #include "vidre/camera.hpp"
 #include "vidre/pylon_camera.hpp"
 #include "yaml-cpp/yaml.h"

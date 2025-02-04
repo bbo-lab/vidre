@@ -3,9 +3,11 @@
 # are defined at first with relevant data. Then pipes are defined connecting
 # outputs of modules to inputs.
 #
+# Example data flow:
+# 
 #  cam1 -> storage1
 #    |
-#    L-> netSink1 - - - - > netSource1 -> presentation
+#    L-> netSink1 --(network)--> netSource1 -> presentation
 #
 #  cam2 -> storage2
 #
@@ -15,13 +17,15 @@ camOverview:
   vendor: pylon
   serial: 22343925
   config_file: C:/Projects/vidre/defaultConfig.config
+  is_config_local: true
   description: For monitoring.
-camHeadset:
-  type: camera
-  vendor: pylon
-  serial: 10001010
-  config_file: C:/Projects/vidre/defaultConfig.config
-  description: For saving and further analysis afterwards.
+# camHeadset:
+#  type: camera
+#  vendor: pylon
+#  serial: 10001010
+#  config_file: C:/Projects/vidre/defaultConfig.config
+#  is_config_local: true
+#  description: For saving and further analysis afterwards.
 
 storage1:
   type: storage
