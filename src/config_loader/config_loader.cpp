@@ -2,16 +2,19 @@
 
 namespace vidre {
     std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
-        std::unique_ptr<vidre::ICamera> camera;
         if (!cameraNode["vendor"])
             return nullptr;
 
+        // Vendor is specified
+        std::unique_ptr<vidre::ICamera> camera;
         if (cameraNode["vendor"].as<std::string>().compare("dummy") == 0) {
             camera = std::make_unique<vidre::DummyCamera>();
         }
         else if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
             camera = std::make_unique<vidre::PylonCamera>();
         }
+        else
+            return nullptr;
 
         if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;

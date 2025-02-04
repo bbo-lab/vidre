@@ -17,7 +17,7 @@ camOverview:
   vendor: pylon   # Can this be acquired from e.g. the specific usb port itself? 
   serial: 22343925
   config_file: C:/Projects/vidre/defaultConfig.config
-  is_config_local: true
+  is_config_local: true # Determines if the config file is local on the node or if it should be sent over on setup.
   description: For monitoring.
 camHeadset:
   type: camera
@@ -28,11 +28,14 @@ camHeadset:
   description: For saving and further analysis afterwards.
 camLeftCorner:
   type: camera
-  vendor: dummy
+  vendor: iAmNotSupported
   serial: 10203000
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
+
+
+# ---- UNIMPLEMENTED ----
 
 storage1:
   type: storage
@@ -43,7 +46,7 @@ storage2:
 
 netSink1:
   type: netSink
-  ip: 127.000.000
+  ip: 127.000.000 # Or MAC address. Or having a sort of LAN DNS, i.e. named IPs to change out nodes without having to change config file IP/MAC.
   port: 25565
 netSource1:
   type: netSource
@@ -54,7 +57,8 @@ presentation:
   type: imageMonitor
 
 pipes:
-  - camOverview: storage1
-  - camHeadset: storage2
-  - camOverview: netSink
+# - output: input
+  - camHeadset: storage1
+  - camOverview: storage2
+  - camHeadset: netSink
   - netSource: presentation

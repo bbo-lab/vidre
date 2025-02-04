@@ -11,6 +11,7 @@ set(public_headers
     ../include/vidre/shared_frame_header.hpp
     ../include/vidre/camera.hpp
     ../include/vidre/config_loader.hpp
+    ../include/vidre/presenter.hpp
 )
 
 source_group(public FILES ${public_headers})

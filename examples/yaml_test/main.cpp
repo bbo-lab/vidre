@@ -1,16 +1,18 @@
 #include <iostream>
-
 #include <string>
 #include <unordered_map>
+#include <chrono>
 
 #include <boost/program_options.hpp>
 
 #include "vidre/config_loader.hpp"
 #include "vidre/camera.hpp"
+#include "vidre/presenter.hpp"
 
 namespace po = boost::program_options;
 
-std::string systemConfigFilepath = "C:/Blip/Blap/Bloop";  //"C:/Projects/vidre/config/setupExample.yaml";
+// std::string systemConfigFilepath = "C:/Not/A/Real/Path.yaml";
+std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
 
 int main(int argc, const char *argv[]) {
     // Parse arguments and set relevant variables.
@@ -40,6 +42,17 @@ int main(int argc, const char *argv[]) {
         std::cout << it->first << " was " << (it->second ? "" : "not ") << "constructed.\n";
     }
     std::cout.flush();
+
+    cameras["camOverview"]->Arm();
+    cameras["camOverview"]->Start();
+    {
+        vidre::Presenter presenter(cameras["camOverview"].get());
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(3s);
+    }
+
+    cameras["camOverview"]->Stop();
+    cameras["camOverview"]->Disarm();
 
     return 0;
 }
