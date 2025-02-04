@@ -22,6 +22,7 @@ namespace vidre {
         // -------------------
 
         virtual void Init() = 0;
+        virtual bool Init(std::string serial) = 0;
         virtual void Arm() = 0;
         virtual void Disarm() = 0;
         virtual void Start() = 0;
@@ -34,8 +35,8 @@ namespace vidre {
 
         // Idea: Custom functions for different filetypes.
         // Idea: Seperate object for configurations.
-        virtual bool SaveConfiguration(const char *filepath) = 0;
-        virtual bool LoadConfiguration(const char *filepath) = 0;
+        virtual bool SaveConfiguration(std::string filepath) = 0;
+        virtual bool LoadConfiguration(std::string filepath) = 0;
 
         // Convenience functions for now. Using GenApi or own abstraction?
         virtual unsigned int GetFrameWidth() = 0;

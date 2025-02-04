@@ -14,18 +14,25 @@
 ---
 camOverview:
   type: camera
-  vendor: pylon
+  vendor: pylon   # Can this be acquired from e.g. the specific usb port itself? 
   serial: 22343925
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true
   description: For monitoring.
-# camHeadset:
-#  type: camera
-#  vendor: pylon
-#  serial: 10001010
-#  config_file: C:/Projects/vidre/defaultConfig.config
-#  is_config_local: true
-#  description: For saving and further analysis afterwards.
+camHeadset:
+  type: camera
+  vendor: dummy
+  serial: 10001010
+  config_file: C:/Projects/vidre/defaultConfig.config
+  is_config_local: true
+  description: For saving and further analysis afterwards.
+camLeftCorner:
+  type: camera
+  vendor: dummy
+  serial: 10203000
+  config_file: C:/Projects/vidre/defaultConfig.config
+  is_config_local: true
+  description: For saving and further analysis afterwards.
 
 storage1:
   type: storage

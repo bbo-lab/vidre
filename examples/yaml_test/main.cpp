@@ -13,7 +13,7 @@ namespace po = boost::program_options;
 std::string systemConfigFilepath = "C:/Blip/Blap/Bloop";  //"C:/Projects/vidre/config/setupExample.yaml";
 
 int main(int argc, const char *argv[]) {
-    // Parse arguments
+    // Parse arguments and set relevant variables.
     po::options_description desc("Allowed options");
     desc.add_options()("help", "Print this help message")("config", po::value<std::string>(),
                                                           "File path to system configuration file");
@@ -26,11 +26,11 @@ int main(int argc, const char *argv[]) {
         std::cout << desc << "\n";
         return 0;
     }
-
     if (vm.count("config")) {
         systemConfigFilepath = vm["config"].as<std::string>();
     }
 
+    // Create system from YAML and check constructed cameras.
     std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras = vidre::LoadSystemSetup(systemConfigFilepath);
     if (cameras.size() == 0) {
         std::cout << "Error in loading system config file." << std::endl;
