@@ -9,6 +9,7 @@ set(public_headers
     ../include/vidre/shared_frame_buffer_controller.hpp
     ../include/vidre/shared_frame_header.hpp
     ../include/vidre/camera.hpp
+    ../include/vidre/config_loader.hpp
 )
 
 source_group(public FILES ${public_headers})
@@ -25,11 +26,16 @@ if(PYLON_ENABLED)
 endif()
 
 target_link_libraries(vidre PUBLIC Boost::headers)
+target_link_libraries(vidre PUBLIC Boost::program_options)
+target_link_libraries(vidre PUBLIC Boost::filesystem)
+
+target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 
 add_subdirectory(ring_buffer)
 add_subdirectory(runtime)
 add_subdirectory(storage)
 add_subdirectory(camera)
+add_subdirectory(config_loader)
 
 install(FILES ${public_headers} DESTINATION include/vidre)
 
