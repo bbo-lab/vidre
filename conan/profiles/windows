@@ -1,0 +1,11 @@
+[settings]
+arch=x86_64
+os=Windows
+compiler=msvc
+compiler.version=193
+compiler.runtime=dynamic
+compiler.runtime_type=Release
+build_type=Release
+
+[conf]
+tools.microsoft.msbuild:max_cpu=count={{os.cpu_count()}}
