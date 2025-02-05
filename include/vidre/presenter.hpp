@@ -9,18 +9,31 @@
 namespace vidre {
     class Presenter {
     public:
-        Presenter(ICamera *camera) {
+        Presenter() {}
+        ~Presenter() {
+            Stop();
+        }
+        void SetCamera(ICamera *newCamera) {
+            camera = newCamera;
+        }
+        void Start() {
             presenting = true;
             thread = std::thread(&Presenter::presentationThread, this, camera);
         }
-        ~Presenter() {
+        void Stop() {
+            if (!presenting)
+                return;
             presenting = false;
             thread.join();
+        }
+        bool IsRunning() {
+            return presenting;
         }
 
     private:
         std::thread thread;
         std::atomic<bool> presenting;
+        ICamera *camera;
 
         static void presentFrame(void *dataBuffer, const vidre::Config &config) {
             Pylon::CPylonImage image;
