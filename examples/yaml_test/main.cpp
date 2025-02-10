@@ -62,6 +62,9 @@ int main(int argc, const char *argv[]) {
     std::cout.flush();
 
     vidre::Presenter presenter;
+
+    // Simple Mock CLI
+    // Mainly for testing out multiple cameras.
     std::string input;
     bool running = true;
     while (running) {
@@ -113,6 +116,9 @@ int main(int argc, const char *argv[]) {
                 std::cout << match->first << " already running" << std::endl;
         }
         else if (tokens[0].compare("stop") == 0) {
+            if (match->second.get() == presenter.GetCamera()) {
+                presenter.Stop();
+            }
             if (match->second->IsRunning()) {
                 match->second->Stop();
                 match->second->Disarm();
@@ -129,7 +135,7 @@ int main(int argc, const char *argv[]) {
                 std::cout << "Staging " << match->first << std::endl;
             }
             else
-                std::cout << match->first << " is not running" << std::endl;
+                std::cout << match->first << " not running" << std::endl;
         }
     }
 
