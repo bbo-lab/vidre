@@ -6,10 +6,11 @@ namespace vidre {
         config_ = config; 
     }     
 
-    Storage::SetConfig(const Config& config)
+    void Storage::SetConfig(const Config& config)
     {
         config_ = config;
     }  
+    
     Config Storage::GetConfig()
     {
         return config_;

@@ -38,3 +38,7 @@ build/
 .vscode/*
 !.vscode/tasks.json
 !.vscode/launch.json
+
+
+# conan
+CMakeUserPresets.json

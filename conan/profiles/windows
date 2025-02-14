@@ -8,4 +8,4 @@ compiler.runtime_type=Release
 build_type=Release
 
 [conf]
-tools.microsoft.msbuild:max_cpu=count={{os.cpu_count()}}
+tools.microsoft.msbuild:max_cpu_count={{os.cpu_count()}}

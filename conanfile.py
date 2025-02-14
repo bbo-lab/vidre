@@ -25,6 +25,7 @@ class Vidre(ConanFile):
         self.requires("boost/1.86.0")
         self.requires("cli11/[2.3.2]")
         self.requires("fmt/11.1.1")
+
     def build_requirements(self):
         self.tool_requires("cmake/3.29.6")
 
@@ -39,6 +40,8 @@ class Vidre(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        tc.cache_variables["PYLON_ROOT"] = os.getenv("PYLON_ROOT")
+        tc.cache_variables["PYLON_DEV_DIR"] = os.getenv("PYLON_DEV_DIR")
 
         tc.generate()
 
@@ -54,3 +57,10 @@ class Vidre(ConanFile):
     def package(self):
         cmake = CMake(self)
         cmake.install()
+
+    def package_info(self):
+        self.cpp_info.components.libdirs = ['lib']
+        self.cpp_info.components.libs = ['vidre']
+        self.cpp_info.components.includedirs = ['include']
+        self.cpp_info.components.requires = ["boost::headers", "boost::program_options", "boost::filesystem"]
+        self.cpp_info.components.set_property("cmake_target_name", "vidre::vidre")

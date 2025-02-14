@@ -120,8 +120,8 @@ FetchContent_MakeAvailable(yaml-cpp)
 # FetchContent_MakeAvailable(nlohmann_json)
 
 # pylon
-list(APPEND CMAKE_PREFIX_PATH $ENV{PYLON_ROOT})
-list(APPEND CMAKE_PREFIX_PATH $ENV{PYLON_DEV_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${PYLON_ROOT})
+list(APPEND CMAKE_PREFIX_PATH ${PYLON_DEV_DIR})
 find_package(pylon 8.0.0 REQUIRED)
 
 if(pylon_FOUND)
