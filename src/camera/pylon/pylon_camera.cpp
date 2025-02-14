@@ -59,11 +59,6 @@ namespace vidre {
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            // camera.RegisterImageEventHandler(new CSampleImageEventHandler, Pylon::RegistrationMode_Append,
-            // Pylon::Cleanup_Delete);
-            // camera.RegisterConfiguration(new Pylon::CSoftwareTriggerConfiguration,
-            //                             Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_Delete);
-
             camera.MaxNumBuffer = 30;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
@@ -71,6 +66,29 @@ namespace vidre {
             throw;
         }
         camera.Open();
+    }
+    bool PylonCamera::Init(std::string serial) {
+        static Pylon::CTlFactory &tlFactory = Pylon::CTlFactory::GetInstance();
+        Pylon::DeviceInfoList_t deviceList;
+        tlFactory.EnumerateDevices(deviceList);
+
+        auto match = std::find_if(deviceList.begin(), deviceList.end(), [&](const Pylon::CDeviceInfo &deviceInfo) {
+            return deviceInfo.GetSerialNumber().compare(serial.c_str()) == 0;
+        });
+        if (match == deviceList.end())
+            return false;
+
+        try {
+            camera.Attach(tlFactory.CreateDevice(*match));
+            camera.MaxNumBuffer = 30;
+        } catch (const Pylon::GenericException &e) {
+            // Error handling.
+            std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
+            throw;
+        }
+        camera.Open();
+
+        return true;
     }
     /// Executing Arm() "fixes" the camera configuration in place.
     void PylonCamera::Arm() {
@@ -200,9 +218,9 @@ namespace vidre {
         }
     }
 
-    bool PylonCamera::LoadConfiguration(const char *filepath) {
+    bool PylonCamera::LoadConfiguration(std::string filepath) {
         try {
-            Pylon::CFeaturePersistence::Load(filepath, &GetGenAPINodeMap(), true);
+            Pylon::CFeaturePersistence::Load(filepath.c_str(), &GetGenAPINodeMap(), true);
         } catch (const Pylon::GenericException &e) {
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             return false;
@@ -210,9 +228,9 @@ namespace vidre {
         return true;
     }
 
-    bool PylonCamera::SaveConfiguration(const char *filepath) {
+    bool PylonCamera::SaveConfiguration(std::string filepath) {
         try {
-            Pylon::CFeaturePersistence::Save(filepath, &GetGenAPINodeMap());
+            Pylon::CFeaturePersistence::Save(filepath.c_str(), &GetGenAPINodeMap());
         } catch (const Pylon::GenericException &e) {
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             return false;

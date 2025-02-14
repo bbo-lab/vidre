@@ -2,13 +2,29 @@
 
 namespace vidre {
     std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
+        if (!cameraNode["vendor"])
+            return nullptr;
+
+        // Vendor is specified
         std::unique_ptr<vidre::ICamera> camera;
-        if (cameraNode["vendor"] && cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
+        if (cameraNode["vendor"].as<std::string>().compare("dummy") == 0) {
+            camera = std::make_unique<vidre::DummyCamera>();
+        }
+        else if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
             camera = std::make_unique<vidre::PylonCamera>();
-            camera->Init();
-            if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str()))
-                std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+        }
+        else
+            return nullptr;
+
+        if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
+            std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
+            return nullptr;
+        }
+        if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
+            std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+            return nullptr;
         }  // TODO: Delegate to Factory
+
         return camera;
     }
 
@@ -36,8 +52,10 @@ namespace vidre {
             if (!it->second["type"])
                 continue;
 
-            if (!it->second["type"].as<std::string>().compare("camera") != 0)
+            // Create camera from file-defined details if the node is a camera node.
+            if (!it->second["type"].as<std::string>().compare("camera") != 0) {
                 cameras[it->first.as<std::string>()] = LoadCamera(it->second);
+            }
         }
 
         return cameras;

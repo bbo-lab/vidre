@@ -18,6 +18,7 @@ namespace vidre {
         ~PylonCamera();
 
         virtual void Init() override;
+        virtual bool Init(std::string serial) override;
         virtual void Arm() override;
         virtual void Disarm() override;
         virtual void Start() override;
@@ -28,8 +29,8 @@ namespace vidre {
 
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
-        virtual bool SaveConfiguration(const char *filepath) override;
-        virtual bool LoadConfiguration(const char *filepath) override;
+        virtual bool SaveConfiguration(std::string filepath) override;
+        virtual bool LoadConfiguration(std::string filepath) override;
 
         GenApi::INodeMap &GetGenAPINodeMap();
 
