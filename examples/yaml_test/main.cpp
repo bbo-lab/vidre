@@ -74,6 +74,7 @@ int main(int argc, const char *argv[]) {
         std::vector<std::string> tokens = split(input.c_str());
         if (tokens[0].compare("exit") == 0) {
             running = false;
+            presenter.Stop();
             std::cout << "Exiting" << std::endl;
             continue;
         }
@@ -137,6 +138,11 @@ int main(int argc, const char *argv[]) {
             else
                 std::cout << match->first << " not running" << std::endl;
         }
+    }
+
+    for (const auto &it : cameras) {
+        it.second->Stop();
+        it.second->Disarm();
     }
 
     return 0;

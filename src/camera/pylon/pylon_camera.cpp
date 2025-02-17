@@ -114,7 +114,8 @@ namespace vidre {
     }
     void PylonCamera::Stop() {
         running.store(false);
-        grabber.join();
+        if (grabber.joinable())
+            grabber.join();
     }
 
     const SharedFrameHeader *PylonCamera::RetrieveLatestFrame() {
