@@ -32,7 +32,8 @@ namespace vidre {
                 return;
             window.Hide();
             presenting = false;
-            thread.join();
+            if (thread.joinable())
+                thread.join();
         }
         bool IsRunning() {
             return presenting;
