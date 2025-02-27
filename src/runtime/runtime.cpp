@@ -46,6 +46,7 @@ namespace vidre
         cameraConfig.sourceWidth = camera->GetFrameWidth();
         cameraConfig.sourceHeight = camera->GetFrameHeight();
         cameraConfig.sourceMaxNumBuffer = camera->GetMaxNumBuffer();
+        cameraConfig.sourceFrameRate =  camera->GetFrameRate();
         
         storage = std::make_unique<vidre::Storage>(cameraConfig);
 
@@ -81,6 +82,17 @@ namespace vidre
                         result->frameID);
 
             previousResult = result;
+            
+            // update ccv_header
+            storage->UpdateCCVHeader(result->frameID);
+
+            // create_tail
+            vidre::ccv_frame_tail tail;
+            tail.frameIndex = result->frameID; // + result->numSkippedBefore? TODO: think about skipped logic
+            // tail.skippedFrames = numSkippedBefore;
+            tail.timeStamp = result->timeStamp;
+            tail.timeStamp /= 1e9;
+            storage->AppendCCVFrame((const void *)(result + 1), tail);
         }
     }
 
