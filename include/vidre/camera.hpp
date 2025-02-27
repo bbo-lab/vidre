@@ -4,6 +4,7 @@
 
 #include "shared_frame_header.hpp"
 #include "shared_frame_buffer_controller.hpp"
+#include <boost/interprocess/managed_shared_memory.hpp>
 
 namespace vidre {
     // Aptina camera does not seem to support GenICam cameras. Is adapting Aptina to
@@ -31,6 +32,7 @@ namespace vidre {
         virtual bool IsArmed() = 0;
         virtual bool IsRunning() = 0;
 
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory) = 0;
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
         // Idea: Custom functions for different filetypes.
@@ -43,6 +45,7 @@ namespace vidre {
         virtual unsigned int GetFrameHeight() = 0;
         virtual unsigned int GetFrameOffsetX() = 0;
         virtual unsigned int GetFrameOffsetY() = 0;
+        virtual unsigned int GetMaxNumBuffer() = 0;
         virtual double GetFrameRate() = 0;
         virtual void SetFrameWidth(unsigned int newFrameWidth) = 0;
         virtual void SetFrameHeight(unsigned int newFrameHeight) = 0;

@@ -2,13 +2,16 @@
 #include "config.h"
 #include <pylon/PylonIncludes.h>
 #include <pylon/ImagePersistence.h>
+#include <boost/interprocess/managed_shared_memory.hpp>
 
 namespace vidre {
     struct Config {
         Pylon::EPixelType sourcePixelType;
         uint32_t sourceWidth;
         uint32_t sourceHeight;
+        uint32_t sourceMaxNumBuffer;
         size_t sourcePaddingX;
+        
     };
 
     class Storage {
@@ -20,7 +23,9 @@ namespace vidre {
         void SetConfig(const Config& config);
         Config GetConfig();
         void Save(const void *data_ptr, size_t data_size, int frame);
+        boost::interprocess::managed_shared_memory* GetSharedMemory();
     private:
+        std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory_;
         Config config_;
     };
 }  // namespace vidre

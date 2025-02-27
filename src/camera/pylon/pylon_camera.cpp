@@ -92,9 +92,11 @@ namespace vidre {
     }
     /// Executing Arm() "fixes" the camera configuration in place.
     void PylonCamera::Arm() {
-        shrBufferFactory.PreallocateFrameBuffers((sizeof(SharedFrameHeader) + GetFrameWidth() * GetFrameHeight() /* * PixelSize*/) *
-                                                     (camera.MaxNumBuffer.GetValue() + 1),
-                                                 "vidre");
+        // shrBufferFactory.PreallocateFrameBuffers((sizeof(SharedFrameHeader) + GetFrameWidth() * GetFrameHeight() /* * PixelSize*/) *
+        //                                              (camera.MaxNumBuffer.GetValue() + 1),
+        //                                          "vidre");
+
+        shrBufferFactory.PreallocateFrameBuffers();
 
         camera.SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
         // camera.Close();
@@ -158,6 +160,10 @@ namespace vidre {
         Pylon::CIntegerParameter offsetY(GetGenAPINodeMap(), "OffsetY");
 
         return offsetY.GetValue();
+    }
+
+    unsigned int PylonCamera::GetMaxNumBuffer() {
+        return camera.MaxNumBuffer.GetValue();
     }
 
     double PylonCamera::GetFrameRate() {
@@ -237,5 +243,10 @@ namespace vidre {
             return false;
         }
         return true;
+    }
+
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory)
+    {
+        shrBufferFactory.SetSharedMemory(shared_memory);
     }
 }  // namespace vidre

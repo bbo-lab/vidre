@@ -33,6 +33,11 @@ namespace vidre {
             return running;
         };
 
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory)
+        {
+            return;
+        };
+
         virtual const SharedFrameHeader *RetrieveLatestFrame() {
             return nullptr;
         };
@@ -55,6 +60,9 @@ namespace vidre {
             return 0;
         };
         virtual unsigned int GetFrameOffsetY() {
+            return 0;
+        };
+        virtual unsigned int GetMaxNumBuffer() {
             return 0;
         };
         virtual double GetFrameRate() {

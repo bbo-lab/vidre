@@ -34,26 +34,28 @@ namespace vidre
         camera->Init();
         // camera->SaveConfiguration(defaultConfig);
         if (!camera->LoadConfiguration(configuration.c_str())) {
-            std::cout << "Could not load configuration file \"" << defaultConfigFilepath << "\"" << std::endl;
+            std::cout << "Could not load configuration file \"" << configuration << "\"" << std::endl;
         }
         camera->SetFrameRate(10.0);
 
 
-        storage = std::make_unique<vidre::Storage>();
-
+        
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
         cameraConfig.sourcePaddingX = camera->GetFrameOffsetX();
         cameraConfig.sourceWidth = camera->GetFrameWidth();
         cameraConfig.sourceHeight = camera->GetFrameHeight();
+        cameraConfig.sourceMaxNumBuffer = camera->GetMaxNumBuffer();
+        
+        storage = std::make_unique<vidre::Storage>(cameraConfig);
 
-        storage->SetConfig(cameraConfig);
+        camera->SetSharedMemory(storage->GetSharedMemory());
     }
 
     void RuntimeInstance::presentationThread() {
         // Setting up relevant camera data for saving
         const vidre::SharedFrameHeader *result = nullptr, *previousResult = nullptr;
-
+        const auto cameraConfig = storage->GetConfig();
         // Wait for Pylon's CInstantCamera to start running.
         while (!camera->IsRunning()) {
             std::this_thread::yield();
@@ -91,9 +93,8 @@ namespace vidre
             camera->Start();
 
 
-
             // Start thread to query the latest frames. Stops when camera is stopped.
-            std::thread presentation(presentationThread);
+            std::thread presentation(&RuntimeInstance::presentationThread, this);
 
             // Pylon::WaitObject::Sleep(2000);
 
