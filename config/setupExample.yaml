@@ -19,6 +19,10 @@ camOverview:
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true # Determines if the config file is local on the node or if it should be sent over on setup.
   description: For monitoring.
+  storage:
+    type: storage
+    output_file: pylon.ccv
+    # size and other storage related entities, e.g: root dir, save or not pngs etc
 camHeadset:
   type: camera
   vendor: dummy
@@ -26,6 +30,9 @@ camHeadset:
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
+  storage:
+    type: storage
+    output_file: dummy.ccv
 camLeftCorner:
   type: camera
   vendor: iAmNotSupported
@@ -33,16 +40,12 @@ camLeftCorner:
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
+  storage:
+    type: storage
+    output_file: ns.ccv
 
 
 # ---- UNIMPLEMENTED ----
-
-storage1:
-  type: storage
-  output_file: ../out/cam1.mp4
-storage2:
-  type: storage
-  output_file: ../out/cam2.mp4
 
 netSink1:
   type: netSink

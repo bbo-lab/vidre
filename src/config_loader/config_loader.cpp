@@ -28,7 +28,7 @@ namespace vidre {
         return camera;
     }
 
-    std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> LoadSystemSetup(std::string setupFilepath) {
+    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
         // Idea for future: Create packages of commands per module from YAML. Afterwards properly distribute
         // over network. Currently just execute those packages locally and just have multiple cameras
         // be able to be started.
@@ -40,7 +40,7 @@ namespace vidre {
         // YAML File has a pipe between cam1 and storage1. Both are on the same node:
         // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
 
-        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras;
+        std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
         if (!boost::filesystem::exists(setupFilepath))
             return cameras;
 
@@ -51,10 +51,14 @@ namespace vidre {
                 continue;
             if (!it->second["type"])
                 continue;
-
+                
             // Create camera from file-defined details if the node is a camera node.
             if (!it->second["type"].as<std::string>().compare("camera") != 0) {
-                cameras[it->first.as<std::string>()] = LoadCamera(it->second);
+                cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
+                
+                cameras[it->first.as<std::string>()]->SetCamera(LoadCamera(it->second));
+
+                cameras[it->first.as<std::string>()]->CreateStorage(it->second["storage"]["output_file"].as<std::string>());  
             }
         }
 

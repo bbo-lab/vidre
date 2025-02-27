@@ -3,12 +3,12 @@
 
 namespace vidre {
 
-    Storage::Storage(const Config& config)
+    Storage::Storage(const Config& config, std::string output_file_name_)
     {
         config_ = config; 
 
         // Shared Memory
-        const std::string newMemoryName = "vidre";
+        const std::string newMemoryName = output_file_name_;
         boost::interprocess::shared_memory_object::remove(newMemoryName.c_str());
         size_t capacity = (sizeof(SharedFrameHeader) + config_.sourceWidth * config_.sourceHeight) * 
                           (config_.sourceMaxNumBuffer + 1);
@@ -29,6 +29,7 @@ namespace vidre {
         ccv_header.frameCount = 0;
 
         // initial write of header
+        output_file_name = output_file_name_;
         std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::trunc);
         file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
         file.close();

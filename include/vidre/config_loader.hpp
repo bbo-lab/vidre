@@ -8,8 +8,10 @@
 #include "vidre/camera.hpp"
 #include "vidre/pylon_camera.hpp"
 #include "vidre/dummy_camera.hpp"
+#include "vidre/runtime.h"
+
 #include "yaml-cpp/yaml.h"
 
 namespace vidre {
-    std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> LoadSystemSetup(std::string setupFilepath);
+    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath);
 }  // namespace vidre

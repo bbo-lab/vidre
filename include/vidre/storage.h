@@ -21,7 +21,7 @@ namespace vidre {
     class Storage {
     public:
         Storage() {};
-        Storage(const Config& config);
+        Storage(const Config& config, std::string output_file_name_ = "some.ccv");
         ~Storage() {};
 
         void SetConfig(const Config& config);

@@ -52,6 +52,33 @@ namespace vidre
 
         camera->SetSharedMemory(storage->GetSharedMemory());
     }
+    void RuntimeInstance::SetCamera(std::unique_ptr<ICamera> camera_)
+    {
+        if (camera != nullptr || camera_ == nullptr) 
+        {
+            return;
+        }
+        camera = std::move(camera_);
+    }
+    void RuntimeInstance::CreateStorage(std::string output_file_name)
+    {
+        if (storage != nullptr || camera == nullptr)
+        {
+            return;
+        }
+        
+        vidre::Config cameraConfig{};
+        cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
+        cameraConfig.sourcePaddingX = camera->GetFrameOffsetX();
+        cameraConfig.sourceWidth = camera->GetFrameWidth();
+        cameraConfig.sourceHeight = camera->GetFrameHeight();
+        cameraConfig.sourceMaxNumBuffer = camera->GetMaxNumBuffer();
+        cameraConfig.sourceFrameRate =  camera->GetFrameRate();
+        
+        storage = std::make_unique<vidre::Storage>(cameraConfig, output_file_name);
+
+        camera->SetSharedMemory(storage->GetSharedMemory());
+    }
 
     void RuntimeInstance::presentationThread() {
         // Setting up relevant camera data for saving
@@ -123,4 +150,10 @@ namespace vidre
             Pylon::WaitObject::Sleep(500);
         }
     }
+
+    bool RuntimeInstance::CheckCamera()
+    {
+        return camera != nullptr;
+    }
+
 }
