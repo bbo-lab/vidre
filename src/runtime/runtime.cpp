@@ -123,32 +123,23 @@ namespace vidre
         }
     }
 
-    void RuntimeInstance::run(int n_iter)
+    void RuntimeInstance::run()
     {
-        std::thread presentation;
+        camera->Arm();
+        camera->Start();
+        thread = std::thread(&RuntimeInstance::presentationThread, this);
+    }
 
-        for (int i = 0; i < n_iter; ++i) {
-            camera->Arm();
-            camera->Start();
-
-
-            // Start thread to query the latest frames. Stops when camera is stopped.
-            std::thread presentation(&RuntimeInstance::presentationThread, this);
-
-            // Pylon::WaitObject::Sleep(2000);
-
-            std::cout << "Press Enter to stop.\n";
-            while (std::cin.get() != '\n') {
-            }
-
-            camera->Stop();
-            presentation.join();
-            camera->Disarm();
-
-            // Simulate change of parameters inbetween.
-            camera->SetFrameRate(10.0);
-            Pylon::WaitObject::Sleep(500);
+    void RuntimeInstance::stop()
+    {
+        camera->Stop();
+        
+        if (thread.joinable())
+        {
+            thread.join();
         }
+        
+        camera->Disarm();
     }
 
     bool RuntimeInstance::CheckCamera()

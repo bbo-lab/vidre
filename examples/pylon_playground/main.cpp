@@ -8,8 +8,11 @@ int main(int argc, char** argv) {
 
     auto runtime = std::make_unique<vidre::RuntimeInstance>(defaultConfigFilepath);
 
-    int n_iter = 1;
-    runtime->run(n_iter);
+    runtime->run();
+    
+    std::cout << "Press Enter to stop.\n";
+    while (std::cin.get() != '\n') {}
 
+    runtime->stop();
     return 0;
 }

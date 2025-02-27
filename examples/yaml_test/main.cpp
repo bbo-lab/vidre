@@ -11,8 +11,8 @@
 namespace po = boost::program_options;
 
 // std::string systemConfigFilepath = "C:/Not/A/Real/Path.yaml";
-// std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
-std::string systemConfigFilepath = "C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/config/setupExample.yaml";
+std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
+// std::string systemConfigFilepath = "C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/config/setupExample.yaml";
 
 static std::vector<std::string> split(const char *str, char c = ' ') {
     std::vector<std::string> result;
@@ -62,89 +62,84 @@ int main(int argc, const char *argv[]) {
     }
     std::cout.flush();
 
+
     // vidre::Presenter presenter;
 
     // Simple Mock CLI
     // Mainly for testing out multiple cameras.
-    // std::string input;
-    // bool running = true;
-    // while (running) {
-    //     std::cout << "[vidre] ";
-    //     std::getline(std::cin, input);
+    std::string input;
+    bool running = true;
+    while (running) {
+        std::cout << "[vidre] ";
+        std::getline(std::cin, input);
 
-    //     std::vector<std::string> tokens = split(input.c_str());
-    //     if (tokens[0].compare("exit") == 0) {
-    //         running = false;
-    //         presenter.Stop();
-    //         std::cout << "Exiting" << std::endl;
-    //         continue;
-    //     }
-    //     else if (tokens[0].compare("unstage") == 0) {
-    //         if (presenter.IsRunning()) {
-    //             presenter.Stop();
-    //             std::cout << "Unstaging" << std::endl;
-    //         }
-    //         else
-    //             std::cout << "Nothing staged" << std::endl;
-    //         continue;
-    //     }
-    //     else if (tokens[0].compare("list") == 0) {
-    //         if (cameras.size() == 0) {
-    //             std::cout << "No cameras loaded" << std::endl;
-    //             continue;
-    //         }
-    //         for (const auto &it : cameras)
-    //             std::cout << "- " << it.first << std::endl;
-    //         continue;
-    //     }
+        std::vector<std::string> tokens = split(input.c_str());
+        if (tokens[0].compare("exit") == 0) {
+            running = false;
+            // presenter.Stop();
+            std::cout << "Exiting" << std::endl;
+            continue;
+        }
+        // else if (tokens[0].compare("unstage") == 0) {
+        //     if (presenter.IsRunning()) {
+        //         presenter.Stop();
+        //         std::cout << "Unstaging" << std::endl;
+        //     }
+        //     else
+        //         std::cout << "Nothing staged" << std::endl;
+        //     continue;
+        // }
+        else if (tokens[0].compare("list") == 0) {
+            if (cameras.size() == 0) {
+                std::cout << "No cameras loaded" << std::endl;
+                continue;
+            }
+            for (const auto &it : cameras)
+                std::cout << "- " << it.first << std::endl;
+            continue;
+        }
 
-    //     if (tokens.size() < 2) {
-    //         std::cout << "Insufficient arguments" << std::endl;
-    //         continue;
-    //     }
-    //     auto match = cameras.find(tokens[1]);
-    //     if (match == cameras.end()) {
-    //         std::cout << tokens[1] << " not found" << std::endl;
-    //         continue;
-    //     }
+        if (tokens.size() < 2) {
+            std::cout << "Insufficient arguments" << std::endl;
+            continue;
+        }
+        auto match = cameras.find(tokens[1]);
+        if (match == cameras.end()) {
+            std::cout << tokens[1] << " not found" << std::endl;
+            continue;
+        }
 
-    //     if (tokens[0].compare("start") == 0) {
-    //         if (!match->second->IsRunning()) {
-    //             match->second->Arm();
-    //             match->second->Start();
-    //             std::cout << "Starting " << match->first << std::endl;
-    //         }
-    //         else
-    //             std::cout << match->first << " already running" << std::endl;
-    //     }
-    //     else if (tokens[0].compare("stop") == 0) {
-    //         if (match->second.get() == presenter.GetCamera()) {
-    //             presenter.Stop();
-    //         }
-    //         if (match->second->IsRunning()) {
-    //             match->second->Stop();
-    //             match->second->Disarm();
-    //             std::cout << "Stopping " << match->first << std::endl;
-    //         }
-    //         else
-    //             std::cout << match->first << " not running" << std::endl;
-    //     }
-    //     else if (tokens[0].compare("stage") == 0) {
-    //         if (match->second->IsRunning()) {
-    //             presenter.Stop();
-    //             presenter.SetCamera(match->second.get());
-    //             presenter.Start();
-    //             std::cout << "Staging " << match->first << std::endl;
-    //         }
-    //         else
-    //             std::cout << match->first << " not running" << std::endl;
-    //     }
-    // }
+        if (tokens[0].compare("start") == 0) {
+            if (!match->second->IsRunning()) {
+                match->second->run();
+                std::cout << "Starting " << match->first << std::endl;
+            }
+            else
+                std::cout << match->first << " already running" << std::endl;
+        }
+        else if (tokens[0].compare("stop") == 0) {
+            if (match->second->IsRunning()) {
+                match->second->stop();
+                std::cout << "Stopping " << match->first << std::endl;
+            }
+            else
+                std::cout << match->first << " not running" << std::endl;
+        }
+        // else if (tokens[0].compare("stage") == 0) {
+        //     if (match->second->IsRunning()) {
+        //         presenter.Stop();
+        //         presenter.SetCamera(match->second.get());
+        //         presenter.Start();
+        //         std::cout << "Staging " << match->first << std::endl;
+        //     }
+        //     else
+        //         std::cout << match->first << " not running" << std::endl;
+        // }
+    }
 
-    // for (const auto &it : cameras) {
-    //     it.second->Stop();
-    //     it.second->Disarm();
-    // }
+    for (const auto &it : cameras) {
+        it.second->stop();
+    }
 
     return 0;
 }
