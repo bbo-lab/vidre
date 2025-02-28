@@ -63,7 +63,7 @@ namespace vidre {
             return 0;
         };
         virtual unsigned int GetMaxNumBuffer() {
-            return 0;
+            return 1;
         };
         virtual double GetFrameRate() {
             return 1;

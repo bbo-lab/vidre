@@ -12,10 +12,17 @@ namespace vidre {
         boost::interprocess::shared_memory_object::remove(newMemoryName.c_str());
         size_t capacity = (sizeof(SharedFrameHeader) + config_.sourceWidth * config_.sourceHeight) * 
                           (config_.sourceMaxNumBuffer + 1);
-        shared_memory_ = std::make_unique<boost::interprocess::managed_shared_memory>(
+
+        // !!! Just to show for yaml_test, (default dummy  cam set up has too low capacity)
+        capacity *= capacity > 32000 ? 1 : 1000;
+        try {
+            shared_memory_ = std::make_unique<boost::interprocess::managed_shared_memory>(
             boost::interprocess::open_or_create, newMemoryName.c_str(), capacity
         );
-
+        } catch (boost::interprocess::interprocess_exception const& iExcept) {
+            std::cout << iExcept.what();
+            return;
+        }
 
         // ccv staff
         ccv_header.headerSize = sizeof(vidre::ccv_cam_header);

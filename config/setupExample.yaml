@@ -15,8 +15,10 @@
 camOverview:
   type: camera
   vendor: pylon   # Can this be acquired from e.g. the specific usb port itself? 
-  serial: 22343925
-  config_file: C:/Projects/vidre/defaultConfig.config
+  # serial: 22343925
+  serial: 22511389
+  # config_file: C:/Projects/vidre/defaultConfig.config
+  config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
   is_config_local: true # Determines if the config file is local on the node or if it should be sent over on setup.
   description: For monitoring.
   storage:
@@ -27,7 +29,8 @@ camHeadset:
   type: camera
   vendor: dummy
   serial: 10001010
-  config_file: C:/Projects/vidre/defaultConfig.config
+  # config_file: C:/Projects/vidre/defaultConfig.config
+  config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
   storage:
@@ -37,7 +40,8 @@ camLeftCorner:
   type: camera
   vendor: iAmNotSupported
   serial: 10203000
-  config_file: C:/Projects/vidre/defaultConfig.config
+  # config_file: C:/Projects/vidre/defaultConfig.config
+  config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
   storage:

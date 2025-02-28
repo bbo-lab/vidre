@@ -125,6 +125,10 @@ namespace vidre
 
     void RuntimeInstance::run()
     {
+        if (camera == nullptr || storage == nullptr)
+        {
+            return;
+        }
         camera->Arm();
         camera->Start();
         thread = std::thread(&RuntimeInstance::presentationThread, this);
@@ -132,6 +136,11 @@ namespace vidre
 
     void RuntimeInstance::stop()
     {
+        // todo: maybe clear storage
+        if (camera == nullptr )
+        {
+            return;
+        }
         camera->Stop();
         
         if (thread.joinable())
