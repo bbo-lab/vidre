@@ -36,7 +36,6 @@ namespace vidre
         if (!camera->LoadConfiguration(configuration.c_str())) {
             std::cout << "Could not load configuration file \"" << configuration << "\"" << std::endl;
         }
-        camera->SetFrameRate(10.0);
 
 
         
@@ -99,14 +98,14 @@ namespace vidre
             }
 
             // Present frame
-    #ifdef PYLON_WIN_BUILD
-            presentFrame((void *)(result + 1), cameraConfig);
-    #endif
+    // #ifdef PYLON_WIN_BUILD
+    //         presentFrame((void *)(result + 1), cameraConfig);
+    // #endif
             std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
 
             // Save Image
-            storage->Save((const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
-                        result->frameID);
+            // storage->Save((const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
+            //             result->frameID);
 
             previousResult = result;
             

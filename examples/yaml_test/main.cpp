@@ -80,15 +80,6 @@ int main(int argc, const char *argv[]) {
             std::cout << "Exiting" << std::endl;
             continue;
         }
-        // else if (tokens[0].compare("unstage") == 0) {
-        //     if (presenter.IsRunning()) {
-        //         presenter.Stop();
-        //         std::cout << "Unstaging" << std::endl;
-        //     }
-        //     else
-        //         std::cout << "Nothing staged" << std::endl;
-        //     continue;
-        // }
         else if (tokens[0].compare("list") == 0) {
             if (cameras.size() == 0) {
                 std::cout << "No cameras loaded" << std::endl;
@@ -125,16 +116,6 @@ int main(int argc, const char *argv[]) {
             else
                 std::cout << match->first << " not running" << std::endl;
         }
-        // else if (tokens[0].compare("stage") == 0) {
-        //     if (match->second->IsRunning()) {
-        //         presenter.Stop();
-        //         presenter.SetCamera(match->second.get());
-        //         presenter.Start();
-        //         std::cout << "Staging " << match->first << std::endl;
-        //     }
-        //     else
-        //         std::cout << match->first << " not running" << std::endl;
-        // }
     }
 
     for (const auto &it : cameras) {
