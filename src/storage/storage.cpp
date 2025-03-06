@@ -1,10 +1,9 @@
-#include "vidre/storage.h"
+#include "vidre/storage.hpp"
 #include "vidre/shared_frame_header.hpp"
 
 namespace vidre {
 
-    Storage::Storage(const Config& config, std::string outputFileName)
-    {
+    Storage::Storage(const Config& config, std::string outputFileName) {
         _config = config; 
 
         // Shared Memory
@@ -37,18 +36,15 @@ namespace vidre {
         file.close();
     }     
 
-    void Storage::SetConfig(const Config& config)
-    {
+    void Storage::setConfig(const Config& config) {
         _config = config;
     }  
     
-    Config Storage::GetConfig()
-    {
+    Config Storage::getConfig() {
         return _config;
     }
 
-
-    void Storage::Save(const void *buffer, size_t dataSize, int frameID) {
+    void Storage::save(const void *buffer, size_t dataSize, int frameID) {
         Pylon::CPylonImage pylonImage;
 
         Pylon::CImageFormatConverter formatConverter;
@@ -60,13 +56,12 @@ namespace vidre {
         Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
     }
 
-    boost::interprocess::managed_shared_memory* Storage::GetSharedMemory()
+    boost::interprocess::managed_shared_memory* Storage::getSharedMemory()
     {
         return shared_memory_.get(); 
     }
     
-    void Storage::UpdateCCVHeader(uint32_t frameID)
-    {
+    void Storage::updateCCVHeader(uint32_t frameID) {
         _CCVHeader.frameCount = frameID; // todo: skipped frames logic
         std::fstream file(_outputFileName, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(0, std::ios::beg);
@@ -74,8 +69,7 @@ namespace vidre {
         file.close();
     }
 
-    void Storage::AppendCCVFrame(const void* buffer, ccv_frame_tail tail)
-    {
+    void Storage::appendCCVFrame(const void* buffer, ccv_frame_tail tail) {
         std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::app);
 
         // write frame

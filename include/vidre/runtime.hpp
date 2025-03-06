@@ -1,7 +1,7 @@
 #pragma once
 #include <pylon/PylonIncludes.h>
 #include <pylon/ImagePersistence.h>
-#include "storage.h"
+#include "storage.hpp"
 #include "camera.hpp"
 #include <thread>
 

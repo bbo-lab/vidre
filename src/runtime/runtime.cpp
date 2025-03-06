@@ -1,7 +1,7 @@
-#include "vidre/runtime.h"
+#include "vidre/runtime.hpp"
 #include "vidre/pylon_camera.hpp"
 #include "vidre/shared_frame_header.hpp"
-#include "vidre/storage.h"
+#include "vidre/storage.hpp"
 #include <string>
 
 
@@ -16,82 +16,99 @@ static void presentFrame(void *dataBuffer, const vidre::Config &config) {
 
 namespace vidre
 {
-    RuntimeInstance::~RuntimeInstance()
-    {
+    RuntimeInstance::~RuntimeInstance() {
         // Unsure where this last (and to be closed) PylonInit comes from.
         Pylon::PylonTerminate();
     }
 
-    RuntimeInstance::RuntimeInstance(std::string configuration)
-    {
+    RuntimeInstance::RuntimeInstance(std::string configuration) {
+        // switch (configuration.cameraVendor)  {
+        //     // cameravendor is enum
+        //     case CameraVendor::Pylon:
+        //         _camera = std::make_unique<vidre::PylonCamera>();
+        //     case CameraVendor::Aptina:
+        //         _camera = std::make_unique<vidre::AptinaCamera>();
+        //     default:
+        //         _camera = nullptr;
+        // }
         _camera = std::make_unique<vidre::PylonCamera>();
-        // Eventually add Aptina Camera support.
-        // std::unique_ptr<vidre::ICamera> camera = std::make_unique<vidre::AptinaCamera>();
-        // Eventually there might be a way to generalize all GenICam (or USB3Vision) cameras under one class using GenAPI.
-        // std::unique_ptr<vidre::ICamera> camera = std::make_unique<vidre::USB3VisionCamera>();
+
 
         // Initialize and start the camera
         _camera->Init();
-        // camera->SaveConfiguration(defaultConfig);
+
         if (!_camera->LoadConfiguration(configuration.c_str())) {
-            std::cout << "Could not load configuration file \"" << configuration << "\"" << std::endl;
+            std::cout << "Could not load configuration file \"" << configuration << "\" \n";
         }
 
 
         
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = camera->GetFrameOffsetX();
-        cameraConfig.sourceWidth = camera->GetFrameWidth();
-        cameraConfig.sourceHeight = camera->GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  camera->GetFrameRate();
+        cameraConfig.sourcePaddingX = _camera->GetFrameOffsetX();
+        cameraConfig.sourceWidth = _camera->GetFrameWidth();
+        cameraConfig.sourceHeight = _camera->GetFrameHeight();
+        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
+        cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
         
         storage = std::make_unique<vidre::Storage>(cameraConfig);
 
-        camera->SetSharedMemory(storage->GetSharedMemory());
+        _camera->SetSharedMemory(storage->GetSharedMemory());
     }
-    void RuntimeInstance::SetCamera(std::unique_ptr<ICamera> camera_)
-    {
-        if (camera != nullptr || camera_ == nullptr) 
-        {
+
+    void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
+        if (_camera != nullptr) {
+            std::cout << "Camera is set already \n";
             return;
         }
-        camera = std::move(camera_);
+
+        if (camera == nullptr) {
+            std::cout << "Recieved nullptr camera \n";
+            return;
+        }
+
+        _camera = std::move(camera);
     }
-    void RuntimeInstance::CreateStorage(std::string output_file_name)
-    {
-        if (storage != nullptr || camera == nullptr)
-        {
+
+    void RuntimeInstance::createStorage(std::string outputFileName) {
+        if (_storage != nullptr) {
+            std::cout << "Storage is created already \n";
+            return;
+        }
+
+        if (_camera == nullptr) {
+            std::cout << "Camera is not set \n";
             return;
         }
         
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = camera->GetFrameOffsetX();
-        cameraConfig.sourceWidth = camera->GetFrameWidth();
-        cameraConfig.sourceHeight = camera->GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  camera->GetFrameRate();
+        cameraConfig.sourcePaddingX = _camera->GetFrameOffsetX();
+        cameraConfig.sourceWidth = _camera->GetFrameWidth();
+        cameraConfig.sourceHeight = _camera->GetFrameHeight();
+        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
+        cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
         
-        storage = std::make_unique<vidre::Storage>(cameraConfig, output_file_name);
+        _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
 
-        camera->SetSharedMemory(storage->GetSharedMemory());
+        _camera->SetSharedMemory(_storage->getSharedMemory());
     }
 
     void RuntimeInstance::presentationThread() {
         // Setting up relevant camera data for saving
         const vidre::SharedFrameHeader *result = nullptr, *previousResult = nullptr;
-        const auto cameraConfig = storage->GetConfig();
+        
+        const auto cameraConfig = _storage->getConfig();
+
         // Wait for Pylon's CInstantCamera to start running.
-        while (!camera->IsRunning()) {
+        while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
-        while (camera->IsRunning()) {
+        while (_camera->IsRunning()) {
             // Retrieve frame
-            result = camera->RetrieveLatestFrame();  // Unsafe: Pointer to const is not actually constant
+            result = _camera->RetrieveLatestFrame();  // Unsafe: Pointer to const is not actually constant
             if (result == previousResult) {
                 std::this_thread::yield();
                 continue;
@@ -110,7 +127,7 @@ namespace vidre
             previousResult = result;
             
             // update ccv_header
-            storage->UpdateCCVHeader(result->frameID);
+            _storage->updateCCVHeader(result->frameID);
 
             // create_tail
             vidre::ccv_frame_tail tail;
@@ -118,40 +135,41 @@ namespace vidre
             // tail.skippedFrames = numSkippedBefore;
             tail.timeStamp = result->timeStamp;
             tail.timeStamp /= 1e9;
-            storage->AppendCCVFrame((const void *)(result + 1), tail);
+            _storage->appendCCVFrame((const void *)(result + 1), tail);
         }
     }
 
-    void RuntimeInstance::run()
-    {
-        if (camera == nullptr || storage == nullptr)
-        {
+    void RuntimeInstance::run() {
+        if (_camera == nullptr) {
             return;
         }
-        camera->Arm();
-        camera->Start();
-        thread = std::thread(&RuntimeInstance::presentationThread, this);
+
+        if (_storage == nullptr) {
+            return;
+        }
+
+        _camera->Arm();
+        _camera->Start();
+        
+        _thread = std::thread(&RuntimeInstance::presentationThread, this);
     }
 
-    void RuntimeInstance::stop()
-    {
+    void RuntimeInstance::stop() {
         // todo: maybe clear storage
-        if (camera == nullptr )
-        {
+        if (camera == nullptr) {
             return;
         }
-        camera->Stop();
+
+        _camera->Stop();
         
-        if (thread.joinable())
-        {
-            thread.join();
+        if (_thread.joinable()) {
+            _thread.join();
         }
         
-        camera->Disarm();
+        _camera->Disarm();
     }
 
-    bool RuntimeInstance::CheckCamera()
-    {
+    bool RuntimeInstance::checkCamera() {
         return camera != nullptr;
     }
 

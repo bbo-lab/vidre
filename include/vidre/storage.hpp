@@ -35,5 +35,7 @@ namespace vidre {
         Config _config;
         std::string _outputFileName = "some.ccv";
         ccv_cam_header _CCVHeader;
+
+        // std::unique_ptr<FILE, decltype(&fclose)> outputFile;
     };
 }  // namespace vidre
