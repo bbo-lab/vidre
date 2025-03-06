@@ -18,14 +18,11 @@ public:
         shared_memory = storage_shared_memory;
     }
 
-    // void PreallocateFrameBuffers(size_t capacity, const char *newMemoryName) {
     void PreallocateFrameBuffers() {
-        // boost::interprocess::shared_memory_object::remove(newMemoryName);
-        // shared_memory = {boost::interprocess::open_or_create, newMemoryName, capacity};
         m_lastBufferContext = -1;
     }
 
-    virtual void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext) {
+    void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext) override {
         try {
             // Allocation should be delegated to a seperate object so that the data can be accessed by other resources.
             bufferContext = ++m_lastBufferContext;
@@ -46,10 +43,13 @@ public:
             throw;
         }
     }
-    virtual void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext) {
+    
+    void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext) override {
         shared_memory->deallocate((vidre::SharedFrameHeader *)pCreatedBuffer - 1);
     }
-    virtual void DestroyBufferFactory() {
+
+    // todo: fix this
+    void DestroyBufferFactory() override {
         boost::interprocess::shared_memory_object::remove(memoryName);
         delete this;
     }

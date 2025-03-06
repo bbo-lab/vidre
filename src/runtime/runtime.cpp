@@ -24,16 +24,16 @@ namespace vidre
 
     RuntimeInstance::RuntimeInstance(std::string configuration)
     {
-        camera = std::make_unique<vidre::PylonCamera>();
+        _camera = std::make_unique<vidre::PylonCamera>();
         // Eventually add Aptina Camera support.
         // std::unique_ptr<vidre::ICamera> camera = std::make_unique<vidre::AptinaCamera>();
         // Eventually there might be a way to generalize all GenICam (or USB3Vision) cameras under one class using GenAPI.
         // std::unique_ptr<vidre::ICamera> camera = std::make_unique<vidre::USB3VisionCamera>();
 
         // Initialize and start the camera
-        camera->Init();
+        _camera->Init();
         // camera->SaveConfiguration(defaultConfig);
-        if (!camera->LoadConfiguration(configuration.c_str())) {
+        if (!_camera->LoadConfiguration(configuration.c_str())) {
             std::cout << "Could not load configuration file \"" << configuration << "\"" << std::endl;
         }
 

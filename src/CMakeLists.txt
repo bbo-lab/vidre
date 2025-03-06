@@ -2,9 +2,8 @@ configure_file("${CMAKE_SOURCE_DIR}/include/vidre/config.h.in" "${CMAKE_BINARY_D
 
 set(public_headers
     ${CMAKE_BINARY_DIR}/config.h
-    ../include/vidre/ring_buffer.h
-    ../include/vidre/storage.h
-    ../include/vidre/runtime.h
+    ../include/vidre/storage.hpp
+    ../include/vidre/runtime.hpp
     ../include/vidre/pylon_camera.hpp
     ../include/vidre/dummy_camera.hpp
     ../include/vidre/shared_frame_buffer_controller.hpp

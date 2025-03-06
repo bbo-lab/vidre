@@ -9,3 +9,4 @@ how inheritance should be used for 1. internal relationships and 2. access by e.
 ### misc:
 1. ScanImage BigTIFF
 2. refactor to unified codestyle
+3. pre-commit linters / clang-format etc

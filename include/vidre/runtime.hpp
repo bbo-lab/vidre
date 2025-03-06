@@ -18,19 +18,19 @@ namespace vidre {
         void run();
         void stop();
 
-        void SetCamera(std::unique_ptr<ICamera> camera_);
-        void CreateStorage(std::string output_file_name = "some.ccv");
+        void setCamera(std::unique_ptr<ICamera> camera);
+        void createStorage(std::string outputFileName = "some.ccv");
 
-        bool CheckCamera();
+        bool checkCamera();
 
-        bool IsRunning()
+        bool isRunning()
         {
             return camera->IsRunning();
         }
 
     private:
-        std::thread thread;
-        std::unique_ptr<ICamera> camera;
-        std::unique_ptr<Storage> storage;
+        std::thread _thread;
+        std::unique_ptr<ICamera> _camera;
+        std::unique_ptr<Storage> _storage;
     };
 }  // namespace vidre

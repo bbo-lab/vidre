@@ -25,7 +25,9 @@ namespace vidre {
 // #if double CCV_CAM_HEADER_VERSION >= 0.12
         byte_t packed;
 // #endif
-        // add sensor
+
+
+        // todo add sensor
         // "sensor" / If(this.header_version >= 0.12, Struct(
         //     "offset" / Int32ul[2],
         //     "size" / Int32ul[2],
