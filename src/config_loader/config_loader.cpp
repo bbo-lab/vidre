@@ -1,6 +1,7 @@
 #include "vidre/config_loader.hpp"
 
 namespace vidre {
+    // Module construction
     std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
         if (!cameraNode["vendor"])
             return nullptr;
@@ -27,6 +28,22 @@ namespace vidre {
 
         return camera;
     }
+    std::unique_ptr<vidre::Storage> LoadStorage(YAML::Node storageNode) {
+        return nullptr;
+    }
+
+
+    // Pipe construction
+    //std::unique_ptr<vidre::Storage> ConnectModules(std::string output, std::string input, std::unordered_map<std::string, vidre::Device>) {
+    std::unique_ptr<vidre::Storage> ConnectModules(std::string output, 
+        std::string input,
+        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras,
+        std::unordered_map<std::string, std::unique_ptr<vidre::Storage>> storages) {
+
+        cameras[output]->SetSharedMemory(storages[input]->GetSharedMemory());
+
+        return nullptr;
+    }
 
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
         // Idea for future: Create packages of commands per module from YAML. Afterwards properly distribute
@@ -40,12 +57,14 @@ namespace vidre {
         // YAML File has a pipe between cam1 and storage1. Both are on the same node:
         // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
 
+        //std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
         std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
         if (!boost::filesystem::exists(setupFilepath))
             return cameras;
 
         YAML::Node config = YAML::LoadFile(setupFilepath);
 
+        // First pass: Get modules
         for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
             if (!it->second.IsMap())
                 continue;
@@ -61,6 +80,34 @@ namespace vidre {
                 cameras[it->first.as<std::string>()]->CreateStorage(it->second["storage"]["output_file"].as<std::string>());  
             }
         }
+
+        // Second pass: Connect modules
+        YAML::iterator pipesNodeIt = std::find_if(
+            config.begin(), 
+            config.end(), 
+            [](std::pair<YAML::Node, YAML::Node> n) {
+                return (n.first.as<std::string>().compare("pipes") == 0);
+            }
+        );
+
+        if (pipesNodeIt == config.end()) {
+            std::cout << "Could not load find pipes." << std::endl;
+            return cameras;
+        }
+
+        YAML::Node pipesNode = pipesNodeIt->second;
+
+        for (YAML::const_iterator it = pipesNode.begin(); it != pipesNode.end(); ++it) {
+            
+            std::cout << "Connected " << it->first.as<std::string>() << " to " << it->second.as<std::string>() << std::endl;
+            //ConnectModules(
+            //    it->first.as<std::string>(), 
+            //    it->second.as<std::string>(), 
+            //    cameras,
+            //    storages
+            //);
+        }
+
 
         return cameras;
     }

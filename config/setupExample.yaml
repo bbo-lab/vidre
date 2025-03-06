@@ -15,10 +15,10 @@
 camOverview:
   type: camera
   vendor: pylon   # Can this be acquired from e.g. the specific usb port itself? 
-  # serial: 22343925
-  serial: 22511389
+  serial: 22343925
+  # serial: 22511389
   # config_file: C:/Projects/vidre/defaultConfig.config
-  config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
+  config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true # Determines if the config file is local on the node or if it should be sent over on setup.
   description: For monitoring.
   storage:
@@ -64,8 +64,8 @@ presentation:
   type: imageMonitor
 
 pipes:
-# - output: input
-  - camHeadset: storage1
-  - camOverview: storage2
-  - camHeadset: netSink
-  - netSource: presentation
+# output: input
+  camHeadset: storage1
+  camOverview: storage2
+  camHeadset: netSink
+  netSource: presentation
