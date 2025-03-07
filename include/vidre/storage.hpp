@@ -1,8 +1,11 @@
 #pragma once
-#include "config.h"
+
 #include <pylon/PylonIncludes.h>
 #include <pylon/ImagePersistence.h>
+
 #include <boost/interprocess/managed_shared_memory.hpp>
+
+#include "vidre/config.h"
 #include "vidre/ccv_format.hpp"
 
 #include <fstream>
@@ -34,8 +37,8 @@ namespace vidre {
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;
         std::string _outputFileName = "some.ccv";
-        ccv_cam_header _CCVHeader;
+        CamCommandoHeader _CCVHeader;
 
-        // std::unique_ptr<FILE, decltype(&fclose)> outputFile;
+        std::unique_ptr<FILE, decltype(&fclose)> _outputFile;
     };
 }  // namespace vidre

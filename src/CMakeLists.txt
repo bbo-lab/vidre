@@ -1,3 +1,5 @@
+set(CCV_HEADER_VERSION 0.12)
+
 configure_file("${CMAKE_SOURCE_DIR}/include/vidre/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
 
 set(public_headers

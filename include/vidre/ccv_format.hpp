@@ -1,18 +1,35 @@
 #pragma once
+
 #include <cstdint>
 #include <cstddef>
 
-#ifndef CCV_CAM_HEADER_VERSION
-#define CCV_CAM_HEADER_VERSION 0.12
-#endif
+#include "vidre/config.h"
+
 
 namespace vidre {
-    typedef double ccv_timestamp_t;
-    typedef char byte_t;
 
-    struct ccv_cam_header {
+    struct GreenbergString {
+        uint32_t length; 
+        std::vector<uint8_t> data;
+        uint8_t terminator = 0;
+    
+        GreenbergString(uint32_t len, const std::vector<uint8_t>& input_data)
+            : length(len), data(input_data) {}
+    };
+
+    struct SensorInfo {
+        uint32_t offset[2];
+        uint32_t size[2];
+        int64_t clock;
+        double exposure;
+        double gain;
+    };
+
+    struct CamCommandoHeader {
         uint32_t headerSize;
-        const double headerVersion = CCV_CAM_HEADER_VERSION;
+        GreenbergString cameraType;
+        double headerVersion;
+        GreenbergString imageType;
 
         uint32_t bytesPerPixel;
         uint32_t bitsPerPixel;
@@ -22,27 +39,21 @@ namespace vidre {
         uint32_t height;
         double frameRate;
 
-// #if double CCV_CAM_HEADER_VERSION >= 0.12
-        byte_t packed;
-// #endif
-
-
-        // todo add sensor
-        // "sensor" / If(this.header_version >= 0.12, Struct(
-        //     "offset" / Int32ul[2],
-        //     "size" / Int32ul[2],
-        //     "clock" / Int64ul,
-        //     "exposure" / Float64l,
-        //     "gain" / Float64l
-        // ))
-        
+#if CCV_HEADER_VERSION >= 0.12
+        uint8_t packed;
+#endif
 
         uint32_t frameCount;
+
+#if CCV_HEADER_VERSION >= 0.12
+        SensorInfo sensor;
+#endif
     };
 
-    struct ccv_frame_tail {
+    struct CCVFrameTail {
         uint32_t frameIndex;
-        ccv_timestamp_t timeStamp;
-        byte_t padding[9];  // Probably for additional custom data
+        double timeStamp;
+        uint8_t padding[9];  
     };
+    
 }  // namespace vidre

@@ -26,14 +26,17 @@ namespace vidre {
         _CCVHeader.height = _config.sourceHeight;
         _CCVHeader.frameBytesOnDisk = _CCVHeader.width * _CCVHeader.height * _CCVHeader.bytesPerPixel;
         _CCVHeader.frameRate = _config.sourceFrameRate;  
+
+#if CCV_HEADER_VERSION >= 0.12
         _CCVHeader.packed = 0;
+#endif
         _CCVHeader.frameCount = 0; // not constant
 
         // initial write of header
         _outputFileName = outputFileName;
-        std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::trunc);
-        file.write(reinterpret_cast<char*>(&_CCVHeader), sizeof(_CCVHeader));
-        file.close();
+        _outputFile(fopen(_outputFileName.c_str(), "wb"), fclose);
+
+        fwrite(&_CCVHeader, sizeof(_CCVHeader), 1, _outputFile.get());
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -63,21 +66,17 @@ namespace vidre {
     
     void Storage::updateCCVHeader(uint32_t frameID) {
         _CCVHeader.frameCount = frameID; // todo: skipped frames logic
-        std::fstream file(_outputFileName, std::ios::in | std::ios::out | std::ios::binary);
-        file.seekp(0, std::ios::beg);
-        file.write(reinterpret_cast<char*>(&_CCVHeader), sizeof(_CCVHeader));
-        file.close();
+        
+        fseek(_outputFile.get(), 0, SEEK_SET);
+        fwrite(&_CCVHeader, sizeof(_CCVHeader), 1, _outputFile.get());
     }
 
     void Storage::appendCCVFrame(const void* buffer, ccv_frame_tail tail) {
-        std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::app);
+        fseek(_outputFile.get(), 0, SEEK_END);
 
         // write frame
-        file.write(static_cast<const char*>(buffer), _CCVHeader.frameBytesOnDisk);
-
+        fwrite(buffer, _CCVHeader.frameBytesOnDisk, 1, _outputFile.get());
         // write tail
-        file.write(reinterpret_cast<char*>(&tail), sizeof(tail));
-
-        file.close();
+        fwrite(&tail, sizeof(tail), 1, _outputFile.get());
     }
 }  // namespace vidre

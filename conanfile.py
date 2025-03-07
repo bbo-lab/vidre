@@ -13,9 +13,11 @@ class Vidre(ConanFile):
     revision_mode = "scm"
 
     options = {
+        "ccv_header_version": "ANY"
     }
 
     default_options = {
+        "ccv_header_version": 0.12
     }
 
     def set_version(self):
@@ -40,8 +42,11 @@ class Vidre(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        
         tc.cache_variables["PYLON_ROOT"] = os.getenv("PYLON_ROOT")
         tc.cache_variables["PYLON_DEV_DIR"] = os.getenv("PYLON_DEV_DIR")
+
+        tc.variables["CCV_HEADER_VERSION"] = self.options.get_safe("ccv_header_version", 0.12)
 
         tc.generate()
 

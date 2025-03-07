@@ -1,3 +1,5 @@
 #pragma once
 
 #cmakedefine01 PYLON_ENABLED
+
+#define CCV_HEADER_VERSION @CCV_HEADER_VERSION@
