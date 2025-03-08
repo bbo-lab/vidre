@@ -5,14 +5,12 @@
 #include <string>
 
 
-#ifdef PYLON_WIN_BUILD
 static void presentFrame(void *dataBuffer, const vidre::Config &config) {
     Pylon::CPylonImage image;
     image.AttachUserBuffer(dataBuffer, config.sourceWidth * config.sourceHeight, config.sourcePixelType, config.sourceWidth,
                            config.sourceHeight, config.sourcePaddingX);
     Pylon::DisplayImage(1, image);
 }
-#endif
 
 namespace vidre
 {
@@ -94,12 +92,9 @@ namespace vidre
         _camera->SetSharedMemory(_storage->getSharedMemory());
     }
 
-    void RuntimeInstance::presentationThread() {
-        // Setting up relevant camera data for saving
-        const vidre::SharedFrameHeader *result = nullptr, *previousResult = nullptr;
+    void RuntimeInstance::retrieveFrames() {
+        vidre::SharedFrameHeader* previousResult = nullptr;
         
-        const auto cameraConfig = _storage->getConfig();
-
         // Wait for Pylon's CInstantCamera to start running.
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
@@ -108,34 +103,37 @@ namespace vidre
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
             // Retrieve frame
-            result = _camera->RetrieveLatestFrame();  // Unsafe: Pointer to const is not actually constant
+            const auto* result = _camera->RetrieveLatestFrame();
+            
             if (result == previousResult) {
                 std::this_thread::yield();
                 continue;
             }
-
-            // Present frame
-    // #ifdef PYLON_WIN_BUILD
-    //         presentFrame((void *)(result + 1), cameraConfig);
-    // #endif
+            
             std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
 
-            // Save Image
-            // storage->Save((const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,
-            //             result->frameID);
-
-            previousResult = result;
-            
             // update ccv_header
             _storage->updateCCVHeader(result->frameID);
 
             // create_tail
-            vidre::ccv_frame_tail tail;
+            vidre::CCVFrameTail tail;
             tail.frameIndex = result->frameID; // + result->numSkippedBefore? TODO: think about skipped logic
             // tail.skippedFrames = numSkippedBefore;
             tail.timeStamp = result->timeStamp;
             tail.timeStamp /= 1e9;
+
             _storage->appendCCVFrame((const void *)(result + 1), tail);
+         
+         
+            previousResult = result;
+
+            if (_saveTIFF) {
+                storage->save((const void *)(result + 1), result->frameID);
+            }
+            
+            if (_presentFrame) {
+                presentFrame((void *)(result + 1), _storage->getConfig());
+            }
         }
     }
 
@@ -151,7 +149,7 @@ namespace vidre
         _camera->Arm();
         _camera->Start();
         
-        _thread = std::thread(&RuntimeInstance::presentationThread, this);
+        _thread = std::thread(&RuntimeInstance::retrieveFrames, this);
     }
 
     void RuntimeInstance::stop() {

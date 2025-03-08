@@ -47,21 +47,20 @@ namespace vidre {
         return _config;
     }
 
-    void Storage::save(const void *buffer, size_t dataSize, int frameID) {
+    void Storage::save(const void* buffer, uint32_t frameID) {
         Pylon::CPylonImage pylonImage;
 
         Pylon::CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        formatConverter.Convert(pylonImage, buffer, dataSize, _config.sourcePixelType, _config.sourceWidth, _config.sourceHeight,
+        formatConverter.Convert(pylonImage, buffer, _CCVHeader.frameBytesOnDisk, _config.sourcePixelType, _config.sourceWidth, _config.sourceHeight,
                                 _config.sourcePaddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
 
-        std::string fileName = std::to_string(frameID) + ".png";
+        std::string fileName = std::to_string(frameID) + ".tiff";
         Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
     }
 
-    boost::interprocess::managed_shared_memory* Storage::getSharedMemory()
-    {
-        return shared_memory_.get(); 
+    boost::interprocess::managed_shared_memory* Storage::getSharedMemory() {
+        return _sharedMemory.get(); 
     }
     
     void Storage::updateCCVHeader(uint32_t frameID) {

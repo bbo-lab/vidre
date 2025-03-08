@@ -14,7 +14,7 @@ namespace vidre {
         RuntimeInstance(std::string configuration);
         ~RuntimeInstance();
         
-        void presentationThread();
+        void retrieveFrames();
         void run();
         void stop();
 
@@ -32,5 +32,7 @@ namespace vidre {
         std::thread _thread;
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;
+        bool _saveTIFF = false;
+        bool _presentFrame = false;
     };
 }  // namespace vidre
