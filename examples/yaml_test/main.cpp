@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <cassert>
 
 #include <boost/program_options.hpp>
 
@@ -12,7 +13,7 @@ namespace po = boost::program_options;
 
 // std::string systemConfigFilepath = "C:/Not/A/Real/Path.yaml";
 // std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
-std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
+std::string systemConfigFilepath = "D:/Projects/vidre/config/setupExample.yaml";
 
 static std::vector<std::string> split(const char *str, char c = ' ') {
     std::vector<std::string> result;
@@ -49,6 +50,7 @@ int main(int argc, const char *argv[]) {
 
     // Create system from YAML and check constructed cameras.
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras = vidre::LoadSystemSetup(systemConfigFilepath);
+    
     if (cameras.size() == 0) {
         std::cout << "Error in loading system config file." << std::endl;
         return 1;

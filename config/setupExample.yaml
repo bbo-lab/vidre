@@ -64,7 +64,6 @@ presentation:
   type: imageMonitor
 
 pipes:
-# output: input
   camHeadset: storage1
   camOverview: storage2
   camHeadset: netSink

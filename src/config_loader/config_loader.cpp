@@ -108,7 +108,6 @@ namespace vidre {
             //);
         }
 
-
         return cameras;
     }
 }  // namespace vidre
