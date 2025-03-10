@@ -73,7 +73,7 @@ namespace vidre
         cameraConfig.sourceHeight = camera->GetFrameHeight();
         cameraConfig.sourceMaxNumBuffer = camera->GetMaxNumBuffer();
         cameraConfig.sourceFrameRate =  camera->GetFrameRate();
-        
+        cameraConfig.sourceSerialNumber = camera->GetSerialNumber();
         storage = std::make_unique<vidre::Storage>(cameraConfig, output_file_name);
 
         camera->SetSharedMemory(storage->GetSharedMemory());
@@ -92,16 +92,23 @@ namespace vidre
         while (camera->IsRunning()) {
             // Retrieve frame
             result = camera->RetrieveLatestFrame();  // Unsafe: Pointer to const is not actually constant
+            
             if (result == previousResult) {
                 std::this_thread::yield();
                 continue;
             }
+            if (result->frameID >1)
+            {
+                std::this_thread::yield();
+                continue;
+            }
+            std:: cout <<  result->frameID << std::endl;
 
             // Present frame
     // #ifdef PYLON_WIN_BUILD
     //         presentFrame((void *)(result + 1), cameraConfig);
     // #endif
-            std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
+            // std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
 
             // Save Image
             // storage->Save((const void *)(result + 1), cameraConfig.sourceWidth * cameraConfig.sourceHeight,

@@ -172,6 +172,11 @@ namespace vidre {
         return frameRate.GetValue();
     }
 
+    std::string PylonCamera::GetSerialNumber()
+    {
+        return camera.GetDeviceInfo().GetSerialNumber();
+    }
+
     void PylonCamera::SetFrameWidth(unsigned int newFrameWidth) {
         if (!camera.IsOpen())
             return;

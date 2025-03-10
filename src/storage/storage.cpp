@@ -1,5 +1,39 @@
 #include "vidre/storage.h"
 #include "vidre/shared_frame_header.hpp"
+template <typename T>
+void writeField(std::ofstream& outFile, const T& value) {
+    outFile.write(reinterpret_cast<const char*>(&value), sizeof(T));
+}
+void writeString(std::ofstream& outFile, const std::string& str) {
+    outFile.write(str.c_str(), str.length() + 1); // Write the string, including null terminator
+}
+void writeHeader(std::ofstream& outFile, vidre::ccv_cam_header h)
+{
+        writeField(outFile, h.headerSize);
+        writeField(outFile, h.cameraType.length);
+        writeString(outFile, h.cameraType.data);
+        writeField(outFile, h.headerVersion);
+        writeField(outFile, h.imageType.length);
+        writeString(outFile, h.imageType.data);
+
+        writeField(outFile, h.bytesPerPixel);
+        writeField(outFile, h.bitsPerPixel);
+        writeField(outFile, h.frameBytesOnDisk);
+
+        writeField(outFile, h.width);
+        writeField(outFile, h.height);
+        writeField(outFile, h.frameRate);
+
+        writeField(outFile, h.packed);
+
+        writeField(outFile, h.frameCount);
+
+        writeField(outFile, h.sensor.offset);
+        writeField(outFile, h.sensor.size);
+        writeField(outFile, h.sensor.clock);
+        writeField(outFile, h.sensor.exposure);
+        writeField(outFile, h.sensor.gain);
+}
 
 namespace vidre {
 
@@ -8,8 +42,7 @@ namespace vidre {
         config_ = config; 
 
         // Shared Memory
-        const std::string newMemoryName = output_file_name_;
-        boost::interprocess::shared_memory_object::remove(newMemoryName.c_str());
+        boost::interprocess::shared_memory_object::remove(config_.sourceSerialNumber.c_str());
         size_t capacity = (sizeof(SharedFrameHeader) + config_.sourceWidth * config_.sourceHeight) * 
                           (config_.sourceMaxNumBuffer + 1);
 
@@ -17,28 +50,29 @@ namespace vidre {
         capacity *= capacity > 32000 ? 1 : 1000;
         try {
             shared_memory_ = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::open_or_create, newMemoryName.c_str(), capacity
+            boost::interprocess::open_or_create, config_.sourceSerialNumber.c_str(), capacity
         );
         } catch (boost::interprocess::interprocess_exception const& iExcept) {
-            std::cout << iExcept.what();
+            std::cout <<"BOOST CREATING SHARED MEMORY EXCEPTION: \n" << iExcept.what() << std::endl;
             return;
         }
 
         // ccv staff
-        ccv_header.headerSize = sizeof(vidre::ccv_cam_header);
+        ccv_header.headerSize += (ccv_header.cameraType.length + 1) + (ccv_header.imageType.length + 1);
         ccv_header.bytesPerPixel = 1; // PixelType_Mono8;
         ccv_header.bitsPerPixel = 8; // PixelType_Mono8;
         ccv_header.width = config_.sourceWidth;
         ccv_header.height = config_.sourceHeight;
-        ccv_header.frameBytesOnDisk = ccv_header.width * ccv_header.height * ccv_header.bytesPerPixel;
+        ccv_header.frameBytesOnDisk = ccv_header.width * ccv_header.height * ccv_header.bytesPerPixel + sizeof(ccv_frame_tail);
         ccv_header.frameRate = config_.sourceFrameRate;  
         ccv_header.packed = 0;
         ccv_header.frameCount = 0;
 
         // initial write of header
         output_file_name = output_file_name_;
+        std::cout << sizeof(ccv_cam_header) << std::endl;
         std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::trunc);
-        file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
+        writeHeader(file, ccv_header);
         file.close();
     }     
 
@@ -73,9 +107,10 @@ namespace vidre {
     void Storage::UpdateCCVHeader(uint32_t frame_id)
     {
         ccv_header.frameCount = frame_id; // todo: skipped frames logic
-        std::fstream file(output_file_name, std::ios::in | std::ios::out | std::ios::binary);
+        std::ofstream file(output_file_name, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(0, std::ios::beg);
-        file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
+        writeHeader(file, ccv_header);
+        // file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
         file.close();
     }
 
@@ -84,10 +119,13 @@ namespace vidre {
         std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::app);
 
         // write frame
-        file.write(static_cast<const char*>(buffer), ccv_header.frameBytesOnDisk);
+        file.write(static_cast<const char*>(buffer), ccv_header.frameBytesOnDisk - sizeof(ccv_frame_tail));
 
         // write tail
-        file.write(reinterpret_cast<char*>(&tail), sizeof(tail));
+        writeField(file, tail.frameIndex);
+        writeField(file, tail.timeStamp);
+        writeField(file, tail.padding);
+        // file.write(reinterpret_cast<char*>(&tail), sizeof(tail));
 
         file.close();
     }

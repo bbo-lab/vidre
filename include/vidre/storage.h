@@ -16,6 +16,7 @@ namespace vidre {
         uint32_t sourceMaxNumBuffer;
         size_t sourcePaddingX;
         double sourceFrameRate;
+        std::string sourceSerialNumber;
     };
 
     class Storage {

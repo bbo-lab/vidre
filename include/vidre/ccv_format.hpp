@@ -1,18 +1,37 @@
 #pragma once
+
 #include <cstdint>
 #include <cstddef>
+#include <array>
 
-#ifndef CCV_CAM_HEADER_VERSION
-#define CCV_CAM_HEADER_VERSION 0.12
-#endif
+#include "config.h"
+
 
 namespace vidre {
-    typedef double ccv_timestamp_t;
-    typedef char byte_t;
+
+    struct GreenbergString {
+        uint32_t length; 
+        std::string data;
+        GreenbergString()
+        {
+            data= "basler";
+            length = data.length();
+        }
+    };
+
+    struct SensorInfo {
+        uint32_t offset[2];
+        uint32_t size[2];
+        int64_t clock;
+        double exposure;
+        double gain;
+    };
 
     struct ccv_cam_header {
-        uint32_t headerSize;
-        const double headerVersion = CCV_CAM_HEADER_VERSION;
+        uint32_t headerSize = 93;
+        GreenbergString cameraType;
+        double headerVersion = 0.12;
+        GreenbergString imageType;
 
         uint32_t bytesPerPixel;
         uint32_t bitsPerPixel;
@@ -22,25 +41,17 @@ namespace vidre {
         uint32_t height;
         double frameRate;
 
-// #if double CCV_CAM_HEADER_VERSION >= 0.12
-        byte_t packed;
-// #endif
-        // add sensor
-        // "sensor" / If(this.header_version >= 0.12, Struct(
-        //     "offset" / Int32ul[2],
-        //     "size" / Int32ul[2],
-        //     "clock" / Int64ul,
-        //     "exposure" / Float64l,
-        //     "gain" / Float64l
-        // ))
-        
+        uint8_t packed;
 
         uint32_t frameCount;
+
+        SensorInfo sensor;
     };
 
     struct ccv_frame_tail {
         uint32_t frameIndex;
-        ccv_timestamp_t timeStamp;
-        byte_t padding[9];  // Probably for additional custom data
+        double timeStamp;
+        uint8_t padding[9];  
     };
+    
 }  // namespace vidre
