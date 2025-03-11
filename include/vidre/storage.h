@@ -29,7 +29,7 @@ namespace vidre {
         Config GetConfig();
         void Save(const void *data_ptr, size_t data_size, int frame);
         boost::interprocess::managed_shared_memory* GetSharedMemory();
-        void UpdateCCVHeader(uint32_t frame_id);
+        void UpdateCCVHeader();
         void AppendCCVFrame(const void* buffer, ccv_frame_tail tail);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> shared_memory_;

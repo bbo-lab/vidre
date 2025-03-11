@@ -97,12 +97,11 @@ namespace vidre
                 std::this_thread::yield();
                 continue;
             }
-            if (result->frameID >1)
-            {
-                std::this_thread::yield();
-                continue;
-            }
-            std:: cout <<  result->frameID << std::endl;
+            // if (result->frameID > 1)
+            // {
+            //     std::this_thread::yield();
+            //     continue;
+            // }
 
             // Present frame
     // #ifdef PYLON_WIN_BUILD
@@ -117,7 +116,7 @@ namespace vidre
             previousResult = result;
             
             // update ccv_header
-            storage->UpdateCCVHeader(result->frameID);
+            storage->UpdateCCVHeader();
 
             // create_tail
             vidre::ccv_frame_tail tail;

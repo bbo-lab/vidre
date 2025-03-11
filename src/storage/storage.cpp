@@ -63,17 +63,16 @@ namespace vidre {
         ccv_header.bitsPerPixel = 8; // PixelType_Mono8;
         ccv_header.width = config_.sourceWidth;
         ccv_header.height = config_.sourceHeight;
-        ccv_header.frameBytesOnDisk = ccv_header.width * ccv_header.height * ccv_header.bytesPerPixel + sizeof(ccv_frame_tail);
+        ccv_header.frameBytesOnDisk = ccv_header.width * ccv_header.height * ccv_header.bytesPerPixel;
+        ccv_header.frameBytesOnDisk += 21; // size of tail
         ccv_header.frameRate = config_.sourceFrameRate;  
         ccv_header.packed = 0;
         ccv_header.frameCount = 0;
 
         // initial write of header
         output_file_name = output_file_name_;
-        std::cout << sizeof(ccv_cam_header) << std::endl;
         std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::trunc);
         writeHeader(file, ccv_header);
-        file.close();
     }     
 
     void Storage::SetConfig(const Config& config)
@@ -104,14 +103,12 @@ namespace vidre {
         return shared_memory_.get(); 
     }
     
-    void Storage::UpdateCCVHeader(uint32_t frame_id)
+    void Storage::UpdateCCVHeader()
     {
-        ccv_header.frameCount = frame_id; // todo: skipped frames logic
+        ++ccv_header.frameCount; // todo: skipped frames logic
         std::ofstream file(output_file_name, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(0, std::ios::beg);
         writeHeader(file, ccv_header);
-        // file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
-        file.close();
     }
 
     void Storage::AppendCCVFrame(const void* buffer, ccv_frame_tail tail)
@@ -119,14 +116,11 @@ namespace vidre {
         std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::app);
 
         // write frame
-        file.write(static_cast<const char*>(buffer), ccv_header.frameBytesOnDisk - sizeof(ccv_frame_tail));
+        file.write(static_cast<const char*>(buffer), ccv_header.frameBytesOnDisk - 21);
 
         // write tail
         writeField(file, tail.frameIndex);
         writeField(file, tail.timeStamp);
         writeField(file, tail.padding);
-        // file.write(reinterpret_cast<char*>(&tail), sizeof(tail));
-
-        file.close();
     }
 }  // namespace vidre
