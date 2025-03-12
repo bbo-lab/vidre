@@ -94,6 +94,35 @@ int main(int argc, const char *argv[]) {
             std::cout << "Insufficient arguments" << std::endl;
             continue;
         }
+        // start all / stop all
+        if (tokens[0] == "start" && tokens[1] == "all")
+        {
+            for (auto& cam: cameras)
+            {
+                if (!cam.second->IsRunning()) {
+                    cam.second->run();
+                    std::cout << "Starting " << cam.first << std::endl;
+                }
+                else
+                    std::cout << cam.first << " already running" << std::endl;
+            }
+            continue;
+        }
+
+        if (tokens[0] == "stop" && tokens[1] == "all")
+        {
+            for (auto& cam: cameras)
+            {
+            if (cam.second->IsRunning()) {
+                cam.second->stop();
+                std::cout << "Stopping " << cam.first << std::endl;
+            }
+            else
+                std::cout << cam.first << " not running" << std::endl;
+            }
+            continue;
+        }
+
         auto match = cameras.find(tokens[1]);
         if (match == cameras.end()) {
             std::cout << tokens[1] << " not found" << std::endl;

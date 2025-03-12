@@ -86,7 +86,7 @@ namespace vidre
         cameraConfig.sourceHeight = _camera->GetFrameHeight();
         cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
-        
+        cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
         _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
 
         _camera->SetSharedMemory(_storage->getSharedMemory());
@@ -109,11 +109,8 @@ namespace vidre
                 std::this_thread::yield();
                 continue;
             }
-            
-            std::cout << "Frame: " << result->frameID << "\tSkipped frames: " << result->numSkippedBefore << std::endl;  //'\n';
-
             // update ccv_header
-            _storage->updateCCVHeader(result->frameID);
+            _storage->UpdateCCVHeader();
 
             // create_tail
             vidre::CCVFrameTail tail;

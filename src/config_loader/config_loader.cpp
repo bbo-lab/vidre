@@ -20,10 +20,10 @@ namespace vidre {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
             return nullptr;
         }
-        if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
-            std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
-            return nullptr;
-        }  // TODO: Delegate to Factory
+        // if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
+        //     std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+        //     return nullptr;
+        // }  // TODO: Delegate to Factory
 
         return camera;
     }

@@ -68,6 +68,10 @@ namespace vidre {
         virtual double GetFrameRate() {
             return 1;
         };
+        virtual std::string GetSerialNumber()
+        {
+            return "";
+        }
         virtual void SetFrameWidth(unsigned int newFrameWidth) {};
         virtual void SetFrameHeight(unsigned int newFrameHeight) {};
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) {};

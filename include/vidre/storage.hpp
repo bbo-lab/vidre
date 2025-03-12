@@ -19,6 +19,7 @@ namespace vidre {
         uint32_t sourceMaxNumBuffer;
         size_t sourcePaddingX;
         double sourceFrameRate;
+        std::string sourceSerialNumber;
     };
 
     class Storage {
@@ -31,7 +32,7 @@ namespace vidre {
         Config getConfig();
         void save(const void *buffer, uint32_t frameID);
         boost::interprocess::managed_shared_memory* getSharedMemory();
-        void updateCCVHeader(uint32_t frameID);
+        void updateCCVHeader();
         void appendCCVFrame(const void* buffer, ccv_frame_tail tail);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;

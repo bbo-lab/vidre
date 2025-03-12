@@ -1,7 +1,11 @@
 #pragma once
 
+
 #include <cstdint>
 #include <cstddef>
+#include <array>
+
+#include "config.h"
 
 #include "vidre/config.h"
 
@@ -54,6 +58,7 @@ namespace vidre {
         uint32_t frameIndex;
         double timeStamp;
         uint8_t padding[9];  
+        double timeStamp;
+        uint8_t padding[9];  
     };
-    
 }  // namespace vidre
