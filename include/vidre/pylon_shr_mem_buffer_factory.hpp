@@ -14,8 +14,9 @@ public:
     virtual ~ShrBufferFactory() {}
 
 
-    void SetSharedMemory(boost::interprocess::managed_shared_memory* storage_shared_memory) {
+    void SetSharedMemory(boost::interprocess::managed_shared_memory* storage_shared_memory, std::string memory_name) {
         shared_memory = storage_shared_memory;
+        memoryName = memory_name;
     }
 
     void PreallocateFrameBuffers() {
@@ -50,12 +51,12 @@ public:
 
     // todo: fix this
     void DestroyBufferFactory() override {
-        boost::interprocess::shared_memory_object::remove(memoryName);
+        boost::interprocess::shared_memory_object::remove(memoryName.c_str());
         delete this;
     }
 
 protected:
-    const char *memoryName;
+    std::string memoryName;
     boost::interprocess::managed_shared_memory* shared_memory;
     unsigned long m_lastBufferContext;
 };

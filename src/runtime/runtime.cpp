@@ -48,10 +48,11 @@ namespace vidre
         cameraConfig.sourceHeight = _camera->GetFrameHeight();
         cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
-        
-        storage = std::make_unique<vidre::Storage>(cameraConfig);
+        cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
 
-        _camera->SetSharedMemory(storage->GetSharedMemory());
+        _storage = std::make_unique<vidre::Storage>(cameraConfig);
+
+        _camera->SetSharedMemory(storage->GetSharedMemory(), _storage->getConfig().sourceSerialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -89,7 +90,7 @@ namespace vidre
         cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
         _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory());
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
     }
 
     void RuntimeInstance::retrieveFrames() {

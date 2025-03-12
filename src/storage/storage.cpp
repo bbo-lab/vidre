@@ -1,5 +1,6 @@
 #include "vidre/storage.hpp"
 #include "vidre/shared_frame_header.hpp"
+
 template <typename T>
 void writeField(std::ofstream& outFile, const T& value) {
     outFile.write(reinterpret_cast<const char*>(&value), sizeof(T));

@@ -27,7 +27,7 @@ namespace vidre {
         virtual bool IsArmed() override;
         virtual bool IsRunning() override;
 
-        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory) override;
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
         virtual bool SaveConfiguration(std::string filepath) override;
