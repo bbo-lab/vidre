@@ -4,7 +4,7 @@
 // #include <pylon/PylonGUI.h>
 #include "pylon_camera.hpp"
 #include "vidre/shared_frame_header.hpp"
-#include "storage.h"
+#include "vidre/storage.hpp"
 
 namespace vidre {
     class Presenter {
