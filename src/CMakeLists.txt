@@ -1,10 +1,12 @@
+set(CCV_HEADER_VERSION_MAJOR 0)
+set(CCV_HEADER_VERSION_MINOR 12)
+
 configure_file("${CMAKE_SOURCE_DIR}/include/vidre/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
 
 set(public_headers
     ${CMAKE_BINARY_DIR}/config.h
-    ../include/vidre/ring_buffer.h
-    ../include/vidre/storage.h
-    ../include/vidre/runtime.h
+    ../include/vidre/storage.hpp
+    ../include/vidre/runtime.hpp
     ../include/vidre/pylon_camera.hpp
     ../include/vidre/dummy_camera.hpp
     ../include/vidre/shared_frame_buffer_controller.hpp
@@ -36,7 +38,6 @@ target_link_libraries(vidre PUBLIC Boost::filesystem)
 
 target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 
-add_subdirectory(ring_buffer)
 add_subdirectory(runtime)
 add_subdirectory(storage)
 add_subdirectory(camera)

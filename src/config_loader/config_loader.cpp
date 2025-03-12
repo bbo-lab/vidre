@@ -21,10 +21,10 @@ namespace vidre {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
             return nullptr;
         }
-        if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
-            std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
-            return nullptr;
-        }  // TODO: Delegate to Factory
+        // if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
+        //     std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+        //     return nullptr;
+        // }  // TODO: Delegate to Factory
 
         return camera;
     }
@@ -78,39 +78,12 @@ namespace vidre {
                 
             // Create camera from file-defined details if the node is a camera node.
             if (!it->second["type"].as<std::string>().compare("camera") != 0) {
-                cameras[it->first.as<std::string>()] = LoadCamera(it->second);
+                cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
+                
+                cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));
+
+                cameras[it->first.as<std::string>()]->createStorage(it->second["storage"]["output_file"].as<std::string>());  
             }
-            if (!it->second["type"].as<std::string>().compare("storage") != 0) {
-                storages.push_back(it->first.as<std::string>());
-            }
-        }
-
-        // Second pass: Connect modules
-        YAML::iterator pipesNodeIt = std::find_if(
-            config.begin(), 
-            config.end(), 
-            [](std::pair<YAML::Node, YAML::Node> n) {
-                return (n.first.as<std::string>().compare("pipes") == 0);
-            }
-        );
-
-        if (pipesNodeIt == config.end()) {
-            std::cout << "Could not load find pipes." << std::endl;
-            return std::vector<std::unique_ptr<vidre::RuntimeInstance>>();
-        }
-
-        YAML::Node pipesNode = pipesNodeIt->second;
-
-        for (YAML::const_iterator it = pipesNode.begin(); it != pipesNode.end(); ++it) {
-            
-            std::cout << "Connected " << it->first.as<std::string>() << " to " << it->second.as<std::string>() << std::endl;
-            
-            //ConnectModules(
-            //    it->first.as<std::string>(), 
-            //    it->second.as<std::string>(), 
-            //    cameras,
-            //    storages
-            //);
         }
 
         return cameras;

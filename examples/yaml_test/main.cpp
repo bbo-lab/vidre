@@ -56,7 +56,7 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
     for (auto it = cameras.begin(); it != cameras.end();) {
-        std::cout << it->first << " was " << (it->second->CheckCamera() ? "" : "not ") << "constructed.\n";
+        std::cout << it->first << " was " << (it->second->checkCamera() ? "" : "not ") << "constructed.\n";
         if (!it->second)
             it = cameras.erase(it);
         else
@@ -96,6 +96,34 @@ int main(int argc, const char *argv[]) {
             std::cout << "Insufficient arguments" << std::endl;
             continue;
         }
+        
+        // start all / stop all
+        if (tokens[0] == "start" && tokens[1] == "all") {
+            for (auto& cam: cameras) {
+                if (!cam.second->isRunning()) {
+                    cam.second->run();
+                    std::cout << "Starting " << cam.first << std::endl;
+                }
+                else {
+                    std::cout << cam.first << " already running" << std::endl;
+                }
+            }
+            continue;
+        }
+
+        if (tokens[0] == "stop" && tokens[1] == "all") {
+            for (auto& cam: cameras) {
+                if (cam.second->isRunning()) {
+                    cam.second->stop();
+                    std::cout << "Stopping " << cam.first << std::endl;
+                }
+                else {
+                    std::cout << cam.first << " not running" << std::endl;
+                }
+            }
+            continue;
+        }
+
         auto match = cameras.find(tokens[1]);
         if (match == cameras.end()) {
             std::cout << tokens[1] << " not found" << std::endl;
@@ -103,7 +131,7 @@ int main(int argc, const char *argv[]) {
         }
 
         if (tokens[0].compare("start") == 0) {
-            if (!match->second->IsRunning()) {
+            if (!match->second->isRunning()) {
                 match->second->run();
                 std::cout << "Starting " << match->first << std::endl;
             }
@@ -111,7 +139,7 @@ int main(int argc, const char *argv[]) {
                 std::cout << match->first << " already running" << std::endl;
         }
         else if (tokens[0].compare("stop") == 0) {
-            if (match->second->IsRunning()) {
+            if (match->second->isRunning()) {
                 match->second->stop();
                 std::cout << "Stopping " << match->first << std::endl;
             }
