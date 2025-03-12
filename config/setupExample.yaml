@@ -12,6 +12,10 @@
 #  cam2 -> storage2
 #
 ---
+modules:
+  camera:
+    
+
 camOverview:
   type: camera
   vendor: pylon   # Can this be acquired from e.g. the specific usb port itself? 
@@ -21,10 +25,6 @@ camOverview:
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true # Determines if the config file is local on the node or if it should be sent over on setup.
   description: For monitoring.
-  storage:
-    type: storage
-    output_file: pylon.ccv
-    # size and other storage related entities, e.g: root dir, save or not pngs etc
 camHeadset:
   type: camera
   vendor: dummy
@@ -33,9 +33,6 @@ camHeadset:
   config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
-  storage:
-    type: storage
-    output_file: dummy.ccv
 camLeftCorner:
   type: camera
   vendor: iAmNotSupported
@@ -44,12 +41,17 @@ camLeftCorner:
   config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
   is_config_local: true
   description: For saving and further analysis afterwards.
-  storage:
-    type: storage
-    output_file: ns.ccv
 
 
 # ---- UNIMPLEMENTED ----
+
+
+storageOverview:
+  type: storage
+  output_file: pylon.ccv
+storageHeadset:
+  type: storage
+  output_file: dummy.ccv
 
 netSink1:
   type: netSink
@@ -64,7 +66,7 @@ presentation:
   type: imageMonitor
 
 pipes:
-  camHeadset: storage1
-  camOverview: storage2
+  camHeadset: storageOverview
+  camOverview: storageHeadset
   camHeadset: netSink
   netSource: presentation

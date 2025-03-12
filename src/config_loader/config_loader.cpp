@@ -45,7 +45,7 @@ namespace vidre {
         return nullptr;
     }
 
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
+    std::vector<std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
         // Idea for future: Create packages of commands per module from YAML. Afterwards properly distribute
         // over network. Currently just execute those packages locally and just have multiple cameras
         // be able to be started.
@@ -58,9 +58,14 @@ namespace vidre {
         // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
 
         //std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
-        std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
+
+        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras;
+        std::vector<std::string> storages;
+        std::vector<std::unique_ptr<vidre::RuntimeInstance>> rtInstances;
+
+
         if (!boost::filesystem::exists(setupFilepath))
-            return cameras;
+            return rtInstances;
 
         YAML::Node config = YAML::LoadFile(setupFilepath);
 
@@ -73,11 +78,10 @@ namespace vidre {
                 
             // Create camera from file-defined details if the node is a camera node.
             if (!it->second["type"].as<std::string>().compare("camera") != 0) {
-                cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
-                
-                cameras[it->first.as<std::string>()]->SetCamera(LoadCamera(it->second));
-
-                cameras[it->first.as<std::string>()]->CreateStorage(it->second["storage"]["output_file"].as<std::string>());  
+                cameras[it->first.as<std::string>()] = LoadCamera(it->second);
+            }
+            if (!it->second["type"].as<std::string>().compare("storage") != 0) {
+                storages.push_back(it->first.as<std::string>());
             }
         }
 
@@ -92,7 +96,7 @@ namespace vidre {
 
         if (pipesNodeIt == config.end()) {
             std::cout << "Could not load find pipes." << std::endl;
-            return cameras;
+            return std::vector<std::unique_ptr<vidre::RuntimeInstance>>();
         }
 
         YAML::Node pipesNode = pipesNodeIt->second;
@@ -100,6 +104,7 @@ namespace vidre {
         for (YAML::const_iterator it = pipesNode.begin(); it != pipesNode.end(); ++it) {
             
             std::cout << "Connected " << it->first.as<std::string>() << " to " << it->second.as<std::string>() << std::endl;
+            
             //ConnectModules(
             //    it->first.as<std::string>(), 
             //    it->second.as<std::string>(), 
