@@ -25,7 +25,7 @@ namespace vidre {
 
         bool isRunning()
         {
-            return camera->IsRunning();
+            return _camera->IsRunning();
         }
 
     private:

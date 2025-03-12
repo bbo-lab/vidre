@@ -1,4 +1,5 @@
-set(CCV_HEADER_VERSION 0.12)
+set(CCV_HEADER_VERSION_MAJOR 0)
+set(CCV_HEADER_VERSION_MINOR 12)
 
 configure_file("${CMAKE_SOURCE_DIR}/include/vidre/config.h.in" "${CMAKE_BINARY_DIR}/config.h")
 

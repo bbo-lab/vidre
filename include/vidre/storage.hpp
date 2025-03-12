@@ -5,7 +5,7 @@
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 
-#include "vidre/config.h"
+#include "config.h"
 #include "vidre/ccv_format.hpp"
 
 #include <fstream>
@@ -33,13 +33,11 @@ namespace vidre {
         void save(const void *buffer, uint32_t frameID);
         boost::interprocess::managed_shared_memory* getSharedMemory();
         void updateCCVHeader();
-        void appendCCVFrame(const void* buffer, ccv_frame_tail tail);
+        void appendCCVFrame(const void* buffer, CCVFrameTail tail);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;
         std::string _outputFileName = "some.ccv";
         CamCommandoHeader _CCVHeader;
-
-        std::unique_ptr<FILE, decltype(&fclose)> _outputFile;
     };
 }  // namespace vidre

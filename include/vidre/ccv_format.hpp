@@ -7,18 +7,18 @@
 
 #include "config.h"
 
-#include "vidre/config.h"
+#include "config.h"
 
 
 namespace vidre {
 
     struct GreenbergString {
         uint32_t length; 
-        std::vector<uint8_t> data;
-        uint8_t terminator = 0;
-    
-        GreenbergString(uint32_t len, const std::vector<uint8_t>& input_data)
-            : length(len), data(input_data) {}
+        std::string data;
+        GreenbergString() {
+            data = "basler";
+            length = data.length();
+        }
     };
 
     struct SensorInfo {
@@ -30,7 +30,11 @@ namespace vidre {
     };
 
     struct CamCommandoHeader {
-        uint32_t headerSize;
+#if CCV_HEADER_VERSION >= 120
+        uint32_t headerSize = 93;
+#else
+        uint32_t headerSize = 52;
+#endif
         GreenbergString cameraType;
         double headerVersion;
         GreenbergString imageType;
@@ -43,21 +47,19 @@ namespace vidre {
         uint32_t height;
         double frameRate;
 
-#if CCV_HEADER_VERSION >= 0.12
+#if CCV_HEADER_VERSION >= 120
         uint8_t packed;
 #endif
 
         uint32_t frameCount;
 
-#if CCV_HEADER_VERSION >= 0.12
+#if CCV_HEADER_VERSION >= 120
         SensorInfo sensor;
 #endif
     };
 
     struct CCVFrameTail {
         uint32_t frameIndex;
-        double timeStamp;
-        uint8_t padding[9];  
         double timeStamp;
         uint8_t padding[9];  
     };

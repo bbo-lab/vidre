@@ -8,7 +8,7 @@ void writeField(std::ofstream& outFile, const T& value) {
 void writeString(std::ofstream& outFile, const std::string& str) {
     outFile.write(str.c_str(), str.length() + 1); // Write the string, including null terminator
 }
-void writeHeader(std::ofstream& outFile, vidre::ccv_cam_header h)
+void writeHeader(std::ofstream& outFile, vidre::CamCommandoHeader h)
 {
         writeField(outFile, h.headerSize);
         writeField(outFile, h.cameraType.length);
@@ -62,7 +62,7 @@ namespace vidre {
         _CCVHeader.frameBytesOnDisk += 21; // size of tail
         _CCVHeader.frameRate = _config.sourceFrameRate;  
 
-#if CCV_HEADER_VERSION >= 0.12
+#if CCV_HEADER_VERSION >= 120
         _CCVHeader.packed = 0;
 #endif
         _CCVHeader.frameCount = 0; // not constant
@@ -97,16 +97,17 @@ namespace vidre {
         return _sharedMemory.get(); 
     }
     
-    void Storage::UpdateCCVHeader()
+    void Storage::updateCCVHeader()
     {
         ++_CCVHeader.frameCount;
-        std::ofstream file(_outputFile, std::ios::in | std::ios::out | std::ios::binary);
+        std::ofstream file(_outputFileName, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(0, std::ios::beg);
         writeHeader(file, _CCVHeader);
     }
 
-    void Storage::appendCCVFrame(const void* buffer, ccv_frame_tail tail) {
-        fseek(_outputFile.get(), 0, SEEK_END);
+    void Storage::appendCCVFrame(const void* buffer, CCVFrameTail tail) {
+        
+        std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::app);
 
         // write frame
         file.write(static_cast<const char*>(buffer), _CCVHeader.frameBytesOnDisk - 21);

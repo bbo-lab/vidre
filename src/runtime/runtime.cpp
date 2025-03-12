@@ -52,7 +52,7 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig);
 
-        _camera->SetSharedMemory(storage->GetSharedMemory(), _storage->getConfig().sourceSerialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -94,7 +94,7 @@ namespace vidre
     }
 
     void RuntimeInstance::retrieveFrames() {
-        vidre::SharedFrameHeader* previousResult = nullptr;
+        const vidre::SharedFrameHeader* previousResult = nullptr;
         
         // Wait for Pylon's CInstantCamera to start running.
         while (!_camera->IsRunning()) {
@@ -111,7 +111,7 @@ namespace vidre
                 continue;
             }
             // update ccv_header
-            _storage->UpdateCCVHeader();
+            _storage->updateCCVHeader();
 
             // create_tail
             vidre::CCVFrameTail tail;
@@ -126,7 +126,7 @@ namespace vidre
             previousResult = result;
 
             if (_saveTIFF) {
-                storage->save((const void *)(result + 1), result->frameID);
+                _storage->save((const void *)(result + 1), result->frameID);
             }
             
             if (_presentFrame) {
@@ -152,7 +152,7 @@ namespace vidre
 
     void RuntimeInstance::stop() {
         // todo: maybe clear storage
-        if (camera == nullptr) {
+        if (_camera == nullptr) {
             return;
         }
 
@@ -166,7 +166,7 @@ namespace vidre
     }
 
     bool RuntimeInstance::checkCamera() {
-        return camera != nullptr;
+        return _camera != nullptr;
     }
 
 }
