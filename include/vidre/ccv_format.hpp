@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include "config.h"
-
 
 namespace vidre {
 
@@ -36,7 +34,7 @@ namespace vidre {
         uint32_t headerSize = 52;
 #endif
         GreenbergString cameraType;
-        double headerVersion;
+        double headerVersion = CCV_HEADER_VERSION_MAJOR + CCV_HEADER_VERSION_MINOR / 100.0;
         GreenbergString imageType;
 
         uint32_t bytesPerPixel;

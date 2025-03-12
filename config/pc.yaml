@@ -8,7 +8,6 @@ cam1:
   storage:
     type: storage
     output_file: D:/yamlsaving/pylon1.ccv
-    # output_file: pylon1.ccv
 cam2:
   type: camera
   vendor: pylon
@@ -19,7 +18,6 @@ cam2:
   storage:
     type: storage
     output_file: D:/yamlsaving/pylon2.ccv
-    # output_file: pylon2.ccv
 cam3:
   type: camera
   vendor: pylon
@@ -30,7 +28,6 @@ cam3:
   storage:
     type: storage
     output_file: D:/yamlsaving/pylon3.ccv
-    # output_file: pylon3.ccv
 cam4:
   type: camera
   vendor: pylon
@@ -41,4 +38,3 @@ cam4:
   storage:
     type: storage
     output_file: D:/yamlsaving/pylon4.ccv
-    # output_file: pylon4.ccv

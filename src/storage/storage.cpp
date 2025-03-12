@@ -24,16 +24,17 @@ void writeHeader(std::ofstream& outFile, vidre::CamCommandoHeader h)
         writeField(outFile, h.width);
         writeField(outFile, h.height);
         writeField(outFile, h.frameRate);
-
+#if CCV_HEADER_VERSION >= 120
         writeField(outFile, h.packed);
-
+#endif
         writeField(outFile, h.frameCount);
-
+#if CCV_HEADER_VERSION >= 120
         writeField(outFile, h.sensor.offset);
         writeField(outFile, h.sensor.size);
         writeField(outFile, h.sensor.clock);
         writeField(outFile, h.sensor.exposure);
         writeField(outFile, h.sensor.gain);
+#endif
 }
 
 namespace vidre {
@@ -86,7 +87,7 @@ namespace vidre {
 
         Pylon::CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        formatConverter.Convert(pylonImage, buffer, _CCVHeader.frameBytesOnDisk, _config.sourcePixelType, _config.sourceWidth, _config.sourceHeight,
+        formatConverter.Convert(pylonImage, buffer, _CCVHeader.frameBytesOnDisk - 21, _config.sourcePixelType, _config.sourceWidth, _config.sourceHeight,
                                 _config.sourcePaddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
 
         std::string fileName = std::to_string(frameID) + ".tiff";
