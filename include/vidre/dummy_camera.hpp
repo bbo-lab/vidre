@@ -77,6 +77,8 @@ namespace vidre {
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) {};
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) {};
         virtual void SetFrameRate(double newFrameRate) {};
+        virtual void SetTriggerIn(unsigned int line) {};
+        virtual void SetTriggerOut(unsigned int line) {};
 
     private:
         std::atomic<bool> armed;

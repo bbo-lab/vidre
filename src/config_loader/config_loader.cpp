@@ -25,6 +25,13 @@ namespace vidre {
         //     return nullptr;
         // }  // TODO: Delegate to Factory
 
+        if (cameraNode["trigger_in"]) {
+            camera->SetTriggerIn(3);
+        }
+        if (cameraNode["trigger_out"]) {
+            camera->SetTriggerOut(3);
+        }
+
         return camera;
     }
 
