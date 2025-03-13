@@ -1,7 +1,6 @@
 #include "vidre/config_loader.hpp"
 
 namespace vidre {
-    // Module construction
     std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
         if (!cameraNode["vendor"])
             return nullptr;
@@ -28,24 +27,8 @@ namespace vidre {
 
         return camera;
     }
-    std::unique_ptr<vidre::Storage> LoadStorage(YAML::Node storageNode) {
-        return nullptr;
-    }
 
-
-    // Pipe construction
-    //std::unique_ptr<vidre::Storage> ConnectModules(std::string output, std::string input, std::unordered_map<std::string, vidre::Device>) {
-    std::unique_ptr<vidre::Storage> ConnectModules(std::string output, 
-        std::string input,
-        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras,
-        std::unordered_map<std::string, std::unique_ptr<vidre::Storage>> storages) {
-
-        cameras[output]->SetSharedMemory(storages[input]->GetSharedMemory());
-
-        return nullptr;
-    }
-
-    std::vector<std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
+    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
         // Idea for future: Create packages of commands per module from YAML. Afterwards properly distribute
         // over network. Currently just execute those packages locally and just have multiple cameras
         // be able to be started.
@@ -57,19 +40,12 @@ namespace vidre {
         // YAML File has a pipe between cam1 and storage1. Both are on the same node:
         // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
 
-        //std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
-
-        std::unordered_map<std::string, std::unique_ptr<vidre::ICamera>> cameras;
-        std::vector<std::string> storages;
-        std::vector<std::unique_ptr<vidre::RuntimeInstance>> rtInstances;
-
-
+        std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
         if (!boost::filesystem::exists(setupFilepath))
-            return rtInstances;
+            return cameras;
 
         YAML::Node config = YAML::LoadFile(setupFilepath);
 
-        // First pass: Get modules
         for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
             if (!it->second.IsMap())
                 continue;

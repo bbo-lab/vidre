@@ -12,35 +12,38 @@
 #  cam2 -> storage2
 #
 ---
-modules:
-  camera:
-    
 
 camOverview:
   type: camera
   vendor: pylon   # Can this be acquired from e.g. the specific usb port itself? 
   serial: 22343925
   # serial: 22511389
-  # config_file: C:/Projects/vidre/defaultConfig.config
   config_file: C:/Projects/vidre/defaultConfig.config
   is_config_local: true # Determines if the config file is local on the node or if it should be sent over on setup.
   description: For monitoring.
-camHeadset:
-  type: camera
-  vendor: dummy
-  serial: 10001010
-  # config_file: C:/Projects/vidre/defaultConfig.config
-  config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
-  is_config_local: true
-  description: For saving and further analysis afterwards.
-camLeftCorner:
-  type: camera
-  vendor: iAmNotSupported
-  serial: 10203000
-  # config_file: C:/Projects/vidre/defaultConfig.config
-  config_file: C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/defaultConfig.config
-  is_config_local: true
-  description: For saving and further analysis afterwards.
+  storage:
+    type: storage
+    output_file: pylon.ccv
+#camHeadset:
+#  type: camera
+#  vendor: dummy
+#  serial: 10001010
+#  config_file: C:/Projects/vidre/defaultConfig.config
+#  is_config_local: true
+#  description: For saving and further analysis afterwards.
+#  storage:
+#    type: storage
+#    output_file: dummy.ccv
+#camLeftCorner:
+#  type: camera
+#  vendor: iAmNotSupported
+#  serial: 10203000
+#  config_file: C:/Projects/vidre/defaultConfig.config
+#  is_config_local: true
+#  description: For saving and further analysis afterwards.
+#  storage:
+#    type: storage
+#    output_file: ns.ccv
 
 
 # ---- UNIMPLEMENTED ----

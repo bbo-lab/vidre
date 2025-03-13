@@ -10,7 +10,7 @@ namespace vidre {
     //     }
     // };
 
-    PylonCamera::PylonCamera() : running(false), armed(false) {}
+    PylonCamera::PylonCamera() : running(false), armed(false), outputLine(-1) {}
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
@@ -29,6 +29,9 @@ namespace vidre {
         //     camera.ExecuteSoftwareTrigger();
         while (running.load()) {
             // Frame Grabbing
+
+            // Trigger line (is it triggered automatically?)
+
             Pylon::CGrabResultPtr currentPtrGrabResult;
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
@@ -174,7 +177,7 @@ namespace vidre {
 
     std::string PylonCamera::GetSerialNumber()
     {
-        return camera.GetDeviceInfo().GetSerialNumber();
+        return std::string(camera.GetDeviceInfo().GetSerialNumber().c_str());
     }
 
     void PylonCamera::SetFrameWidth(unsigned int newFrameWidth) {

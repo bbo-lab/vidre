@@ -48,7 +48,6 @@ namespace vidre {
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) override;
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) override;
         virtual void SetFrameRate(double newFrameRate) override;
-
     private:
         void run();
 
