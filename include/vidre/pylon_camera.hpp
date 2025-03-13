@@ -27,7 +27,7 @@ namespace vidre {
         virtual bool IsArmed() override;
         virtual bool IsRunning() override;
 
-        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory) override;
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
         virtual bool SaveConfiguration(std::string filepath) override;
@@ -42,12 +42,12 @@ namespace vidre {
         virtual unsigned int GetFrameOffsetY() override;
         virtual unsigned int GetMaxNumBuffer() override;
         virtual double GetFrameRate() override;
+        virtual std::string GetSerialNumber() override;
         virtual void SetFrameWidth(unsigned int newFrameWidth) override;
         virtual void SetFrameHeight(unsigned int newFrameHeight) override;
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) override;
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) override;
         virtual void SetFrameRate(double newFrameRate) override;
-
     private:
         void run();
 
