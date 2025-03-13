@@ -10,7 +10,7 @@ namespace vidre {
     //     }
     // };
 
-    PylonCamera::PylonCamera() : running(false), armed(false), outputLine(-1) {}
+    PylonCamera::PylonCamera() : running(false), armed(false) {}
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
