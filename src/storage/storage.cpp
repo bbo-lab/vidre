@@ -1,94 +1,121 @@
-#include "vidre/storage.h"
+#include "vidre/storage.hpp"
 #include "vidre/shared_frame_header.hpp"
+
+template <typename T>
+void writeField(std::ofstream& outFile, const T& value) {
+    outFile.write(reinterpret_cast<const char*>(&value), sizeof(T));
+}
+void writeString(std::ofstream& outFile, const std::string& str) {
+    outFile.write(str.c_str(), str.length() + 1); // Write the string, including null terminator
+}
+void writeHeader(std::ofstream& outFile, vidre::CamCommandoHeader h)
+{
+        writeField(outFile, h.headerSize);
+        writeField(outFile, h.cameraType.length);
+        writeString(outFile, h.cameraType.data);
+        writeField(outFile, h.headerVersion);
+        writeField(outFile, h.imageType.length);
+        writeString(outFile, h.imageType.data);
+
+        writeField(outFile, h.bytesPerPixel);
+        writeField(outFile, h.bitsPerPixel);
+        writeField(outFile, h.frameBytesOnDisk);
+
+        writeField(outFile, h.width);
+        writeField(outFile, h.height);
+        writeField(outFile, h.frameRate);
+#if CCV_HEADER_VERSION >= 120
+        writeField(outFile, h.packed);
+#endif
+        writeField(outFile, h.frameCount);
+#if CCV_HEADER_VERSION >= 120
+        writeField(outFile, h.sensor.offset);
+        writeField(outFile, h.sensor.size);
+        writeField(outFile, h.sensor.clock);
+        writeField(outFile, h.sensor.exposure);
+        writeField(outFile, h.sensor.gain);
+#endif
+}
 
 namespace vidre {
 
-    Storage::Storage(const Config& config, std::string output_file_name_)
-    {
-        config_ = config; 
+    Storage::Storage(const Config& config, std::string outputFileName) {
+        _config = config; 
 
         // Shared Memory
-        const std::string newMemoryName = output_file_name_;
-        boost::interprocess::shared_memory_object::remove(newMemoryName.c_str());
-        size_t capacity = (sizeof(SharedFrameHeader) + config_.sourceWidth * config_.sourceHeight) * 
-                          (config_.sourceMaxNumBuffer + 1);
+        boost::interprocess::shared_memory_object::remove(_config.sourceSerialNumber.c_str());
+        size_t capacity = (sizeof(SharedFrameHeader) + _config.sourceWidth * _config.sourceHeight) * 
+                          (_config.sourceMaxNumBuffer + 1);
 
-        // !!! Just to show for yaml_test, (default dummy  cam set up has too low capacity)
-        capacity *= capacity > 32000 ? 1 : 1000;
-        try {
-            shared_memory_ = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::open_or_create, newMemoryName.c_str(), capacity
-        );
-        } catch (boost::interprocess::interprocess_exception const& iExcept) {
-            std::cout << iExcept.what();
-            return;
-        }
+        _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
+            boost::interprocess::open_or_create, _config.sourceSerialNumber.c_str(), capacity);
 
         // ccv staff
-        ccv_header.headerSize = sizeof(vidre::ccv_cam_header);
-        ccv_header.bytesPerPixel = 1; // PixelType_Mono8;
-        ccv_header.bitsPerPixel = 8; // PixelType_Mono8;
-        ccv_header.width = config_.sourceWidth;
-        ccv_header.height = config_.sourceHeight;
-        ccv_header.frameBytesOnDisk = ccv_header.width * ccv_header.height * ccv_header.bytesPerPixel;
-        ccv_header.frameRate = config_.sourceFrameRate;  
-        ccv_header.packed = 0;
-        ccv_header.frameCount = 0;
+        _CCVHeader.headerSize += (_CCVHeader.cameraType.length + 1) + (_CCVHeader.imageType.length + 1);
+        
+        // todo : from config and resolve depending on it
+        _CCVHeader.bytesPerPixel = 1; // PixelType_Mono8; 
+        _CCVHeader.bitsPerPixel = 8; // PixelType_Mono8;
+
+        _CCVHeader.width = _config.sourceWidth;
+        _CCVHeader.height = _config.sourceHeight;
+        _CCVHeader.frameBytesOnDisk = _CCVHeader.width * _CCVHeader.height * _CCVHeader.bytesPerPixel;
+        _CCVHeader.frameBytesOnDisk += 21; // size of tail
+        _CCVHeader.frameRate = _config.sourceFrameRate;  
+
+#if CCV_HEADER_VERSION >= 120
+        _CCVHeader.packed = 0;
+#endif
+        _CCVHeader.frameCount = 0; // not constant
 
         // initial write of header
-        output_file_name = output_file_name_;
-        std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::trunc);
-        file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
-        file.close();
+        _outputFileName = outputFileName;
+        std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::trunc);
+        writeHeader(file, _CCVHeader);
     }     
 
-    void Storage::SetConfig(const Config& config)
-    {
-        config_ = config;
+    void Storage::setConfig(const Config& config) {
+        _config = config;
     }  
     
-    Config Storage::GetConfig()
-    {
-        return config_;
+    Config Storage::getConfig() {
+        return _config;
     }
 
-
-    void Storage::Save(const void *data_ptr, size_t data_size, int frame) {
+    void Storage::save(const void* buffer, uint32_t frameID) {
         Pylon::CPylonImage pylonImage;
 
         Pylon::CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        formatConverter.Convert(pylonImage, data_ptr, data_size, config_.sourcePixelType, config_.sourceWidth, config_.sourceHeight,
-                                config_.sourcePaddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
+        formatConverter.Convert(pylonImage, buffer, _CCVHeader.frameBytesOnDisk - 21, _config.sourcePixelType, _config.sourceWidth, _config.sourceHeight,
+                                _config.sourcePaddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
 
-        std::string file_name = std::to_string(frame) + ".png";
-        Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, file_name.c_str(), pylonImage);
+        std::string fileName = std::to_string(frameID) + ".tiff";
+        Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
     }
 
-    boost::interprocess::managed_shared_memory* Storage::GetSharedMemory()
-    {
-        return shared_memory_.get(); 
+    boost::interprocess::managed_shared_memory* Storage::getSharedMemory() {
+        return _sharedMemory.get(); 
     }
     
-    void Storage::UpdateCCVHeader(uint32_t frame_id)
+    void Storage::updateCCVHeader()
     {
-        ccv_header.frameCount = frame_id; // todo: skipped frames logic
-        std::fstream file(output_file_name, std::ios::in | std::ios::out | std::ios::binary);
+        ++_CCVHeader.frameCount;
+        std::ofstream file(_outputFileName, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(0, std::ios::beg);
-        file.write(reinterpret_cast<char*>(&ccv_header), sizeof(ccv_header));
-        file.close();
+        writeHeader(file, _CCVHeader);
     }
 
-    void Storage::AppendCCVFrame(const void* buffer, ccv_frame_tail tail)
-    {
-        std::ofstream file(output_file_name, std::ios::out | std::ios::binary | std::ios::app);
+    void Storage::appendCCVFrame(const void* buffer, CCVFrameTail tail) {
+        
+        std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::app);
 
         // write frame
-        file.write(static_cast<const char*>(buffer), ccv_header.frameBytesOnDisk);
+        file.write(static_cast<const char*>(buffer), _CCVHeader.frameBytesOnDisk - 21);
 
         // write tail
-        file.write(reinterpret_cast<char*>(&tail), sizeof(tail));
-
-        file.close();
+        writeField(file, tail.frameIndex);
+        writeField(file, tail.timeStamp);
+        writeField(file, tail.padding);
     }
 }  // namespace vidre

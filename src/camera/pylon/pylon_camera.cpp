@@ -172,6 +172,11 @@ namespace vidre {
         return frameRate.GetValue();
     }
 
+    std::string PylonCamera::GetSerialNumber()
+    {
+        return camera.GetDeviceInfo().GetSerialNumber();
+    }
+
     void PylonCamera::SetFrameWidth(unsigned int newFrameWidth) {
         if (!camera.IsOpen())
             return;
@@ -245,8 +250,8 @@ namespace vidre {
         return true;
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory)
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
     {
-        shrBufferFactory.SetSharedMemory(shared_memory);
+        shrBufferFactory.SetSharedMemory(shared_memory, memory_name);
     }
 }  // namespace vidre

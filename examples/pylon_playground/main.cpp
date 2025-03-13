@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "vidre/runtime.h"
+#include "vidre/runtime.hpp"
 
 
 int main(int argc, char** argv) {

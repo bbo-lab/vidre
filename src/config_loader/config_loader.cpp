@@ -20,10 +20,10 @@ namespace vidre {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
             return nullptr;
         }
-        if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
-            std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
-            return nullptr;
-        }  // TODO: Delegate to Factory
+        // if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
+        //     std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+        //     return nullptr;
+        // }  // TODO: Delegate to Factory
 
         return camera;
     }
@@ -56,9 +56,9 @@ namespace vidre {
             if (!it->second["type"].as<std::string>().compare("camera") != 0) {
                 cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
                 
-                cameras[it->first.as<std::string>()]->SetCamera(LoadCamera(it->second));
+                cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));
 
-                cameras[it->first.as<std::string>()]->CreateStorage(it->second["storage"]["output_file"].as<std::string>());  
+                cameras[it->first.as<std::string>()]->createStorage(it->second["storage"]["output_file"].as<std::string>());  
             }
         }
 
