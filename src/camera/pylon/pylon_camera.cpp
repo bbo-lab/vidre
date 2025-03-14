@@ -232,6 +232,7 @@ namespace vidre {
 
     
     void PylonCamera::SetTriggerIn(unsigned int line) {
+        std::cout << "In: " << GetSerialNumber() << std::endl;
         GenApi::INodeMap &nodemap = GetGenAPINodeMap();
 
         Pylon::CEnumParameter triggerSelector(nodemap, "TriggerSelector");
@@ -241,22 +242,23 @@ namespace vidre {
         triggerMode.SetValue("On");
 
         Pylon::CEnumParameter triggerSource(nodemap, "TriggerSource");
-        triggerSource.SetValue("Line3");
+        triggerSource.SetValue(std::string("Line", line).c_str());
 
         Pylon::CEnumParameter triggerActivation(nodemap, "TriggerActivation");
         triggerActivation.SetValue("FallingEdge");
 
         Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue("Line3");
+        lineSelector.SetValue(std::string("Line", line).c_str());
 
         Pylon::CEnumParameter lineMode(nodemap, "LineMode");
         lineMode.SetValue("Output");
     }
     void PylonCamera::SetTriggerOut(unsigned int line) {
+        std::cout << "Out: " << GetSerialNumber() << std::endl;
         GenApi::INodeMap &nodemap = GetGenAPINodeMap();
 
         Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue("Line3");
+        lineSelector.SetValue(std::string("Line", line).c_str());
 
         Pylon::CEnumParameter lineMode(nodemap, "LineMode");
         lineMode.SetValue("Output");
