@@ -242,13 +242,13 @@ namespace vidre {
         triggerMode.SetValue("On");
 
         Pylon::CEnumParameter triggerSource(nodemap, "TriggerSource");
-        triggerSource.SetValue(std::string({"Line", line}).c_str());
+        triggerSource.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
         Pylon::CEnumParameter triggerActivation(nodemap, "TriggerActivation");
         triggerActivation.SetValue("FallingEdge");
 
         Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue(std::string({"Line", line}).c_str());
+        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
         Pylon::CEnumParameter lineMode(nodemap, "LineMode");
         lineMode.SetValue("Output");
@@ -258,7 +258,7 @@ namespace vidre {
         GenApi::INodeMap &nodemap = GetGenAPINodeMap();
 
         Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue(std::string({"Line", line}).c_str());
+        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
         Pylon::CEnumParameter lineMode(nodemap, "LineMode");
         lineMode.SetValue("Output");
