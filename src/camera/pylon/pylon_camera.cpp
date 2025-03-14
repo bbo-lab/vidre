@@ -251,7 +251,7 @@ namespace vidre {
         lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
         Pylon::CEnumParameter lineMode(nodemap, "LineMode");
-        lineMode.SetValue("Output");
+        lineMode.SetValue("Input");
     }
     void PylonCamera::SetTriggerOut(unsigned int line) {
         std::cout << "Out: " << GetSerialNumber() << std::endl;
