@@ -6,6 +6,7 @@
 #include <array>
 
 #include "config.h"
+#include "vidre/header.hpp"
 
 
 namespace vidre {
@@ -27,7 +28,23 @@ namespace vidre {
         double gain;
     };
 
-    struct CamCommandoHeader {
+    struct CCVFrameTail {
+        uint32_t frameIndex;
+        double timeStamp;
+        uint8_t padding[9];  
+    };
+
+    class CamCommandoHeader : public IHeader {
+    public:
+        CamCommandoHeader();
+        virtual void initiateHeader() override;
+        virtual void updateHeader() override;
+        virtual void writeFrame() override;
+        virtual void writeTail() override;
+    
+    private:
+        void writeHeader(std::ofstream& outFile);
+        template <typename T> void writeField(std::ofstream& outFile, const T& value);
 #if CCV_HEADER_VERSION >= 120
         uint32_t headerSize = 93;
 #else
@@ -54,11 +71,5 @@ namespace vidre {
 #if CCV_HEADER_VERSION >= 120
         SensorInfo sensor;
 #endif
-    };
-
-    struct CCVFrameTail {
-        uint32_t frameIndex;
-        double timeStamp;
-        uint8_t padding[9];  
     };
 }  // namespace vidre

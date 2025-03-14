@@ -38,6 +38,6 @@ namespace vidre {
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;
         std::string _outputFileName = "some.ccv";
-        CamCommandoHeader _CCVHeader;
+        IHeader _header;
     };
 }  // namespace vidre
