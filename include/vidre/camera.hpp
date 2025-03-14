@@ -53,5 +53,8 @@ namespace vidre {
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) = 0;
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) = 0;
         virtual void SetFrameRate(double newFrameRate) = 0;
+
+        virtual void SetTriggerIn(unsigned int line) = 0;
+        virtual void SetTriggerOut(unsigned int line) = 0;
     };
 }  // namespace vidre

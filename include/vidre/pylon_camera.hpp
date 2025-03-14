@@ -49,6 +49,8 @@ namespace vidre {
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) override;
         virtual void SetFrameRate(double newFrameRate) override;
 
+        virtual void SetTriggerIn(unsigned int line) override;
+        virtual void SetTriggerOut(unsigned int line) override;
     private:
         void run();
 
