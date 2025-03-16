@@ -1,17 +1,26 @@
 #include "vidre/storage.hpp"
 #include "vidre/shared_frame_header.hpp"
+#include "ccv_format.hpp"
 namespace vidre {
 
-    Storage::Storage(const Config& config, std::string outputFileName) {
+    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) {
         _config = config; 
 
-        // Shared Memory
         boost::interprocess::shared_memory_object::remove(_config.sourceSerialNumber.c_str());
         size_t capacity = (sizeof(SharedFrameHeader) + _config.sourceWidth * _config.sourceHeight) * 
                           (_config.sourceMaxNumBuffer + 1);
 
         _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
             boost::interprocess::open_or_create, _config.sourceSerialNumber.c_str(), capacity);
+
+        // todo: enum
+        _headerFormat = header_format;
+        if (_headerFormat == "ccv") {
+            _header = CamCommandoHeader(config)
+        }
+
+        _outputFileName = output_file_name;
+        _header.initiateHeader(_outputFileName);
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -38,24 +47,21 @@ namespace vidre {
         return _sharedMemory.get(); 
     }
     
-    void Storage::updateCCVHeader()
-    {
-        ++_CCVHeader.frameCount;
-        std::ofstream file(_outputFileName, std::ios::in | std::ios::out | std::ios::binary);
-        file.seekp(0, std::ios::beg);
-        writeHeader(file, _CCVHeader);
+    void Storage::updateHeader() {
+        _header.updateHeader(_outputFileName);
     }
 
-    void Storage::appendCCVFrame(const void* buffer, CCVFrameTail tail) {
-        
-        std::ofstream file(_outputFileName, std::ios::out | std::ios::binary | std::ios::app);
+    void Storage::appendFrame(const void* buffer) {
+        _header.writeFrame(buffer, _outputFileName);
+    }
 
-        // write frame
-        file.write(static_cast<const char*>(buffer), _CCVHeader.frameBytesOnDisk - 21);
-
-        // write tail
-        writeField(file, tail.frameIndex);
-        writeField(file, tail.timeStamp);
-        writeField(file, tail.padding);
+    void Storage::appendTail(uint32_t frame_idx, double time_stamp) {
+        if (_headerFormat == "ccv") {
+            vidre::CCVFrameTail tail;
+            tail.frameIndex = frame_idx // + result->numSkippedBefore? TODO: think about skipped logic
+            tail.timeStamp = time_stamp;
+            tail.timeStamp /= 1e9;
+            _header.writeTail(_outputFileName, tail);
+        }
     }
 }  // namespace vidre

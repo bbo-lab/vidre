@@ -19,7 +19,7 @@ namespace vidre
         Pylon::PylonTerminate();
     }
 
-    RuntimeInstance::RuntimeInstance(std::string configuration) {
+    RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
         // switch (configuration.cameraVendor)  {
         //     // cameravendor is enum
         //     case CameraVendor::Pylon:
@@ -50,7 +50,7 @@ namespace vidre
         cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
         cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
 
-        _storage = std::make_unique<vidre::Storage>(cameraConfig);
+        _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
         _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
     }
@@ -69,7 +69,7 @@ namespace vidre
         _camera = std::move(camera);
     }
 
-    void RuntimeInstance::createStorage(std::string outputFileName) {
+    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format) {
         if (_storage != nullptr) {
             std::cout << "Storage is created already \n";
             return;
@@ -88,7 +88,7 @@ namespace vidre
         cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
         cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
-        _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
+        _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
         _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
     }
@@ -110,17 +110,11 @@ namespace vidre
                 std::this_thread::yield();
                 continue;
             }
-            // update ccv_header
-            _storage->updateCCVHeader();
+            
 
-            // create_tail
-            vidre::CCVFrameTail tail;
-            tail.frameIndex = result->frameID; // + result->numSkippedBefore? TODO: think about skipped logic
-            // tail.skippedFrames = numSkippedBefore;
-            tail.timeStamp = result->timeStamp;
-            tail.timeStamp /= 1e9;
-
-            _storage->appendCCVFrame((const void *)(result + 1), tail);
+            _storage->updateHeader();
+            _storage->appendFrame((const void *)(result + 1));
+            _storage->appendTail(result->frameID, result->timeStamp);
          
          
             previousResult = result;

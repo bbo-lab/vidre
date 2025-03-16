@@ -11,7 +11,7 @@ namespace vidre {
     class RuntimeInstance {
     public:
         RuntimeInstance() = default;
-        RuntimeInstance(std::string configuration);
+        RuntimeInstance(std::string configuration, std::string header_format = "ccv");
         ~RuntimeInstance();
         
         void retrieveFrames();
@@ -19,7 +19,7 @@ namespace vidre {
         void stop();
 
         void setCamera(std::unique_ptr<ICamera> camera);
-        void createStorage(std::string outputFileName = "some.ccv");
+        void createStorage(std::string output_file_name = "some.ccv", std::string header_format = "ccv");
 
         bool checkCamera();
 
