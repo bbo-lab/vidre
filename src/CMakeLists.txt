@@ -14,7 +14,6 @@ set(public_headers
     ../include/vidre/camera.hpp
     ../include/vidre/config_loader.hpp
     ../include/vidre/presenter.hpp
-    ../include/vidre/ccv_format.hpp
     ../include/vidre/header.hpp
 )
 

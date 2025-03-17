@@ -7,8 +7,8 @@
 
 static void presentFrame(void *dataBuffer, const vidre::Config &config) {
     Pylon::CPylonImage image;
-    image.AttachUserBuffer(dataBuffer, config.sourceWidth * config.sourceHeight, config.sourcePixelType, config.sourceWidth,
-                           config.sourceHeight, config.sourcePaddingX);
+    image.AttachUserBuffer(dataBuffer, config.width * config.height, config.pixelType, config.width,
+                           config.height, config.paddingX);
     Pylon::DisplayImage(1, image);
 }
 
@@ -42,17 +42,17 @@ namespace vidre
 
         
         vidre::Config cameraConfig{};
-        cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = _camera->GetFrameOffsetX();
-        cameraConfig.sourceWidth = _camera->GetFrameWidth();
-        cameraConfig.sourceHeight = _camera->GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
-        cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
+        cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+        cameraConfig.paddingX = _camera->GetFrameOffsetX();
+        cameraConfig.width = _camera->GetFrameWidth();
+        cameraConfig.height = _camera->GetFrameHeight();
+        cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
+        cameraConfig.frameRate =  _camera->GetFrameRate();
+        cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -81,16 +81,17 @@ namespace vidre
         }
         
         vidre::Config cameraConfig{};
-        cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = _camera->GetFrameOffsetX();
-        cameraConfig.sourceWidth = _camera->GetFrameWidth();
-        cameraConfig.sourceHeight = _camera->GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
-        cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
+        cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+        cameraConfig.paddingX = _camera->GetFrameOffsetX();
+        cameraConfig.width = _camera->GetFrameWidth();
+        cameraConfig.height = _camera->GetFrameHeight();
+        cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
+        cameraConfig.frameRate = _camera->GetFrameRate();
+        cameraConfig.serialNumber = _camera->GetSerialNumber();
+
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::retrieveFrames() {

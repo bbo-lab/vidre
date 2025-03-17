@@ -1,26 +1,28 @@
 #include "vidre/storage.hpp"
 #include "vidre/shared_frame_header.hpp"
-#include "ccv_format.hpp"
+
+#include "header/ccv_format.hpp"
+
 namespace vidre {
 
     Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) {
         _config = config; 
 
-        boost::interprocess::shared_memory_object::remove(_config.sourceSerialNumber.c_str());
-        size_t capacity = (sizeof(SharedFrameHeader) + _config.sourceWidth * _config.sourceHeight) * 
-                          (_config.sourceMaxNumBuffer + 1);
+        boost::interprocess::shared_memory_object::remove(_config.serialNumber.c_str());
+        size_t capacity = (sizeof(SharedFrameHeader) + _config.width * _config.height) * 
+                          (_config.maxNumBuffer + 1);
 
         _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::open_or_create, _config.sourceSerialNumber.c_str(), capacity);
+            boost::interprocess::open_or_create, _config.serialNumber.c_str(), capacity);
 
         // todo: enum
         _headerFormat = header_format;
         if (_headerFormat == "ccv") {
-            _header = CamCommandoHeader(config)
+            _header = std::make_unique<CamCommandoHeader>(config);
         }
 
         _outputFileName = output_file_name;
-        _header.initiateHeader(_outputFileName);
+        _header->initiateHeader(_outputFileName);
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -36,8 +38,8 @@ namespace vidre {
 
         Pylon::CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        formatConverter.Convert(pylonImage, buffer, _CCVHeader.frameBytesOnDisk - 21, _config.sourcePixelType, _config.sourceWidth, _config.sourceHeight,
-                                _config.sourcePaddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
+        formatConverter.Convert(pylonImage, buffer, _config.width * _config.height, _config.pixelType, _config.width, _config.height,
+                                _config.paddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
 
         std::string fileName = std::to_string(frameID) + ".tiff";
         Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
@@ -48,20 +50,20 @@ namespace vidre {
     }
     
     void Storage::updateHeader() {
-        _header.updateHeader(_outputFileName);
+        _header->updateHeader(_outputFileName);
     }
 
     void Storage::appendFrame(const void* buffer) {
-        _header.writeFrame(buffer, _outputFileName);
+        _header->writeFrame(buffer, _outputFileName);
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp) {
         if (_headerFormat == "ccv") {
             vidre::CCVFrameTail tail;
-            tail.frameIndex = frame_idx // + result->numSkippedBefore? TODO: think about skipped logic
+            tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
             tail.timeStamp = time_stamp;
             tail.timeStamp /= 1e9;
-            _header.writeTail(_outputFileName, tail);
+            _header->writeTail<CamCommandoHeader>(_outputFileName, tail);
         }
     }
 }  // namespace vidre

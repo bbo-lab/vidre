@@ -1,4 +1,8 @@
 #include "ccv_format.hpp"
+#include "vidre/storage.hpp"
+
+#include <fstream>
+#include <iostream>
 
 namespace vidre {
     vidre::CamCommandoHeader::CamCommandoHeader() {

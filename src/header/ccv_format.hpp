@@ -4,10 +4,9 @@
 
 #include "vidre/header.hpp"
 
-#include "vidre/storage.hpp"
-
 
 namespace vidre {
+    struct Config;
 
     struct GreenbergString {
         uint32_t length; 
@@ -38,14 +37,14 @@ namespace vidre {
         uint8_t padding[9];  
     };
 
-    class CamCommandoHeader : public IHeader<CCVFrameTail> {
+    class CamCommandoHeader : public IHeader {
     public:
         CamCommandoHeader();
         CamCommandoHeader(Config config, std::string camera_type = "basler", std::string image_type = "basler");
         virtual void initiateHeader(const std::string& out_file) override;
         virtual void updateHeader(const std::string& out_file) override;
-        virtual void writeFrame(const void* buffer, const std::string& out_file) override;
-        virtual void writeTail(const std::string& out_file, const CCVFrameTail& tail) override;
+        virtual void writeFrame(const void* buffer, const std::string& out_file) override;        
+        void writeTail(const std::string& out_file, const CCVFrameTail& tail);
     
     private:
         void writeHeader(std::ofstream& outFile);

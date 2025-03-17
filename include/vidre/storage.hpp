@@ -8,10 +8,12 @@
 #include "config.h"
 #include "vidre/header.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <variant>
+
+
 
 namespace vidre {
+    struct CCVFrameTail;
 
     struct Config {
         Pylon::EPixelType pixelType;
@@ -40,7 +42,8 @@ namespace vidre {
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;
         std::string _outputFileName = "some.ccv";
-        std::string _headerFormat = "ccv"
-        IHeader _header;
+        std::string _headerFormat = "ccv";
+        
+        std::unique_ptr<IHeader> _header;
     };
 }  // namespace vidre
