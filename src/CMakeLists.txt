@@ -15,8 +15,6 @@ set(public_headers
     ../include/vidre/config_loader.hpp
     ../include/vidre/presenter.hpp
     ../include/vidre/ccv_format.hpp
-    ../include/vidre/camera_config.hpp
-    ../include/vidre/module_instance.hpp
 )
 
 source_group(public FILES ${public_headers})

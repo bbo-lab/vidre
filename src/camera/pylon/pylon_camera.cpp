@@ -9,8 +9,174 @@ namespace vidre {
     //         header->timeStamp = ptrGrabResult->GetTimeStamp();
     //     }
     // };
+    PylonCameraConfig::PylonCameraConfig(Pylon::CInstantCamera camera) :
+        nodeMap(camera.GetNodeMap()) {}
 
-    PylonCamera::PylonCamera() : running(false), armed(false) {}
+        
+    void PylonCameraConfig::SetNodeMap(GenApi::INodeMap &newNodeMap) {
+        nodeMap = newNodeMap;
+    }
+    GenApi::INodeMap &PylonCameraConfig::GetNodeMap() {
+        return nodeMap;
+    }
+
+    void PylonCameraConfig::SetBool(std::string parameter, bool value) {
+        Pylon::CBooleanParameter(nodeMap, parameter.c_str()).SetValue(value);
+    }
+    void PylonCameraConfig::SetInt(std::string parameter, int64_t value) {
+        Pylon::CIntegerParameter(nodeMap, parameter.c_str()).SetValue(value);
+    } 
+    void PylonCameraConfig::SetFloat(std::string parameter, float value) {
+        Pylon::CFloatParameter(nodeMap, parameter.c_str()).SetValue(value);
+    }
+    bool PylonCameraConfig::GetBool(std::string parameter) {
+        return Pylon::CBooleanParameter(nodeMap, parameter.c_str()).GetValue();
+    }
+    int64_t PylonCameraConfig::GetInt(std::string parameter) {
+        return Pylon::CIntegerParameter(nodeMap, parameter.c_str()).GetValue();
+    }
+    float PylonCameraConfig::GetFloat(std::string parameter) {
+        return Pylon::CFloatParameter(nodeMap, parameter.c_str()).GetValue();
+    }
+    
+
+    unsigned int PylonCameraConfig::GetFrameWidth() {
+        Pylon::CIntegerParameter width(nodeMap, "Width");
+
+        return width.GetValue();
+    }
+
+    unsigned int PylonCameraConfig::GetFrameHeight() {
+        Pylon::CIntegerParameter height(nodeMap, "Height");
+
+        return height.GetValue();
+    }
+
+    unsigned int PylonCameraConfig::GetFrameOffsetX() {
+        Pylon::CIntegerParameter offsetX(nodeMap, "OffsetX");
+
+        return offsetX.GetValue();
+    }
+
+    unsigned int PylonCameraConfig::GetFrameOffsetY() {
+        Pylon::CIntegerParameter offsetY(nodeMap, "OffsetY");
+
+        return offsetY.GetValue();
+    }
+    double PylonCameraConfig::GetFrameRate() {
+        Pylon::CFloatParameter frameRate(nodeMap, "AcquisitionFrameRate");
+
+        return frameRate.GetValue();
+    }
+
+    std::string PylonCameraConfig::GetSerialNumber() {
+        Pylon::CStringParameter serialNumber(nodeMap, "DeviceSerialNumber");
+
+        return std::string(serialNumber.GetValue().c_str());
+    }
+
+    void PylonCameraConfig::SetFrameWidth(unsigned int newFrameWidth) {
+        Pylon::CIntegerParameter frameWidth(nodeMap, "Width");
+
+        if (!frameWidth.TrySetValue(newFrameWidth)) {
+            std::cout << "Could not set frame width!" << std::endl;
+        }
+    }
+
+    void PylonCameraConfig::SetFrameHeight(unsigned int newFrameHeight) {
+        Pylon::CIntegerParameter frameHeight(nodeMap, "Height");
+
+        if (!frameHeight.TrySetValue(newFrameHeight)) {
+            std::cout << "Could not set frame height!" << std::endl;
+        }
+    }
+
+    void PylonCameraConfig::SetFrameOffsetX(unsigned int newFrameOffsetX) {
+        Pylon::CIntegerParameter frameOffsetX(nodeMap, "OffsetX");
+
+        if (!frameOffsetX.TrySetValue(newFrameOffsetX)) {
+            std::cout << "Could not set frame offset x!" << std::endl;
+        }
+    }
+
+    void PylonCameraConfig::SetFrameOffsetY(unsigned int newFrameOffsetY) {
+        Pylon::CIntegerParameter frameOffsetY(nodeMap, "OffsetY");
+
+        if (!frameOffsetY.TrySetValue(newFrameOffsetY)) {
+            std::cout << "Could not set frame offset y!" << std::endl;
+        }
+    }
+
+    void PylonCameraConfig::SetFrameRate(double newFrameRate) {
+        Pylon::CBooleanParameter frameRateEnable(nodeMap, "AcquisitionFrameRateEnable");
+        Pylon::CFloatParameter frameRate(nodeMap, "AcquisitionFrameRate");
+
+        if (frameRateEnable.TrySetValue(true)) {
+            if (!frameRate.TrySetValue(newFrameRate))
+                std::cout << "Could not set frame rate!" << std::endl;
+        }
+    }
+
+    
+    void PylonCameraConfig::SetTriggerIn(unsigned int line) {
+        Pylon::CEnumParameter triggerSelector(nodeMap, "TriggerSelector");
+        triggerSelector.SetValue("FrameStart");
+        
+        Pylon::CEnumParameter triggerMode(nodeMap, "TriggerMode");
+        triggerMode.SetValue("On");
+
+        Pylon::CEnumParameter triggerSource(nodeMap, "TriggerSource");
+        triggerSource.SetValue((std::string("Line") + std::to_string(line)).c_str());
+
+        Pylon::CEnumParameter triggerActivation(nodeMap, "TriggerActivation");
+        triggerActivation.SetValue("FallingEdge");
+
+        Pylon::CEnumParameter lineSelector(nodeMap, "LineSelector");
+        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
+
+        Pylon::CEnumParameter lineMode(nodeMap, "LineMode");
+        lineMode.SetValue("Input");
+    }
+    void PylonCameraConfig::SetTriggerOut(unsigned int line) {
+        Pylon::CEnumParameter lineSelector(nodeMap, "LineSelector");
+        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
+
+        Pylon::CEnumParameter lineMode(nodeMap, "LineMode");
+        lineMode.SetValue("Output");
+
+        Pylon::CEnumParameter lineSource(nodeMap, "LineSource");
+        lineSource.SetValue("ExposureActive");
+    }
+
+    bool PylonCameraConfig::LoadConfiguration(std::string filepath) {
+        try {
+            Pylon::CFeaturePersistence::Load(filepath.c_str(), &nodeMap, true);
+        } catch (const Pylon::GenericException &e) {
+            std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
+            return false;
+        }
+        return true;
+    }
+
+    bool PylonCameraConfig::SaveConfiguration(std::string filepath) {
+        try {
+            Pylon::CFeaturePersistence::Save(filepath.c_str(), &nodeMap);
+        } catch (const Pylon::GenericException &e) {
+            std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
+            return false;
+        }
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+    PylonCamera::PylonCamera() : running(false), armed(false), cameraConfig(nullptr) {}
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
@@ -69,6 +235,8 @@ namespace vidre {
             throw;
         }
         camera.Open();
+
+        cameraConfig = std::make_unique<PylonCameraConfig>(camera.GetNodeMap());
     }
     bool PylonCamera::Init(std::string serial) {
         static Pylon::CTlFactory &tlFactory = Pylon::CTlFactory::GetInstance();
@@ -90,6 +258,8 @@ namespace vidre {
             throw;
         }
         camera.Open();
+
+        cameraConfig = std::make_unique<PylonCameraConfig>(camera.GetNodeMap());
 
         return true;
     }
@@ -133,162 +303,14 @@ namespace vidre {
         return running.load();
     }
 
+    
+    ICameraConfig *PylonCamera::GetCameraConfig() {
+        return cameraConfig.get();
+    }
+
     /// --------------------------
     /// Camera parameter access
     /// --------------------------
-
-    GenApi::INodeMap &PylonCamera::GetGenAPINodeMap() {
-        return camera.GetNodeMap();
-    }
-
-    unsigned int PylonCamera::GetFrameWidth() {
-        Pylon::CIntegerParameter width(GetGenAPINodeMap(), "Width");
-
-        return width.GetValue();
-    }
-
-    unsigned int PylonCamera::GetFrameHeight() {
-        Pylon::CIntegerParameter height(GetGenAPINodeMap(), "Height");
-
-        return height.GetValue();
-    }
-
-    unsigned int PylonCamera::GetFrameOffsetX() {
-        Pylon::CIntegerParameter offsetX(GetGenAPINodeMap(), "OffsetX");
-
-        return offsetX.GetValue();
-    }
-
-    unsigned int PylonCamera::GetFrameOffsetY() {
-        Pylon::CIntegerParameter offsetY(GetGenAPINodeMap(), "OffsetY");
-
-        return offsetY.GetValue();
-    }
-
-    unsigned int PylonCamera::GetMaxNumBuffer() {
-        return camera.MaxNumBuffer.GetValue();
-    }
-
-    double PylonCamera::GetFrameRate() {
-        Pylon::CFloatParameter frameRate(GetGenAPINodeMap(), "AcquisitionFrameRate");
-
-        return frameRate.GetValue();
-    }
-
-    std::string PylonCamera::GetSerialNumber()
-    {
-        return std::string(camera.GetDeviceInfo().GetSerialNumber().c_str());
-    }
-
-    void PylonCamera::SetFrameWidth(unsigned int newFrameWidth) {
-        if (!camera.IsOpen())
-            return;
-        Pylon::CIntegerParameter frameWidth(GetGenAPINodeMap(), "Width");
-
-        if (!frameWidth.TrySetValue(newFrameWidth)) {
-            std::cout << "Could not set frame width!" << std::endl;
-        }
-    }
-
-    void PylonCamera::SetFrameHeight(unsigned int newFrameHeight) {
-        if (!camera.IsOpen())
-            return;
-        Pylon::CIntegerParameter frameHeight(GetGenAPINodeMap(), "Height");
-
-        if (!frameHeight.TrySetValue(newFrameHeight)) {
-            std::cout << "Could not set frame height!" << std::endl;
-        }
-    }
-
-    void PylonCamera::SetFrameOffsetX(unsigned int newFrameOffsetX) {
-        if (!camera.IsOpen())
-            return;
-        Pylon::CIntegerParameter frameOffsetX(GetGenAPINodeMap(), "OffsetX");
-
-        if (!frameOffsetX.TrySetValue(newFrameOffsetX)) {
-            std::cout << "Could not set frame offset x!" << std::endl;
-        }
-    }
-
-    void PylonCamera::SetFrameOffsetY(unsigned int newFrameOffsetY) {
-        if (!camera.IsOpen())
-            return;
-        Pylon::CIntegerParameter frameOffsetY(GetGenAPINodeMap(), "OffsetY");
-
-        if (!frameOffsetY.TrySetValue(newFrameOffsetY)) {
-            std::cout << "Could not set frame offset y!" << std::endl;
-        }
-    }
-
-    void PylonCamera::SetFrameRate(double newFrameRate) {
-        if (!camera.IsOpen())
-            return;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
-        Pylon::CBooleanParameter frameRateEnable(nodemap, "AcquisitionFrameRateEnable");
-        Pylon::CFloatParameter frameRate(nodemap, "AcquisitionFrameRate");
-
-        if (frameRateEnable.TrySetValue(true)) {
-            if (!frameRate.TrySetValue(newFrameRate))
-                std::cout << "Could not set frame rate!" << std::endl;
-        }
-    }
-
-    
-    void PylonCamera::SetTriggerIn(unsigned int line) {
-        std::cout << "In: " << GetSerialNumber() << std::endl;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
-
-        Pylon::CEnumParameter triggerSelector(nodemap, "TriggerSelector");
-        triggerSelector.SetValue("FrameStart");
-        
-        Pylon::CEnumParameter triggerMode(nodemap, "TriggerMode");
-        triggerMode.SetValue("On");
-
-        Pylon::CEnumParameter triggerSource(nodemap, "TriggerSource");
-        triggerSource.SetValue((std::string("Line") + std::to_string(line)).c_str());
-
-        Pylon::CEnumParameter triggerActivation(nodemap, "TriggerActivation");
-        triggerActivation.SetValue("FallingEdge");
-
-        Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
-
-        Pylon::CEnumParameter lineMode(nodemap, "LineMode");
-        lineMode.SetValue("Input");
-    }
-    void PylonCamera::SetTriggerOut(unsigned int line) {
-        std::cout << "Out: " << GetSerialNumber() << std::endl;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
-
-        Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
-
-        Pylon::CEnumParameter lineMode(nodemap, "LineMode");
-        lineMode.SetValue("Output");
-
-        Pylon::CEnumParameter lineSource(nodemap, "LineSource");
-        lineSource.SetValue("ExposureActive");
-    }
-
-    bool PylonCamera::LoadConfiguration(std::string filepath) {
-        try {
-            Pylon::CFeaturePersistence::Load(filepath.c_str(), &GetGenAPINodeMap(), true);
-        } catch (const Pylon::GenericException &e) {
-            std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
-            return false;
-        }
-        return true;
-    }
-
-    bool PylonCamera::SaveConfiguration(std::string filepath) {
-        try {
-            Pylon::CFeaturePersistence::Save(filepath.c_str(), &GetGenAPINodeMap());
-        } catch (const Pylon::GenericException &e) {
-            std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
-            return false;
-        }
-        return true;
-    }
 
     void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
     {

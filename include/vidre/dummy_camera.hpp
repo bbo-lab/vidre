@@ -4,9 +4,24 @@
 namespace vidre {
     // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
 
+    class DummyCameraConfig : public ICameraConfig {
+    public:
+        DummyCameraConfig() {};
+        
+        void SetBool(std::string parameter, bool value) override {}
+        void SetInt(std::string parameter, int64_t value) override {}
+        void SetFloat(std::string parameter, float value) override {}
+        bool GetBool(std::string parameter) override { return false; }
+        int64_t GetInt(std::string parameter) override { return 0; }
+        float GetFloat(std::string parameter) override { return 0.0; }
+
+        bool SaveConfiguration(std::string filepath) override { return true; }
+        bool LoadConfiguration(std::string filepath) override { return true; }
+    };
+
     class DummyCamera : public ICamera {
     public:
-        DummyCamera() {};
+        DummyCamera() : cameraConfig() {};
         ~DummyCamera() {};
 
         virtual void Init() {};
@@ -42,46 +57,12 @@ namespace vidre {
             return nullptr;
         };
 
-        virtual bool SaveConfiguration(std::string filepath) {
-            return true;
-        };
-        virtual bool LoadConfiguration(std::string filepath) {
-            return true;
-        };
-
-        // For convenience.
-        virtual unsigned int GetFrameWidth() {
-            return 1;
-        };
-        virtual unsigned int GetFrameHeight() {
-            return 1;
-        };
-        virtual unsigned int GetFrameOffsetX() {
-            return 0;
-        };
-        virtual unsigned int GetFrameOffsetY() {
-            return 0;
-        };
-        virtual unsigned int GetMaxNumBuffer() {
-            return 1;
-        };
-        virtual double GetFrameRate() {
-            return 1;
-        };
-        virtual std::string GetSerialNumber()
-        {
-            return "";
-        }
-        virtual void SetFrameWidth(unsigned int newFrameWidth) {};
-        virtual void SetFrameHeight(unsigned int newFrameHeight) {};
-        virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) {};
-        virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) {};
-        virtual void SetFrameRate(double newFrameRate) {};
-        virtual void SetTriggerIn(unsigned int line) {};
-        virtual void SetTriggerOut(unsigned int line) {};
+        virtual ICameraConfig *GetCameraConfig() { return cameraConfig; }
 
     private:
         std::atomic<bool> armed;
         std::atomic<bool> running;
+
+        std::unique_ptr<DummyCameraConfig> cameraConfig;
     };
 }  // namespace vidre

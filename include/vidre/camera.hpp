@@ -14,6 +14,35 @@ namespace vidre {
     // ICamera and PylonCamera: GenICamera. That way mainly the
     // aspects around camera parameters can be combined.
 
+    class ICameraConfig {
+    public:
+        virtual void SetBool(std::string parameter, bool value) = 0;
+        virtual void SetInt(std::string parameter, int64_t value) = 0;
+        virtual void SetFloat(std::string parameter, float value) = 0;
+        virtual bool GetBool(std::string parameter) = 0;
+        virtual int64_t GetInt(std::string parameter) = 0;
+        virtual float GetFloat(std::string parameter) = 0;
+
+        virtual bool SaveConfiguration(std::string filepath) = 0;
+        virtual bool LoadConfiguration(std::string filepath) = 0;
+
+        int GetFrameWidth() { return -1; }
+        int GetFrameHeight() { return -1; }
+        int GetFrameOffsetX() { return -1; }
+        int GetFrameOffsetY() { return -1; }
+        int GetMaxNumBuffer() { return -1; }
+        double GetFrameRate() { return -1.0; }
+        std::string GetSerialNumber() { return ""; }
+        void SetFrameWidth(unsigned int newFrameWidth) {}
+        void SetFrameHeight(unsigned int newFrameHeight) {}
+        void SetFrameOffsetX(unsigned int newFrameOffsetX) {}
+        void SetFrameOffsetY(unsigned int newFrameOffsetY) {}
+        void SetFrameRate(double newFrameRate) {}
+
+        void SetTriggerIn(unsigned int line) {}
+        void SetTriggerOut(unsigned int line) {}
+    };
+
     class ICamera {
     public:
         // virtual ~ICamera() = default;
@@ -35,26 +64,6 @@ namespace vidre {
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) = 0;
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
-        // Idea: Custom functions for different filetypes.
-        // Idea: Seperate object for configurations.
-        virtual bool SaveConfiguration(std::string filepath) = 0;
-        virtual bool LoadConfiguration(std::string filepath) = 0;
-
-        // Convenience functions for now. Using GenApi or own abstraction?
-        virtual unsigned int GetFrameWidth() = 0;
-        virtual unsigned int GetFrameHeight() = 0;
-        virtual unsigned int GetFrameOffsetX() = 0;
-        virtual unsigned int GetFrameOffsetY() = 0;
-        virtual unsigned int GetMaxNumBuffer() = 0;
-        virtual double GetFrameRate() = 0;
-        virtual std::string GetSerialNumber() = 0;
-        virtual void SetFrameWidth(unsigned int newFrameWidth) = 0;
-        virtual void SetFrameHeight(unsigned int newFrameHeight) = 0;
-        virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) = 0;
-        virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) = 0;
-        virtual void SetFrameRate(double newFrameRate) = 0;
-
-        virtual void SetTriggerIn(unsigned int line) = 0;
-        virtual void SetTriggerOut(unsigned int line) = 0;
+        virtual ICameraConfig *GetCameraConfig() = 0;
     };
 }  // namespace vidre

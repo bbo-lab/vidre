@@ -35,7 +35,9 @@ namespace vidre
         // Initialize and start the camera
         _camera->Init();
 
-        if (!_camera->LoadConfiguration(configuration.c_str())) {
+        ICameraConfig &cameraParamConfiguration = _camera->GetCameraConfig();
+
+        if (!cameraParamConfiguration.LoadConfiguration(configuration.c_str())) {
             std::cout << "Could not load configuration file \"" << configuration << "\" \n";
         }
 
@@ -43,12 +45,12 @@ namespace vidre
         
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = _camera->GetFrameOffsetX();
-        cameraConfig.sourceWidth = _camera->GetFrameWidth();
-        cameraConfig.sourceHeight = _camera->GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
-        cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
+        cameraConfig.sourcePaddingX = cameraParamConfiguration.GetFrameOffsetX();
+        cameraConfig.sourceWidth = cameraParamConfiguration.GetFrameWidth();
+        cameraConfig.sourceHeight = cameraParamConfiguration.GetFrameHeight();
+        cameraConfig.sourceMaxNumBuffer = cameraParamConfiguration.GetMaxNumBuffer();
+        cameraConfig.sourceFrameRate =  cameraParamConfiguration.GetFrameRate();
+        cameraConfig.sourceSerialNumber = cameraParamConfiguration.GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig);
 
@@ -79,15 +81,16 @@ namespace vidre
             std::cout << "Camera is not set \n";
             return;
         }
+        ICameraConfig &cameraParamConfiguration = _camera->GetCameraConfig();
         
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = _camera->GetFrameOffsetX();
-        cameraConfig.sourceWidth = _camera->GetFrameWidth();
-        cameraConfig.sourceHeight = _camera->GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  _camera->GetFrameRate();
-        cameraConfig.sourceSerialNumber = _camera->GetSerialNumber();
+        cameraConfig.sourcePaddingX = cameraParamConfiguration.GetFrameOffsetX();
+        cameraConfig.sourceWidth = cameraParamConfiguration.GetFrameWidth();
+        cameraConfig.sourceHeight = cameraParamConfiguration.GetFrameHeight();
+        cameraConfig.sourceMaxNumBuffer = cameraParamConfiguration.GetMaxNumBuffer();
+        cameraConfig.sourceFrameRate =  cameraParamConfiguration.GetFrameRate();
+        cameraConfig.sourceSerialNumber = cameraParamConfiguration.GetSerialNumber();
         _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
 
         _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);

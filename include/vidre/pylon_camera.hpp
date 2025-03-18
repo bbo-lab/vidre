@@ -12,6 +12,43 @@
 namespace vidre {
     // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
 
+    class PylonCameraConfig : public ICameraConfig {
+    public:
+        PylonCameraConfig() = delete;
+        PylonCameraConfig(Pylon::CInstantCamera camera);
+
+        void SetNodeMap(GenApi::INodeMap &newNodeMap);
+        GenApi::INodeMap &GetNodeMap();
+
+        virtual void SetBool(std::string parameter, bool value) override;
+        virtual void SetInt(std::string parameter, int64_t value) override;
+        virtual void SetFloat(std::string parameter, float value) override;
+        virtual bool GetBool(std::string parameter) override;
+        virtual int64_t GetInt(std::string parameter) override;
+        virtual float GetFloat(std::string parameter) override;
+
+        virtual bool SaveConfiguration(std::string filepath) override;
+        virtual bool LoadConfiguration(std::string filepath) override;
+
+        unsigned int GetFrameWidth();
+        unsigned int GetFrameHeight();
+        unsigned int GetFrameOffsetX();
+        unsigned int GetFrameOffsetY();
+        unsigned int GetMaxNumBuffer();
+        double GetFrameRate();
+        std::string GetSerialNumber();
+        void SetFrameWidth(unsigned int newFrameWidth);
+        void SetFrameHeight(unsigned int newFrameHeight);
+        void SetFrameOffsetX(unsigned int newFrameOffsetX);
+        void SetFrameOffsetY(unsigned int newFrameOffsetY);
+        void SetFrameRate(double newFrameRate);
+    
+        void SetTriggerIn(unsigned int line);
+        void SetTriggerOut(unsigned int line);
+    private:
+        GenApi::INodeMap &nodeMap;
+    };
+
     class PylonCamera : public ICamera {
     public:
         PylonCamera();
@@ -30,27 +67,7 @@ namespace vidre {
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
-        virtual bool SaveConfiguration(std::string filepath) override;
-        virtual bool LoadConfiguration(std::string filepath) override;
-
-        GenApi::INodeMap &GetGenAPINodeMap();
-
-        // For convenience.
-        virtual unsigned int GetFrameWidth() override;
-        virtual unsigned int GetFrameHeight() override;
-        virtual unsigned int GetFrameOffsetX() override;
-        virtual unsigned int GetFrameOffsetY() override;
-        virtual unsigned int GetMaxNumBuffer() override;
-        virtual double GetFrameRate() override;
-        virtual std::string GetSerialNumber() override;
-        virtual void SetFrameWidth(unsigned int newFrameWidth) override;
-        virtual void SetFrameHeight(unsigned int newFrameHeight) override;
-        virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) override;
-        virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) override;
-        virtual void SetFrameRate(double newFrameRate) override;
-
-        virtual void SetTriggerIn(unsigned int line) override;
-        virtual void SetTriggerOut(unsigned int line) override;
+        ICameraConfig *GetCameraConfig();
     private:
         void run();
 
@@ -65,6 +82,7 @@ namespace vidre {
         Pylon::CInstantCamera camera;
         Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
+        std::unique_ptr<PylonCameraConfig> cameraConfig;
         // --------------------------------
     };
 }  // namespace vidre
