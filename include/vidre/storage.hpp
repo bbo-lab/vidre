@@ -6,38 +6,44 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include "config.h"
-#include "vidre/ccv_format.hpp"
+#include "vidre/header.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <variant>
+
+
 
 namespace vidre {
+    struct CCVFrameTail;
+
     struct Config {
-        Pylon::EPixelType sourcePixelType;
-        uint32_t sourceWidth;
-        uint32_t sourceHeight;
-        uint32_t sourceMaxNumBuffer;
-        size_t sourcePaddingX;
-        double sourceFrameRate;
-        std::string sourceSerialNumber;
+        Pylon::EPixelType pixelType;
+        uint32_t width;
+        uint32_t height;
+        uint32_t maxNumBuffer;
+        size_t paddingX;
+        double frameRate;
+        std::string serialNumber;
     };
 
     class Storage {
     public:
         Storage() {};
-        Storage(const Config& config, std::string outputFileName = "some.ccv");
+        Storage(const Config& config, const std::string& header_format = "ccv", const std::string& output_file_name = "some.ccv");
         ~Storage() {};
 
         void setConfig(const Config& config);
         Config getConfig();
-        void save(const void *buffer, uint32_t frameID);
+        void save(const void* buffer, uint32_t frameID);
         boost::interprocess::managed_shared_memory* getSharedMemory();
-        void updateCCVHeader();
-        void appendCCVFrame(const void* buffer, CCVFrameTail tail);
+        void updateHeader();
+        void appendFrame(const void* buffer);
+        void appendTail(uint32_t frame_idx, double time_stamp);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;
         std::string _outputFileName = "some.ccv";
-        CamCommandoHeader _CCVHeader;
+        std::string _headerFormat = "ccv";
+        
+        std::unique_ptr<IHeader> _header;
     };
 }  // namespace vidre
