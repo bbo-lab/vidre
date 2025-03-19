@@ -1,0 +1,1 @@
+- Aptina is more traditional C-style function based (atleast in C++ and not COM) while Pylon relies on objects and polymorphism

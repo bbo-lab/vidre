@@ -33,7 +33,6 @@ namespace vidre {
         unsigned int GetFrameHeight();
         unsigned int GetFrameOffsetX();
         unsigned int GetFrameOffsetY();
-        unsigned int GetMaxNumBuffer();
         double GetFrameRate();
         std::string GetSerialNumber();
         void SetFrameWidth(unsigned int newFrameWidth);
@@ -67,6 +66,7 @@ namespace vidre {
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
         virtual ICameraConfig *GetCameraConfig() override;
+        virtual int64_t GetMaxNumBuffer() override;
     private:
         void run();
 

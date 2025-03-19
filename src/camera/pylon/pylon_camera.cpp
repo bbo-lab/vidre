@@ -312,6 +312,10 @@ namespace vidre {
     ICameraConfig *PylonCamera::GetCameraConfig() {
         return cameraConfig.get();
     }
+    
+    int64_t PylonCamera::GetMaxNumBuffer() {
+        return camera.MaxNumBuffer.GetValue();
+    }
 
     /// --------------------------
     /// Camera parameter access

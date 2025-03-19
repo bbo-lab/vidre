@@ -29,4 +29,6 @@ Using other libraries for handling piping behaviour?
 
 Generally: Splitting configuration into software and hardware topology.
 -> Software Topology: Revolves around the piping around the system, what modules to connect how
--> Hardware Topolgy: Hints towards the actual connections, nodes of modules etc.
+-> Hardware Topolgy: Hints towards the actual connections, nodes of modules, expected connection bottlenecks etc.
+    Also this configuration file might include a sort of config of a domain name service so that e.g. a named device may be replaced and does not have its serial number replaced in the entire configurations
+=> Combine both to create suitable relationships between modules. (e.g. choosing sequential over multi-threading)

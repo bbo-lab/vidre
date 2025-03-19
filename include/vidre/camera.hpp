@@ -26,21 +26,20 @@ namespace vidre {
         virtual bool SaveConfiguration(std::string filepath) = 0;
         virtual bool LoadConfiguration(std::string filepath) = 0;
 
-        int GetFrameWidth() { return -1; }
-        int GetFrameHeight() { return -1; }
-        int GetFrameOffsetX() { return -1; }
-        int GetFrameOffsetY() { return -1; }
-        int GetMaxNumBuffer() { return -1; }
-        double GetFrameRate() { return -1.0; }
-        std::string GetSerialNumber() { return ""; }
-        void SetFrameWidth(unsigned int newFrameWidth) {}
-        void SetFrameHeight(unsigned int newFrameHeight) {}
-        void SetFrameOffsetX(unsigned int newFrameOffsetX) {}
-        void SetFrameOffsetY(unsigned int newFrameOffsetY) {}
-        void SetFrameRate(double newFrameRate) {}
+        virtual unsigned int GetFrameWidth() { return 0; }
+        virtual unsigned int GetFrameHeight() { return 0; }
+        virtual unsigned int GetFrameOffsetX() { return 0; }
+        virtual unsigned int GetFrameOffsetY() { return 0; }
+        virtual double GetFrameRate() { return 0.0; }
+        virtual std::string GetSerialNumber() { return ""; }
+        virtual void SetFrameWidth(unsigned int newFrameWidth) {}
+        virtual void SetFrameHeight(unsigned int newFrameHeight) {}
+        virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) {}
+        virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) {}
+        virtual void SetFrameRate(double newFrameRate) {}
 
-        void SetTriggerIn(unsigned int line) {}
-        void SetTriggerOut(unsigned int line) {}
+        virtual void SetTriggerIn(unsigned int line) {}
+        virtual void SetTriggerOut(unsigned int line) {}
     };
 
     class ICamera {
@@ -65,5 +64,6 @@ namespace vidre {
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
         virtual ICameraConfig *GetCameraConfig() = 0;
+        virtual int64_t GetMaxNumBuffer() { return 0; }
     };
 }  // namespace vidre
