@@ -14,11 +14,10 @@ namespace vidre {
 
     class PylonCameraConfig : public ICameraConfig {
     public:
-        PylonCameraConfig() = delete;
-        PylonCameraConfig(Pylon::CInstantCamera camera);
+        PylonCameraConfig();
 
         void SetNodeMap(GenApi::INodeMap &newNodeMap);
-        GenApi::INodeMap &GetNodeMap();
+        GenApi::INodeMap *GetNodeMap();
 
         virtual void SetBool(std::string parameter, bool value) override;
         virtual void SetInt(std::string parameter, int64_t value) override;
@@ -46,7 +45,7 @@ namespace vidre {
         void SetTriggerIn(unsigned int line);
         void SetTriggerOut(unsigned int line);
     private:
-        GenApi::INodeMap &nodeMap;
+        GenApi::INodeMap *nodeMap;
     };
 
     class PylonCamera : public ICamera {
@@ -67,7 +66,7 @@ namespace vidre {
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
-        ICameraConfig *GetCameraConfig();
+        virtual ICameraConfig *GetCameraConfig() override;
     private:
         void run();
 

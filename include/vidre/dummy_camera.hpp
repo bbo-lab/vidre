@@ -21,7 +21,7 @@ namespace vidre {
 
     class DummyCamera : public ICamera {
     public:
-        DummyCamera() : cameraConfig() {};
+        DummyCamera() {};
         ~DummyCamera() {};
 
         virtual void Init() {};
@@ -57,7 +57,7 @@ namespace vidre {
             return nullptr;
         };
 
-        virtual ICameraConfig *GetCameraConfig() { return cameraConfig; }
+        virtual ICameraConfig *GetCameraConfig() { return cameraConfig.get(); }
 
     private:
         std::atomic<bool> armed;

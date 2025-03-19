@@ -9,14 +9,15 @@ namespace vidre {
     //         header->timeStamp = ptrGrabResult->GetTimeStamp();
     //     }
     // };
-    PylonCameraConfig::PylonCameraConfig(Pylon::CInstantCamera camera) :
-        nodeMap(camera.GetNodeMap()) {}
+    PylonCameraConfig::PylonCameraConfig() {
+        nodeMap = GenApi::CNodeMapFactory::CreateEmptyNodeMap();
+    }
 
         
     void PylonCameraConfig::SetNodeMap(GenApi::INodeMap &newNodeMap) {
-        nodeMap = newNodeMap;
+        nodeMap = std::addressof(newNodeMap);
     }
-    GenApi::INodeMap &PylonCameraConfig::GetNodeMap() {
+    GenApi::INodeMap *PylonCameraConfig::GetNodeMap() {
         return nodeMap;
     }
 
@@ -150,7 +151,7 @@ namespace vidre {
 
     bool PylonCameraConfig::LoadConfiguration(std::string filepath) {
         try {
-            Pylon::CFeaturePersistence::Load(filepath.c_str(), &nodeMap, true);
+            Pylon::CFeaturePersistence::Load(filepath.c_str(), nodeMap, true);
         } catch (const Pylon::GenericException &e) {
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             return false;
@@ -160,7 +161,7 @@ namespace vidre {
 
     bool PylonCameraConfig::SaveConfiguration(std::string filepath) {
         try {
-            Pylon::CFeaturePersistence::Save(filepath.c_str(), &nodeMap);
+            Pylon::CFeaturePersistence::Save(filepath.c_str(), nodeMap);
         } catch (const Pylon::GenericException &e) {
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             return false;
@@ -176,7 +177,9 @@ namespace vidre {
 
 
 
-    PylonCamera::PylonCamera() : running(false), armed(false), cameraConfig(nullptr) {}
+    PylonCamera::PylonCamera() : running(false), armed(false) {
+        cameraConfig = std::make_unique<PylonCameraConfig>();
+    }
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
@@ -236,7 +239,8 @@ namespace vidre {
         }
         camera.Open();
 
-        cameraConfig = std::make_unique<PylonCameraConfig>(camera.GetNodeMap());
+        cameraConfig = std::make_unique<PylonCameraConfig>();
+        cameraConfig->SetNodeMap(camera.GetNodeMap());
     }
     bool PylonCamera::Init(std::string serial) {
         static Pylon::CTlFactory &tlFactory = Pylon::CTlFactory::GetInstance();
@@ -259,7 +263,8 @@ namespace vidre {
         }
         camera.Open();
 
-        cameraConfig = std::make_unique<PylonCameraConfig>(camera.GetNodeMap());
+        cameraConfig = std::make_unique<PylonCameraConfig>();
+        cameraConfig->SetNodeMap(camera.GetNodeMap());
 
         return true;
     }

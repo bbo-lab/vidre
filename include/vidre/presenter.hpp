@@ -55,13 +55,13 @@ namespace vidre {
 
         void presentationThread(vidre::ICamera *camera) {
             // Setting up relevant camera data for saving
-            ICameraConfig &cameraParamConfig = camera->GetCameraConfig();
+            ICameraConfig *cameraParamConfig = camera->GetCameraConfig();
 
             vidre::Config cameraConfig{};
             cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-            cameraConfig.sourcePaddingX = cameraParamConfig.GetFrameOffsetX();
-            cameraConfig.sourceWidth = cameraParamConfig.GetFrameWidth();
-            cameraConfig.sourceHeight = cameraParamConfig.GetFrameHeight();
+            cameraConfig.sourcePaddingX = cameraParamConfig->GetFrameOffsetX();
+            cameraConfig.sourceWidth = cameraParamConfig->GetFrameWidth();
+            cameraConfig.sourceHeight = cameraParamConfig->GetFrameHeight();
 
             const vidre::SharedFrameHeader *result = nullptr, *previousResult = nullptr;
 
