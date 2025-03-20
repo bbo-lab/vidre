@@ -21,28 +21,32 @@ namespace vidre {
 
         virtual void SetBool(std::string parameter, bool value) override;
         virtual void SetInt(std::string parameter, int64_t value) override;
-        virtual void SetFloat(std::string parameter, float value) override;
+        virtual void SetFloat(std::string parameter, double value) override;
+        virtual void SetString(std::string parameter, std::string value) override;
+        virtual void SetEnum(std::string parameter, std::string value) override;
         virtual bool GetBool(std::string parameter) override;
         virtual int64_t GetInt(std::string parameter) override;
-        virtual float GetFloat(std::string parameter) override;
+        virtual double GetFloat(std::string parameter) override;
+        virtual std::string GetString(std::string parameter) override;
+        virtual std::string GetEnum(std::string parameter) override;
 
         virtual bool SaveConfiguration(std::string filepath) override;
         virtual bool LoadConfiguration(std::string filepath) override;
 
-        unsigned int GetFrameWidth();
-        unsigned int GetFrameHeight();
-        unsigned int GetFrameOffsetX();
-        unsigned int GetFrameOffsetY();
-        double GetFrameRate();
-        std::string GetSerialNumber();
-        void SetFrameWidth(unsigned int newFrameWidth);
-        void SetFrameHeight(unsigned int newFrameHeight);
-        void SetFrameOffsetX(unsigned int newFrameOffsetX);
-        void SetFrameOffsetY(unsigned int newFrameOffsetY);
-        void SetFrameRate(double newFrameRate);
-    
-        void SetTriggerIn(unsigned int line);
-        void SetTriggerOut(unsigned int line);
+        virtual int64_t GetFrameWidth() override;
+        virtual int64_t GetFrameHeight() override;
+        virtual int64_t GetFrameOffsetX() override;
+        virtual int64_t GetFrameOffsetY() override;
+        virtual double GetFrameRate() override;
+        virtual std::string GetSerialNumber();
+        virtual void SetFrameWidth(int64_t newFrameWidth) override;
+        virtual void SetFrameHeight(int64_t newFrameHeight) override;
+        virtual void SetFrameOffsetX(int64_t newFrameOffsetX) override;
+        virtual void SetFrameOffsetY(int64_t newFrameOffsetY) override;
+        virtual void SetFrameRate(double newFrameRate) override;
+
+        virtual void SetTriggerIn(int64_t line) override;
+        virtual void SetTriggerOut(int64_t line) override;
     private:
         GenApi::INodeMap *nodeMap;
     };

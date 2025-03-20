@@ -27,8 +27,14 @@ namespace vidre {
     void PylonCameraConfig::SetInt(std::string parameter, int64_t value) {
         Pylon::CIntegerParameter(nodeMap, parameter.c_str()).SetValue(value);
     } 
-    void PylonCameraConfig::SetFloat(std::string parameter, float value) {
+    void PylonCameraConfig::SetFloat(std::string parameter, double value) {
         Pylon::CFloatParameter(nodeMap, parameter.c_str()).SetValue(value);
+    }
+    void PylonCameraConfig::SetString(std::string parameter, std::string value) {
+        Pylon::CStringParameter(nodeMap, parameter.c_str()).SetValue(value.c_str());
+    }
+    void PylonCameraConfig::SetEnum(std::string parameter, std::string value) {
+        Pylon::CEnumParameter(nodeMap, parameter.c_str()).SetValue(value.c_str());
     }
     bool PylonCameraConfig::GetBool(std::string parameter) {
         return Pylon::CBooleanParameter(nodeMap, parameter.c_str()).GetValue();
@@ -36,117 +42,74 @@ namespace vidre {
     int64_t PylonCameraConfig::GetInt(std::string parameter) {
         return Pylon::CIntegerParameter(nodeMap, parameter.c_str()).GetValue();
     }
-    float PylonCameraConfig::GetFloat(std::string parameter) {
+    double PylonCameraConfig::GetFloat(std::string parameter) {
         return Pylon::CFloatParameter(nodeMap, parameter.c_str()).GetValue();
+    }
+    std::string PylonCameraConfig::GetString(std::string parameter) {
+        return Pylon::CStringParameter(nodeMap, parameter.c_str()).GetValue().c_str();
+    }
+    std::string PylonCameraConfig::GetEnum(std::string parameter) {
+        return Pylon::CEnumParameter(nodeMap, parameter.c_str()).GetValue().c_str();
     }
     
 
-    unsigned int PylonCameraConfig::GetFrameWidth() {
-        Pylon::CIntegerParameter width(nodeMap, "Width");
-
-        return width.GetValue();
+    int64_t PylonCameraConfig::GetFrameWidth() {
+        return GetInt("Width");
     }
 
-    unsigned int PylonCameraConfig::GetFrameHeight() {
-        Pylon::CIntegerParameter height(nodeMap, "Height");
-
-        return height.GetValue();
+    int64_t PylonCameraConfig::GetFrameHeight() {
+        return GetInt("Height");
     }
 
-    unsigned int PylonCameraConfig::GetFrameOffsetX() {
-        Pylon::CIntegerParameter offsetX(nodeMap, "OffsetX");
-
-        return offsetX.GetValue();
+    int64_t PylonCameraConfig::GetFrameOffsetX() {
+        return GetInt("OffsetX");
     }
 
-    unsigned int PylonCameraConfig::GetFrameOffsetY() {
-        Pylon::CIntegerParameter offsetY(nodeMap, "OffsetY");
-
-        return offsetY.GetValue();
+    int64_t PylonCameraConfig::GetFrameOffsetY() {
+        return GetInt("OffsetY");
     }
     double PylonCameraConfig::GetFrameRate() {
-        Pylon::CFloatParameter frameRate(nodeMap, "AcquisitionFrameRate");
-
-        return frameRate.GetValue();
+        return GetFloat("AcquisitionFrameRate");
     }
 
     std::string PylonCameraConfig::GetSerialNumber() {
-        Pylon::CStringParameter serialNumber(nodeMap, "DeviceSerialNumber");
-
-        return std::string(serialNumber.GetValue().c_str());
+        return GetString("DeviceSerialNumber");
     }
 
-    void PylonCameraConfig::SetFrameWidth(unsigned int newFrameWidth) {
-        Pylon::CIntegerParameter frameWidth(nodeMap, "Width");
-
-        if (!frameWidth.TrySetValue(newFrameWidth)) {
-            std::cout << "Could not set frame width!" << std::endl;
-        }
+    void PylonCameraConfig::SetFrameWidth(int64_t newFrameWidth) {
+        SetInt("Width", newFrameWidth);
     }
 
-    void PylonCameraConfig::SetFrameHeight(unsigned int newFrameHeight) {
-        Pylon::CIntegerParameter frameHeight(nodeMap, "Height");
-
-        if (!frameHeight.TrySetValue(newFrameHeight)) {
-            std::cout << "Could not set frame height!" << std::endl;
-        }
+    void PylonCameraConfig::SetFrameHeight(int64_t newFrameHeight) {
+        SetInt("Width", newFrameHeight);
     }
 
-    void PylonCameraConfig::SetFrameOffsetX(unsigned int newFrameOffsetX) {
-        Pylon::CIntegerParameter frameOffsetX(nodeMap, "OffsetX");
-
-        if (!frameOffsetX.TrySetValue(newFrameOffsetX)) {
-            std::cout << "Could not set frame offset x!" << std::endl;
-        }
+    void PylonCameraConfig::SetFrameOffsetX(int64_t newFrameOffsetX) {
+        SetInt("OffsetX", newFrameOffsetX);
     }
 
-    void PylonCameraConfig::SetFrameOffsetY(unsigned int newFrameOffsetY) {
-        Pylon::CIntegerParameter frameOffsetY(nodeMap, "OffsetY");
-
-        if (!frameOffsetY.TrySetValue(newFrameOffsetY)) {
-            std::cout << "Could not set frame offset y!" << std::endl;
-        }
+    void PylonCameraConfig::SetFrameOffsetY(int64_t newFrameOffsetY) {
+        SetInt("OffsetY", newFrameOffsetY);
     }
 
     void PylonCameraConfig::SetFrameRate(double newFrameRate) {
-        Pylon::CBooleanParameter frameRateEnable(nodeMap, "AcquisitionFrameRateEnable");
-        Pylon::CFloatParameter frameRate(nodeMap, "AcquisitionFrameRate");
-
-        if (frameRateEnable.TrySetValue(true)) {
-            if (!frameRate.TrySetValue(newFrameRate))
-                std::cout << "Could not set frame rate!" << std::endl;
-        }
+        SetBool("AcquisitionFrameRateEnable", true);
+        SetFloat("AcquisitionFrameRate", newFrameRate);
     }
 
     
-    void PylonCameraConfig::SetTriggerIn(unsigned int line) {
-        Pylon::CEnumParameter triggerSelector(nodeMap, "TriggerSelector");
-        triggerSelector.SetValue("FrameStart");
-        
-        Pylon::CEnumParameter triggerMode(nodeMap, "TriggerMode");
-        triggerMode.SetValue("On");
-
-        Pylon::CEnumParameter triggerSource(nodeMap, "TriggerSource");
-        triggerSource.SetValue((std::string("Line") + std::to_string(line)).c_str());
-
-        Pylon::CEnumParameter triggerActivation(nodeMap, "TriggerActivation");
-        triggerActivation.SetValue("FallingEdge");
-
-        Pylon::CEnumParameter lineSelector(nodeMap, "LineSelector");
-        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
-
-        Pylon::CEnumParameter lineMode(nodeMap, "LineMode");
-        lineMode.SetValue("Input");
+    void PylonCameraConfig::SetTriggerIn(int64_t line) {
+        SetEnum("TriggerSelector", "FrameStart");
+        SetEnum("TriggerMode", "On");
+        SetEnum("TriggerSource", (std::string("Line") + std::to_string(line)).c_str());
+        SetEnum("TriggerActivation", "FallingEdge");
+        SetEnum("LineSelector", (std::string("Line") + std::to_string(line)).c_str());
+        SetEnum("LineMode", "Input");
     }
-    void PylonCameraConfig::SetTriggerOut(unsigned int line) {
-        Pylon::CEnumParameter lineSelector(nodeMap, "LineSelector");
-        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
-
-        Pylon::CEnumParameter lineMode(nodeMap, "LineMode");
-        lineMode.SetValue("Output");
-
-        Pylon::CEnumParameter lineSource(nodeMap, "LineSource");
-        lineSource.SetValue("ExposureActive");
+    void PylonCameraConfig::SetTriggerOut(int64_t line) {
+        SetEnum("LineSelector", (std::string("Line") + std::to_string(line)).c_str());
+        SetEnum("LineMode", "Output");
+        SetEnum("LineSource", "ExposureActive");
     }
 
     bool PylonCameraConfig::LoadConfiguration(std::string filepath) {
@@ -221,6 +184,8 @@ namespace vidre {
                 currentPtrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
 
             latestFrame.store(result);
+
+            // Potential delegation function to consumers, notifying about a new frame. Maybe have some general post-processing chain.
 
             // Simulate skipping images
             // Pylon::WaitObject::Sleep(500);

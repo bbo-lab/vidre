@@ -18,28 +18,32 @@ namespace vidre {
     public:
         virtual void SetBool(std::string parameter, bool value) = 0;
         virtual void SetInt(std::string parameter, int64_t value) = 0;
-        virtual void SetFloat(std::string parameter, float value) = 0;
+        virtual void SetFloat(std::string parameter, double value) = 0; // GenApi clarification: The actual function is called SetFloat even though the parameter is a double.
+        virtual void SetString(std::string parameter, std::string value) = 0;
+        virtual void SetEnum(std::string parameter, std::string value) = 0;
         virtual bool GetBool(std::string parameter) = 0;
         virtual int64_t GetInt(std::string parameter) = 0;
-        virtual float GetFloat(std::string parameter) = 0;
+        virtual double GetFloat(std::string parameter) = 0; // s.a.
+        virtual std::string GetString(std::string parameter) = 0;
+        virtual std::string GetEnum(std::string parameter) = 0;
 
         virtual bool SaveConfiguration(std::string filepath) = 0;
         virtual bool LoadConfiguration(std::string filepath) = 0;
 
-        virtual unsigned int GetFrameWidth() { return 0; }
-        virtual unsigned int GetFrameHeight() { return 0; }
-        virtual unsigned int GetFrameOffsetX() { return 0; }
-        virtual unsigned int GetFrameOffsetY() { return 0; }
-        virtual double GetFrameRate() { return 0.0; }
+        virtual int64_t GetFrameWidth() { return 0; }
+        virtual int64_t GetFrameHeight() { return 0; }
+        virtual int64_t GetFrameOffsetX() { return 0; }
+        virtual int64_t GetFrameOffsetY() { return 0; }
+        virtual double GetFrameRate() { return 0.0; } 
         virtual std::string GetSerialNumber() { return ""; }
-        virtual void SetFrameWidth(unsigned int newFrameWidth) {}
-        virtual void SetFrameHeight(unsigned int newFrameHeight) {}
-        virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) {}
-        virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) {}
+        virtual void SetFrameWidth(int64_t newFrameWidth) {}
+        virtual void SetFrameHeight(int64_t newFrameHeight) {}
+        virtual void SetFrameOffsetX(int64_t newFrameOffsetX) {}
+        virtual void SetFrameOffsetY(int64_t newFrameOffsetY) {}
         virtual void SetFrameRate(double newFrameRate) {}
 
-        virtual void SetTriggerIn(unsigned int line) {}
-        virtual void SetTriggerOut(unsigned int line) {}
+        virtual void SetTriggerIn(int64_t line) {}
+        virtual void SetTriggerOut(int64_t line) {}
     };
 
     class ICamera {

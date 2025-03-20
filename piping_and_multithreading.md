@@ -45,3 +45,19 @@ https://moodycamel.com/blog/2014/a-fast-general-purpose-lock-free-queue-for-c++
 https://github.com/tudinfse/FFQ
 
 Weak valid check: At the start of handling a frame copy the frame id to local memory. During writing occasionally check
+
+
+# Coding Style
+
+# Modules
+- Camera
+- Storage
+- Presenter
+- Transport
+    - Source (also goes for Camera?)
+    - Sink (also goes for Storage?)
+- Processing
+    - Transform
+    - Splitter
+- Logging
+- Custom Modules?
