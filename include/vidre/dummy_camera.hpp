@@ -21,41 +21,41 @@ namespace vidre {
 
     class DummyCamera : public ICamera {
     public:
-        DummyCamera() {};
-        ~DummyCamera() {};
+        DummyCamera() {}
+        ~DummyCamera() {}
 
-        virtual void Init() {};
+        virtual void Init() {}
         virtual bool Init(std::string serial) {
             return true;
-        };
+        }
         virtual void Arm() {
             armed = true;
-        };
+        }
         virtual void Disarm() {
             armed = false;
         }
         virtual void Start() {
             running = true;
-        };
+        }
         virtual void Stop() {
             running = false;
-        };
+        }
 
         virtual bool IsArmed() {
             return armed;
-        };
+        }
         virtual bool IsRunning() {
             return running;
-        };
+        }
 
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
         {
             return;
-        };
+        }
 
         virtual const SharedFrameHeader *RetrieveLatestFrame() {
             return nullptr;
-        };
+        }
 
         virtual ICameraConfig *GetCameraConfig() { return cameraConfig.get(); }
 

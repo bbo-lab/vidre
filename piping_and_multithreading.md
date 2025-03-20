@@ -21,7 +21,7 @@ We need some kind of unified wrapper.
 Maybe there is a need to rework the camera. I am not quite sure if the event system from Pylon SDK is hardware or software based, i.e. are the events fired by the device and through usb or does the Pylon runtime listen to it. If it
 is hardware based it would make more sense to use Pylon's OnEvent. If not the gain is probably negligible and its cleaner for us to do the listening.
 
-Should the shared memory part be explicit.
+Should the shared memory part be explicit? I.e. have a shared memory module.
 
 Using other libraries for handling piping behaviour?
 - Gstreamer: A big known library with big capabilities. Does include pylon, genicam, aptina, etc. sources. Might be too big?
@@ -32,3 +32,16 @@ Generally: Splitting configuration into software and hardware topology.
 -> Hardware Topolgy: Hints towards the actual connections, nodes of modules, expected connection bottlenecks etc.
     Also this configuration file might include a sort of config of a domain name service so that e.g. a named device may be replaced and does not have its serial number replaced in the entire configurations
 => Combine both to create suitable relationships between modules. (e.g. choosing sequential over multi-threading)
+
+# How to do Producer/Consumer
+We have a sort of lock-free queue that is filled by the camera without regards to how consumers use it. 
+
+What should take precedence? Camera frame grabs or frame storage. I.e. should frames be dropped by the camera thread or the following (e.g. Storage) threads.
+
+https://github.com/rigtorp/MPMCQueue
+
+https://moodycamel.com/blog/2014/a-fast-general-purpose-lock-free-queue-for-c++
+
+https://github.com/tudinfse/FFQ
+
+Weak valid check: At the start of handling a frame copy the frame id to local memory. During writing occasionally check
