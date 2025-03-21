@@ -38,6 +38,7 @@ namespace vidre {
         void updateHeader();
         void appendFrame(const void* buffer);
         void appendTail(uint32_t frame_idx, double time_stamp);
+        void retrieveFrame(uint32_t frame_idx);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;

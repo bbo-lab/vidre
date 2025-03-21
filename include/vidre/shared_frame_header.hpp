@@ -2,20 +2,8 @@
 #include <cstdint>
 
 namespace vidre {
-
-    typedef uint64_t timestamp_t;
-
     struct SharedFrameHeader {
-        // Type/Tag
-        timestamp_t timeStamp;  // Timestamp data type as suggested by Pylon.
+        uint64_t timeStamp; 
         uint64_t frameID;
-        int64_t numSkippedBefore;
-        // - bool is_valid;   // Flag to determine if a header has become invalid. Might also be detectable by comparing frame_ids.
-        // Length
-        // - uint16_t width;
-        // - uint16_t height;
-        // - Pixel Type
-        // Values
-        // ...
     };
 }  // namespace vidre

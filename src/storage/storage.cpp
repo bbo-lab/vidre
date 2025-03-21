@@ -67,9 +67,10 @@ namespace vidre {
         }
     }
 
-    void Storage::RetrieveResult(uitn32_t frame_idx) {
-        auto offset = frame_idx * frame_size;
-        auto* data = _shareedMemory.get(offset);
+    SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
+        auto offset = frame_idx * (_config.width * _config.height + sizeof(SharedFrameHeader));
+        auto* data = static_cast<SharedFrameHeader*>(_sharedMemory->get_address_from_offset(offset));
+
         return data;
     }
 }  // namespace vidre

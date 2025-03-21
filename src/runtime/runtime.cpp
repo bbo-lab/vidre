@@ -48,7 +48,6 @@ namespace vidre
         cameraConfig.height = _camera->GetFrameHeight();
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate =  _camera->GetFrameRate();
-        std::cout << cameraConfig.frameRate << std::endl;
         cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
@@ -88,7 +87,6 @@ namespace vidre
         cameraConfig.height = _camera->GetFrameHeight();
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate = _camera->GetFrameRate();
-        std::cout << cameraConfig.frameRate << std::endl;
         cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
@@ -103,13 +101,15 @@ namespace vidre
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
-            auto current_frame = _currentFrame  % cameraConfig.maxNumBuffer;
-            _storage->RetrieveResult(current_frame);
+            auto current_frame = _currentFrame % cameraConfig.maxNumBuffer;
+
+            auto* result = _storage->retrieveFrame(current_frame);
+
+
             
             _storage->updateHeader();
-            _storage->appendFrame((const void *)(result + 1));
+            _storage->appendFrame(static_cast<const void*>(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
-         
          
 
             if (_saveTIFF) {
@@ -119,6 +119,8 @@ namespace vidre
             if (_presentFrame) {
                 presentFrame((void *)(result + 1), _storage->getConfig());
             }
+
+            _currentFrame++;
         }
     }
 
