@@ -68,8 +68,12 @@ namespace vidre {
     }
 
     SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
-        auto offset = frame_idx * (_config.width * _config.height + sizeof(SharedFrameHeader));
-        auto* data = static_cast<SharedFrameHeader*>(_sharedMemory->get_address_from_offset(offset));
+        void** firstBuffer_p = _sharedMemory->find<void*>("FirstBuffer").first;
+        void* firstBuffer = *firstBuffer_p;
+        auto offset = (frame_idx % (_config.maxNumBuffer)) * (_config.width * _config.height + sizeof(SharedFrameHeader));
+
+
+        SharedFrameHeader *data = (SharedFrameHeader *)((char *)firstBuffer + offset);
 
         return data;
     }

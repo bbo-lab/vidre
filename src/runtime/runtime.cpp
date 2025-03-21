@@ -101,14 +101,16 @@ namespace vidre
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
-            auto current_frame = _currentFrame % cameraConfig.maxNumBuffer;
 
-            auto* result = _storage->retrieveFrame(current_frame);
+            auto *result = _storage->retrieveFrame(_currentFrame);
+
+            std::cout << result->frameID << std::endl;
 
 
             
             _storage->updateHeader();
             _storage->appendFrame(static_cast<const void*>(result + 1));
+            // std::cout << "resulted id:" << result->frameID << std::endl;
             _storage->appendTail(result->frameID, result->timeStamp);
          
 

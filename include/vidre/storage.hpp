@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "vidre/header.hpp"
+#include "vidre/shared_frame_header.hpp"
 
 #include <variant>
 
@@ -38,7 +39,7 @@ namespace vidre {
         void updateHeader();
         void appendFrame(const void* buffer);
         void appendTail(uint32_t frame_idx, double time_stamp);
-        void retrieveFrame(uint32_t frame_idx);
+        SharedFrameHeader* retrieveFrame(uint32_t frame_idx);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         Config _config;
