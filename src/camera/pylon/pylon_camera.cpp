@@ -25,35 +25,8 @@ namespace vidre {
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        // if (camera.WaitForFrameTriggerReady(1000, Pylon::TimeoutHandling_Return))
-        //     camera.ExecuteSoftwareTrigger();
-        while (running.load()) {
-            // Frame Grabbing
-            Pylon::CGrabResultPtr currentPtrGrabResult;
-            if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
-                std::this_thread::yield();
-                continue;
-            }
-            std::cout << currentPtrGrabResult->GetImageNumber()  << std::endl;
-            SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
-
-            // if (camera.WaitForFrameTriggerReady(1, Pylon::TimeoutHandling_Return))
-            //     camera.ExecuteSoftwareTrigger();
-            // else {
-            //     std::this_thread::yield();
-            //     continue;
-            // }
-
-            result->frameID = currentPtrGrabResult->GetImageNumber();
-            result->timeStamp = currentPtrGrabResult->GetTimeStamp();
-            result->numSkippedBefore =
-                currentPtrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
-
-            latestFrame.store(result);
-
-            // Simulate skipping images
-            // Pylon::WaitObject::Sleep(500);
-        }
+        while (running.load()) {}
+        
         camera.StopGrabbing();
     }
 
