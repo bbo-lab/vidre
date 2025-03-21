@@ -15,7 +15,7 @@ namespace vidre {
 
         
     void PylonCameraConfig::SetNodeMap(GenApi::INodeMap &newNodeMap) {
-        nodeMap = std::addressof(newNodeMap);
+        nodeMap = &newNodeMap;
     }
     GenApi::INodeMap *PylonCameraConfig::GetNodeMap() {
         return nodeMap;
@@ -161,8 +161,6 @@ namespace vidre {
         //     camera.ExecuteSoftwareTrigger();
         while (running.load()) {
             // Frame Grabbing
-
-            // Trigger line (is it triggered automatically?)
 
             Pylon::CGrabResultPtr currentPtrGrabResult;
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {

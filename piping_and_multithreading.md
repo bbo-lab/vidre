@@ -61,3 +61,12 @@ Weak valid check: At the start of handling a frame copy the frame id to local me
     - Splitter
 - Logging
 - Custom Modules?
+
+
+
+
+# Handle Warnings
+- Warnings about frame droppings
+- Noted ccv files
+- Check if failed trigger
+- Change Interface to storage buffer
