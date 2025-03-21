@@ -34,6 +34,7 @@ namespace vidre {
                 std::this_thread::yield();
                 continue;
             }
+            std::cout << currentPtrGrabResult->GetImageNumber()  << std::endl;
             SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 
             // if (camera.WaitForFrameTriggerReady(1, Pylon::TimeoutHandling_Return))

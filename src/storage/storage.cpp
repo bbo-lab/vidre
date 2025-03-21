@@ -66,4 +66,10 @@ namespace vidre {
             _header->writeTail<CamCommandoHeader>(_outputFileName, tail);
         }
     }
+
+    void Storage::RetrieveResult(uitn32_t frame_idx) {
+        auto offset = frame_idx * frame_size;
+        auto* data = _shareedMemory.get(offset);
+        return data;
+    }
 }  // namespace vidre

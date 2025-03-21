@@ -48,6 +48,7 @@ namespace vidre
         cameraConfig.height = _camera->GetFrameHeight();
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate =  _camera->GetFrameRate();
+        std::cout << cameraConfig.frameRate << std::endl;
         cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
@@ -87,6 +88,7 @@ namespace vidre
         cameraConfig.height = _camera->GetFrameHeight();
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate = _camera->GetFrameRate();
+        std::cout << cameraConfig.frameRate << std::endl;
         cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
@@ -95,30 +97,20 @@ namespace vidre
     }
 
     void RuntimeInstance::retrieveFrames() {
-        const vidre::SharedFrameHeader* previousResult = nullptr;
-        
-        // Wait for Pylon's CInstantCamera to start running.
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
-            // Retrieve frame
-            const auto* result = _camera->RetrieveLatestFrame();
+            auto current_frame = _currentFrame  % cameraConfig.maxNumBuffer;
+            _storage->RetrieveResult(current_frame);
             
-            if (result == previousResult) {
-                std::this_thread::yield();
-                continue;
-            }
-            
-
             _storage->updateHeader();
             _storage->appendFrame((const void *)(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
          
          
-            previousResult = result;
 
             if (_saveTIFF) {
                 _storage->save((const void *)(result + 1), result->frameID);
