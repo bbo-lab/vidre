@@ -101,25 +101,32 @@ namespace vidre
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
+            // if (_currentFrame == 10)
+            // {
+            //     std::this_thread::yield();
+            //     continue;
+            // }
 
-            auto *result = _storage->retrieveFrame(_currentFrame);
-
-            std::cout << result->frameID << std::endl;
+            auto result = _camera->grabFrame();
+            if (!result.data)
+            {
+                std::this_thread::yield();
+                continue;
+            }
 
 
             
             _storage->updateHeader();
-            _storage->appendFrame(static_cast<const void*>(result + 1));
-            // std::cout << "resulted id:" << result->frameID << std::endl;
-            _storage->appendTail(result->frameID, result->timeStamp);
+            _storage->appendFrame(result.data);
+            _storage->appendTail(result.frameID, result.timeStamp);
          
 
             if (_saveTIFF) {
-                _storage->save((const void *)(result + 1), result->frameID);
+                _storage->save(result.data, 1);
             }
             
             if (_presentFrame) {
-                presentFrame((void *)(result + 1), _storage->getConfig());
+                presentFrame(result.data, _storage->getConfig());
             }
 
             _currentFrame++;

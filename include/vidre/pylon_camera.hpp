@@ -51,6 +51,7 @@ namespace vidre {
 
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
+        virtual SharedFrameHeader grabFrame() override;
     private:
         void run();
 

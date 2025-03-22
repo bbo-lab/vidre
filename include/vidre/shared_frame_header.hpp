@@ -3,7 +3,8 @@
 
 namespace vidre {
     struct SharedFrameHeader {
+        void* data;
+        int64_t frameID;
         uint64_t timeStamp; 
-        uint64_t frameID;
     };
 }  // namespace vidre

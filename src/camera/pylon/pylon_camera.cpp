@@ -20,6 +20,17 @@ namespace vidre {
         Pylon::PylonTerminate();
     }
 
+    SharedFrameHeader PylonCamera::grabFrame() {
+        Pylon::CGrabResultPtr result;
+        if (camera.IsGrabbing()) {
+            if (!camera.RetrieveResult(1000, result, Pylon::TimeoutHandling_Return))
+            {
+                return {};
+            }
+        }
+        return {result->GetBuffer(), result->GetImageNumber(), result->GetTimeStamp()};
+    }
+
     void PylonCamera::run() {
         running.store(true);
 

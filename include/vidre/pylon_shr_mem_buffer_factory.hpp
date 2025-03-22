@@ -37,11 +37,6 @@ public:
                 bytePointer[i] = 0;
             }
 
-            if (bufferContext == 1) {
-                shared_memory->find_or_construct<void *>("FirstBuffer")(allocatedMemory);
-            }
-
-            //std::cout << "Acquired buffer " << bufferContext << ", " << *pCreatedBuffer << " of size " << bufferSize << std::endl;
         } catch (const std::exception &) {
             if (*pCreatedBuffer != NULL) {
                 shared_memory->deallocate(pCreatedBuffer);
@@ -51,13 +46,11 @@ public:
     }
     
     void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext) override {
-            //std::cout << "FREED buffer " << std::endl;
         shared_memory->deallocate((vidre::SharedFrameHeader *)pCreatedBuffer - 1);
     }
 
     // todo: fix this
     void DestroyBufferFactory() override {
-            //std::cout << "DESTROYED buffer " << std::endl;
         boost::interprocess::shared_memory_object::remove(memoryName.c_str());
         delete this;
     }

@@ -66,15 +66,4 @@ namespace vidre {
             _header->writeTail<CamCommandoHeader>(_outputFileName, tail);
         }
     }
-
-    SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
-        void** firstBuffer_p = _sharedMemory->find<void*>("FirstBuffer").first;
-        void* firstBuffer = *firstBuffer_p;
-        auto offset = (frame_idx % (_config.maxNumBuffer)) * (_config.width * _config.height + sizeof(SharedFrameHeader));
-
-
-        SharedFrameHeader *data = (SharedFrameHeader *)((char *)firstBuffer + offset);
-
-        return data;
-    }
 }  // namespace vidre

@@ -79,6 +79,9 @@ namespace vidre {
         virtual void SetFrameRate(double newFrameRate) {};
         virtual void SetTriggerIn(unsigned int line) {};
         virtual void SetTriggerOut(unsigned int line) {};
+        virtual SharedFrameHeader grabFrame() {
+            return {};
+        };
 
     private:
         std::atomic<bool> armed;
