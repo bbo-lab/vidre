@@ -21,14 +21,15 @@ namespace vidre {
     }
 
     SharedFrameHeader PylonCamera::grabFrame() {
-        Pylon::CGrabResultPtr result;
+       /* Pylon::CGrabResultPtr result;
         if (camera.IsGrabbing()) {
             if (!camera.RetrieveResult(1000, result, Pylon::TimeoutHandling_Return))
             {
                 return {};
             }
         }
-        return {result->GetBuffer(), result->GetImageNumber(), result->GetTimeStamp()};
+        return {result->GetBuffer(), result->GetImageNumber(), result->GetTimeStamp()};*/
+        return {};
     }
 
     void PylonCamera::run() {
@@ -36,7 +37,19 @@ namespace vidre {
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        while (running.load()) {}
+        while (running.load()) 
+        {
+            Pylon::CGrabResultPtr currentPtrGrabResult;
+            if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
+                std::this_thread::yield();
+                continue;
+            }
+
+            SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
+
+            result->frameID = currentPtrGrabResult->GetImageNumber();
+            result->timeStamp = currentPtrGrabResult->GetTimeStamp();
+        }
         
         camera.StopGrabbing();
     }

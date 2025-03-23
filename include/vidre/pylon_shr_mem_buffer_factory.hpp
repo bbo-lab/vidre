@@ -36,7 +36,7 @@ public:
             for (size_t i = 0; i < bufferSize; ++i) {
                 bytePointer[i] = 0;
             }
-
+            shared_memory->find_or_construct<void *>(std::to_string(m_lastBufferContext).c_str())(allocatedMemory);
         } catch (const std::exception &) {
             if (*pCreatedBuffer != NULL) {
                 shared_memory->deallocate(pCreatedBuffer);

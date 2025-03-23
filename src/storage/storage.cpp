@@ -66,4 +66,19 @@ namespace vidre {
             _header->writeTail<CamCommandoHeader>(_outputFileName, tail);
         }
     }
+    
+    SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
+        auto current_frame_idx = frame_idx % (_config.maxNumBuffer);
+
+        void** firstBuffer_p = _sharedMemory->find<void*>(std::to_string(current_frame_idx).c_str()).first;
+        if (!firstBuffer_p)
+        {
+            return nullptr;
+        }
+
+        void* firstBuffer = *firstBuffer_p;
+        vidre::SharedFrameHeader *header = static_cast<vidre::SharedFrameHeader *>(firstBuffer);
+
+        return header;
+    }
 }  // namespace vidre
