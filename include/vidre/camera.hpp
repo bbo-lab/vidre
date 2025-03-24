@@ -14,6 +14,9 @@ namespace vidre {
     // ICamera and PylonCamera: GenICamera. That way mainly the
     // aspects around camera parameters can be combined.
 
+    // Camera Config should be used to split off the cameras static configurations from the runtime aspects.
+    // Later useful because we can abstract GenAPI configuration stuff and reuse the implementation for the configuration
+    // for different camera types that all support GenICam.
     class ICameraConfig {
     public:
         virtual void SetBool(std::string parameter, bool value) = 0;
@@ -30,6 +33,7 @@ namespace vidre {
         virtual bool SaveConfiguration(std::string filepath) = 0;
         virtual bool LoadConfiguration(std::string filepath) = 0;
 
+        // Remove eventually
         virtual int64_t GetFrameWidth() { return 0; }
         virtual int64_t GetFrameHeight() { return 0; }
         virtual int64_t GetFrameOffsetX() { return 0; }
@@ -67,7 +71,7 @@ namespace vidre {
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) = 0;
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
-        virtual ICameraConfig *GetCameraConfig() = 0;
+        virtual ICameraConfig &GetCameraConfig() = 0;
         virtual int64_t GetMaxNumBuffer() { return 0; }
     };
 }  // namespace vidre

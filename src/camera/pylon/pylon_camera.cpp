@@ -134,18 +134,19 @@ namespace vidre {
 
 
 
-
+    
 
 
 
 
 
     PylonCamera::PylonCamera() : running(false), armed(false) {
-        cameraConfig = std::make_unique<PylonCameraConfig>();
+        //cameraConfig = std::make_unique<PylonCameraConfig>();
     }
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
+        camera.DeregisterImageEventHandler(this);
         if (camera.IsPylonDeviceAttached())
             camera.DestroyDevice();
 
@@ -157,36 +158,23 @@ namespace vidre {
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        // if (camera.WaitForFrameTriggerReady(1000, Pylon::TimeoutHandling_Return))
-        //     camera.ExecuteSoftwareTrigger();
+        int32_t currentFrameID = 0;
         while (running.load()) {
             // Frame Grabbing
-
             Pylon::CGrabResultPtr currentPtrGrabResult;
-            if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
+            if (!camera.RetrieveResult(1, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
             }
+            // Frame annotation
             SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
-
-            // if (camera.WaitForFrameTriggerReady(1, Pylon::TimeoutHandling_Return))
-            //     camera.ExecuteSoftwareTrigger();
-            // else {
-            //     std::this_thread::yield();
-            //     continue;
-            // }
-
             result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
-            result->numSkippedBefore =
-                currentPtrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
+            result->numSkippedBefore = currentPtrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
 
+            // Announce newest frame availability
             latestFrame.store(result);
-
-            // Potential delegation function to consumers, notifying about a new frame. Maybe have some general post-processing chain.
-
-            // Simulate skipping images
-            // Pylon::WaitObject::Sleep(500);
+            std::this_thread::yield();
         }
         camera.StopGrabbing();
     }
@@ -202,8 +190,7 @@ namespace vidre {
         }
         camera.Open();
 
-        cameraConfig = std::make_unique<PylonCameraConfig>();
-        cameraConfig->SetNodeMap(camera.GetNodeMap());
+        cameraConfig.SetNodeMap(camera.GetNodeMap());
     }
     bool PylonCamera::Init(std::string serial) {
         static Pylon::CTlFactory &tlFactory = Pylon::CTlFactory::GetInstance();
@@ -226,27 +213,24 @@ namespace vidre {
         }
         camera.Open();
 
-        cameraConfig = std::make_unique<PylonCameraConfig>();
-        cameraConfig->SetNodeMap(camera.GetNodeMap());
+        camera.RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
+        //camera.GrabCameraEvents = true;
+        cameraConfig.SetNodeMap(camera.GetNodeMap());
 
         return true;
     }
     /// Executing Arm() "fixes" the camera configuration in place.
     void PylonCamera::Arm() {
-        // shrBufferFactory.PreallocateFrameBuffers((sizeof(SharedFrameHeader) + GetFrameWidth() * GetFrameHeight() /* * PixelSize*/) *
-        //                                              (camera.MaxNumBuffer.GetValue() + 1),
-        //                                          "vidre");
-
         shrBufferFactory.PreallocateFrameBuffers();
 
         camera.SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
-        // camera.Close();
+        camera.Close();
         armed.store(true);
     }
     void PylonCamera::Disarm() {
         // Free Shared Memory Buffers
         armed.store(false);
-        // camera.Open();
+        camera.Open();
     }
     void PylonCamera::Start() {
         if (!armed.load())
@@ -272,8 +256,8 @@ namespace vidre {
     }
 
     
-    ICameraConfig *PylonCamera::GetCameraConfig() {
-        return cameraConfig.get();
+    ICameraConfig &PylonCamera::GetCameraConfig() {
+        return cameraConfig;
     }
     
     int64_t PylonCamera::GetMaxNumBuffer() {

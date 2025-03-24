@@ -26,10 +26,10 @@ namespace vidre {
         // }  // TODO: Delegate to Factory
 
         if (cameraNode["trigger_in"]) {
-            camera->GetCameraConfig()->SetTriggerIn(cameraNode["trigger_in"].as<int>());
+            camera->GetCameraConfig().SetTriggerIn(cameraNode["trigger_in"].as<int>());
         }
         if (cameraNode["trigger_out"]) {
-            camera->GetCameraConfig()->SetTriggerIn(cameraNode["trigger_out"].as<int>());
+            camera->GetCameraConfig().SetTriggerIn(cameraNode["trigger_out"].as<int>());
         }
 
         return camera;

@@ -10,8 +10,6 @@
 #include "pylon_shr_mem_buffer_factory.hpp"
 
 namespace vidre {
-    // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
-
     class PylonCameraConfig : public ICameraConfig {
     public:
         PylonCameraConfig();
@@ -51,7 +49,7 @@ namespace vidre {
         GenApi::INodeMap *nodeMap;
     };
 
-    class PylonCamera : public ICamera {
+    class PylonCamera : public ICamera, public Pylon::CImageEventHandler {
     public:
         PylonCamera();
         ~PylonCamera();
@@ -69,9 +67,15 @@ namespace vidre {
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
-        virtual ICameraConfig *GetCameraConfig() override;
+        virtual ICameraConfig &GetCameraConfig() override;
         virtual int64_t GetMaxNumBuffer() override;
     private:
+        virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override
+        {
+            std::cout << "CSampleImageEventHandler::OnImageGrabbed called." << std::endl;
+            std::cout << std::endl;
+            std::cout << std::endl;
+        }
         void run();
 
         std::thread grabber;
@@ -85,7 +89,7 @@ namespace vidre {
         Pylon::CInstantCamera camera;
         Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
-        std::unique_ptr<PylonCameraConfig> cameraConfig;
+        PylonCameraConfig cameraConfig;
         // --------------------------------
     };
 }  // namespace vidre

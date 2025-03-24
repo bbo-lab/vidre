@@ -61,12 +61,12 @@ namespace vidre {
             return nullptr;
         }
 
-        virtual ICameraConfig *GetCameraConfig() { return cameraConfig.get(); }
+        virtual ICameraConfig &GetCameraConfig() { return cameraConfig; }
 
     private:
         std::atomic<bool> armed;
         std::atomic<bool> running;
 
-        std::unique_ptr<DummyCameraConfig> cameraConfig;
+        DummyCameraConfig cameraConfig;
     };
 }  // namespace vidre

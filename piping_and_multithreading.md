@@ -2,6 +2,10 @@
 Given the actual virtual and hardware topology some performance considerations have to be taken
 into account.
 
+# Glossary
+- Node: A pc in the network
+- Module: A processing unit that creates or modifies data
+
 # System setup timeline
 - Connecting hardware manually so that it equates the wanted hardware topology
 - Start daemons on nodes that listen to setup commands over networks
@@ -51,6 +55,7 @@ Weak valid check: At the start of handling a frame copy the frame id to local me
 
 # Modules
 - Camera
+    - Camera Group? (For sharing threads)
 - Storage
 - Presenter
 - Transport

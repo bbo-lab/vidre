@@ -35,9 +35,9 @@ namespace vidre
         // Initialize and start the camera
         _camera->Init();
 
-        ICameraConfig *cameraParamConfiguration = _camera->GetCameraConfig();
+        ICameraConfig &cameraParamConfiguration = _camera->GetCameraConfig();
 
-        if (!cameraParamConfiguration->LoadConfiguration(configuration.c_str())) {
+        if (!cameraParamConfiguration.LoadConfiguration(configuration.c_str())) {
             std::cout << "Could not load configuration file \"" << configuration << "\" \n";
         }
 
@@ -45,12 +45,12 @@ namespace vidre
         
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = cameraParamConfiguration->GetFrameOffsetX();
-        cameraConfig.sourceWidth = cameraParamConfiguration->GetFrameWidth();
-        cameraConfig.sourceHeight = cameraParamConfiguration->GetFrameHeight();
+        cameraConfig.sourcePaddingX = cameraParamConfiguration.GetFrameOffsetX();
+        cameraConfig.sourceWidth = cameraParamConfiguration.GetFrameWidth();
+        cameraConfig.sourceHeight = cameraParamConfiguration.GetFrameHeight();
         cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  cameraParamConfiguration->GetFrameRate();
-        cameraConfig.sourceSerialNumber = cameraParamConfiguration->GetSerialNumber();
+        cameraConfig.sourceFrameRate =  cameraParamConfiguration.GetFrameRate();
+        cameraConfig.sourceSerialNumber = cameraParamConfiguration.GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig);
 
@@ -81,16 +81,16 @@ namespace vidre
             std::cout << "Camera is not set \n";
             return;
         }
-        ICameraConfig *cameraParamConfiguration = _camera->GetCameraConfig();
+        ICameraConfig &cameraParamConfiguration = _camera->GetCameraConfig();
         
         vidre::Config cameraConfig{};
         cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = cameraParamConfiguration->GetFrameOffsetX();
-        cameraConfig.sourceWidth = cameraParamConfiguration->GetFrameWidth();
-        cameraConfig.sourceHeight = cameraParamConfiguration->GetFrameHeight();
+        cameraConfig.sourcePaddingX = cameraParamConfiguration.GetFrameOffsetX();
+        cameraConfig.sourceWidth = cameraParamConfiguration.GetFrameWidth();
+        cameraConfig.sourceHeight = cameraParamConfiguration.GetFrameHeight();
         cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  cameraParamConfiguration->GetFrameRate();
-        cameraConfig.sourceSerialNumber = cameraParamConfiguration->GetSerialNumber();
+        cameraConfig.sourceFrameRate =  cameraParamConfiguration.GetFrameRate();
+        cameraConfig.sourceSerialNumber = cameraParamConfiguration.GetSerialNumber();
         _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
 
         _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
@@ -103,7 +103,7 @@ namespace vidre
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
-
+        uint32_t currentIndex = 0;
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
             // Retrieve frame
@@ -122,6 +122,12 @@ namespace vidre
             // tail.skippedFrames = numSkippedBefore;
             tail.timeStamp = result->timeStamp;
             tail.timeStamp /= 1e9;
+
+            if (tail.frameIndex != currentIndex) {
+                std::cerr << tail.frameIndex - currentIndex << " frames skipped\n";
+                currentIndex = tail.frameIndex + 1;
+            }
+            else currentIndex++;
 
             _storage->appendCCVFrame((const void *)(result + 1), tail);
          
