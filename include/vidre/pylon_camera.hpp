@@ -7,6 +7,8 @@
 #include <pylon/PylonGUI.h>
 // #endif
 #include <pylon/PylonIncludes.h>
+
+#include <pylon/BaslerUniversalInstantCamera.h>
 #include "pylon_shr_mem_buffer_factory.hpp"
 
 namespace vidre {
@@ -49,7 +51,7 @@ namespace vidre {
         GenApi::INodeMap *nodeMap;
     };
 
-    class PylonCamera : public ICamera, public Pylon::CImageEventHandler {
+    class PylonCamera : public ICamera, public Pylon::CImageEventHandler, public Pylon::CBaslerUniversalCameraEventHandler {
     public:
         PylonCamera();
         ~PylonCamera();
@@ -76,6 +78,8 @@ namespace vidre {
 
         // -------- Pylon specific --------
         virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override;
+        virtual void OnCameraEvent( Pylon::CBaslerUniversalInstantCamera &camera, intptr_t userProvidedId, GenApi::INode* /* pNode */ ) override;
+        
         void _Init();
 
         Pylon::CInstantCamera camera;
