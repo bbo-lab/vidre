@@ -70,22 +70,13 @@ namespace vidre {
         virtual ICameraConfig &GetCameraConfig() override;
         virtual int64_t GetMaxNumBuffer() override;
     private:
-        virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override
-        {
-            std::cout << "CSampleImageEventHandler::OnImageGrabbed called." << std::endl;
-            std::cout << std::endl;
-            std::cout << std::endl;
-        }
-        void run();
-
-        std::thread grabber;
-        std::atomic<bool> running;
-
         std::atomic<bool> armed;
 
         std::atomic<SharedFrameHeader *> latestFrame;
 
         // -------- Pylon specific --------
+        virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override;
+        
         Pylon::CInstantCamera camera;
         Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
