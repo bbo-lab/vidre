@@ -4,7 +4,6 @@ namespace vidre {
     PylonCameraConfig::PylonCameraConfig() {
         nodeMap = GenApi::CNodeMapFactory::CreateEmptyNodeMap();
     }
-
         
     void PylonCameraConfig::SetNodeMap(GenApi::INodeMap &newNodeMap) {
         nodeMap = &newNodeMap;
@@ -132,9 +131,7 @@ namespace vidre {
 
 
 
-    PylonCamera::PylonCamera() : armed(false) {
-        //cameraConfig = std::make_unique<PylonCameraConfig>();
-    }
+    PylonCamera::PylonCamera() : armed(false) {}
     PylonCamera::~PylonCamera() {
         Stop();
         camera.Close();
@@ -159,22 +156,30 @@ namespace vidre {
         latestFrame.store(result);
     }
 
+    void PylonCamera::_Init() {
+        camera.Open();
+        std::cout << (camera.IsOpen() ? "Yes" : "No") << std::endl;
+        camera.MaxNumBuffer = 30;
+
+        camera.RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
+        camera.GrabCameraEvents = true;
+
+        cameraConfig.SetNodeMap(camera.GetNodeMap());
+    }
+
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            camera.MaxNumBuffer = 30;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             throw;
         }
-        camera.Open();
-
-        cameraConfig.SetNodeMap(camera.GetNodeMap());
+        _Init();
     }
     bool PylonCamera::Init(std::string serial) {
-        static Pylon::CTlFactory &tlFactory = Pylon::CTlFactory::GetInstance();
         Pylon::DeviceInfoList_t deviceList;
+        Pylon::CTlFactory& tlFactory = Pylon::CTlFactory::GetInstance();
         tlFactory.EnumerateDevices(deviceList);
 
         auto match = std::find_if(deviceList.begin(), deviceList.end(), [&](const Pylon::CDeviceInfo &deviceInfo) {
@@ -182,19 +187,17 @@ namespace vidre {
         });
         if (match == deviceList.end())
             return false;
-
+        
         try {
             camera.Attach(tlFactory.CreateDevice(*match));
-            camera.MaxNumBuffer = 30;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
             throw;
         }
-        camera.Open();
+        
 
-        camera.RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
-        cameraConfig.SetNodeMap(camera.GetNodeMap());
+        _Init();
 
         return true;
     }
@@ -212,8 +215,10 @@ namespace vidre {
             camera.Open();
     }
     void PylonCamera::Start() {
-        if (!armed.load())
+        if (!armed.load()
+         || camera.IsCameraDeviceRemoved()) {
             return;
+        }
         latestFrame.store(nullptr);
 
         camera.StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
