@@ -44,6 +44,7 @@ namespace vidre {
                 std::this_thread::yield();
                 continue;
             }
+            
 
             SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 

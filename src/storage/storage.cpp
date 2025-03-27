@@ -71,8 +71,7 @@ namespace vidre {
         auto current_frame_idx = frame_idx % (_config.maxNumBuffer);
 
         void** firstBuffer_p = _sharedMemory->find<void*>(std::to_string(current_frame_idx).c_str()).first;
-        if (!firstBuffer_p)
-        {
+        if (!firstBuffer_p) {
             return nullptr;
         }
 
