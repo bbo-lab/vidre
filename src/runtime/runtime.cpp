@@ -52,7 +52,7 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_storage->getM(), _storage->getSharedMemory(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -91,7 +91,7 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_storage->getM(), _storage->getSharedMemory(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::retrieveFrames() {
@@ -101,25 +101,22 @@ namespace vidre
         const vidre::SharedFrameHeader* previousResult = nullptr;
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
+        int prev_frame_id = -1;
         while (_camera->IsRunning()) {
-            // if (_currentFrame >= 150)
-            // {
-            //     std::this_thread::yield();
-            //     continue;
-            // }
 
             // auto result = _camera->grabFrame();
             const auto* result = _storage->retrieveFrame(_currentFrame);
-            if (result == nullptr || result->frameID == 0) {
+            if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
                 continue;
             }
             
-
+            prev_frame_id = result->frameID;
             std::cout << "Saving : " << result->frameID << "\n";
 
 
+
             
-            _storage->updateHeader();
+            
             _storage->appendFrame( static_cast<const void *>(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
 
@@ -136,10 +133,8 @@ namespace vidre
             previousResult = result;
 
             _currentFrame++;
-            // if (_currentFrame % _storage->getConfig().maxNumBuffer == 0) {
-            //     _currentFrame++;
-            // }
         }
+        _storage->updateHeader(_currentFrame - 1);
     }
 
     void RuntimeInstance::run() {

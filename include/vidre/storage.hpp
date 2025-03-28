@@ -36,7 +36,11 @@ namespace vidre {
         Config getConfig();
         void save(const void* buffer, uint32_t frameID);
         std::vector<void*>* getSharedMemory();
-        void updateHeader();
+        boost::interprocess::managed_shared_memory* getM()
+        {
+            return _sharedMemory.get();
+        }
+        void updateHeader(int frames);
         void appendFrame(const void* buffer);
         void appendTail(uint32_t frame_idx, double time_stamp);
         SharedFrameHeader* retrieveFrame(uint32_t frame_idx);

@@ -42,7 +42,7 @@ namespace vidre {
         CamCommandoHeader();
         CamCommandoHeader(Config config, std::string camera_type = "basler", std::string image_type = "basler");
         virtual void initiateHeader(const std::string& out_file) override;
-        virtual void updateHeader(const std::string& out_file) override;
+        virtual void updateHeader(const std::string& out_file, int frames) override;
         virtual void writeFrame(const void* buffer, const std::string& out_file) override;        
         void writeTail(const std::string& out_file, const CCVFrameTail& tail);
     

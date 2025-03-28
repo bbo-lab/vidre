@@ -43,8 +43,8 @@ namespace vidre {
         writeHeader(file);
     }
 
-    void vidre::CamCommandoHeader::updateHeader(const std::string& out_file) {
-        ++frameCount;
+    void vidre::CamCommandoHeader::updateHeader(const std::string& out_file, int frames) {
+        frameCount = frames;
         std::ofstream file(out_file, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(0, std::ios::beg);
         writeHeader(file);

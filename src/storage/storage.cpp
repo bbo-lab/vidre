@@ -13,7 +13,7 @@ namespace vidre {
                           (_config.maxNumBuffer + 1);
 
         _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::open_or_create, _config.serialNumber.c_str(), capacity);
+            boost::interprocess::create_only, _config.serialNumber.c_str(), capacity);
 
         // todo: enum
         _headerFormat = header_format;
@@ -23,6 +23,7 @@ namespace vidre {
 
         _outputFileName = output_file_name;
         _header->initiateHeader(_outputFileName);
+        ptrs = std::make_unique<std::vector<void*>>(_config.maxNumBuffer, nullptr);
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -49,8 +50,8 @@ namespace vidre {
         return ptrs.get(); 
     }
     
-    void Storage::updateHeader() {
-        _header->updateHeader(_outputFileName);
+    void Storage::updateHeader(int frames) {
+        _header->updateHeader(_outputFileName, frames);
     }
 
     void Storage::appendFrame(const void* buffer) {
@@ -69,12 +70,8 @@ namespace vidre {
     
     SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
         auto current_frame_idx = frame_idx % (_config.maxNumBuffer);
-        if (current_frame_idx >= ptrs->size())
-        {
-            return nullptr;
-        }
 
-        void* firstBuffer = (*ptrs)[current_frame_idx];
+        void* firstBuffer = ptrs->at(current_frame_idx);
         
         if (!firstBuffer) {
             return nullptr;

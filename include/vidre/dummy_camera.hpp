@@ -33,7 +33,7 @@ namespace vidre {
             return running;
         };
 
-        virtual void SetSharedMemory(std::vector<void *>* ptrs, std::string memory_name)
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory,std::vector<void *>* ptrs, std::string memory_name)
         {
             return;
         };
