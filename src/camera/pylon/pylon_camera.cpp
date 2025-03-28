@@ -142,12 +142,6 @@ namespace vidre {
         Pylon::PylonTerminate();
     }
 
-
-
-    void PylonCamera::OnCameraEvent( Pylon::CBaslerUniversalInstantCamera& camera, intptr_t userProvidedId, GenApi::INode* /* pNode */ ) 
-    {
-    }
-
     void PylonCamera::OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& ptrGrabResult )
     {
         SharedFrameHeader *result = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
@@ -162,6 +156,10 @@ namespace vidre {
         // Announce newest frame availability
         latestFrame.store(result);
     }
+    void PylonCamera::OnCameraDeviceRemoved( Pylon::CBaslerUniversalInstantCamera& camera ) 
+    {
+        std::cout << "Camera removed" << std::endl;
+    }
 
     void PylonCamera::_Init() {
         camera.Open();
@@ -170,7 +168,6 @@ namespace vidre {
         camera.MaxNumBuffer = 30;
 
         camera.RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
-        //camera.RegisterCameraEventHandler(this, )
         //camera.GrabCameraEvents = true;
 
         cameraConfig.SetNodeMap(nodeMap);
