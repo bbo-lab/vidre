@@ -45,8 +45,8 @@ namespace vidre {
         Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
     }
 
-    boost::interprocess::managed_shared_memory* Storage::getSharedMemory() {
-        return _sharedMemory.get(); 
+    std::vector<void *>*  Storage::getSharedMemory() {
+        return ptrs.get(); 
     }
     
     void Storage::updateHeader() {
@@ -69,13 +69,17 @@ namespace vidre {
     
     SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
         auto current_frame_idx = frame_idx % (_config.maxNumBuffer);
-
-        void** firstBuffer_p = _sharedMemory->find<void*>(std::to_string(current_frame_idx).c_str()).first;
-        if (!firstBuffer_p) {
+        if (current_frame_idx >= ptrs->size())
+        {
             return nullptr;
         }
 
-        void* firstBuffer = *firstBuffer_p;
+        void* firstBuffer = (*ptrs)[current_frame_idx];
+        
+        if (!firstBuffer) {
+            return nullptr;
+        }
+
         vidre::SharedFrameHeader *header = static_cast<vidre::SharedFrameHeader *>(firstBuffer);
 
         return header;

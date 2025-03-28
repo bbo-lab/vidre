@@ -14,8 +14,8 @@ public:
     virtual ~ShrBufferFactory() {}
 
 
-    void SetSharedMemory(boost::interprocess::managed_shared_memory* storage_shared_memory, std::string memory_name) {
-        shared_memory = storage_shared_memory;
+    void SetSharedMemory(std::vector<void *>* ptrs, std::string memory_name) {
+        shared_memory_ptrs = ptrs;
         memoryName = memory_name;
     }
 
@@ -25,10 +25,12 @@ public:
 
     void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext) override {
         try {
+            std::cout <<"H\n";
+            boost::interprocess::managed_shared_memory shared_memory(boost::interprocess::open_only, memoryName.c_str());
             // Allocation should be delegated to a seperate object so that the data can be accessed by other resources.
             bufferContext = ++m_lastBufferContext;
 
-            void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
+            void *allocatedMemory = shared_memory.allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
             *pCreatedBuffer =
                 (void *)((vidre::SharedFrameHeader *)(allocatedMemory) + 1);
             // Zero out buffer
@@ -36,17 +38,22 @@ public:
             for (size_t i = 0; i < bufferSize; ++i) {
                 bytePointer[i] = 0;
             }
-            shared_memory->find_or_construct<void *>(std::to_string(m_lastBufferContext).c_str())(allocatedMemory);
+            std::cout <<"H\n";
+            shared_memory_ptrs->push_back(
+                shared_memory.construct<void *>(std::to_string(m_lastBufferContext).c_str())(allocatedMemory)
+            );
         } catch (const std::exception &) {
             if (*pCreatedBuffer != NULL) {
-                shared_memory->deallocate(pCreatedBuffer);
+                boost::interprocess::managed_shared_memory shared_memory(boost::interprocess::open_only, memoryName.c_str());
+                shared_memory.deallocate(pCreatedBuffer);
             }
             throw;
         }
     }
     
     void FreeBuffer(void *pCreatedBuffer, intptr_t bufferContext) override {
-        shared_memory->deallocate((vidre::SharedFrameHeader *)pCreatedBuffer - 1);
+            boost::interprocess::managed_shared_memory shared_memory(boost::interprocess::open_only, memoryName.c_str());
+            shared_memory.deallocate((vidre::SharedFrameHeader *)pCreatedBuffer - 1);
     }
 
     // todo: fix this
@@ -57,6 +64,6 @@ public:
 
 protected:
     std::string memoryName;
-    boost::interprocess::managed_shared_memory* shared_memory;
+    std::vector<void *>* shared_memory_ptrs;
     unsigned long m_lastBufferContext;
 };

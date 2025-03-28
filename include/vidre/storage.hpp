@@ -35,13 +35,14 @@ namespace vidre {
         void setConfig(const Config& config);
         Config getConfig();
         void save(const void* buffer, uint32_t frameID);
-        boost::interprocess::managed_shared_memory* getSharedMemory();
+        std::vector<void*>* getSharedMemory();
         void updateHeader();
         void appendFrame(const void* buffer);
         void appendTail(uint32_t frame_idx, double time_stamp);
         SharedFrameHeader* retrieveFrame(uint32_t frame_idx);
     private:
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
+        std::unique_ptr<std::vector<void *>> ptrs;
         Config _config;
         std::string _outputFileName = "some.ccv";
         std::string _headerFormat = "ccv";

@@ -102,16 +102,15 @@ namespace vidre
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
-            if (_currentFrame >= 150)
-            {
-                std::this_thread::yield();
-                continue;
-            }
+            // if (_currentFrame >= 150)
+            // {
+            //     std::this_thread::yield();
+            //     continue;
+            // }
 
             // auto result = _camera->grabFrame();
             const auto* result = _storage->retrieveFrame(_currentFrame);
-            if (result == previousResult || result->frameID == 0) {
-                std::this_thread::yield();
+            if (result == nullptr || result->frameID == 0) {
                 continue;
             }
             

@@ -43,6 +43,8 @@ namespace vidre {
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
+            } else{
+                std::cout << "RETR : " << currentPtrGrabResult->GetImageNumber() << "\n";
             }
             
 
@@ -58,7 +60,7 @@ namespace vidre {
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            camera.MaxNumBuffer = 30;
+            camera.MaxNumBuffer = 200;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -79,7 +81,7 @@ namespace vidre {
 
         try {
             camera.Attach(tlFactory.CreateDevice(*match));
-            camera.MaxNumBuffer = 30;
+            camera.MaxNumBuffer = 200;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -286,8 +288,8 @@ namespace vidre {
         return true;
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
+    void PylonCamera::SetSharedMemory(std::vector<void *>* ptrs, std::string memory_name)
     {
-        shrBufferFactory.SetSharedMemory(shared_memory, memory_name);
+        shrBufferFactory.SetSharedMemory(ptrs, memory_name);
     }
 }  // namespace vidre
