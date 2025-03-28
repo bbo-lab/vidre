@@ -38,41 +38,40 @@ namespace vidre {
         frameCount = 0;
     }
 
-    void vidre::CamCommandoHeader::initiateHeader(const std::string& out_file) {
-        std::ofstream file(out_file, std::ios::out | std::ios::binary | std::ios::trunc);
-        writeHeader(file);
+    void vidre::CamCommandoHeader::initiateHeader(FILE* out_file) {
+        writeHeader(out_file);
     }
 
-    void vidre::CamCommandoHeader::updateHeader(const std::string& out_file, int frames) {
+    void vidre::CamCommandoHeader::updateHeader(FILE* out_file, int frames) {
         frameCount = frames;
-        std::ofstream file(out_file, std::ios::in | std::ios::out | std::ios::binary);
-        file.seekp(0, std::ios::beg);
-        writeHeader(file);
+        rewind(out_file);
+        writeHeader(out_file);
     }
 
-    void vidre::CamCommandoHeader::writeFrame(const void* buffer, const std::string& out_file) {
-        std::ofstream file(out_file, std::ios::out | std::ios::binary | std::ios::app);
-        file.write(static_cast<const char*>(buffer), frameBytesOnDisk - 21);
+    void vidre::CamCommandoHeader::writeFrame(const void* buffer, FILE* out_file) {
+        fwrite(reinterpret_cast<const char*>(buffer), 1, frameBytesOnDisk - 21, out_file);
+        // file.write(static_cast<const char*>(buffer), frameBytesOnDisk - 21);
     }
 
-    void vidre::CamCommandoHeader::writeTail(const std::string& out_file, const CCVFrameTail& tail) {
-        std::ofstream file(out_file, std::ios::out | std::ios::binary | std::ios::app); 
-        writeField(file, tail.frameIndex);
-        writeField(file, tail.timeStamp);
-        writeField(file, tail.padding);
+    void vidre::CamCommandoHeader::writeTail(FILE* out_file, const CCVFrameTail& tail) {
+        writeField(out_file, tail.frameIndex);
+        writeField(out_file, tail.timeStamp);
+        writeField(out_file, tail.padding);
     }
 
     template <typename T>
-    void vidre::CamCommandoHeader::writeField(std::ofstream& outFile, const T& value) {
-        outFile.write(reinterpret_cast<const char*>(&value), sizeof(T));
+    void vidre::CamCommandoHeader::writeField(FILE* outFile, const T& value) {
+        fwrite(reinterpret_cast<const char *>(&value), 1, sizeof(T), outFile);
+        // outFile.write(reinterpret_cast<const char*>(&value), sizeof(T));
     }
 
     template <>
-    void vidre::CamCommandoHeader::writeField<std::string>(std::ofstream& outFile, const std::string& value) {
-        outFile.write(value.c_str(), value.length() + 1);
+    void vidre::CamCommandoHeader::writeField<std::string>(FILE* outFile, const std::string& value) {
+        fwrite(value.c_str(), 1, value.length() + 1, outFile);
+        // outFile.write(value.c_str(), value.length() + 1);
     }
 
-    void vidre::CamCommandoHeader::writeHeader(std::ofstream& outFile) {
+    void vidre::CamCommandoHeader::writeHeader(FILE* outFile) {
         writeField(outFile, headerSize);
         writeField(outFile, cameraType.length);
         writeField<std::string>(outFile, cameraType.data);

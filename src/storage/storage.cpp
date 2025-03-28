@@ -5,7 +5,9 @@
 
 namespace vidre {
 
-    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) {
+    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) 
+    : output_file(fopen(output_file_name.c_str(), "wb"), fclose)
+    {
         _config = config; 
 
         boost::interprocess::shared_memory_object::remove(_config.serialNumber.c_str());
@@ -22,7 +24,9 @@ namespace vidre {
         }
 
         _outputFileName = output_file_name;
-        _header->initiateHeader(_outputFileName);
+
+        _header->initiateHeader(output_file.get());
+
         ptrs = std::make_unique<std::vector<void*>>(_config.maxNumBuffer, nullptr);
     }     
 
@@ -51,11 +55,11 @@ namespace vidre {
     }
     
     void Storage::updateHeader(int frames) {
-        _header->updateHeader(_outputFileName, frames);
+        _header->updateHeader(output_file.get(), frames);
     }
 
     void Storage::appendFrame(const void* buffer) {
-        _header->writeFrame(buffer, _outputFileName);
+        _header->writeFrame(buffer, output_file.get());
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp) {
@@ -64,7 +68,7 @@ namespace vidre {
             tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
             tail.timeStamp = time_stamp;
             tail.timeStamp /= 1e9;
-            _header->writeTail<CamCommandoHeader>(_outputFileName, tail);
+            _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
         }
     }
     

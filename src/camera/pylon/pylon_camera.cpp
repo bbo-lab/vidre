@@ -59,7 +59,7 @@ namespace vidre {
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            camera.MaxNumBuffer = 500;
+            camera.MaxNumBuffer = 100;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -80,7 +80,7 @@ namespace vidre {
 
         try {
             camera.Attach(tlFactory.CreateDevice(*match));
-            camera.MaxNumBuffer = 500;
+            camera.MaxNumBuffer = 100;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;

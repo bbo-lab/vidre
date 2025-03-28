@@ -41,14 +41,14 @@ namespace vidre {
     public:
         CamCommandoHeader();
         CamCommandoHeader(Config config, std::string camera_type = "basler", std::string image_type = "basler");
-        virtual void initiateHeader(const std::string& out_file) override;
-        virtual void updateHeader(const std::string& out_file, int frames) override;
-        virtual void writeFrame(const void* buffer, const std::string& out_file) override;        
-        void writeTail(const std::string& out_file, const CCVFrameTail& tail);
+        virtual void initiateHeader(FILE* out_file) override;
+        virtual void updateHeader(FILE* out_file, int frames) override;
+        virtual void writeFrame(const void* buffer, FILE* out_file) override;        
+        void writeTail(FILE* out_file, const CCVFrameTail& tail);
     
     private:
-        void writeHeader(std::ofstream& outFile);
-        template <typename T> void writeField(std::ofstream& outFile, const T& value);
+        void writeHeader(FILE* outFile);
+        template <typename T> void writeField(FILE* outFile, const T& value);
 
 #if CCV_HEADER_VERSION >= 120
         uint32_t headerSize = 93;

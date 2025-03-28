@@ -28,7 +28,7 @@ namespace vidre {
 
     class Storage {
     public:
-        Storage() {};
+        Storage() : output_file(nullptr, fclose) {}
         Storage(const Config& config, const std::string& header_format = "ccv", const std::string& output_file_name = "some.ccv");
         ~Storage() {};
 
@@ -52,5 +52,6 @@ namespace vidre {
         std::string _headerFormat = "ccv";
         
         std::unique_ptr<IHeader> _header;
+        std::unique_ptr<FILE, decltype(&fclose)> output_file;
     };
 }  // namespace vidre
