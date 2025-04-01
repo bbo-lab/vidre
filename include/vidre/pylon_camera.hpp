@@ -77,13 +77,15 @@ namespace vidre {
 
         std::atomic<SharedFrameHeader *> latestFrame;
 
+        Pylon::String_t serialNumber;
+
         // -------- Pylon specific --------
         virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override;
         virtual void OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) override;
         
         void _Init();
 
-        Pylon::CInstantCamera camera;
+        std::unique_ptr<Pylon::CInstantCamera> camera;
         Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
         PylonCameraConfig cameraConfig;

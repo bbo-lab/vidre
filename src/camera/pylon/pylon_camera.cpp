@@ -134,10 +134,10 @@ namespace vidre {
     PylonCamera::PylonCamera() : armed(false), cameraConfig(), initialized(false) {}
     PylonCamera::~PylonCamera() {
         Stop();
-        camera.Close();
-        camera.DeregisterImageEventHandler(this);
-        if (camera.IsPylonDeviceAttached())
-            camera.DestroyDevice();
+        camera->Close();
+        camera->DeregisterImageEventHandler(this);
+        if (camera->IsPylonDeviceAttached())
+            camera->DestroyDevice();
 
         Pylon::PylonTerminate();
     }
@@ -159,29 +159,33 @@ namespace vidre {
     void PylonCamera::OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) 
     {
         camera.StopGrabbing();
-        //camera.DestroyDevice();
         initialized = false;
-        std::cout << "Camera with serial number " << camera.GetDeviceInfo().GetSerialNumber() << " was disconnected!" << std::endl;
+        std::cout << "Camera with serial number " << serialNumber << " was disconnected!" << std::endl;
         // This needs to be wrapped up in some signaling so that outside classes can act upon CameraDeviceRemoval.
         // E.g. having a list of functors that are called. Same for other events. Generalize it to other modules aswell.
+
+        camera.DestroyDevice();
     }
 
     void PylonCamera::_Init() {
-        camera.Open();
+        camera->Open();
 
-        GenApi::INodeMap &nodeMap = camera.GetNodeMap();
-        camera.MaxNumBuffer = 30;
+        GenApi::INodeMap &nodeMap = camera->GetNodeMap();
+        camera->MaxNumBuffer = 30;
 
-        camera.RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
-        camera.RegisterConfiguration(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
+        camera->RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
+        camera->RegisterConfiguration(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
 
         cameraConfig.SetNodeMap(nodeMap);
         initialized = true;
+
+        serialNumber = camera->GetDeviceInfo().GetSerialNumber();
     }
 
     void PylonCamera::Init() {
+        camera = std::make_unique<Pylon::CInstantCamera>();
         try {
-            camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
+            camera->Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -190,6 +194,7 @@ namespace vidre {
         _Init();
     }
     bool PylonCamera::Init(std::string serial) {
+        camera = std::make_unique<Pylon::CInstantCamera>();
         Pylon::DeviceInfoList_t deviceList;
         Pylon::CTlFactory& tlFactory = Pylon::CTlFactory::GetInstance();
         tlFactory.EnumerateDevices(deviceList);
@@ -201,7 +206,7 @@ namespace vidre {
             return false;
         
         try {
-            camera.Attach(tlFactory.CreateDevice(*match));
+            camera->Attach(tlFactory.CreateDevice(*match));
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -215,37 +220,36 @@ namespace vidre {
     }
     /// Executing Arm() "fixes" the camera configuration in place.
     void PylonCamera::Arm() {
-        if (!initialized) Init(std::string(camera.GetDeviceInfo().GetSerialNumber().c_str()));
+        if (!initialized) Init(std::string(serialNumber.c_str()));
 
         shrBufferFactory.PreallocateFrameBuffers();
 
-        camera.SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
-        camera.Close();
+        camera->SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
+        //camera->Close();
         armed.store(true);
     }
     void PylonCamera::Disarm() {
-        if (!initialized) Init(std::string(camera.GetDeviceInfo().GetSerialNumber().c_str()));
+        if (!initialized) Init(std::string(serialNumber.c_str()));
 
         armed.store(false);
-        if (!camera.IsCameraDeviceRemoved())
-            camera.Open();
+        //if (!camera->IsCameraDeviceRemoved())
+        //    camera->Open();
     }
     void PylonCamera::Start() {
-        if (!initialized) Init(std::string(camera.GetDeviceInfo().GetSerialNumber().c_str()));
+        if (!initialized) Init(std::string(serialNumber.c_str()));
 
-        std::cout << (camera.IsCameraDeviceRemoved() ? "Oopsie" : "We're good") << std::endl;
         if (!armed.load()
-         || camera.IsCameraDeviceRemoved()) {
+         || camera->IsCameraDeviceRemoved()) {
             return;
         }
         latestFrame.store(nullptr);
 
-        camera.StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
+        camera->StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
     }
     void PylonCamera::Stop() {
-        if (!initialized) Init(std::string(camera.GetDeviceInfo().GetSerialNumber().c_str()));
+        if (!initialized) Init(std::string(serialNumber.c_str()));
 
-        camera.StopGrabbing();
+        camera->StopGrabbing();
     }
 
     const SharedFrameHeader *PylonCamera::RetrieveLatestFrame() {
@@ -255,7 +259,7 @@ namespace vidre {
         return armed.load();
     }
     bool PylonCamera::IsRunning() {
-        return camera.IsGrabbing();
+        return camera->IsGrabbing();
     }
 
     
@@ -264,7 +268,7 @@ namespace vidre {
     }
     
     int64_t PylonCamera::GetMaxNumBuffer() {
-        return camera.MaxNumBuffer.GetValue();
+        return camera->MaxNumBuffer.GetValue();
     }
 
     void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
