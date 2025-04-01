@@ -158,13 +158,13 @@ namespace vidre {
     }
     void PylonCamera::OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) 
     {
-        camera.StopGrabbing();
+        //camera.StopGrabbing();
         initialized = false;
         std::cout << "Camera with serial number " << serialNumber << " was disconnected!" << std::endl;
         // This needs to be wrapped up in some signaling so that outside classes can act upon CameraDeviceRemoval.
         // E.g. having a list of functors that are called. Same for other events. Generalize it to other modules aswell.
 
-        camera.DestroyDevice();
+        //camera.DestroyDevice();
     }
 
     void PylonCamera::_Init() {
@@ -183,6 +183,7 @@ namespace vidre {
     }
 
     void PylonCamera::Init() {
+        camera.release();
         camera = std::make_unique<Pylon::CInstantCamera>();
         try {
             camera->Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
@@ -194,6 +195,7 @@ namespace vidre {
         _Init();
     }
     bool PylonCamera::Init(std::string serial) {
+        camera.release();
         camera = std::make_unique<Pylon::CInstantCamera>();
         Pylon::DeviceInfoList_t deviceList;
         Pylon::CTlFactory& tlFactory = Pylon::CTlFactory::GetInstance();
