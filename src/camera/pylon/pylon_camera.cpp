@@ -43,15 +43,16 @@ namespace vidre {
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
-            } else{
-                std::cout << "RETR : " << currentPtrGrabResult->GetImageNumber() << "\n";
-            }
+            } 
+            fc++;
             
             SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 
             result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
         }
+
+        std::cout << "RETRIEVED : " << fc << std::endl;
         
         camera.StopGrabbing();
     }
@@ -59,7 +60,7 @@ namespace vidre {
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            camera.MaxNumBuffer = 100;
+            camera.MaxNumBuffer = 500;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -80,7 +81,7 @@ namespace vidre {
 
         try {
             camera.Attach(tlFactory.CreateDevice(*match));
-            camera.MaxNumBuffer = 100;
+            camera.MaxNumBuffer = 500;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;

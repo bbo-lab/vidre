@@ -111,8 +111,6 @@ namespace vidre
             }
             
             prev_frame_id = result->frameID;
-            std::cout << "Saving : " << result->frameID << "\n";
-
 
 
             
@@ -134,7 +132,9 @@ namespace vidre
 
             _currentFrame++;
         }
-        _storage->updateHeader(_currentFrame - 1);
+
+        _storage->updateHeader(_currentFrame);
+        std::cout << "SAVED : " << _currentFrame << std::endl;
     }
 
     void RuntimeInstance::run() {

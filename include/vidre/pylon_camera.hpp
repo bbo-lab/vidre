@@ -66,6 +66,9 @@ namespace vidre {
         Pylon::CInstantCamera camera;
         Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
+
+
+        int64_t fc = 0;
         // --------------------------------
     };
 }  // namespace vidre
