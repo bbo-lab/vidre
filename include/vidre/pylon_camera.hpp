@@ -51,7 +51,7 @@ namespace vidre {
         GenApi::INodeMap *nodeMap;
     };
 
-    class PylonCamera : public ICamera, public Pylon::CImageEventHandler, public Pylon::CBaslerUniversalConfigurationEventHandler {
+    class PylonCamera : public ICamera, public Pylon::CImageEventHandler, public Pylon::CConfigurationEventHandler {
     public:
         PylonCamera();
         ~PylonCamera();
@@ -73,12 +73,13 @@ namespace vidre {
         virtual int64_t GetMaxNumBuffer() override;
     private:
         std::atomic<bool> armed;
+        std::atomic<bool> initialized;
 
         std::atomic<SharedFrameHeader *> latestFrame;
 
         // -------- Pylon specific --------
         virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override;
-        virtual void OnCameraDeviceRemoved( Pylon::CBaslerUniversalInstantCamera& camera ) override;
+        virtual void OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) override;
         
         void _Init();
 
