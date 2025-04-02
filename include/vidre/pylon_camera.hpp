@@ -17,7 +17,7 @@ namespace vidre {
         PylonCameraConfig();
 
         void SetNodeMap(GenApi::INodeMap &newNodeMap);
-        GenApi::INodeMap *GetNodeMap();
+        //GenApi::INodeMap *GetNodeMap();
 
         virtual void SetBool(std::string parameter, bool value) override;
         virtual void SetInt(std::string parameter, int64_t value) override;
@@ -75,12 +75,12 @@ namespace vidre {
         std::atomic<bool> armed;
         std::atomic<bool> initialized;
 
-        std::atomic<SharedFrameHeader *> latestFrame;
+        SharedFrameHeader *latestFrame;
 
-        Pylon::String_t serialNumber;
+        Pylon::String_t serialNumber; // Save it in case we need to recover from a disconnect and reconnect. Maybe even include a Recovery method to start up again.
 
         // -------- Pylon specific --------
-        virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& /*ptrGrabResult*/ ) override;
+        virtual void OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& ptrGrabResult ) override;
         virtual void OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) override;
         
         void _Init();

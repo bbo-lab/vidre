@@ -8,9 +8,9 @@ namespace vidre {
     void PylonCameraConfig::SetNodeMap(GenApi::INodeMap &newNodeMap) {
         nodeMap = &newNodeMap;
     }
-    GenApi::INodeMap *PylonCameraConfig::GetNodeMap() {
-        return nodeMap;
-    }
+    //GenApi::INodeMap *PylonCameraConfig::GetNodeMap() {
+    //    return nodeMap;
+    //}
 
     void PylonCameraConfig::SetBool(std::string parameter, bool value) {
         Pylon::CBooleanParameter(nodeMap, parameter.c_str()).SetValue(value);
@@ -131,7 +131,7 @@ namespace vidre {
 
 
 
-    PylonCamera::PylonCamera() : armed(false), cameraConfig(), initialized(false) {}
+    PylonCamera::PylonCamera() : armed(false), initialized(false) {}
     PylonCamera::~PylonCamera() {
         Stop();
         camera->Close();
@@ -142,29 +142,29 @@ namespace vidre {
         Pylon::PylonTerminate();
     }
 
-    void PylonCamera::OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& ptrGrabResult )
-    {
+    void PylonCamera::OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& ptrGrabResult ) {
+        // Assumption space reserved before data for Header.
         SharedFrameHeader *result = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
         result->frameID = ptrGrabResult->GetImageNumber();
         result->timeStamp = ptrGrabResult->GetTimeStamp();
         result->numSkippedBefore = ptrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
-
-        if (!ptrGrabResult->GrabSucceeded()) {
-            std::cerr << "Error: " << ptrGrabResult->GetErrorCode() << ": " << ptrGrabResult->GetErrorDescription() << "\n";
-            return;
-        }
+        //if (!ptrGrabResult->GrabSucceeded()) {
+        //    std::cerr << "Error: " << ptrGrabResult->GetErrorCode() << ": " << ptrGrabResult->GetErrorDescription() << "\n";
+        //    return;
+        //}
         // Announce newest frame availability
-        latestFrame.store(result);
+        latestFrame = result;
     }
-    void PylonCamera::OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) 
-    {
-        //camera.StopGrabbing();
+    void PylonCamera::OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) {
+        camera.StopGrabbing();
+        Disarm();
         initialized = false;
         std::cout << "Camera with serial number " << serialNumber << " was disconnected!" << std::endl;
         // This needs to be wrapped up in some signaling so that outside classes can act upon CameraDeviceRemoval.
         // E.g. having a list of functors that are called. Same for other events. Generalize it to other modules aswell.
 
-        //camera.DestroyDevice();
+        camera.DetachDevice();
+        camera.DestroyDevice();
     }
 
     void PylonCamera::_Init() {
@@ -240,11 +240,11 @@ namespace vidre {
     void PylonCamera::Start() {
         if (!initialized) Init(std::string(serialNumber.c_str()));
 
-        if (!armed.load()
+        if (!armed
          || camera->IsCameraDeviceRemoved()) {
             return;
         }
-        latestFrame.store(nullptr);
+        latestFrame = nullptr;
 
         camera->StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
     }
@@ -255,7 +255,7 @@ namespace vidre {
     }
 
     const SharedFrameHeader *PylonCamera::RetrieveLatestFrame() {
-        return latestFrame.load();
+        return latestFrame;
     }
     bool PylonCamera::IsArmed() {
         return armed.load();
@@ -273,8 +273,7 @@ namespace vidre {
         return camera->MaxNumBuffer.GetValue();
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
-    {
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) {
         shrBufferFactory.SetSharedMemory(shared_memory, memory_name);
     }
 }  // namespace vidre

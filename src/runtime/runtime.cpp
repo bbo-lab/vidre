@@ -152,6 +152,8 @@ namespace vidre
         if (_storage == nullptr) {
             return;
         }
+        
+        if (_thread.joinable()) _thread.join();
 
         _camera->Arm();
         _camera->Start();
