@@ -152,13 +152,12 @@ namespace vidre
         if (_storage == nullptr) {
             return;
         }
-        
-        if (_thread.joinable()) _thread.join();
 
         _camera->Arm();
         _camera->Start();
         
         _thread = std::thread(&RuntimeInstance::retrieveFrames, this);
+        _thread.detach();
     }
 
     void RuntimeInstance::stop() {
