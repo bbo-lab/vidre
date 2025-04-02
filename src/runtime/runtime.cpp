@@ -157,7 +157,7 @@ namespace vidre
         _camera->Start();
         
         _thread = std::thread(&RuntimeInstance::retrieveFrames, this);
-        _thread.detach();
+        _thread.detach(); // This should not be necesarry in the future. There should be a camera event that should stop all recording.
     }
 
     void RuntimeInstance::stop() {

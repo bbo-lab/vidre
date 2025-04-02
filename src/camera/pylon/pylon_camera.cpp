@@ -142,7 +142,7 @@ namespace vidre {
         Pylon::PylonTerminate();
     }
 
-    void PylonCamera::OnImageGrabbed( Pylon::CInstantCamera& /*camera*/, const Pylon::CGrabResultPtr& ptrGrabResult ) {
+    void PylonCamera::OnImageGrabbed( Pylon::CInstantCamera& camera, const Pylon::CGrabResultPtr& ptrGrabResult ) {
         // Assumption space reserved before data for Header.
         SharedFrameHeader *result = (SharedFrameHeader *)(ptrGrabResult->GetBuffer()) - 1;
         result->frameID = ptrGrabResult->GetImageNumber();
@@ -156,9 +156,9 @@ namespace vidre {
         latestFrame = result;
     }
     void PylonCamera::OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) {
+        initialized = false;
         camera.StopGrabbing();
         Disarm();
-        initialized = false;
         std::cout << "Camera with serial number " << serialNumber << " was disconnected!" << std::endl;
         // This needs to be wrapped up in some signaling so that outside classes can act upon CameraDeviceRemoval.
         // E.g. having a list of functors that are called. Same for other events. Generalize it to other modules aswell.
@@ -169,17 +169,18 @@ namespace vidre {
 
     void PylonCamera::_Init() {
         camera->Open();
-
         GenApi::INodeMap &nodeMap = camera->GetNodeMap();
+
         camera->MaxNumBuffer = 30;
+        camera->MaxNumGrabResults = 2;
 
         camera->RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
         camera->RegisterConfiguration(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
 
         cameraConfig.SetNodeMap(nodeMap);
-        initialized = true;
-
         serialNumber = camera->GetDeviceInfo().GetSerialNumber();
+
+        initialized = true;
     }
 
     void PylonCamera::Init() {
@@ -238,12 +239,16 @@ namespace vidre {
         //    camera->Open();
     }
     void PylonCamera::Start() {
-        if (!initialized) Init(std::string(serialNumber.c_str()));
-
         if (!armed
          || camera->IsCameraDeviceRemoved()) {
             return;
         }
+
+        if (!initialized) {
+            if (!Init(std::string(serialNumber.c_str())))
+                return;
+        }
+
         latestFrame = nullptr;
 
         camera->StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
@@ -258,9 +263,12 @@ namespace vidre {
         return latestFrame;
     }
     bool PylonCamera::IsArmed() {
+        if (!initialized || camera->IsCameraDeviceRemoved()) return false;
         return armed.load();
     }
     bool PylonCamera::IsRunning() {
+        if (!initialized || camera->IsCameraDeviceRemoved()) return false;
+
         return camera->IsGrabbing();
     }
 
