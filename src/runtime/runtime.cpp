@@ -135,6 +135,25 @@ namespace vidre
 
             _currentFrame++;
         }
+        // for (int i = 0; i < _storage->getConfig().maxNumBuffer; ++i) 
+        // {
+        //     const auto* result = _storage->retrieveFrame(i);
+        //     if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
+        //         continue;
+        //     }
+        //     if (result->frameID > prev_frame_id + 1)
+        //     {
+        //         std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+        //     }
+        //     prev_frame_id = result->frameID;
+
+
+            
+            
+        //     _storage->appendFrame( static_cast<const void *>(result + 1));
+        //     _storage->appendTail(result->frameID, result->timeStamp);
+        //     _currentFrame++;
+        // }
 
         _storage->updateHeader(_currentFrame);
         std::cout << "SAVED : " << _currentFrame << std::endl;
