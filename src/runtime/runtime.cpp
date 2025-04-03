@@ -101,7 +101,7 @@ namespace vidre
         const vidre::SharedFrameHeader* previousResult = nullptr;
 
         // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
-        int prev_frame_id = -1;
+        int prev_frame_id = 0;
         while (_camera->IsRunning()) {
 
             // auto result = _camera->grabFrame();
@@ -109,7 +109,10 @@ namespace vidre
             if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
                 continue;
             }
-            
+            if (result->frameID > prev_frame_id + 1)
+            {
+                std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+            }
             prev_frame_id = result->frameID;
 
 
