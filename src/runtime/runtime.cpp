@@ -151,7 +151,7 @@ namespace vidre
         }
 
         _storage->updateHeader(_currentFrame);
-        std::cout << "SAVED : " << _currentFrame << std::endl;
+        // std::cout << "SAVED : " << _currentFrame << std::endl;
     }
 
     void RuntimeInstance::run() {
