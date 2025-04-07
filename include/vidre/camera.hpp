@@ -56,7 +56,5 @@ namespace vidre {
 
         virtual void SetTriggerIn(unsigned int line) = 0;
         virtual void SetTriggerOut(unsigned int line) = 0;
-
-        virtual SharedFrameHeader grabFrame() = 0;
     };
 }  // namespace vidre

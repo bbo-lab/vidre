@@ -31,14 +31,14 @@ cam3:
     type: storage
     output_file: F:/yamlsaving/pylon3.ccv
   trigger_in: 3
-cam4:
-  type: camera
-  vendor: pylon
-  serial: 40412366
-  config_file: ../../../vidre/trigger_cam.config
-  is_config_local: true
-  description: For monitoring.
-  storage:
-    type: storage
-    output_file: G:/yamlsaving/pylon4.ccv
-  trigger_in: 3
+# cam4:
+#   type: camera
+#   vendor: pylon
+#   serial: 40412366
+#   config_file: ../../../vidre/trigger_cam.config
+#   is_config_local: true
+#   description: For monitoring.
+#   storage:
+#     type: storage
+#     output_file: G:/yamlsaving/pylon4.ccv
+#   trigger_in: 3

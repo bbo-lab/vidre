@@ -73,15 +73,15 @@ namespace vidre {
     }
     
     SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
-        auto current_frame_idx = frame_idx % (_config.maxNumBuffer);
+        auto buffer_idx = frame_idx % (_config.maxNumBuffer);
 
-        void* firstBuffer = ptrs->at(current_frame_idx);
+        void* buffer_ptr = ptrs->at(buffer_idx);
         
-        if (!firstBuffer) {
+        if (!buffer_ptr) {
             return nullptr;
         }
 
-        vidre::SharedFrameHeader *header = static_cast<vidre::SharedFrameHeader *>(firstBuffer);
+        vidre::SharedFrameHeader *header = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
 
         return header;
     }

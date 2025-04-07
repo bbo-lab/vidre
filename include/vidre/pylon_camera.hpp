@@ -51,7 +51,6 @@ namespace vidre {
 
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
-        virtual SharedFrameHeader grabFrame() override;
     private:
         void run();
 
@@ -68,7 +67,7 @@ namespace vidre {
         ShrBufferFactory shrBufferFactory;
 
 
-        int64_t fc = 0;
+        int64_t retrievedFramesNumber = 0;
         // --------------------------------
     };
 }  // namespace vidre

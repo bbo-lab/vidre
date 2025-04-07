@@ -98,62 +98,57 @@ namespace vidre
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
-        const vidre::SharedFrameHeader* previousResult = nullptr;
 
-        // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         int prev_frame_id = 0;
         while (_camera->IsRunning()) {
-
-            // auto result = _camera->grabFrame();
             const auto* result = _storage->retrieveFrame(_currentFrame);
+           
             if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
                 continue;
             }
-            if (result->frameID > prev_frame_id + 1)
-            {
+           
+            if (result->frameID > prev_frame_id + 1) {
                 std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
             }
+           
             prev_frame_id = result->frameID;
-
-
             
-            
-            _storage->appendFrame( static_cast<const void *>(result + 1));
+            _storage->appendFrame(static_cast<const void *>(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
 
-         
-
-            // if (_saveTIFF) {
-            //     _storage->save(result.data, 1);
-            // }
+            if (_saveTIFF) {
+                _storage->save(static_cast<const void *>(result + 1), result->frameID);
+            }
             
-            // if (_presentFrame) {
-            //     presentFrame(result.data, _storage->getConfig());
-            // }
-
-            previousResult = result;
-
             _currentFrame++;
         }
-        // for (int i = 0; i < _storage->getConfig().maxNumBuffer; ++i) 
-        // {
-        //     const auto* result = _storage->retrieveFrame(i);
-        //     if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
-        //         continue;
-        //     }
-        //     if (result->frameID > prev_frame_id + 1)
-        //     {
-        //         std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
-        //     }
-        //     prev_frame_id = result->frameID;
 
 
+        // todo: add waiting for camera really fully stops, i.e runtime need control over cam thread
+        // until then -1 saved frame in most cases
+        for (int i = 0; i <= _storage->getConfig().maxNumBuffer; ++i) 
+        {
+            const auto* result = _storage->retrieveFrame(i);
             
+            if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
+                continue;
+            }
+
+            if (result->frameID > prev_frame_id + 1) {
+                std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+            }
+
+            prev_frame_id = result->frameID;
+
+            _storage->appendFrame(static_cast<const void *>(result + 1));
+            _storage->appendTail(result->frameID, result->timeStamp);
+
+            if (_saveTIFF) {
+                _storage->save(static_cast<const void *>(result + 1), result->frameID);
+            }
             
-        //     _storage->appendFrame( static_cast<const void *>(result + 1));
-        //     _storage->appendTail(result->frameID, result->timeStamp);
-        //     _currentFrame++;
-        // }
+            _currentFrame++;
+        }
 
         _storage->updateHeader(_currentFrame);
         std::cout << "SAVED : " << _currentFrame << std::endl;
