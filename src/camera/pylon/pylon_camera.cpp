@@ -25,41 +25,31 @@ namespace vidre {
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        // if (camera.WaitForFrameTriggerReady(1000, Pylon::TimeoutHandling_Return))
-        //     camera.ExecuteSoftwareTrigger();
-        while (running.load()) {
-            // Frame Grabbing
+        while (running.load()) 
+        {
             Pylon::CGrabResultPtr currentPtrGrabResult;
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
-            }
-            SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
+            } 
 
-            // if (camera.WaitForFrameTriggerReady(1, Pylon::TimeoutHandling_Return))
-            //     camera.ExecuteSoftwareTrigger();
-            // else {
-            //     std::this_thread::yield();
-            //     continue;
-            // }
+            retrievedFramesNumber++;
+            
+            SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 
             result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
-            result->numSkippedBefore =
-                currentPtrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
-
-            latestFrame.store(result);
-
-            // Simulate skipping images
-            // Pylon::WaitObject::Sleep(500);
         }
+
+        // std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
+        
         camera.StopGrabbing();
     }
 
     void PylonCamera::Init() {
         try {
             camera.Attach(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
-            camera.MaxNumBuffer = 30;
+            camera.MaxNumBuffer = 500;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -80,7 +70,7 @@ namespace vidre {
 
         try {
             camera.Attach(tlFactory.CreateDevice(*match));
-            camera.MaxNumBuffer = 30;
+            camera.MaxNumBuffer = 500;
         } catch (const Pylon::GenericException &e) {
             // Error handling.
             std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
@@ -287,8 +277,8 @@ namespace vidre {
         return true;
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name)
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
-        shrBufferFactory.SetSharedMemory(shared_memory, memory_name);
+        shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
     }
 }  // namespace vidre

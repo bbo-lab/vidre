@@ -29,6 +29,7 @@ namespace vidre {
         }
 
     private:
+        int _currentFrame = 0;
         std::thread _thread;
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;

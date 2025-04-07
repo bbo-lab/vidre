@@ -52,7 +52,7 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -91,43 +91,67 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::retrieveFrames() {
-        const vidre::SharedFrameHeader* previousResult = nullptr;
-        
-        // Wait for Pylon's CInstantCamera to start running.
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
 
-        // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
+        int prev_frame_id = 0;
         while (_camera->IsRunning()) {
-            // Retrieve frame
-            const auto* result = _camera->RetrieveLatestFrame();
-            
-            if (result == previousResult) {
-                std::this_thread::yield();
+            const auto* result = _storage->retrieveFrame(_currentFrame);
+           
+            if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
                 continue;
             }
+           
+            if (result->frameID > prev_frame_id + 1) {
+                std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+            }
+           
+            prev_frame_id = result->frameID;
             
-
-            _storage->updateHeader();
-            _storage->appendFrame((const void *)(result + 1));
+            _storage->appendFrame(static_cast<const void *>(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
-         
-         
-            previousResult = result;
 
             if (_saveTIFF) {
-                _storage->save((const void *)(result + 1), result->frameID);
+                _storage->save(static_cast<const void *>(result + 1), result->frameID);
             }
             
-            if (_presentFrame) {
-                presentFrame((void *)(result + 1), _storage->getConfig());
-            }
+            _currentFrame++;
         }
+
+
+        // todo: add waiting for camera really fully stops, i.e runtime need control over cam thread
+        // until then -1 saved frame in most cases
+        for (int i = 0; i <= _storage->getConfig().maxNumBuffer; ++i) 
+        {
+            const auto* result = _storage->retrieveFrame(i);
+            
+            if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
+                continue;
+            }
+
+            if (result->frameID > prev_frame_id + 1) {
+                std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+            }
+
+            prev_frame_id = result->frameID;
+
+            _storage->appendFrame(static_cast<const void *>(result + 1));
+            _storage->appendTail(result->frameID, result->timeStamp);
+
+            if (_saveTIFF) {
+                _storage->save(static_cast<const void *>(result + 1), result->frameID);
+            }
+            
+            _currentFrame++;
+        }
+
+        _storage->updateHeader(_currentFrame);
+        // std::cout << "SAVED : " << _currentFrame << std::endl;
     }
 
     void RuntimeInstance::run() {
