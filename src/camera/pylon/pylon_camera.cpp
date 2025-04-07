@@ -277,7 +277,7 @@ namespace vidre {
         return true;
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory,std::vector<void *>* ptrs, std::string memory_name)
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
         shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
     }

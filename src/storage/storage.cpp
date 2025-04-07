@@ -27,7 +27,7 @@ namespace vidre {
 
         _header->initiateHeader(output_file.get());
 
-        ptrs = std::make_unique<std::vector<void*>>(_config.maxNumBuffer, nullptr);
+        _sharedMemoryPtrs = std::make_unique<std::vector<void*>>(_config.maxNumBuffer, nullptr);
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -50,10 +50,6 @@ namespace vidre {
         Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
     }
 
-    std::vector<void *>*  Storage::getSharedMemory() {
-        return ptrs.get(); 
-    }
-    
     void Storage::updateHeader(int frames) {
         _header->updateHeader(output_file.get(), frames);
     }
@@ -75,7 +71,7 @@ namespace vidre {
     SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
         auto buffer_idx = frame_idx % (_config.maxNumBuffer);
 
-        void* buffer_ptr = ptrs->at(buffer_idx);
+        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx);
         
         if (!buffer_ptr) {
             return nullptr;

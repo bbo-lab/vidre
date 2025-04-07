@@ -52,7 +52,7 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _camera->SetSharedMemory(_storage->getM(), _storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -91,7 +91,7 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
-        _camera->SetSharedMemory(_storage->getM(), _storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::retrieveFrames() {
