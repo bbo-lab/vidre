@@ -2,10 +2,11 @@
 arch=x86_64
 os=Windows
 compiler=msvc
-compiler.version=193
+compiler.version=194
 compiler.runtime=dynamic
 compiler.runtime_type=Release
 build_type=Release
+compiler.cppstd=20
 
 [conf]
 tools.microsoft.msbuild:max_cpu_count={{os.cpu_count()}}

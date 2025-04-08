@@ -1,20 +1,24 @@
 #pragma once
 
-
-#include <cstdint>
-#include <cstddef>
-#include <array>
-
 #include "config.h"
+
+#include "vidre/header.hpp"
 
 
 namespace vidre {
+    struct Config;
 
     struct GreenbergString {
         uint32_t length; 
         std::string data;
+
         GreenbergString() {
             data = "basler";
+            length = data.length();
+        }
+
+        GreenbergString(std::string input) {
+            data = input;
             length = data.length();
         }
     };
@@ -27,12 +31,31 @@ namespace vidre {
         double gain;
     };
 
-    struct CamCommandoHeader {
+    struct CCVFrameTail {
+        uint32_t frameIndex;
+        double timeStamp;
+        uint8_t padding[9];  
+    };
+
+    class CamCommandoHeader : public IHeader {
+    public:
+        CamCommandoHeader();
+        CamCommandoHeader(Config config, std::string camera_type = "basler", std::string image_type = "basler");
+        virtual void initiateHeader(const std::string& out_file) override;
+        virtual void updateHeader(const std::string& out_file) override;
+        virtual void writeFrame(const void* buffer, const std::string& out_file) override;        
+        void writeTail(const std::string& out_file, const CCVFrameTail& tail);
+    
+    private:
+        void writeHeader(std::ofstream& outFile);
+        template <typename T> void writeField(std::ofstream& outFile, const T& value);
+
 #if CCV_HEADER_VERSION >= 120
         uint32_t headerSize = 93;
 #else
         uint32_t headerSize = 52;
 #endif
+
         GreenbergString cameraType;
         double headerVersion = CCV_HEADER_VERSION_MAJOR + CCV_HEADER_VERSION_MINOR / 100.0;
         GreenbergString imageType;
@@ -54,11 +77,5 @@ namespace vidre {
 #if CCV_HEADER_VERSION >= 120
         SensorInfo sensor;
 #endif
-    };
-
-    struct CCVFrameTail {
-        uint32_t frameIndex;
-        double timeStamp;
-        uint8_t padding[9];  
     };
 }  // namespace vidre

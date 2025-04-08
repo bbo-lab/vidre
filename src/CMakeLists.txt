@@ -14,7 +14,7 @@ set(public_headers
     ../include/vidre/camera.hpp
     ../include/vidre/config_loader.hpp
     ../include/vidre/presenter.hpp
-    ../include/vidre/ccv_format.hpp
+    ../include/vidre/header.hpp
 )
 
 source_group(public FILES ${public_headers})
@@ -40,6 +40,7 @@ add_subdirectory(runtime)
 add_subdirectory(storage)
 add_subdirectory(camera)
 add_subdirectory(config_loader)
+add_subdirectory(header)
 
 install(FILES ${public_headers} DESTINATION include/vidre)
 

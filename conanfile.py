@@ -46,7 +46,7 @@ class Vidre(ConanFile):
         tc.cache_variables["PYLON_ROOT"] = os.getenv("PYLON_ROOT")
         tc.cache_variables["PYLON_DEV_DIR"] = os.getenv("PYLON_DEV_DIR")
 
-        version = self.options.get_safe("ccv_header_version", "0.12")
+        version = str(self.options.get_safe("ccv_header_version", "0.12"))
         tc.variables["CCV_HEADER_VERSION_MAJOR"] = int(version.split(".")[0])
         tc.variables["CCV_HEADER_VERSION_MINOR"] = int(version.split(".")[1])
 

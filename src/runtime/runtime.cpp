@@ -7,8 +7,8 @@
 
 static void presentFrame(void *dataBuffer, const vidre::Config &config) {
     Pylon::CPylonImage image;
-    image.AttachUserBuffer(dataBuffer, config.sourceWidth * config.sourceHeight, config.sourcePixelType, config.sourceWidth,
-                           config.sourceHeight, config.sourcePaddingX);
+    image.AttachUserBuffer(dataBuffer, config.width * config.height, config.pixelType, config.width,
+                           config.height, config.paddingX);
     Pylon::DisplayImage(1, image);
 }
 
@@ -19,7 +19,7 @@ namespace vidre
         Pylon::PylonTerminate();
     }
 
-    RuntimeInstance::RuntimeInstance(std::string configuration) {
+    RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
         // switch (configuration.cameraVendor)  {
         //     // cameravendor is enum
         //     case CameraVendor::Pylon:
@@ -44,17 +44,17 @@ namespace vidre
 
         
         vidre::Config cameraConfig{};
-        cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = cameraParamConfiguration.GetFrameOffsetX();
-        cameraConfig.sourceWidth = cameraParamConfiguration.GetFrameWidth();
-        cameraConfig.sourceHeight = cameraParamConfiguration.GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  cameraParamConfiguration.GetFrameRate();
-        cameraConfig.sourceSerialNumber = cameraParamConfiguration.GetSerialNumber();
+        cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+        cameraConfig.paddingX = cameraParamConfiguration.GetFrameOffsetX();
+        cameraConfig.width = cameraParamConfiguration.GetFrameWidth();
+        cameraConfig.height = cameraParamConfiguration.GetFrameHeight();
+        cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
+        cameraConfig.frameRate =  cameraParamConfiguration.GetFrameRate();
+        cameraConfig.serialNumber = cameraParamConfiguration.GetSerialNumber();
 
-        _storage = std::make_unique<vidre::Storage>(cameraConfig);
+        _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -71,7 +71,7 @@ namespace vidre
         _camera = std::move(camera);
     }
 
-    void RuntimeInstance::createStorage(std::string outputFileName) {
+    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format) {
         if (_storage != nullptr) {
             std::cout << "Storage is created already \n";
             return;
@@ -84,16 +84,17 @@ namespace vidre
         ICameraConfig &cameraParamConfiguration = _camera->GetCameraConfig();
         
         vidre::Config cameraConfig{};
-        cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.sourcePaddingX = cameraParamConfiguration.GetFrameOffsetX();
-        cameraConfig.sourceWidth = cameraParamConfiguration.GetFrameWidth();
-        cameraConfig.sourceHeight = cameraParamConfiguration.GetFrameHeight();
-        cameraConfig.sourceMaxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.sourceFrameRate =  cameraParamConfiguration.GetFrameRate();
-        cameraConfig.sourceSerialNumber = cameraParamConfiguration.GetSerialNumber();
-        _storage = std::make_unique<vidre::Storage>(cameraConfig, outputFileName);
+        cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+        cameraConfig.paddingX = cameraParamConfiguration.GetFrameOffsetX();
+        cameraConfig.width = cameraParamConfiguration.GetFrameWidth();
+        cameraConfig.height = cameraParamConfiguration.GetFrameHeight();
+        cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
+        cameraConfig.frameRate = cameraParamConfiguration.GetFrameRate();
+        cameraConfig.serialNumber = cameraParamConfiguration.GetSerialNumber();
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().sourceSerialNumber);
+        _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
+
+        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::retrieveFrames() {
@@ -113,23 +114,11 @@ namespace vidre
                 std::this_thread::yield();
                 continue;
             }
-            // update ccv_header
-            _storage->updateCCVHeader();
+            
 
-            // create_tail
-            vidre::CCVFrameTail tail;
-            tail.frameIndex = result->frameID; // + result->numSkippedBefore? TODO: think about skipped logic
-            // tail.skippedFrames = numSkippedBefore;
-            tail.timeStamp = result->timeStamp;
-            tail.timeStamp /= 1e9;
-
-            if (tail.frameIndex != currentIndex) {
-                std::cerr << tail.frameIndex - currentIndex << " frames skipped\n";
-                currentIndex = tail.frameIndex + 1;
-            }
-            else currentIndex++;
-
-            _storage->appendCCVFrame((const void *)(result + 1), tail);
+            _storage->updateHeader();
+            _storage->appendFrame((const void *)(result + 1));
+            _storage->appendTail(result->frameID, result->timeStamp);
          
          
             previousResult = result;

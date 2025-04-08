@@ -47,8 +47,8 @@ namespace vidre {
 
         void presentFrame(void *dataBuffer, const vidre::Config &config) {
             Pylon::CPylonImage image;
-            image.AttachUserBuffer(dataBuffer, config.sourceWidth * config.sourceHeight, config.sourcePixelType, config.sourceWidth,
-                                   config.sourceHeight, config.sourcePaddingX);
+            image.AttachUserBuffer(dataBuffer, config.width * config.height, config.pixelType, config.width,
+                                   config.height, config.paddingX);
             window.SetImage(image);
             window.Show();
         }
@@ -58,10 +58,10 @@ namespace vidre {
             ICameraConfig &cameraParamConfig = camera->GetCameraConfig();
 
             vidre::Config cameraConfig{};
-            cameraConfig.sourcePixelType = Pylon::EPixelType::PixelType_Mono8;
-            cameraConfig.sourcePaddingX = cameraParamConfig.GetFrameOffsetX();
-            cameraConfig.sourceWidth = cameraParamConfig.GetFrameWidth();
-            cameraConfig.sourceHeight = cameraParamConfig.GetFrameHeight();
+            cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+            cameraConfig.paddingX = cameraParamConfig.GetFrameOffsetX();
+            cameraConfig.width = cameraParamConfig.GetFrameWidth();
+            cameraConfig.height = cameraParamConfig.GetFrameHeight();
 
             const vidre::SharedFrameHeader *result = nullptr, *previousResult = nullptr;
 
