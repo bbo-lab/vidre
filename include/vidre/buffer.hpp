@@ -2,15 +2,18 @@
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 
+#include "vidre/shared_frame_header.hpp"
 #include "config.h"
 
+#include <memory>
+#include <vector>
 
 namespace vidre {
     struct Config;
 
     class Buffer {
     public:
-        Buffer() = delete;
+        Buffer() = default;
         Buffer(const Config& config);
         ~Buffer() {};
 
@@ -24,7 +27,7 @@ namespace vidre {
         
         int getSavedFramesNumber();
         
-        void* pop() {return nullptr;}; // -> pop() without args _currentFrame here from runtime; sort of retrieveFrame
+        SharedFrameHeader* pop();
     private:
         int _currentFrameID;
         int _bufferSize;
