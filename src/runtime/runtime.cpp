@@ -51,6 +51,7 @@ namespace vidre
         cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
+        _buffer = std::make_unique<vidre::Buffer>();
 
         _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
@@ -101,57 +102,24 @@ namespace vidre
 
         int prev_frame_id = 0;
         while (_camera->IsRunning()) {
-            const auto* result = _storage->retrieveFrame(_currentFrame);
+            const auto* result = _buffer->pop();
            
-            if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
-                continue;
-            }
-           
-            if (result->frameID > prev_frame_id + 1) {
-                std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
-            }
-           
-            prev_frame_id = result->frameID;
-            
             _storage->appendFrame(static_cast<const void *>(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
 
             if (_saveTIFF) {
                 _storage->save(static_cast<const void *>(result + 1), result->frameID);
             }
-            
-            _currentFrame++;
         }
 
 
         // todo: add waiting for camera really fully stops, i.e runtime need control over cam thread
         // until then -1 saved frame in most cases
-        for (int i = 0; i <= _storage->getConfig().maxNumBuffer; ++i) 
-        {
-            const auto* result = _storage->retrieveFrame(i);
-            
-            if (result == nullptr || result->frameID == 0 || prev_frame_id >= result->frameID) {
-                continue;
-            }
 
-            if (result->frameID > prev_frame_id + 1) {
-                std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
-            }
 
-            prev_frame_id = result->frameID;
+        _storage->updateHeader(_buffer->getSavedFramesNumber());
 
-            _storage->appendFrame(static_cast<const void *>(result + 1));
-            _storage->appendTail(result->frameID, result->timeStamp);
-
-            if (_saveTIFF) {
-                _storage->save(static_cast<const void *>(result + 1), result->frameID);
-            }
-            
-            _currentFrame++;
-        }
-
-        _storage->updateHeader(_currentFrame);
-        // std::cout << "SAVED : " << _currentFrame << std::endl;
+        // std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
     }
 
     void RuntimeInstance::run() {

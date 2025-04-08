@@ -10,13 +10,6 @@ namespace vidre {
     {
         _config = config; 
 
-        boost::interprocess::shared_memory_object::remove(_config.serialNumber.c_str());
-        size_t capacity = (sizeof(SharedFrameHeader) + _config.width * _config.height) * 
-                          (_config.maxNumBuffer + 1);
-
-        _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::create_only, _config.serialNumber.c_str(), capacity);
-
         // todo: enum
         _headerFormat = header_format;
         if (_headerFormat == "ccv") {
@@ -26,8 +19,6 @@ namespace vidre {
         _outputFileName = output_file_name;
 
         _header->initiateHeader(output_file.get());
-
-        _sharedMemoryPtrs = std::make_unique<std::vector<void*>>(_config.maxNumBuffer, nullptr);
     }     
 
     void Storage::setConfig(const Config& config) {
