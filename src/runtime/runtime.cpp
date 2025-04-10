@@ -51,9 +51,10 @@ namespace vidre
         cameraConfig.serialNumber = _camera->GetSerialNumber();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
-        _buffer = std::make_unique<vidre::Buffer>();
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
+        _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
+
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -92,8 +93,11 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
+        _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
+
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
+
 
     void RuntimeInstance::retrieveFrames() {
         while (!_camera->IsRunning()) {
@@ -103,6 +107,9 @@ namespace vidre
         int prev_frame_id = 0;
         while (_camera->IsRunning()) {
             const auto* result = _buffer->pop();
+            if (result == nullptr) {
+                continue;
+            }
            
             _storage->appendFrame(static_cast<const void *>(result + 1));
             _storage->appendTail(result->frameID, result->timeStamp);
@@ -119,7 +126,7 @@ namespace vidre
 
         _storage->updateHeader(_buffer->getSavedFramesNumber());
 
-        // std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
+        std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
     }
 
     void RuntimeInstance::run() {

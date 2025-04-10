@@ -58,18 +58,4 @@ namespace vidre {
             _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
         }
     }
-    
-    SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
-        auto buffer_idx = frame_idx % (_config.maxNumBuffer);
-
-        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx);
-        
-        if (!buffer_ptr) {
-            return nullptr;
-        }
-
-        vidre::SharedFrameHeader *header = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
-
-        return header;
-    }
 }  // namespace vidre

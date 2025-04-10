@@ -41,7 +41,7 @@ namespace vidre {
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
         }
 
-        // std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
+        std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
         
         camera.StopGrabbing();
     }

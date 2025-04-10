@@ -18,14 +18,13 @@ namespace vidre {
 
     SharedFrameHeader* Buffer::pop() {
         auto buffer_idx = _currentFrameID % _bufferSize;
-        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx);
-        
+
+        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx);        
         if (buffer_ptr == nullptr) {
             return nullptr;
         }
 
         vidre::SharedFrameHeader* result = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
-
         if (result == nullptr || result->frameID == 0 || _currentFrameID >= result->frameID) {
             return nullptr;
         }
@@ -37,7 +36,6 @@ namespace vidre {
         _previousFrameID = result->frameID;
 
         _currentFrameID++;
-
 
         return result;
     }
