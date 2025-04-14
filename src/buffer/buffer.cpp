@@ -27,7 +27,7 @@ namespace vidre {
         }
 
         vidre::SharedFrameHeader* result = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
-        if (result == nullptr || result->frameID == std::numeric_limits<int64_t>::max() || _nextFrameToPop >= result->frameID) {
+        if (result == nullptr || result->frameID == 0 || _nextFrameToPop >= result->frameID) {
             return nullptr;
         }
         

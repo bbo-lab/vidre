@@ -37,8 +37,8 @@ public:
             byte *bytePointer = (byte *)(*pCreatedBuffer);
             for (size_t i = 0; i < bufferSize; ++i) {
                 bytePointer[i] = 0;
-            
             }
+            
             shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
         } catch (const std::exception &) {
             if (*pCreatedBuffer != NULL) {

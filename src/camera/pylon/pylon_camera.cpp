@@ -32,7 +32,7 @@ namespace vidre {
                 std::this_thread::yield();
                 continue;
             } 
-            result->computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+            auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime).count();
 
             retrievedFramesNumber++;
@@ -41,6 +41,7 @@ namespace vidre {
 
             result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
+            result->computerTimeStamp = computerTimeStamp;
         }
 
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
