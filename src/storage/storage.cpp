@@ -49,12 +49,17 @@ namespace vidre {
         _header->writeFrame(buffer, output_file.get());
     }
 
-    void Storage::appendTail(uint32_t frame_idx, double time_stamp) {
+    void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
         if (_headerFormat == "ccv") {
             vidre::CCVFrameTail tail;
             tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
             tail.timeStamp = time_stamp;
             tail.timeStamp /= 1e9;
+
+            for (int i = 0; i < sizeof(long) && i < 9; i++) {
+                tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
+            }
+            
             _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
         }
     }

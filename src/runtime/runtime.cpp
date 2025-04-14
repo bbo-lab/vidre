@@ -104,7 +104,6 @@ namespace vidre
             std::this_thread::yield();
         }
 
-        int prev_frame_id = 0;
         while (_camera->IsRunning()) {
             const auto* result = _buffer->pop();
             if (result == nullptr) {
@@ -112,7 +111,7 @@ namespace vidre
             }
            
             _storage->appendFrame(static_cast<const void *>(result + 1));
-            _storage->appendTail(result->frameID, result->timeStamp);
+            _storage->appendTail(result->frameID, result->timeStamp, result->computerTimeStamp);
 
             if (_saveTIFF) {
                 _storage->save(static_cast<const void *>(result + 1), result->frameID);

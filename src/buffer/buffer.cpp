@@ -1,9 +1,11 @@
 #include "vidre/buffer.hpp"
 #include "vidre/storage.hpp"
 
+#include <limits>
+
 namespace vidre {
     Buffer::Buffer(const Config& config) 
-    : _currentFrameID(0), _bufferSize(config.maxNumBuffer), _previousFrameID(0)
+    : _nextFrameToPop(0), _bufferSize(config.maxNumBuffer), _previouslyPopedFrame(0)
     {
         boost::interprocess::shared_memory_object::remove(config.serialNumber.c_str());
         
@@ -17,31 +19,31 @@ namespace vidre {
     }
 
     SharedFrameHeader* Buffer::pop() {
-        auto buffer_idx = _currentFrameID % _bufferSize;
+        auto buffer_idx = _nextFrameToPop % _bufferSize;
 
-        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx);        
+        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx); 
         if (buffer_ptr == nullptr) {
             return nullptr;
         }
 
         vidre::SharedFrameHeader* result = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
-        if (result == nullptr || result->frameID == 0 || _currentFrameID >= result->frameID) {
+        if (result == nullptr || result->frameID == std::numeric_limits<int64_t>::max() || _nextFrameToPop >= result->frameID) {
             return nullptr;
         }
         
-        if (result->frameID > _previousFrameID + 1) {
+        if (result->frameID > _previouslyPopedFrame + 1) {
             std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
         }
         
-        _previousFrameID = result->frameID;
+        _previouslyPopedFrame = result->frameID;
 
-        _currentFrameID++;
+        _nextFrameToPop++;
 
         return result;
     }
 
     int Buffer::getSavedFramesNumber() {
-        return _currentFrameID;
+        return _nextFrameToPop;
     }
         
 }  // namespace vidre
