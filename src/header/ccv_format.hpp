@@ -34,7 +34,7 @@ namespace vidre {
     struct CCVFrameTail {
         uint32_t frameIndex;
         double timeStamp;
-        uint8_t padding[9];  
+        uint8_t padding[9]; //   use part of 9 bytes to add computer timestamp;
     };
 
     class CamCommandoHeader : public IHeader {

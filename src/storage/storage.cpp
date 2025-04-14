@@ -10,13 +10,6 @@ namespace vidre {
     {
         _config = config; 
 
-        boost::interprocess::shared_memory_object::remove(_config.serialNumber.c_str());
-        size_t capacity = (sizeof(SharedFrameHeader) + _config.width * _config.height) * 
-                          (_config.maxNumBuffer + 1);
-
-        _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::create_only, _config.serialNumber.c_str(), capacity);
-
         // todo: enum
         _headerFormat = header_format;
         if (_headerFormat == "ccv") {
@@ -26,8 +19,6 @@ namespace vidre {
         _outputFileName = output_file_name;
 
         _header->initiateHeader(output_file.get());
-
-        _sharedMemoryPtrs = std::make_unique<std::vector<void*>>(_config.maxNumBuffer, nullptr);
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -58,27 +49,18 @@ namespace vidre {
         _header->writeFrame(buffer, output_file.get());
     }
 
-    void Storage::appendTail(uint32_t frame_idx, double time_stamp) {
+    void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
         if (_headerFormat == "ccv") {
             vidre::CCVFrameTail tail;
             tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
             tail.timeStamp = time_stamp;
             tail.timeStamp /= 1e9;
+
+            for (int i = 0; i < sizeof(long) && i < 9; i++) {
+                tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
+            }
+            
             _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
         }
-    }
-    
-    SharedFrameHeader* Storage::retrieveFrame(uint32_t frame_idx) {
-        auto buffer_idx = frame_idx % (_config.maxNumBuffer);
-
-        void* buffer_ptr = _sharedMemoryPtrs->at(buffer_idx);
-        
-        if (!buffer_ptr) {
-            return nullptr;
-        }
-
-        vidre::SharedFrameHeader *header = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
-
-        return header;
     }
 }  // namespace vidre

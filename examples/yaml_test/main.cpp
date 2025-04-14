@@ -114,6 +114,7 @@ int main(int argc, const char *argv[]) {
                 if (cam.second->isRunning()) {
                     std::cout << "Stopping " << cam.first << std::endl;
                     cam.second->stop();
+                    std::cout << "Stopped " << cam.first << std::endl;
                 }
                 else {
                     std::cout << cam.first << " not running" << std::endl;
@@ -140,6 +141,7 @@ int main(int argc, const char *argv[]) {
             if (match->second->isRunning()) {
                 std::cout << "Stopping " << match->first << std::endl;
                 match->second->stop();
+                std::cout << "Stopped " << match->first << std::endl;
             }
             else
                 std::cout << match->first << " not running" << std::endl;
