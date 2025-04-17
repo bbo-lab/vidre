@@ -3,6 +3,7 @@
 #include <pylon/ImagePersistence.h>
 #include "storage.hpp"
 #include "camera.hpp"
+#include "buffer.hpp"
 #include <thread>
 
 namespace vidre {
@@ -29,9 +30,11 @@ namespace vidre {
         }
 
     private:
+        int _currentFrame = 0;
         std::thread _thread;
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;
+        std::unique_ptr<Buffer> _buffer;
         bool _saveTIFF = false;
         bool _presentFrame = false;
     };

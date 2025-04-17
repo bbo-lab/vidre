@@ -27,7 +27,7 @@ namespace vidre {
         virtual bool IsArmed() override;
         virtual bool IsRunning() override;
 
-        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* shared_memory, std::string memory_name) override;
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
         virtual bool SaveConfiguration(std::string filepath) override;
@@ -65,6 +65,9 @@ namespace vidre {
         Pylon::CInstantCamera camera;
         Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
+
+
+        int64_t retrievedFramesNumber = 0;
         // --------------------------------
     };
 }  // namespace vidre

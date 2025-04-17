@@ -112,8 +112,9 @@ int main(int argc, const char *argv[]) {
         if (tokens[0] == "stop" && tokens[1] == "all") {
             for (auto& cam: cameras) {
                 if (cam.second->isRunning()) {
-                    cam.second->stop();
                     std::cout << "Stopping " << cam.first << std::endl;
+                    cam.second->stop();
+                    std::cout << "Stopped " << cam.first << std::endl;
                 }
                 else {
                     std::cout << cam.first << " not running" << std::endl;
@@ -138,8 +139,9 @@ int main(int argc, const char *argv[]) {
         }
         else if (tokens[0].compare("stop") == 0) {
             if (match->second->isRunning()) {
-                match->second->stop();
                 std::cout << "Stopping " << match->first << std::endl;
+                match->second->stop();
+                std::cout << "Stopped " << match->first << std::endl;
             }
             else
                 std::cout << match->first << " not running" << std::endl;

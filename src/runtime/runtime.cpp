@@ -52,7 +52,9 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
+
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
@@ -91,43 +93,39 @@ namespace vidre
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
-        _camera->SetSharedMemory(_storage->getSharedMemory(), _storage->getConfig().serialNumber);
+        _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
+
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
+
     void RuntimeInstance::retrieveFrames() {
-        const vidre::SharedFrameHeader* previousResult = nullptr;
-        
-        // Wait for Pylon's CInstantCamera to start running.
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
 
-        // As long as the camera is acquiring frames, (display the new frame) and save it to disk.
         while (_camera->IsRunning()) {
-            // Retrieve frame
-            const auto* result = _camera->RetrieveLatestFrame();
-            
-            if (result == previousResult) {
-                std::this_thread::yield();
+            const auto* result = _buffer->pop();
+            if (result == nullptr) {
                 continue;
             }
-            
-
-            _storage->updateHeader();
-            _storage->appendFrame((const void *)(result + 1));
-            _storage->appendTail(result->frameID, result->timeStamp);
-         
-         
-            previousResult = result;
+           
+            _storage->appendFrame(static_cast<const void *>(result + 1));
+            _storage->appendTail(result->frameID, result->timeStamp, result->computerTimeStamp);
 
             if (_saveTIFF) {
-                _storage->save((const void *)(result + 1), result->frameID);
-            }
-            
-            if (_presentFrame) {
-                presentFrame((void *)(result + 1), _storage->getConfig());
+                _storage->save(static_cast<const void *>(result + 1), result->frameID);
             }
         }
+
+
+        // todo: add waiting for camera really fully stops, i.e runtime need control over cam thread
+        // until then -1 saved frame in most cases
+
+
+        _storage->updateHeader(_buffer->getSavedFramesNumber());
+
+        std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
     }
 
     void RuntimeInstance::run() {

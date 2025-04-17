@@ -10,3 +10,5 @@ how inheritance should be used for 1. internal relationships and 2. access by e.
 1. ScanImage BigTIFF
 2. pre-commit linters / clang-format etc
 3. acquire more info from configs for runtime and use enums
+4. traverse through buffers after cam is stopped
+5. force flush on stop

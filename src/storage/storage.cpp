@@ -5,15 +5,10 @@
 
 namespace vidre {
 
-    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) {
+    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) 
+    : output_file(fopen(output_file_name.c_str(), "wb"), fclose)
+    {
         _config = config; 
-
-        boost::interprocess::shared_memory_object::remove(_config.serialNumber.c_str());
-        size_t capacity = (sizeof(SharedFrameHeader) + _config.width * _config.height) * 
-                          (_config.maxNumBuffer + 1);
-
-        _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
-            boost::interprocess::open_or_create, _config.serialNumber.c_str(), capacity);
 
         // todo: enum
         _headerFormat = header_format;
@@ -22,7 +17,8 @@ namespace vidre {
         }
 
         _outputFileName = output_file_name;
-        _header->initiateHeader(_outputFileName);
+
+        _header->initiateHeader(output_file.get());
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -45,25 +41,26 @@ namespace vidre {
         Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
     }
 
-    boost::interprocess::managed_shared_memory* Storage::getSharedMemory() {
-        return _sharedMemory.get(); 
-    }
-    
-    void Storage::updateHeader() {
-        _header->updateHeader(_outputFileName);
+    void Storage::updateHeader(int frames) {
+        _header->updateHeader(output_file.get(), frames);
     }
 
     void Storage::appendFrame(const void* buffer) {
-        _header->writeFrame(buffer, _outputFileName);
+        _header->writeFrame(buffer, output_file.get());
     }
 
-    void Storage::appendTail(uint32_t frame_idx, double time_stamp) {
+    void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
         if (_headerFormat == "ccv") {
             vidre::CCVFrameTail tail;
             tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
             tail.timeStamp = time_stamp;
             tail.timeStamp /= 1e9;
-            _header->writeTail<CamCommandoHeader>(_outputFileName, tail);
+
+            for (int i = 0; i < sizeof(long) && i < 9; i++) {
+                tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
+            }
+            
+            _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
         }
     }
 }  // namespace vidre
