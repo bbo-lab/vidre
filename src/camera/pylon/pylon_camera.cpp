@@ -171,13 +171,17 @@ void PylonCamera::_Init() {
     GenApi::INodeMap &nodeMap = camera->GetNodeMap();
 
     camera->MaxNumBuffer = 30;
-    camera->MaxNumGrabResults = 2;
+    camera->MaxNumQueuedBuffer = 30;
+    camera->MaxNumGrabResults = 1;
 
     camera->RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
     camera->RegisterConfiguration(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
 
     cameraConfig.SetNodeMap(nodeMap);
     serialNumber = camera->GetDeviceInfo().GetSerialNumber();
+
+    //camera->GrabLoopThreadPriorityOverride = true;
+    //camera->GrabLoopThreadPriority = 24;
 
     initialized = true;
 }
@@ -254,7 +258,6 @@ void PylonCamera::Start() {
 }
 void PylonCamera::Stop() {
     if (!initialized) Init(std::string(serialNumber.c_str()));
-
     camera->StopGrabbing();
 }
 
@@ -267,7 +270,6 @@ bool PylonCamera::IsArmed() {
 }
 bool PylonCamera::IsRunning() {
     if (!initialized || camera->IsCameraDeviceRemoved()) return false;
-
     return camera->IsGrabbing();
 }
 
