@@ -1,7 +1,7 @@
 ## Assumed Architecture
 Due to the expected modular nature of the system, the elements are broken down into modules that can be linked to process data in a stream-like fashion. Each module is assumed to run independently, e.g. in its own thread (or potentially threads). Each can be started and stopped and it continuously acquires data either from external sources (like camera devices) or internal sources (like frames coming from camera modules). It processes the data packets according to the module's description and makes it available to other modules or external sinks.
 
-A module can be a producer or consumer of data packets or both. What that essentially necessitates is a buffer the producer part of one module can write to and the consumer part of another module can read from.
+A module can be a producer or consumer of data packets or both. What that essentially necessitates is a buffer the producer part of one module can write to and the consumer part of another module can read from. Similar general implementations already exist like RaftLib which are worth looking into. The alternative would be to implement such a structure or use an even more sophisticated but specific library like Gstreamer (which already has e.g. a Pylon Wrapper). Most times there will be some kind of data sink that exports data to outside resources like a network connection to another PC or probably more common: a module that stores the frames onto disk.
 
 The main packet of information is image frame data with an additional header beforehand describing important meta data like the frame id or timestamp. Those are passed through the "pipeline" of processing modules.
 
@@ -27,6 +27,9 @@ It is important to mention that this class in no way has meaningful data and beh
 ### Future concrete camera classes
 To the outside they should behave similar to how PylonCamera behaves, especially according to the SFNC. PylonCamera is essentially the "example" implementation of an ICamera class.
 
+### ICameraConfig
+Similar to the camera classes this is implemented for each type of camera, depending on the vendor or specific implementations.
+
 ### ConfigLoader
 Not a class per se but contains a function that should be able to translate a configuration file into a working system. 
 
@@ -38,5 +41,5 @@ A configuration file is a YAML file that describes the "software topology", i.e.
 ### Camera Acquisition
 The relevant triggering setups are software and hardware triggered. Software triggered means that the camera frame grab is signalled by the computer sending a software signal over USB (or similar). Hardware triggered means that the camera frame start is triggered by a hardware line. It in turn can be sent a signal by an external device or a master camera.
 ### Memory
-The camera modules should not own the memory they write frames to. It should be owned by an outside object that can also handle access to from other modules. Similar to how a lot of cameras and Pylon behaves, the frames are constantly grabbed in a circular buffer fashion. A certain amount of space for frames is available and oldest frames are replaced by new ones, without particular consideration for other modules' access. This should ensure that the grabbing of frames is as fast as possible.
+The camera modules should not own the memory they write frames to. It should be owned by an outside object that can also handle access from other modules. Similar to how a lot of cameras and Pylon behave, the frames are constantly grabbed in a circular buffer fashion. A certain amount of space for frames is available and oldest frames are replaced by new ones, without particular consideration for other modules' access. This should ensure that the grabbing of frames is as fast as possible.
 
