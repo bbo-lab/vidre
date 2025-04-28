@@ -20,16 +20,18 @@ namespace vidre {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
             return nullptr;
         }
-        // if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
-        //     std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
-        //     return nullptr;
-        // }  // TODO: Delegate to Factory
+        if (!camera->GetCameraConfig().LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
+            std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+            return nullptr;
+        }  // TODO: Delegate to Factory
 
+        camera->GetCameraConfig().SetEnum("DeviceLinkThroughputLimitMode", "Off");
+        //camera->GetCameraConfig().SetEnum("SensorReadoutMode", "Fast"); Not possible
         if (cameraNode["trigger_in"]) {
             camera->GetCameraConfig().SetTriggerIn(cameraNode["trigger_in"].as<int>());
         }
         if (cameraNode["trigger_out"]) {
-            camera->GetCameraConfig().SetTriggerIn(cameraNode["trigger_out"].as<int>());
+            camera->GetCameraConfig().SetTriggerOut(cameraNode["trigger_out"].as<int>());
         }
 
         return camera;
