@@ -12,7 +12,8 @@
 namespace po = boost::program_options;
 
 // std::string systemConfigFilepath = "C:/Not/A/Real/Path.yaml";
-std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
+std::string systemConfigFilepath = "C:/Users/bbo_admin/Desktop/lenn/vidre/config/pc.yaml";
+//std::string systemConfigFilepath = "C:/Users/bbo_admin/Desktop/lenn/vidre/config/test.yaml";
 // std::string systemConfigFilepath = "D:/Projects/vidre/config/setupExample.yaml";
 
 static std::vector<std::string> split(const char *str, char c = ' ') {

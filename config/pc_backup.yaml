@@ -1,0 +1,44 @@
+cam1:
+  type: camera
+  vendor: pylon
+  serial: 40412371
+  config_file: ../../../vidre/defaultConfig.config
+  is_config_local: true
+  description: For monitoring.
+  storage:
+    type: storage
+    output_file: D:/yamlsaving/pylon1.ccv
+  trigger_out: 3
+cam2:
+  type: camera
+  vendor: pylon
+  serial: 40424305
+  config_file: ../../../vidre/defaultConfig.config
+  is_config_local: true
+  description: For monitoring.
+  storage:
+    type: storage
+    output_file: D:/yamlsaving/pylon2.ccv
+  trigger_in: 3
+cam3:
+  type: camera
+  vendor: pylon
+  serial: 40435624
+  config_file: ../../../vidre/defaultConfig.config
+  is_config_local: true
+  description: For monitoring.
+  storage:
+    type: storage
+    output_file: D:/yamlsaving/pylon3.ccv
+  trigger_in: 3
+cam4:
+  type: camera
+  vendor: pylon
+  serial: 40412366
+  config_file: ../../../vidre/defaultConfig.config
+  is_config_local: true
+  description: For monitoring.
+  storage:
+    type: storage
+    output_file: D:/yamlsaving/pylon4.ccv
+  trigger_in: 3

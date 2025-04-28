@@ -88,17 +88,28 @@ void PylonCameraConfig::SetFrameRate(double newFrameRate) {
 
 
 void PylonCameraConfig::SetTriggerIn(int64_t line) {
-    SetEnum("TriggerSelector", "FrameStart");
+
+
     SetEnum("TriggerMode", "On");
+    SetEnum("TriggerSelector", "FrameStart");
     SetEnum("TriggerSource", (std::string("Line") + std::to_string(line)).c_str());
-    SetEnum("TriggerActivation", "RisingEdge");
+    SetEnum("TriggerActivation", "FallingEdge");
+    SetFloat("TriggerDelay", 0);
+    SetBool("AcquisitionFrameRateEnable", false);
     SetEnum("LineSelector", (std::string("Line") + std::to_string(line)).c_str());
     SetEnum("LineMode", "Input");
+    SetBool("LineInverter", false);
+
+    //std::cout << GetEnum("TriggerSource") << std::endl;
 }
 void PylonCameraConfig::SetTriggerOut(int64_t line) {
+    SetEnum("TriggerMode", "Off");
+    SetFloat("TriggerDelay", 0);
     SetEnum("LineSelector", (std::string("Line") + std::to_string(line)).c_str());
     SetEnum("LineMode", "Output");
-    SetEnum("LineSource", "FrameTrigger");
+    SetBool("LineInverter", false);
+    SetEnum("LineSource", "ExposureActive"); 
+
 }
 
 bool PylonCameraConfig::LoadConfiguration(std::string filepath) {
@@ -147,12 +158,15 @@ void PylonCamera::OnImageGrabbed( Pylon::CInstantCamera& camera, const Pylon::CG
     result->timeStamp = ptrGrabResult->GetTimeStamp();
     result->numSkippedBefore = ptrGrabResult->GetNumberOfSkippedImages();  // ! Does not account for camera internal skipped images.
 
+    //if (result->numSkippedBefore > 0)
+    //    std::cout << "Skipped frames" << "\n";
     //if (!ptrGrabResult->GrabSucceeded()) {
     //    std::cerr << "Error: " << ptrGrabResult->GetErrorCode() << ": " << ptrGrabResult->GetErrorDescription() << "\n";
     //    return;
     //}
     // Announce newest frame availability
     latestFrame = result;
+    std::this_thread::yield();
 }
 void PylonCamera::OnCameraDeviceRemoved( Pylon::CInstantCamera& camera ) {
     initialized = false;
@@ -170,14 +184,17 @@ void PylonCamera::_Init() {
     camera->Open();
     GenApi::INodeMap &nodeMap = camera->GetNodeMap();
 
-    camera->MaxNumBuffer = 30;
-    camera->MaxNumGrabResults = 2;
+    camera->MaxNumBuffer = 50;
+    camera->MaxNumGrabResults = 1;
 
     camera->RegisterImageEventHandler(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
     camera->RegisterConfiguration(this, Pylon::ERegistrationMode::RegistrationMode_Append, Pylon::ECleanup::Cleanup_None);
 
     cameraConfig.SetNodeMap(nodeMap);
     serialNumber = camera->GetDeviceInfo().GetSerialNumber();
+
+    //camera->GrabLoopThreadUseTimeout = true;
+    //camera->GrabLoopThreadTimeout = 0;
 
     initialized = true;
 }
@@ -255,7 +272,9 @@ void PylonCamera::Start() {
 void PylonCamera::Stop() {
     if (!initialized) Init(std::string(serialNumber.c_str()));
 
+
     camera->StopGrabbing();
+    std::cout << latestFrame->frameID << "\n";
 }
 
 const SharedFrameHeader *PylonCamera::RetrieveLatestFrame() {
