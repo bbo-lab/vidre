@@ -286,7 +286,6 @@ bool PylonCamera::IsArmed() {
 }
 bool PylonCamera::IsRunning() {
     if (!initialized || camera->IsCameraDeviceRemoved()) return false;
-
     return camera->IsGrabbing();
 }
 

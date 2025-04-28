@@ -75,3 +75,7 @@ Weak valid check: At the start of handling a frame copy the frame id to local me
 - Noted ccv files
 - Check if failed trigger
 - Change Interface to storage buffer
+
+
+# Start-Up
+There is a certain dependency graph. Through topological sorting we can determine a good start-up order. However cycles might be included.
