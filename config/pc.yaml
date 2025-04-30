@@ -2,7 +2,7 @@ cam1:
   type: camera
   vendor: pylon
   serial: 40412371
-  config_file: ../../../master_cam.config
+  config_file: ../../../trigger_cam.config
   is_config_local: true
   description: For monitoring.
   storage:
@@ -24,7 +24,7 @@ cam3:
   type: camera
   vendor: pylon
   serial: 40435624
-  config_file: ../../../trigger_cam.config
+  config_file: ../../../master_cam.config
   is_config_local: true
   description: For monitoring.
   storage:

@@ -88,28 +88,29 @@ void PylonCameraConfig::SetFrameRate(double newFrameRate) {
 
 
 void PylonCameraConfig::SetTriggerIn(int64_t line) {
-
-
-    SetEnum("TriggerMode", "On");
     SetEnum("TriggerSelector", "FrameStart");
+    SetEnum("TriggerMode", "On");
     SetEnum("TriggerSource", (std::string("Line") + std::to_string(line)).c_str());
-    SetEnum("TriggerActivation", "FallingEdge");
+    SetEnum("TriggerActivation", "RisingEdge");
     SetFloat("TriggerDelay", 0);
+    SetEnum("TriggerMode", "On");
     SetBool("AcquisitionFrameRateEnable", false);
     SetEnum("LineSelector", (std::string("Line") + std::to_string(line)).c_str());
     SetEnum("LineMode", "Input");
     SetBool("LineInverter", false);
+
+    //SetEnum("OverlapMode", "Off");
 
     //std::cout << GetEnum("TriggerSource") << std::endl;
 }
 void PylonCameraConfig::SetTriggerOut(int64_t line) {
     SetEnum("TriggerMode", "Off");
     SetFloat("TriggerDelay", 0);
+
     SetEnum("LineSelector", (std::string("Line") + std::to_string(line)).c_str());
     SetEnum("LineMode", "Output");
-    SetBool("LineInverter", false);
-    SetEnum("LineSource", "ExposureActive"); 
-
+    SetBool("LineInverter", true);
+    SetEnum("LineSource", "ExposureActive");
 }
 
 bool PylonCameraConfig::LoadConfiguration(std::string filepath) {
@@ -267,7 +268,7 @@ void PylonCamera::Start() {
 
     latestFrame = nullptr;
 
-    camera->StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_LatestImageOnly, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
+    camera->StartGrabbing(Pylon::EGrabStrategy::GrabStrategy_OneByOne, Pylon::EGrabLoop::GrabLoop_ProvidedByInstantCamera);
 }
 void PylonCamera::Stop() {
     if (!initialized) Init(std::string(serialNumber.c_str()));
