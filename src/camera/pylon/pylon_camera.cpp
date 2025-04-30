@@ -241,7 +241,7 @@ bool PylonCamera::Init(std::string serial) {
 /// Executing Arm() "fixes" the camera configuration in place.
 void PylonCamera::Arm() {
     if (!initialized) Init(std::string(serialNumber.c_str()));
-
+    
     shrBufferFactory.PreallocateFrameBuffers();
 
     camera->SetBufferFactory(&shrBufferFactory, Pylon::Cleanup_None);
