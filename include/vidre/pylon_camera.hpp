@@ -12,6 +12,8 @@
 #include "pylon_shr_mem_buffer_factory.hpp"
 
 namespace vidre {
+    // This PylonCameraConfig relies heavily on encapsulating a NodeMap class that gives access to the cameras parameters
+    // through SFNC. Other vendors may also support this standard and this class could be a good orientation.
     class PylonCameraConfig : public ICameraConfig {
     public:
         PylonCameraConfig();
@@ -75,6 +77,7 @@ namespace vidre {
         std::atomic<bool> armed;
         std::atomic<bool> initialized;
 
+        // Should be handled more carefully due to parallelism
         SharedFrameHeader *latestFrame;
 
         Pylon::String_t serialNumber; // Save it in case we need to recover from a disconnect and reconnect. Maybe even include a Recovery method to start up again.
@@ -86,7 +89,7 @@ namespace vidre {
         void _Init();
 
         std::unique_ptr<Pylon::CInstantCamera> camera;
-        Pylon::PylonAutoInitTerm pylonAutoInitTerm;
+        Pylon::PylonAutoInitTerm pylonAutoInitTerm; // RAII Pylon SDK init
         ShrBufferFactory shrBufferFactory;
         PylonCameraConfig cameraConfig;
         // --------------------------------
