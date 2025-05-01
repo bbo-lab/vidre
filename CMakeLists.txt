@@ -96,10 +96,11 @@ find_package(Boost CONFIG REQUIRED COMPONENTS exception)
 
 # UUID
 check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
-if(NOT HAVE_LIBUUID)
+if(HAVE_LIBUUID)
+    set(UUIDLIB uuid)
+else()
     message(FATAL "Could not find <uuid/uuid.h>")
 endif()
-set(UUIDLIB uuid)
 
 # JSON
 FetchContent_Declare(nlohmann_json
@@ -109,37 +110,6 @@ FetchContent_Declare(nlohmann_json
     FIND_PACKAGE_ARGS
 )
 FetchContent_MakeAvailable(nlohmann_json)
-
-# pylon
-find_package(PYLON QUIET)
-if(PYLON_FOUND)
-    message(STATUS "Using pylon SDK (Basler AG)")
-endif()
-
-# DevWareX
-find_library(MIDLIB2_LIB
-    NAMES midlib2
-    HINTS
-        "/opt/Aptina_Imaging/lib"
-        "C:/Aptina_Imaging/lib"
-)
-if(MIDLIB2_LIB)
-    find_path(MIDLIB2_INC 
-        NAMES midlib2.h
-        HINTS
-            "/opt/Aptina_Imaging/include"
-            "C:/Aptina_Imaging/include"
-    )
-
-    if (MIDLIB2_INC)
-        add_library(midlib2 UNKNOWN IMPORTED GLOBAL)
-        add_library(devwarex::midlib2 ALIAS midlib2)
-        target_include_directories(midlib2
-            INTERFACE ${MIDLIB2_INC})
-
-        message(STATUS "Using midlib2 (Micron Imaging Device LIBrary, DevWareX SDK, OnSemi).")
-        endif()
-endif()
 
 # ffmpeg
 find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
