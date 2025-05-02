@@ -2,7 +2,7 @@
  * Copyright (C) 2024 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
- * 
+ *
  * Affiliations:
  * ¹ MPI f. Neurobiol. of Behavior — caesar, Bonn, Germany
  *
@@ -26,17 +26,20 @@
 
 #include <vidre/config.hh>
 
+namespace vidre {
+    /** Implementation details.
+     * @ingroup api-core-details */
+    namespace detail {}
+}  // namespace vidre
+
 /**@addtogroup api-core-details
- * @details
- * @fileinfo
- * 
  * */
 ///@{
 
 /** Declaration specification for import/export for the core library.
- * 
+ *
  * This macro is needed for compiling on Windows®.
- * 
+ *
  * Usage:
  * @code
  * class VIDRE_CORE_VISIBILITY MyClass {
@@ -44,7 +47,7 @@
  *     MyClass() = default;
  * };
  * @endcode
- * 
+ *
  * @see
  *      [dllexport,dllimport](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170)
  * */
@@ -54,4 +57,4 @@
 
 ///@}
 
-#endif // VIDRE_CORE_CONFIG_HH
+#endif  // VIDRE_CORE_CONFIG_HH

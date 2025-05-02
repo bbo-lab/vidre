@@ -52,6 +52,11 @@ namespace vidre {
 
     namespace detail {
 
+        /** UUID abstraction (libuuid vs. Boost).
+         * */
+        namespace uuid {}
+
+        ///@cond
 #if VIDRE_HAVE_LIBUUID
         struct uuid_t {
             ::uuid_t data;
@@ -264,6 +269,7 @@ namespace vidre {
 
         }  // namespace uuid
 #endif
+        ///@endcond
 
     }  // namespace detail
 

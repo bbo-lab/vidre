@@ -24,9 +24,20 @@
 #define VIDRE_CONFIG_HH
 #pragma once
 
+/** General namespace.
+ * @ingroup api */
+namespace vidre {}
+
 /**@addtogroup api-config
  * @details
  * @fileinfo
+ * 
+ * Compile-time support macros (such as version information or ABI related
+ * declarations).
+ * */
+
+/**@defgroup api-config-version Version information
+ * @ingroup api-config
  * */
 ///@{
 
@@ -38,6 +49,13 @@
 
 /** Version string. */
 #define VIDRE_VERSION_S "@Vidre_VERSION_MAJOR@.@Vidre_VERSION_MINOR@"
+
+///@}
+
+/**@defgroup api-config-abi API/ABI and system settings
+ * @ingroup api-config
+ * */
+///@{
 
 /** Import library symbols. */
 #define VIDRE_API_IMPORT @Vidre_API_IMPORT@
@@ -53,16 +71,13 @@
 
 ///@}
 
-/** General namespace.
- * @ingroup api */
-namespace vidre {}
-
-/**@defgroup api-config-have External libs used.
+/**@defgroup api-config-have Software support flags.
  * @ingroup api-config
  * @details
  * @fileinfo
  * */
 ///@{
+/** Flag if libuuid is used. */
 #cmakedefine01 VIDRE_HAVE_LIBUUID
 ///@}
 
