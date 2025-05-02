@@ -57,4 +57,13 @@
  * @ingroup api */
 namespace vidre {}
 
+/**@defgroup api-config-have External libs used.
+ * @ingroup api-config
+ * @details
+ * @fileinfo
+ * */
+///@{
+#define VIDRE_HAVE_LIBUUID
+///@}
+
 #endif // VIDRE_CONFIG_HH

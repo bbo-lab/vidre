@@ -7,5 +7,6 @@ set_source_files_properties(${vidre_config_hh}
 if(config.hh.in IS_NEWER_THAN config.hh)
     file(READ config.hh.in FILE_CONTENTS)
     string(REGEX REPLACE "@[a-zA-Z0-9-_]*@" "…" FILE_CONTENTS ${FILE_CONTENTS})
+    string(REGEX REPLACE "#cmakedefine01" "#define" FILE_CONTENTS ${FILE_CONTENTS})
     file(WRITE config.hh ${FILE_CONTENTS})
 endif()

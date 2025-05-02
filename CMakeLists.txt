@@ -92,11 +92,31 @@ set(CMAKE_AUTORCC OFF)
 set(CMAKE_AUTOUIC OFF)
 
 # Boost
-find_package(Boost CONFIG REQUIRED COMPONENTS exception) 
+# find_package(Boost 
+#     CONFIG REQUIRED 
+#     COMPONENTS 
+#         exception
+#         system
+# ) 
+set(BOOST_ENABLE_CMAKE ON)
+
+FetchContent_Declare(
+  Boost
+  GIT_REPOSITORY https://github.com/boostorg/boost.git
+  GIT_TAG boost-1.88.0
+  GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS
+        CONFIG
+        COMPONENTS 
+            exception
+            system
+            uuid
+)
+FetchContent_MakeAvailable(Boost)
 
 # UUID
-check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
-if(HAVE_LIBUUID)
+check_include_file_cxx("uuid/uuid.h" VIDRE_HAVE_LIBUUID)
+if(VIDRE_HAVE_LIBUUID)
     set(UUIDLIB uuid)
 else()
     message(FATAL "Could not find <uuid/uuid.h>")

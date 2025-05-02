@@ -16,9 +16,11 @@ vidre_library(vidrecore SHARED
                 $<BUILD_INTERFACE:${vidre_build_include_dir}>
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         LINK_LIBRARIES
+            PRIVATE
+                Boost::exception
+                Boost::system
             PUBLIC
                 ${UUIDLIB}
-                ${Boost_LIBRARIES}
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development
