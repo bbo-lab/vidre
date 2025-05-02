@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
         if (not in.open())
             throw vidre::exception() << throw_message("opening input file failed");
 
-        while(not in.eof()) {
-            auto &src = in.get_frame();
+        while (not in.eof()) {
+            auto &src [[maybe_unused]] = in.get_frame();
         }
 
     } catch (vidre::exception const &e) {

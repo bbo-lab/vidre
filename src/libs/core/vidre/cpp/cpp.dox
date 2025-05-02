@@ -1,0 +1,6 @@
+/**@addtogroup api-core-cpp
+ * @details
+ * 
+ * This directory contains C++20 compatibility helpers.
+ * 
+ * */

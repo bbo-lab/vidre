@@ -1,5 +1,5 @@
 /* VidRe
- * Copyright (C) 2024 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Copyright (C) 2024-2025 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
  * 
@@ -77,8 +77,13 @@ namespace vidre {}
  * @fileinfo
  * */
 ///@{
+
 /** Flag if libuuid is used. */
 #cmakedefine01 VIDRE_HAVE_LIBUUID
+
+/** Using std::format (otherwise fmtlib). */
+#cmakedefine01 VIDRE_HAVE_CPP_LIB_FORMAT
+
 ///@}
 
 #endif // VIDRE_CONFIG_HH

@@ -58,6 +58,8 @@ include(VidreMacros)
 
 # COMPILER ####################################################################
 include(CheckCXXCompilerFlag)
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
 
 # sanitize undefined behavior (UB)
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -80,6 +82,14 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     endif()
 endif()
 
+# C++-20 format library
+check_include_file_cxx("format" VIDRE_HAVE_CPP_LIB_FORMAT)
+if(NOT VIDRE_HAVE_CPP_LIB_FORMAT)
+    find_package(fmt REQUIRED)
+    set(FMTLIB fmt::fmt)
+    set(VIDRE_HAVE_CPP_LIB_FORMAT 0)
+endif()
+
 # DEPENDENCIES ################################################################
 include(FetchContent)
 
@@ -92,13 +102,10 @@ set(CMAKE_AUTORCC OFF)
 set(CMAKE_AUTOUIC OFF)
 
 # Boost
-# find_package(Boost 
-#     CONFIG REQUIRED 
-#     COMPONENTS 
-#         exception
-#         system
-# ) 
 set(BOOST_ENABLE_CMAKE ON)
+# set(Boost_USE_STATIC_LIBS OFF) 
+# set(Boost_USE_MULTITHREADED ON)  
+# set(Boost_USE_STATIC_RUNTIME OFF) 
 
 FetchContent_Declare(
   Boost
@@ -130,6 +137,18 @@ FetchContent_Declare(nlohmann_json
     FIND_PACKAGE_ARGS
 )
 FetchContent_MakeAvailable(nlohmann_json)
+
+# SI-Units
+set(MP_UNITS_API_CONTRACTS NONE)
+# set(MP_UNITS_BUILD_CXX_MODULES ON)
+FetchContent_Declare(mp-units
+  GIT_REPOSITORY https://github.com/mpusz/mp-units
+  GIT_TAG 2.2
+  SOURCE_SUBDIR src
+)
+FetchContent_MakeAvailable(mp-units)
+set(HAVE_UNITS_MP_UNITS 1)
+set(UNITSLIB mp-units)
 
 # ffmpeg
 find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)

@@ -1,5 +1,5 @@
 /* VidRe
- * Copyright (C) 2024 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Copyright (C) 2024-2025 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
  * 

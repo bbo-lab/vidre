@@ -20,7 +20,9 @@ vidre_library(vidrecore SHARED
                 Boost::exception
                 Boost::system
             PUBLIC
+                ${UNITSLIB}
                 ${UUIDLIB}
+                ${FMTLIB}
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development
@@ -28,6 +30,7 @@ vidre_library(vidrecore SHARED
     SOURCES
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
+        vidre/cpp/format.hh
         vidre/exception.hh
         vidre/storage.hh
         vidre/plugin.hh 
