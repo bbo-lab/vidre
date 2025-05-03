@@ -20,8 +20,9 @@ vidre_library(vidrecore SHARED
                 Boost::exception
                 Boost::system
             PUBLIC
-                ${UNITSLIB}
                 ${UUIDLIB}
+                ${UNITSLIB}
+                ${TERMINALLIB}
                 ${FMTLIB}
     INSTALL 
         LIBRARY COMPONENT runtime
