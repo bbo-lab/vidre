@@ -1,0 +1,2 @@
+# ffmpeg
+find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL AVDEVICE)
