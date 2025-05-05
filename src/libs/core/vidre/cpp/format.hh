@@ -19,15 +19,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+///@file
 #ifndef VIDRE_CORE_CPP_FORMAT_HH
 #define VIDRE_CORE_CPP_FORMAT_HH
 #pragma once
 
 #include <vidre/config.hh>
 
-///@cond
+/**@defgroup api-core-cpp-format Format library
+ * @ingroup api-core-cpp
+ * @details
+ * @fileinfo
+ * 
+ * On systems where @c \<format\> is not available the [fmtlib](https://github.com/fmtlib/fmt) is used. 
+ * See the header file for supported functionality.
+ * 
+ * */
+///@{
 
-#if defined(VIDRE_HAVE_CPP_LIB_FORMAT) and VIDRE_HAVE_CPP_LIB_FORMAT
+#if VIDRE_USE_CPP_LIB_FORMAT
 #    include <format>
 #else
 #    include <fmt/format.h>
@@ -43,6 +53,7 @@ namespace std {
 
 }  // namespace std
 #endif
-///@endcond
+
+///@}
 
 #endif

@@ -81,8 +81,8 @@ namespace vidre {}
 /** Flag if libuuid is used. */
 #cmakedefine01 VIDRE_HAVE_LIBUUID
 
-/** Using std::format (otherwise fmtlib). */
-#cmakedefine01 VIDRE_HAVE_CPP_LIB_FORMAT
+/** Using STL's \<format\> (otherwise provided via fmtlib). */
+#cmakedefine01 VIDRE_USE_CPP_LIB_FORMAT
 
 ///@}
 

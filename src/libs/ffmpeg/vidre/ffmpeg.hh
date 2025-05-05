@@ -32,7 +32,7 @@
  * @{
  * @defgroup api-support-ffmpeg-overview Overview
  * @defgroup api-support-ffmpeg-format Format
- * @defgroup api-support-ffmpeg-format Codec
+ * @defgroup api-support-ffmpeg-codec Codec
  * @defgroup api-support-ffmpeg-util Utilities
  * @defgroup api-support-ffmpeg-details Implementations details
  * @}
