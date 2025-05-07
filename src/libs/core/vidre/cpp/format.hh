@@ -32,7 +32,10 @@
  * @fileinfo
  * 
  * On systems where @c \<format\> is not available the [fmtlib](https://github.com/fmtlib/fmt) is used. 
- * See the header file for supported functionality.
+ * 
+ * Available functionality:
+ * - [std::format](https://en.cppreference.com/w/cpp/utility/format/format)
+ * - [std::format_string](https://en.cppreference.com/w/cpp/utility/format/basic_format_string) 
  * 
  * */
 ///@{

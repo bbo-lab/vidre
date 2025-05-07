@@ -29,16 +29,12 @@
  * @fileinfo
  *
  * There are many pro's and con's for using exceptions versus error return
- * types—which we shall not repeat here. As a rule of thumb: do not use
- * exceptions in fast computational paths (where stack unwinding is an
- * unpredictable cost), but use it whereever more information can be transmitted
- * with an exception than with a simple error code.
- *
- * @TBD{Either we need a pulled-in version of
- * https://www.boost.org/doc/libs/1_75_0/libs/exception/doc/tutorial_transporting_data.html and the rest of it's exception
- * interface, or we implement our own "arbitrary data passing". I should note also, that after some trials the Boost API seems quite
- * cumbersome...}
- *
+ * types—which we shall not repeat here. We should note, though, that the
+ * mantra that exceptions are generally slower is [untenable](https://www.youtube.com/watch?v=bY2FlayomlE).
+ * 
+ * We shold advice, though, that Boost's exception [annotations](https://www.boost.org/doc/libs/1_88_0/libs/exception/doc/tutorial_transporting_data.html)
+ * are used and encouraged for transporting terse and human readable 
+ * information, which may add computational overhead.
  * */
 #include <vidre/core/config.hh>
 
