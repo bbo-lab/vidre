@@ -16,6 +16,18 @@
 namespace vidre {
     struct CCVFrameTail;
 
+    enum class HeaderType {
+        CCV,
+        BIGTIFF,
+        UNKNOWN
+    };
+    
+    HeaderType headerTypeFromString(const std::string& header_type) {
+        if (header_type == "ccv") return HeaderType::CCV;
+        if (header_type == "bigtiff") return HeaderType::BIGTIFF;
+        return HeaderType::UNKNOWN;
+    }
+
     struct Config {
         Pylon::EPixelType pixelType;
         uint32_t width;

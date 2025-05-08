@@ -2,6 +2,7 @@
 #include "vidre/shared_frame_header.hpp"
 
 #include "header/ccv_format.hpp"
+#include "header/bigtiff.hpp"
 
 namespace vidre {
 
@@ -12,8 +13,18 @@ namespace vidre {
 
         // todo: enum
         _headerFormat = header_format;
-        if (_headerFormat == "ccv") {
-            _header = std::make_unique<CamCommandoHeader>(config);
+        switch (headerTypeFromString(_headerFormat)) {
+            case HeaderType::CCV:
+                _header = std::make_unique<CamCommandoHeader>(config);
+                break;
+            case HeaderType::BIGTIFF:
+                _header = std::make_unique<BigTIFFHeader>(config);
+                break
+            case HeaderType::Unknown:
+            default:
+                std::cout << "Uknown header type. Setting to ccv.\n";
+                _header = std::make_unique<CamCommandoHeader>(config);
+                break;
         }
 
         _outputFileName = output_file_name;
@@ -50,17 +61,23 @@ namespace vidre {
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
-        if (_headerFormat == "ccv") {
-            vidre::CCVFrameTail tail;
-            tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
-            tail.timeStamp = time_stamp;
-            tail.timeStamp /= 1e9;
+        switch (headerTypeFromString(_headerFormat)) {
+            case HeaderType::CCV:
+                vidre::CCVFrameTail tail;
+                tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
+                tail.timeStamp = time_stamp;
+                tail.timeStamp /= 1e9;
 
-            for (int i = 0; i < sizeof(long) && i < 9; i++) {
-                tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
-            }
-            
-            _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
+                for (int i = 0; i < sizeof(long) && i < 9; i++) {
+                    tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
+                }
+                
+                _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
+                break;
+            case HeaderType::BIGTIFF:
+            case HeaderType::UNKNOWN:
+            default:
+                return;
         }
     }
 }  // namespace vidre

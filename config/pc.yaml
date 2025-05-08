@@ -6,7 +6,7 @@ cam1:
   is_config_local: true
   description: For monitoring.
   storage:
-    type: storage
+    header_format: "ccv"
     output_file: D:/yamlsaving/pylon1.ccv
   trigger_out: 3
 cam2:
@@ -17,7 +17,7 @@ cam2:
   is_config_local: true
   description: For monitoring.
   storage:
-    type: storage
+    header_format: "ccv"
     output_file: E:/yamlsaving/pylon2.ccv
   trigger_in: 3
 cam3:
@@ -28,7 +28,7 @@ cam3:
   is_config_local: true
   description: For monitoring.
   storage:
-    type: storage
+    header_format: "ccv"
     output_file: F:/yamlsaving/pylon3.ccv
   trigger_in: 3
 # cam4:
