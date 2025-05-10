@@ -16,6 +16,16 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.log",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.log",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        }
+,
+        {
             "name": "test.core.exceptions",
             "type": "cppdbg",
             "request": "launch",

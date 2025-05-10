@@ -22,7 +22,7 @@ vidre_library(vidrecore SHARED
             PUBLIC
                 ${UUIDLIB}
                 ${UNITSLIB}
-                ${TERMINALLIB}
+                # ${TERMINALLIB}
                 ${FMTLIB}
     INSTALL 
         LIBRARY COMPONENT runtime
@@ -33,6 +33,7 @@ vidre_library(vidrecore SHARED
         vidre/core/config.hh vidre/core/config.cc
         vidre/cpp/format.hh
         vidre/exception.hh
+        vidre/log.hh vidre/log.cc
         vidre/storage.hh
         vidre/plugin.hh 
             vidre/plugin/information.hh

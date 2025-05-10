@@ -12,6 +12,7 @@
  * 
  * @{
  * @defgroup api-core-exception     Errors and exceptions
+ * @defgroup api-core-log           Logging
  * @defgroup api-core-storage       Storage
  * @defgroup api-core-plugin        Plugins
  * @defgroup api-core-util          Utilities
