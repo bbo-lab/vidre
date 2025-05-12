@@ -18,10 +18,10 @@ namespace vidre {
             reservedZero(0),
             firstIFDOffset(16)
         {}
-        BigTIFFHeader(vidre::Config config);
-        virtual void initiateHeader(const std::string& out_file) override;
-        virtual void updateHeader(const std::string& out_file) override;
-        virtual void writeFrame(const void* buffer, const std::string& out_file) override;
+        BigTIFFHeader(Config config);
+        virtual void initiateHeader(FILE* out_file) override;
+        virtual void updateHeader(FILE* out_file, int frames) override;
+        virtual void writeFrame(const void* buffer, FILE* out_file) override; 
 
     private:
         void writeHeader(FILE* outFile);
@@ -43,6 +43,6 @@ namespace vidre {
 
         // impl specific
         uint64_t frameCount = 0;
-    }
+    };
 
 }

@@ -16,13 +16,13 @@
 namespace vidre {
     struct CCVFrameTail;
 
-    enum class HeaderType {
-        CCV,
-        BIGTIFF,
-        UNKNOWN
+    enum class HeaderType : int32_t {
+        CCV = 0,
+        BIGTIFF = 1,
+        UNKNOWN = 2,
     };
     
-    HeaderType headerTypeFromString(const std::string& header_type) {
+    HeaderType headerTypeFromString(const std::string &header_type) {
         if (header_type == "ccv") return HeaderType::CCV;
         if (header_type == "bigtiff") return HeaderType::BIGTIFF;
         return HeaderType::UNKNOWN;

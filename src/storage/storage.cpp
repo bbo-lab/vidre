@@ -19,8 +19,8 @@ namespace vidre {
                 break;
             case HeaderType::BIGTIFF:
                 _header = std::make_unique<BigTIFFHeader>(config);
-                break
-            case HeaderType::Unknown:
+                break;
+            case HeaderType::UNKNOWN:
             default:
                 std::cout << "Uknown header type. Setting to ccv.\n";
                 _header = std::make_unique<CamCommandoHeader>(config);
