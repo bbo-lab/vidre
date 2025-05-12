@@ -24,10 +24,46 @@
 #include <array>
 #include <algorithm>
 
+#ifdef _WIN32
+#include <io.h>
+#include <windows.h>
+#define ISATTY _isatty
+#define FILENO _fileno
+#else
+#include <unistd.h>
+#define ISATTY isatty
+#define FILENO fileno
+#endif
+
+bool is_clog_terminal() {
+    return ISATTY(FILENO(stderr)) != 0;
+}
+
 using namespace vidre;
 
-int vidre::log::threshold_ = vidre::log::default_level;
-std::vector<vidre::log::stream *> vidre::log::stream_ = {new vidre::log::stream};
+static log::fret vidre_use_fret() {
+    if (is_clog_terminal())
+        return log::fret::color;
+    else
+        return log::fret::tag;
+}
+
+static vidre::log::stream vidrelog{vidre_use_fret()};
+
+std::vector<vidre::log::stream *> vidre::log::stream_ = {&vidrelog};
+
+void log::remove(unsigned id) noexcept {
+    if (id == 0)
+        return;
+    else if (id >= stream_.size())
+        return;
+    else {
+        stream_[id] = nullptr;
+
+        while (stream_.back() == nullptr)
+            stream_.pop_back();
+    }
+}
 
 constexpr unsigned indent_precalc_depth = 64;
 consteval auto indent_precalc_init() noexcept {
@@ -38,35 +74,84 @@ consteval auto indent_precalc_init() noexcept {
 }
 constexpr auto indent_precalc = indent_precalc_init();
 
-log::~log() {
-    // FIXME
-}
+void log::emit(const message_type &msg, unsigned depth) noexcept {
+    depth = std::min(depth, indent_precalc_depth);
 
-void log::emit(const string_type &msg) noexcept {
-    if (level_ >= threshold_) {
-        for (auto *it : stream_)
-            it->emit(msg);
-    }
-}
+    // split lines
+    std::vector<message_type> lines;
 
-void log::emit(unsigned depth, const string_type &msg) noexcept {
-    if (level_ >= threshold_) {
-        depth = std::min(depth, indent_precalc_depth);
+    auto ptr = msg.data();
+    auto end = ptr + msg.size();
 
-        auto ptr = msg.data();
-        auto end = ptr + msg.size();
+    do {
+        auto nl = std::string_view(ptr, end).find_first_of('\n');
+        auto nxt = (nl == std::string_view::npos) ? end : ptr + nl + 1;
 
-        do {
-            auto nl = std::string_view(ptr, end).find_first_of('\n');
-            auto nxt = (nl == std::string_view::npos) ? end : ptr + nl + 1;
+        lines.emplace_back(ptr, nxt);
 
-            for (auto *it : stream_) {
-                it->emit({indent_precalc.data(), depth});
-                it->emit({ptr, nxt});
-                it->emit(eol);
+        ptr = nxt;
+    } while (ptr < end);
+
+    // output per stream
+    for (auto *it : stream_) {
+        if (level_ > it->threshold())
+            continue;
+
+        auto &fret = log::stream::frets[it->fret_][level_ - log::min_level];
+
+        for (auto &txt : lines) {
+            if (first_) {
+                it->write(fret.first);
+                first_ = false;
             }
+            else
+                it->write(fret.prefix);
 
-            ptr = nxt;
-        } while (ptr < end);
+            it->write(txt);
+
+            it->write(fret.suffix);
+        }
     }
+
 }
+
+static const vidre::log::stream::fret vidre_log_fret_plain[vidre::log::level_n] = {
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}},  //
+    {{}, {}, {}}   //
+};
+
+static const vidre::log::stream::fret vidre_log_fret_color[vidre::log::level_n] = {
+    {"\e[1;91m", "\e[1;91m", "\e[0m"},          // fatal
+    {"\e[4;31m", "\e[4;31m", "\e[0m"},          // alert
+    {"\e[0;91m", "\e[0;91m", "\e[0m"},          // critical
+    {"\e[0;31m", "\e[0;31m", "\e[0m"},          // error
+    {"\e[0;33m", "\e[0;33m", "\e[0m"},          // warning
+    {"\e[0;97m", "\e[0;97m", "\e[0m"},          // notice
+    {"\e[0;92m", "\e[0;92m", "\e[0m"},          // status
+    {"\e[0m", "\e[0m", "\e[0m"},                // info
+    {"\e[38:5:246m", "\e[38:5:246m", "\e[0m"},  // debug
+    {"\e[38:5:252m", "\e[38:5:252m", "\e[0m"}   // trace
+};
+
+static const vidre::log::stream::fret vidre_log_fret_tag[vidre::log::level_n] = {
+    {"[FATAL] ", "    ", {}},     //
+    {"[ALERT] ", "    ", {}},     //
+    {"[CRITICAL] ", "    ", {}},  //
+    {"[ERROR] ", "    ", {}},     //
+    {"[WARNING] ", "    ", {}},   //
+    {"[NOTICE] ", "    ", {}},    //
+    {"[STATUS] ", "    ", {}},    //
+    {"[INFO] ", "    ", {}},      //
+    {"[DEBUG] ", "    ", {}},     //
+    {"[TRACE] ", "    ", {}}      //
+};
+
+const log::stream::fret *vidre::log::stream::frets[] = {vidre_log_fret_plain, vidre_log_fret_color, vidre_log_fret_tag};

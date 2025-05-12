@@ -32,6 +32,7 @@ vidre_library(vidrecore SHARED
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
         vidre/cpp/format.hh
+        vidre/cpp/util.hh
         vidre/exception.hh
         vidre/log.hh vidre/log.cc
         vidre/storage.hh
