@@ -118,11 +118,6 @@ namespace vidre
             }
         }
 
-
-        // todo: add waiting for camera really fully stops, i.e runtime need control over cam thread
-        // until then -1 saved frame in most cases
-
-
         _storage->updateHeader(_buffer->getSavedFramesNumber());
 
         std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
