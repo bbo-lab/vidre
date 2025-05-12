@@ -120,7 +120,7 @@ namespace vidre {
         return armed.load();
     }
     bool PylonCamera::IsRunning() {
-        return running.load();
+        return grabber.joinable();
     }
 
     /// --------------------------
