@@ -37,7 +37,7 @@ SEPARATE_MEMBER_PAGES  = NO
 TAB_SIZE               = 4
 ALIASES                = 
 ALIASES               += TBD="<span style=\"color: orange\"><b>TBD</b>"
-ALIASES               += TBD{1}="<span style=\"color: orange\"><b>TBD</b>:</br> \1</span>"
+ALIASES               += TBD{1}="<span style=\"color: orange\"><b>TBD</b>:<br/> \1</span>"
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
 OPTIMIZE_FOR_FORTRAN   = NO

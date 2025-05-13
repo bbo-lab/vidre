@@ -20,26 +20,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "log.hh"
+#include "os/tty.hh"
 
 #include <array>
 #include <algorithm>
 
-#ifdef _WIN32
-#include <io.h>
-#include <windows.h>
-#define ISATTY _isatty
-#define FILENO _fileno
-#else
-#include <unistd.h>
-#define ISATTY isatty
-#define FILENO fileno
-#endif
-
 bool is_clog_terminal() {
-    return ISATTY(FILENO(stderr)) != 0;
+    return vidre::isatty(stderr);
 }
 
 using namespace vidre;
+
+#if 0
 
 static log::fret vidre_use_fret() {
     if (is_clog_terminal())
@@ -100,19 +92,22 @@ void log::emit(const message_type &msg, unsigned depth) noexcept {
         auto &fret = log::stream::frets[it->fret_][level_ - log::min_level];
 
         for (auto &txt : lines) {
-            if (first_) {
-                it->write(fret.first);
-                first_ = false;
+            if (newline_) {
+                if (first_) {
+                    it->write(fret.first);
+                    first_ = false;
+                }
+                else
+                    it->write(fret.prefix);
+            }
+
+            if (txt.back() == '\n') {
+                it->
             }
             else
-                it->write(fret.prefix);
-
-            it->write(txt);
-
-            it->write(fret.suffix);
+                it->write(txt);
         }
     }
-
 }
 
 static const vidre::log::stream::fret vidre_log_fret_plain[vidre::log::level_n] = {
@@ -155,3 +150,6 @@ static const vidre::log::stream::fret vidre_log_fret_tag[vidre::log::level_n] = 
 };
 
 const log::stream::fret *vidre::log::stream::frets[] = {vidre_log_fret_plain, vidre_log_fret_color, vidre_log_fret_tag};
+
+#endif
+

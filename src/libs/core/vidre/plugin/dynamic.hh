@@ -99,7 +99,7 @@ namespace vidre {
              * proprietry libraries which are not distributed together with
              * VidRe.
              *
-             * @hidden
+             * @internal
              * In the case of propriertry libraries the module should not
              * just fail to load. Instead, it should, itself, be able to
              * detect, if it is required and instead of failing report

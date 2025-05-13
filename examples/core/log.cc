@@ -2,6 +2,8 @@
 
 using namespace vidre;
 
+#if 0
+
 //! [simple-log]
 void simple_logging() {
     log::notice() << "A notice..." << log::endl;
@@ -40,7 +42,7 @@ void level1() {
 void tracing() {
     log::trace tr;
     tr << "tracing 3 levels" << log::endl;
-    
+
     level1();
 }
 //! [tracing]
@@ -57,6 +59,13 @@ int main(int argc, const char **argv) {
 
     return 0;
 }
+
+#else
+int main(int argc, const char **argv) {
+    return 0;
+}
+#endif
+
 /**@example examples/core/log.cc
  * @brief This file demonstrates logging.
  *

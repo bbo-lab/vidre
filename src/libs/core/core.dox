@@ -17,6 +17,7 @@
  * @defgroup api-core-plugin        Plugins
  * @defgroup api-core-util          Utilities
  * @defgroup api-core-cpp           C++ compatibility
+ * @defgroup api-core-os            System abstractions
  * @defgroup api-core-details       Implementation details
  * @}
  * */

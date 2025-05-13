@@ -140,7 +140,7 @@ file as well as how settings are applied, for example to plugins.
 
 @section dev-milestone Milestones
 
-@subsubsection milestone-0 Zero
+@subsection milestone-0 Zero
 
 The first implementation should implement @ref core-storage, specifically 
 named shared memory and a semaphore with @ref core-plugins with a Basler® camera

@@ -28,9 +28,53 @@
  * @details
  * @fileinfo
  *
+ * VidRe provides a program-flow and message logging interface that supports
+ * several severity levels (including nested tracing):
+ *
+ * - @c log::fatal (which also terminates the program),
+ * - @c log::alert,
+ * - @c log::critical,
+ * - @c log::error,
+ * - @c log::warning,
+ * - @c log::notice,
+ * - @c log::status,
+ * - @c log::info,
+ * - @c log::debug, and,
+ * - @c log::trace,
+ *
+ * (the latter are compile-time enabled only if NDEBUG is not defined and
+ * DEBUG is defined, respectively, at compile-time). These classes my be used
+ * for single or block-wise output, such as
+ * @code
+ * log::notice() << "A notice.\nMore information for this notice.\n";
+ * @endcode
+ * vs.
+ * @code
+ * log::notice notice;
+ * notice << "A notice.\n";
+ * notice << "More information for this notice.\n";
+ * @endcode
+ *
+ * @note VidRe in general only uses a single newline character ('\\n') to
+ *      emit or determine an end-of-line (see @c log::endl).
+ *
+ * The logging interface also allows to stream its output to different locations
+ * (see @c log::io::stream) with markup (see @c log::io::markup) where each
+ * stream may have it's own log threshold (see @c log::threshold).
+ *
+ * By default, all logging is sent to @c std::clog (id 0).
+ *
  * Example (see @ref examples/core/log.cc):
  * @include examples/core/log.cc
  *
+ * @defgroup api-core-log-if Interface
+ * @ingroup api-core-log
+ *
+ * @defgroup api-core-log-io In-/output
+ * @ingroup api-core-log
+ *
+ * @defgroup api-core-log-details Implementation details
+ * @ingroup api-core-log
  * */
 
 #include <vidre/core/config.hh>
@@ -44,10 +88,126 @@
 
 namespace vidre {
 
-    /**@addtogroup api-core-log
-     * */
-    ///@{
+    /** Message logging interface.
+     * @ingroup api-core-log */
+    namespace log {
 
+        class fatal;
+        class alert;
+        class critical;
+        class error;
+        class warning;
+        class notice;
+        class status;
+        class info;
+        class debug;
+        class trace;
+        inline namespace io {
+            class stream;
+        }  // namespace io
+
+        /** String (or message, respectively) type.
+         * @ingroup api-core-log-details */
+        using message_type = std::string_view;
+
+        /** Log levels.
+         * @ingroup api-core-log-if */
+        enum class level : int {
+            fatal = -5,     ///< System is in an unusable state and the program will terminate.
+            alert = -4,     ///< Immediate user interaction is required, usually when data corruption occurs.
+            critical = -3,  ///< A critical error, such as hardware failure.
+            error = -2,     ///< An application error occurred.
+            warning = -1,   ///< Warning level, which may hint to future failure.
+            notice = 0,     ///< A noteworthy condition occurred (also default log level).
+            status = 1,     ///< A status message.
+            info = 2,       ///< A purely informational message.
+            debug = 3,      ///< Debugging information.
+            trace = 4       ///< Tracing.
+        };
+
+        constexpr static unsigned level_n = 10;                            ///<@internal Number of discernable log levels.
+        constexpr static int level_min = static_cast<int>(level::fatal);   ///<@internal Minimum log level (as integer).
+        constexpr static int max_level = std::numeric_limits<int>::max();  ///<@internal Maximum log level (as integer).
+#if defined(DEBUG)
+        constexpr static int level_default = max_level;  ///<@internal Default log level.
+#elif defined(NDEBUG)
+        constexpr static int level_default = 0;
+#else
+        constexpr static int level_default = static_cast<int>(level::info);
+#endif
+
+        /** Log message handler.
+         *
+         * This class handles logging and, as well, is the base class for
+         * the individual implementations (see @c log::fatal, etc.);
+         *
+         * @ingroup api-core-log-details */
+        class VIDRE_CORE_VISIBILITY handler {
+        public:
+            handler() = default;
+            handler(level lvl) {};
+
+        protected:
+            int level_ = level_default; ///< Log level for this object.
+
+
+
+        };
+
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
+
+        /** End-of-line.
+         * */
+        constexpr static message_type endl = {"\n", 1};
+
+        ///@}
+
+        /** Logging IO.
+         * @ingroup api-core-log
+         * */
+        inline namespace io {
+
+            // FIXME
+
+        }  // namespace io
+
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
+
+        /** Fatal log message.
+         * */
+        class VIDRE_CORE_VISIBILITY fatal : handler {
+        public:
+            fatal() noexcept : handler(log::level::fatal) {}
+            ~fatal() {
+                std::terminate();
+            }
+
+            fatal &operator<<(const message_type &msg) noexcept {
+                // emit(msg);
+                return *this;
+            }
+
+            template <typename V>
+            requires std::formattable<std::remove_cvref_t<V>, char>
+            fatal &operator<<(const V &value) noexcept {
+                // emit(std::format("{}", value));
+                return *this;
+            }
+        };
+
+        ///@}
+
+        ///@cond
+
+        ///@endcond
+
+    }  // namespace log
+
+#if 0
     /** Message logging interface.
      *
      * This provides an interface for program-flow and general message logging.
@@ -65,87 +225,11 @@ namespace vidre {
     public:
         class stream;
 
-        /** Type for log message decorration (or ornament, respectively).
-         * */
-        enum class fret {
-            plain,  ///< No decorration.
-            color,  ///< Uses coloring for log messages (usually only on an interactive terminal).
-            tag     ///< Uses tags (such as "[ERROR]") per log entry.
-        };
-
-        using message_type = std::string_view;  ///< String (or message, respectively) type.
-
-        /** Log levels.
-         *
-         * The log levels are represented as individual classes,
-         * so instead of using
-         * @code
-         * log(log::level::warning) << "A warning.";
-         * @endcode
-         * users must use
-         * @code
-         * log::warning() << "A warning.";
-         * @endcode
-         * which provide additional functionality (see esp. @c log::fatal and @c log::trace .
-         *
-         * */
-        enum class level : int {
-            fatal = -5,     ///< System is in an unusable state and the program will terminate.
-            alert = -4,     ///< Immediate user interaction is required, usually when data corruption occurs.
-            critical = -3,  ///< A critical error, such as hardware failure.
-            error = -2,     ///< An application error occurred.
-            warning = -1,   ///< Warning level, which may hint to future failure.
-            notice = 0,     ///< A noteworthy condition occurred (also default log level).
-            status = 1,     ///< A status message.
-            info = 2,       ///< A purely informational message.
-            debug = 3,      ///< Debugging information.
-            trace = 4       ///< Tracing.
-        };
-
-        /**@internal Number of discernable log levels.
-         * */
-        constexpr static unsigned level_n = 10;
-
-        class fatal;
-        class alert;
-        class critical;
-        class error;
-        class warning;
-        class notice;
-        class status;
-        class info;
-        class debug;
-        class trace;
 
         /**@internal Maximum number of streams.
          * */
         constexpr static std::size_t max_streams = 128;
 
-        /**@internal Minimum log level (as integer). */
-        constexpr static int min_level = static_cast<int>(level::fatal);
-
-        /**@internal Maximum log level (as integer).
-         *
-         * @note
-         *      Tracing (which is only enabled for DEBUG builds) allows nesting, which, in turn,
-         *      allows the respective log formatter to indent the trace.
-         *
-         * */
-        constexpr static int max_level = std::numeric_limits<int>::max();
-
-        /**@internal Default log level.
-         * */
-#if defined(DEBUG)
-        constexpr static int default_level = max_level;
-#elif defined(NDEBUG)
-        constexpr static int default_level = 0;
-#else
-        constexpr static int default_level = static_cast<int>(level::info);
-#endif
-
-        /** End-of-line.
-         * */
-        constexpr static message_type endl = message_type({"\n", 1});
 
     public:
         template <typename T>
@@ -180,8 +264,11 @@ namespace vidre {
         log(level lvl) noexcept : level_(static_cast<int>(lvl)) {}
 
     protected:
-        int level_ = 0;      ///< Log level (for this logging object).
-        bool first_ = true;  ///< True for first line of output, false otherwise.
+        int level_ = 0;  ///< Log level (for this logging object).
+
+    private:
+        bool first_ = true;    ///< True for first line of output, false otherwise.
+        bool newline_ = true;  ///< True when last output finished with a newline.
 
     public:
         /** Emit a log message.
@@ -196,7 +283,8 @@ namespace vidre {
 
     /** Log stream.
      *
-     * FIXME
+     * This class implements logging to @c std::clog, but also, serves a fundament to
+     * implement individual log streamers. FIXME
      *
      * */
     class VIDRE_CORE_VISIBILITY log::stream {
@@ -228,7 +316,7 @@ namespace vidre {
         virtual ~stream() = default;
 
     protected:
-        int threshold_ = log::default_level;  ///< Log threshold for this stream.
+        int threshold_ = log::level_default;  ///< Log threshold for this stream.
         int fret_ = 0;                        ///< Decoration for this stream.
 
     public:
@@ -387,6 +475,8 @@ namespace vidre {
             return *this;
         }
     };
+#endif
+
 #endif
 
 }  // namespace vidre
