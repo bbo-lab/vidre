@@ -54,6 +54,9 @@ namespace std {
     template <typename... T>
     using format_string = fmt::format_string<T...>;
 
+    template<typename T, class Char>
+    concept formattable = std::is_class<fmt::formatter<T>>; // FIXME
+
 }  // namespace std
 #endif
 

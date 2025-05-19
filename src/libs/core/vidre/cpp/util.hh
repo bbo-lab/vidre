@@ -36,16 +36,25 @@
 
 namespace vidre {
 
+    namespace detail {
+
+        // FIXME
+
+    } //
+
     /**@addtogroup api-core-cpp-util
      * */
     ///@{
 
-    /** FIXME.
+    /** Get size of an array of any type.
      * */
     template <typename T, std::size_t N>
     constexpr std::size_t size_of(const T (&)[N]) noexcept {
         return N;
     }
+
+    /** Get demangled name of FIXME.
+     * */
 
     ///@}
 
