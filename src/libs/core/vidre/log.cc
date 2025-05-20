@@ -24,6 +24,7 @@
 
 #include <array>
 #include <algorithm>
+#include <chrono>
 
 using namespace vidre;
 
@@ -80,7 +81,12 @@ void log::io::stream::threshold(unsigned chanid, int lvl) noexcept {
     }
 }
 
-static const log::io::style::tag vidre_log_style_color[log::level_n] = {
+struct style_tags {
+    log::message_type prefix;
+    log::message_type suffix;
+};
+
+static const style_tags vidre_log_style_color[log::level_n] = {
     {"\e[1;91m", "\e[0m"},      // fatal
     {"\e[4;31m", "\e[0m"},      // alert
     {"\e[0;91m", "\e[0m"},      // critical
@@ -93,7 +99,7 @@ static const log::io::style::tag vidre_log_style_color[log::level_n] = {
     {"\e[38:5:239m", "\e[0m"}   // trace
 };
 
-static const log::io::style::tag vidre_log_style_tagged[log::level_n] = {
+static const style_tags vidre_log_style_tagged[log::level_n] = {
     {"[FATAL] ", {}},     //
     {"[ALERT] ", {}},     //
     {"[CRITICAL] ", {}},  //
@@ -169,6 +175,28 @@ void log::handler::emit(const message_type &txt, unsigned indent [[maybe_unused]
         ptr = nxt;
         last_ = last;
     } while (ptr < end);
+}
+
+log::io::file::file(const std::string_view filename, level th, style::type sty) noexcept : stream(th, sty) {
+    outs_ = ::fopen(filename.data(), "a");
+    if (outs_ == nullptr)
+        log::warning() << "Opening log file '" << filename << "' failed.\n";
+    else {
+        chanid_ = add(*this);
+        header();
+    }
+}
+
+void log::io::file::header() noexcept {
+    if (ftell(outs_) > 0)
+        put("\n");
+
+    put("[[[=== ");
+
+    auto now = std::chrono::utc_clock::now();
+    put(std::format("{:%Y-%m-%dT%H:%M:%SZ}", now));
+
+    put(" ===]]]\n");
 }
 
 #if defined(DEBUG)

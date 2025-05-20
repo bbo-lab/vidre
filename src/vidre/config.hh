@@ -29,10 +29,11 @@
 namespace vidre {}
 
 /**@addtogroup api-config
+ * @brief Compile-time configuration
  * @details
  * @fileinfo
  * 
- * Compile-time support macros (such as version information or ABI related
+ * Compile-time support macros (such as version information or API/ABI related
  * declarations).
  * */
 
@@ -47,8 +48,14 @@ namespace vidre {}
 /** Minor version. */
 #define VIDRE_VERSION_MINOR <…>
 
-/** Version string. */
+/** Version string (major.minor). */
 #define VIDRE_VERSION_S "<…>.<…>"
+
+/** Tiny (or patch, respectively) version. */
+#define VIDRE_VERSION_PATCH <…>
+
+/** Release string (major.minor.patch). */
+#define VIDRE_RELEASE_S "<…>.<…>.<…>"
 
 ///@}
 
@@ -57,7 +64,8 @@ namespace vidre {}
  * */
 ///@{
 
-/** Import library symbols. */
+/** Import library symbols. 
+ * @see e.g. VIDRE_CORE_VISIBILITY */
 #define VIDRE_API_IMPORT <…>
 
 /** Export library symbols. */
@@ -71,7 +79,7 @@ namespace vidre {}
 
 ///@}
 
-/**@defgroup api-config-have Software support flags.
+/**@defgroup api-config-have Software support flags
  * @ingroup api-config
  * @details
  * @fileinfo
@@ -81,7 +89,7 @@ namespace vidre {}
 /** Flag if libuuid is used. */
 #define VIDRE_HAVE_LIBUUID <0/1>
 
-/** Using STL's \<format\> (otherwise provided via fmtlib). */
+/** Using STL's \<format\> (otherwise [fmtlib](https://github.com/fmtlib/fmt)). */
 #define VIDRE_USE_CPP_LIB_FORMAT <0/1>
 
 ///@}

@@ -71,32 +71,32 @@
 /**@defgroup api-core-log-if Interface
  * @ingroup api-core-log
  * @brief General logging.
- * 
+ *
  * The general log interface used within the framework follows the convention:
  * @code
  * log::LEVEL() << "message output" << log::endl;
  * @endcode
  * where @c LEVEL may be any of the existing @ref log::level "log levels" and may
- * be used as if @c std::clog would be used directly. 
- * 
+ * be used as if @c std::clog would be used directly.
+ *
  * Special conditions apply to the following levels:
  * - @ref log::fatal terminates the program when the object is destructed.
  * - @ref log::debug is only supported (i.e. functional) when initially compiled
  *        without @c NDEBUG.
  * - @ref log::trace is only available when explicitly compiled with @c DEBUG.
- * 
+ *
  * */
 /**@defgroup api-core-log-io Output
  * @ingroup api-core-log
  * @brief Log streaming facilities.
- * 
- * 
- * 
+ *
+ *
+ *
  * */
 /**@defgroup api-core-log-details Implementation details
  * @ingroup api-core-log
  * @brief Internal implementation details.
- * 
+ *
  * */
 
 #include <vidre/core/config.hh>
@@ -112,6 +112,7 @@
 #include <regex>
 #endif
 
+#include <cstdio>
 #include <cassert>
 
 namespace vidre {
@@ -230,17 +231,12 @@ namespace vidre {
             /** Output style.
              * */
             struct style {
+                /** Style enumeration.
+                 * */
                 enum type : uint8_t {
                     plain,   ///< Plain, undecorated output.
                     tagged,  ///< As the name suggests (i.e. first line tag, following lines indented).
                     color    ///< Colored output (uses terminal escape sequences).
-                };
-
-                /**@internal The tag structure.
-                 * */
-                struct tag {
-                    message_type prefix;
-                    message_type suffix;
                 };
             };
 
@@ -265,7 +261,6 @@ namespace vidre {
 
             public:
                 /**@internal Add a log stream.
-                 * @see vidre::log::scope<>
                  * */
                 template <typename S>
                 requires std::derived_from<S, stream>
@@ -299,11 +294,15 @@ namespace vidre {
                 stream(style::type sty) noexcept : style_(sty) {}
                 stream(level th, style::type sty) noexcept : threshold_(static_cast<int>(th)), style_(sty) {}
 
-                virtual ~stream() {}
+                virtual ~stream() {
+                    if (chanid_ >= 0)
+                        remove(chanid_);
+                }
 
             protected:
                 int threshold_ = level_default;     ///< Log threshold for this stream.
                 style::type style_ = style::plain;  ///< Output style.
+                int chanid_ = -1;                   ///< Channel ID (if av.).
 
             public:
                 /** Write text to this log stream.
@@ -322,8 +321,50 @@ namespace vidre {
                 friend class vidre::log::trace;
             };
 
-            // FIXME class VIDRE_CORE_VISIBILITY file {
-            // };
+            /** File logger.
+             * */
+            class VIDRE_CORE_VISIBILITY file : public stream {
+            public:
+                file(const std::string_view filename, level th = static_cast<level>(level_default),
+                     style::type sty = style::tagged) noexcept;
+                virtual ~file() {
+                    if (outs_ != nullptr)
+                        ::fclose(outs_);
+                }
+
+            protected:
+                FILE *outs_ = nullptr;
+
+            protected:
+                void header() noexcept;
+
+            public:
+                void put(const message_type &msg) noexcept override {
+                    if (outs_)
+                        fwrite(msg.data(), msg.size(), 1, outs_);
+                }
+            };
+
+            /** Log to buffer.
+             * */
+            class VIDRE_CORE_VISIBILITY string : public stream {
+            public:
+                string(level th = static_cast<level>(level_default), style::type sty = style::color) noexcept;
+
+            protected:
+                std::string buf_ = {};
+
+            public:
+                void put(const message_type &msg) noexcept override {
+                    buf_.append(msg);
+                }
+
+                /** Get buffer content.
+                 * */
+                message_type get() noexcept {
+                    return buf_;
+                }
+            };
 
             ///@}
 
@@ -406,7 +447,7 @@ namespace vidre {
         /** Log trace.
          *
          * Tracing is expensive but can give valuable information about the
-         * program flow. Therefore, 
+         * program flow. Therefore,
          *
          * */
         class VIDRE_CORE_VISIBILITY trace : public handler {
@@ -486,8 +527,6 @@ namespace vidre {
 #else
         using trace = null;
 #endif
-
-        // FIXME scope<>
 
         ///@}
 

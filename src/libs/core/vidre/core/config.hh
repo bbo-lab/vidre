@@ -27,8 +27,6 @@
 #include <vidre/config.hh>
 
 namespace vidre {
-    /** Implementation details.
-     * @ingroup api-core-details */
     namespace detail {}
 }  // namespace vidre
 
@@ -51,7 +49,7 @@ namespace vidre {
  * @see
  *      [dllexport,dllimport](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170)
  * */
-#if not defined(VIDRE_CORE_VISIBILITY)
+#if not defined(VIDRE_CORE_VISIBILITY) or defined(DOXYGEN)
 #define VIDRE_CORE_VISIBILITY VIDRE_API_IMPORT
 #endif
 
