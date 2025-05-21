@@ -336,6 +336,14 @@ namespace vidre {
                 FILE *outs_ = nullptr;
 
             protected:
+                /** Write header.
+                 *
+                 * This is, at the moment of writing:
+                 *
+                 *      [[[=== UTC ===]]]
+                 *
+                 * where "UTC" is the actual ISO 8601 UTC Time.
+                 */
                 void header() noexcept;
 
             public:

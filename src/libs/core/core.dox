@@ -3,7 +3,7 @@
  *
  * The base library provides fundamental features for the VidRe framework.
  * This includes, for example, configuration languages (such as JSON),
- * basic networking, module loading, etc. 
+ * module loading, etc. 
  * 
  * Note, that even so the GUI uses Qt which provides numerous equivalent 
  * abstractions, the recording deamon or service, respectively, is ultimately 
@@ -13,6 +13,7 @@
  * @{
  * @defgroup api-core-exception     Errors and exceptions
  * @defgroup api-core-log           Logging
+ * @defgroup api-core-memory        Memory
  * @defgroup api-core-storage       Storage
  * @defgroup api-core-plugin        Plugins
  * @defgroup api-core-util          Utilities

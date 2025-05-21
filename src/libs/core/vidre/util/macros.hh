@@ -36,7 +36,7 @@
  * @code
  * VIDRE_STRINGIFY(__LINE__)
  * @endcode
- * expands to
+ * will expand to
  * > "__LINE__"
  * @see
  *      VIDRE_STRINGIFY_EXPAND
@@ -48,7 +48,7 @@
  * @code
  * VIDRE_STRINGIFY(__LINE__)
  * @endcode
- * expands to
+ * may expand to
  * > "42"
  * @see
  *      VIDRE_STRINGIFY

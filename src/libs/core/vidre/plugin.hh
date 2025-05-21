@@ -31,8 +31,7 @@
  * This header provides an implementation to declare, load and deal
  * with plugins, specifically but not limited to dynamic modules.
  * It's implementation takes into account, that not all libraries,
- * specifically proprietry software, are and will be distributed along
- * VidRe.
+ * specifically proprietry software, are not distributed along VidRe.
  *
  * @internal
  *
@@ -44,7 +43,7 @@
  *    -> must list, e.g. for proprietry software, were to download to enable the feature
  *  - decide category/directory structure, e.g.
  *    device/
- *        pylon/
+ *        basler/
  *        onsemi/
  *    filter/
  *    endcode/
@@ -59,9 +58,6 @@
 
 namespace vidre {
 
-    /** Plugins.
-     * @ingroup api-core-plugin
-     * */
     namespace plugin {}  // namespace plugin
 
 }  // namespace vidre

@@ -89,6 +89,12 @@ namespace vidre {}
 /** Flag if libuuid is used. */
 #cmakedefine01 VIDRE_HAVE_LIBUUID
 
+/** DevWareX midlib2 was available during compilation. */
+#cmakedefine01 VIDRE_HAVE_MIDLIB2
+
+/** Baser pylon was available during compilation. */
+#cmakedefine01 VIDRE_HAVE_PYLON
+
 /** Using STL's \<format\> (otherwise [fmtlib](https://github.com/fmtlib/fmt)). */
 #cmakedefine01 VIDRE_USE_CPP_LIB_FORMAT
 

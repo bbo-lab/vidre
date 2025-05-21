@@ -62,7 +62,7 @@ namespace vidre {
             // FIXME inline void libclose(handle_type handle) noexcept {}
             // FIXME inline symbol_type libget(handle_type handle, const char *symbol) noexcept {}
             // FIXME inline const char *liberror(handle_type handle); ???
-#elif defined(VIDRE_USING_LIBLOADERAPI)
+#elif defined VIDRE_USING_LIBLOADERAPI
             using handle_type = HMODULE;
 
             enum mode {
@@ -130,6 +130,7 @@ namespace vidre {
              * Another method would be to provide a secondary "analysis module".
              * A third method could be to have two plugins, the first loads the
              * the actual plugin.
+             * @endinternal
              *
              * */
             class VIDRE_CORE_VISIBILITY library {

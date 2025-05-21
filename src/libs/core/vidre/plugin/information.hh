@@ -78,8 +78,8 @@ namespace vidre {
          *
          */
 #define VIDRE_MODULE(...)                                                 \
-    VIDRE_API_MODULE struct vidre::plugin::information VIDRE_MODULE_INFO; \
-    struct vidre::plugin::information VIDRE_MODULE_INFO {                 \
+    VIDRE_API_MODULE struct vidre::plugin::information VIDRE_PLUGIN_INFO; \
+    struct vidre::plugin::information VIDRE_PLUGIN_INFO {                 \
         __VA_ARGS__                                                       \
     }
 
