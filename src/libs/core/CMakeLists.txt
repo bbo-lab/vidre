@@ -7,6 +7,7 @@ vidre_library(vidrecore SHARED
         COMPILE_DEFINITIONS
             PRIVATE 
                 VIDRE_CORE_VISIBILITY=VIDRE_API_EXPORT
+                VIDRE_BINARY_DIR="${VIDRE_BINARY_DIR}"
         COMPILE_FEATURES
             PUBLIC 
                 cxx_std_23
@@ -41,6 +42,7 @@ vidre_library(vidrecore SHARED
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
         vidre/util/version.hh
+        vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/util/json.hh
 )

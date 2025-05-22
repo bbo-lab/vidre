@@ -98,6 +98,11 @@ namespace vidre {}
 /** Using STL's \<format\> (otherwise [fmtlib](https://github.com/fmtlib/fmt)). */
 #cmakedefine01 VIDRE_USE_CPP_LIB_FORMAT
 
+/** Developer build.
+ * This enables some in-build tree functionality which FIXME
+ * */
+#cmakedefine01 VIDRE_DEVELOP
+
 ///@}
 
 #endif // VIDRE_CONFIG_HH
