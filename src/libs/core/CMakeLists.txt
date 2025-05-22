@@ -8,6 +8,7 @@ vidre_library(vidrecore SHARED
             PRIVATE 
                 VIDRE_CORE_VISIBILITY=VIDRE_API_EXPORT
                 VIDRE_BINARY_DIR="${VIDRE_BINARY_DIR}"
+                VIDRE_SOURCE_DIR="${VIDRE_SOURCE_DIR}"
         COMPILE_FEATURES
             PUBLIC 
                 cxx_std_23

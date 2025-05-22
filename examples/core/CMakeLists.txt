@@ -13,3 +13,4 @@ vidre_test(GROUP
 vidre_test(uuid SOURCES uuid.cc)
 vidre_test(log SOURCES log.cc)
 vidre_test(develop SOURCES develop.cc)
+vidre_test(plugin SOURCES plugin.cc)

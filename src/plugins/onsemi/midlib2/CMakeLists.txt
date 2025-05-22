@@ -28,24 +28,44 @@ if(MIDLIB2_LIB)
                 IMPORTED_LOCATION ${MIDLIB2_LIB})
 
         message(STATUS "Using midlib2 (Micron Imaging Device LIBrary, DevWareX SDK, OnSemi).")
-        set(VIDRE_HAVE_MIDLIB2 TRUE CACHE BOOL "DevWareX midlib2 library and includes found")
+        set(Vidre_HAVE_MIDLIB2 TRUE CACHE BOOL "DevWareX midlib2 library and includes found")
     endif()
 endif()
-if(NOT VIDRE_HAVE_MIDLIB2)
-    set(VIDRE_HAVE_MIDLIB2 FALSE CACHE BOOL "DevWareX midlib2 library and includes found")
+if(NOT Vidre_HAVE_MIDLIB2)
+    set(Vidre_HAVE_MIDLIB2 FALSE CACHE BOOL "DevWareX midlib2 library and includes found")
 endif()
 
-if(VIDRE_HAVE_MIDLIB2)
-    vidre_module(devwarex-preload
+if(Vidre_HAVE_MIDLIB2)
+    vidre_module(onsemi-midlib2-preload
         PROPERTIES
             OUTPUT_NAME preload
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/midlib2
+        BUILD
+            COMPILE_DEFINITIONS
+                PRIVATE 
+                    LIBMIDLIB2_NAME=\"libmilib2${vidre_DLL_EXTENSION}\"
+            LINK_LIBRARIES
+                PUBLIC 
+                    Vidre::Core
+        INSTALL
+            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/onsemi/devwarex
+            COMPONENT "runtime"
+        SOURCES
+            preload.cc
+    )
+
+    vidre_module(onsemi-midlib2
+        PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/devwarex
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
                     Vidre::Core
                     devwarex::midlib2
+        INSTALL
+            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/onsemi/devwarex
+            COMPONENT "runtime"
         SOURCES
-            preload.cc
+            midlib2.cc
     )
 endif()

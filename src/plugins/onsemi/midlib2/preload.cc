@@ -21,15 +21,10 @@
  */
 #include <vidre/plugin.hh>
 
-VIDRE_MODULE(                    //
-        .name = "basler/pylon",  //
-        .version = "0.0",        //
-        .organization =
-            {
-                .name = "MPINB",          //
-                .domain = "de.mpg.mpinb"  //
-            },
-        .brief = "Basler Pylon SDK.",  //
-        .category = "device/camera"    //
-);
+using namespace vidre;
 
+VIDRE_API_MODULE void vidre_preload() {
+    plugin::dynamic::library midlib2(LIBMIDLIB2_NAME, plugin::dynamic::library::now);
+    if (not midlib2.isvalid())
+        throw false;
+}

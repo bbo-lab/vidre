@@ -8,4 +8,4 @@ set(Vidre_API_MODULE "extern \"C\" VIDRE_API_EXPORT" CACHE STRING "Module symbol
 set(Vidre_DLL_EXTENSION ".so" CACHE STRING "File extension for dynamically linked libraries.") # TODO
 
 # Developer mode
-set(VIDRE_DEVELOP ON CACHE BOOL "Developer mode")
+set(Vidre_DEVELOP ON CACHE BOOL "Developer mode")

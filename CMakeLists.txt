@@ -10,11 +10,11 @@ if(NOT DEFINED CMAKE_BUILD_TYPE_INIT)
 endif()
 
 set(Vidre_ORGANIZATION_NAME "MPINB")
-set(Vidre_ORGANIZATION_DOMAIN "org.mpg.mpinb")
+set(Vidre_ORGANIZATION_DOMAIN "de.mpg.mpinb")
 
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
     if(WIN32)
-    set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
+        set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
     else()
         set(CMAKE_INSTALL_PREFIX "/opt/${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
     endif()
@@ -51,8 +51,6 @@ if(NOT DEFINED LIBRARY_OUTPUT_PATH)
 endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
 
 include(GNUInstallDirs)
-set(CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/vidre)
-set(CMAKE_INSTALL_CMAKEDIR share/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
 
 include(VidreMacros)
 
@@ -83,6 +81,9 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 endif()
 
 # DEPENDENCIES ################################################################
+# FIXME see github.com/SpontanCombust/cmake-fetchcontent-offline
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+
 include(vidre/deps/boost)
 include(vidre/deps/libfmt)
 include(vidre/deps/json)
@@ -92,14 +93,32 @@ include(vidre/deps/terminal)
 include(vidre/deps/ffmpeg)
 include(vidre/deps/qt)
 
+# PATHS #######################################################################
+set(CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/vidre)
+set(CMAKE_INSTALL_DOCDIR ${CMAKE_INSTALL_DATAROOTDIR}/doc/vidre)
+set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
+
+set(CMAKE_INSTALL_PLUGINDIR ${CMAKE_INSTALL_LIBDIR}/plugins)
+set(CMAKE_INSTALL_SCRIPTDIR ${CMAKE_INSTALL_DATADIR}/scripts)
+
+add_definitions(
+    -DVIDRE_INSTALL_PLUGINDIR=\"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_PLUGINDIR}\"
+    -DVIDRE_INSTALL_SCRIPTDIR=\"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_SCRIPTDIR}\"
+)
+
+add_definitions(
+    -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\"
+    -DPROJECT_BINARY_DIR=\"${PROJECT_BINARY_DIR}\"
+)
+
 # BUILD #######################################################################
 
 add_subdirectory(cmake)
 add_subdirectory(src)
 
 install(EXPORT VidreTargets-${Vidre_RELEASE}
-    COMPONENT "development"
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+    COMPONENT "development"
 )
 
 add_subdirectory(docs)

@@ -23,8 +23,16 @@
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"
-        }
-,
+        },
+        {
+            "name": "example.core.plugin",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.plugin",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
         {
             "name": "test.core.exceptions",
             "type": "cppdbg",
