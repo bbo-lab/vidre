@@ -36,16 +36,16 @@ if(NOT VIDRE_HAVE_MIDLIB2)
 endif()
 
 if(VIDRE_HAVE_MIDLIB2)
-    vidre_module(devwarex-module
+    vidre_module(devwarex-preload
         PROPERTIES
-            OUTPUT_NAME module
-            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/module/onsemi/devwarex
+            OUTPUT_NAME preload
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/devwarex
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
                     Vidre::Core
                     devwarex::midlib2
         SOURCES
-            module.cc
+            preload.cc
     )
 endif()

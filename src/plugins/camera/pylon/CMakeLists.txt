@@ -7,10 +7,10 @@ else()
 endif()
 
 if(VIDRE_HAVE_PYLON)
-    vidre_module(basler-pylon-module
+    vidre_module(pylon-preload
         PROPERTIES
-            OUTPUT_NAME module
-            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/module/basler/pylon
+            OUTPUT_NAME preload
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/basler/pylon
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
@@ -19,7 +19,7 @@ if(VIDRE_HAVE_PYLON)
                     pylon::PylonBase
                     # pylon::PylonUtility
         SOURCES
-            module.cc
+            preload.cc
     )
 endif()
 
