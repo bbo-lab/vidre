@@ -45,6 +45,7 @@ void level1() {
 }
 
 void tracing() {
+#if defined(DEBUG)
     {
         log::io::file trf("/tmp/trace.log", log::level::trace);
 
@@ -62,6 +63,7 @@ void tracing() {
         level1();
     }
     log::notice() << "done tracing\n";
+#endif
 }
 //! [tracing]
 

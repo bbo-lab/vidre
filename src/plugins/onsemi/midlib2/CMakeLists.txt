@@ -36,6 +36,42 @@ if(NOT Vidre_HAVE_MIDLIB2)
 endif()
 
 if(Vidre_HAVE_MIDLIB2)
+    vidre_library(vidredev-midlib2 SHARED
+        ALIAS Vidre::Device::MIDlib2
+        EXPORT VidreTargets-${Vidre_RELEASE}
+        VERSION ${Vidre_VERSION}
+        RELEASE ${Vidre_RELEASE}
+        BUILD
+            COMPILE_FEATURES
+                PUBLIC 
+                    cxx_std_23
+            COMPILE_DEFINITIONS
+                PRIVATE 
+                    VIDRE_MIDLIB2_VISIBILITY=VIDRE_API_EXPORT
+            COMPILE_OPTIONS
+                PRIVATE
+                    -Wno-pragma-pack
+            INCLUDE_DIRECTORIES
+                PUBLIC
+                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                    ${MIDLIB2_INC}
+            LINK_LIBRARIES
+                PRIVATE
+                    Boost::exception
+                    Boost::system
+                PUBLIC
+                    Vidre::Core
+                    ${MIDLIB2_LIB}
+        INSTALL 
+            LIBRARY COMPONENT runtime
+            ARCHIVE COMPONENT development
+            PUBLIC_HEADER COMPONENT development        
+        SOURCES
+            vidre/onsemi/midlib2.hh vidre/onsemi/midlib2.cc
+            vidre/onsemi/midlib2/config.hh
+            vidre/onsemi/midlib2/types.hh
+    )
+
     vidre_module(onsemi-midlib2-preload
         PROPERTIES
             OUTPUT_NAME preload

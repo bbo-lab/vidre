@@ -26,6 +26,8 @@
 
 #include <vidre/config.hh>
 
+#include <cstdint>
+
 namespace vidre {
     namespace detail {}
 }  // namespace vidre

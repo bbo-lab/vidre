@@ -34,6 +34,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.playground.aptina",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.playground.aptina",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "test.core.exceptions",
             "type": "cppdbg",
             "request": "launch",

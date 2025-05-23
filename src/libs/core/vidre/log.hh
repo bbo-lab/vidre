@@ -533,7 +533,7 @@ namespace vidre {
             }
         };
 #else
-        using trace = null;
+        class VIDRE_CORE_VISIBILITY trace : public null {};
 #endif
 
         ///@}

@@ -1,6 +1,9 @@
 vidre_test(GROUP 
     NAME playground
     BUILD
+        COMPILE_FEATURES
+            PUBLIC 
+                cxx_std_23    
         COMPILE_DEFINITIONS
             PRIVATE
                 Vidre_CURRENT_BINARY_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"
@@ -24,5 +27,19 @@ if(FFmpeg_FOUND)
                     ${FFMPEG_LIBRARIES}
         
         SOURCES decode_video.cc
+    )
+endif()
+
+if(Vidre_HAVE_MIDLIB2)
+    vidre_test(aptina EXCLUDE
+        BUILD
+            COMPILE_OPTIONS
+                PRIVATE
+                    -Wno-pragma-pack
+            LINK_LIBRARIES 
+                PUBLIC
+                    Vidre::Device::MIDlib2
+                    /opt/Aptina_Imaging/lib/libapbase.so
+        SOURCES aptina.cc
     )
 endif()
