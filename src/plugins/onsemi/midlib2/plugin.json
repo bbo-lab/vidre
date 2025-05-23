@@ -1,0 +1,11 @@
+{
+    "version": "0.0",
+    "name": "onsemi/midlib2",
+    "description": {},
+    "device": {},
+    "load": {
+        "type": "dll",
+        "file": "preload",
+        "when": "always"
+    }
+}
