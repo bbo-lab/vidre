@@ -142,6 +142,11 @@ namespace vidre {
         template <typename T>
         concept convertible_to_message_type = std::is_convertible_v<T, message_type>;
 
+        template <typename Stream, typename T>
+        concept functor = requires (Stream &outs, T &&t) {
+            { t.operator()(outs) } -> std::same_as<Stream &>;
+        };
+
         /** Log levels.
          * @ingroup api-core-log-if */
         enum class level : int {
@@ -196,6 +201,12 @@ namespace vidre {
             handler &operator<<(const vidre::log::message_type &msg) noexcept {
                 emit(msg);
                 return *this;
+            }
+
+            template<typename T>
+            requires functor<handler,T>
+            handler &operator<<(T &&fn) noexcept {
+                return fn(*this);
             }
 
             template <typename V>
