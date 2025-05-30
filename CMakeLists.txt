@@ -20,6 +20,8 @@ set(CMAKE_CXX_EXTENSIONS ON)
 # endif()
 # endif()
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 # set(CMAKE_USER_MAKE_RULES_OVERRIDE "VidreInitFlags.cmake")
 if(NOT DEFINED PROJECT_NAME)
     set(Vidre_IS_SUBPROJECT OFF)
@@ -128,6 +130,13 @@ if(pylon_FOUND)
     set(PYLON_ENABLED ${pylon_FOUND})
     message(STATUS "Using pylon SDK (Basler AG)")
 endif()
+
+find_package(Aptina REQUIRED)
+if (APTINA_FOUND)
+    set(APTINA_ENABLED ${APTINA_FOUND})
+    message(STATUS "USING Aptina")
+endif()
+
 
 # DevWareX
 # find_library(MIDLIB2_LIB
