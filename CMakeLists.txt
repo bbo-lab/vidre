@@ -81,8 +81,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 endif()
 
 # DEPENDENCIES ################################################################
-# FIXME see github.com/SpontanCombust/cmake-fetchcontent-offline
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+include(VidreFetchContent)
 
 include(vidre/deps/boost)
 include(vidre/deps/libfmt)
