@@ -1,8 +1,13 @@
 if(NOT APTINA_DIR)
-    set(APTINA_DIR "C:/Aptina Imaging" CACHE PATH)
+    set(APTINA_DIR "C:/Aptina Imaging")
 endif()
 
 set(_LIB_NAME "apbase")
+
+message(STATUS "APTINA_DIR: ${APTINA_DIR}")
+message(STATUS "Looking for apbase.h in ${APTINA_DIR}/include")
+message(STATUS "Looking for apbase library in ${APTINA_DIR}/lib")
+
 
 find_path(APTINA_INCLUDE_DIR apbase.h PATHS "${APTINA_DIR}/include")
 

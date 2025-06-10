@@ -131,7 +131,7 @@ if(pylon_FOUND)
     message(STATUS "Using pylon SDK (Basler AG)")
 endif()
 
-find_package(Aptina REQUIRED)
+find_package(APTINA)
 if (APTINA_FOUND)
     set(APTINA_ENABLED ${APTINA_FOUND})
     message(STATUS "USING Aptina")
