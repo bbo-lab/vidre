@@ -39,7 +39,13 @@ namespace vidre {
         uint32_t frameBytesOnDisk;
         uint32_t ROI; // ?
         uint32_t IFD; // ?
-        // further comes frame ?
+
+        uint32_t bitsPerPixel;
+        uint32_t width;
+        uint32_t height;
+        /*
+        tags
+        */
 
         // impl specific
         uint64_t frameCount = 0;
