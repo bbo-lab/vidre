@@ -8,7 +8,6 @@ set(public_headers
     ../include/vidre/storage.hpp
     ../include/vidre/runtime.hpp
     ../include/vidre/pylon_camera.hpp
-    ../include/vidre/aptina_camera.hpp
     ../include/vidre/dummy_camera.hpp
     ../include/vidre/shared_frame_buffer_controller.hpp
     ../include/vidre/shared_frame_header.hpp

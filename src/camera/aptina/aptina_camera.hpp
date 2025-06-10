@@ -1,5 +1,5 @@
 #pragma once
-#include "camera.hpp"
+#include "vidre/camera.hpp"
 
 #include <thread>
 
@@ -55,7 +55,7 @@ namespace vidre {
         std::atomic<SharedFrameHeader *> latestFrame;
 
         // -------- Pylon specific --------
-        ShrBufferFactory shrBufferFactory;
+        // ShrBufferFactory shrBufferFactory;
 
         int64_t retrievedFramesNumber = 0;
         // --------------------------------

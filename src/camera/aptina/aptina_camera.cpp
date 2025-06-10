@@ -1,4 +1,4 @@
-#include "vidre/aptina_camera.hpp"
+#include "aptina_camera.hpp"
 
 namespace vidre {
     AptinaCamera::AptinaCamera() : running(false), armed(false) {}
@@ -85,9 +85,11 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
+        return true;
     }
 
     bool AptinaCamera::SaveConfiguration(std::string filepath) {
+        return true;
     }
 
     void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
