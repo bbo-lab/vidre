@@ -7,11 +7,14 @@ namespace vidre {
     Buffer::Buffer(const Config& config) 
     : _nextFrameToPop(0), _bufferSize(config.maxNumBuffer), _previouslyPopedFrame(0)
     {
+        // std::cout << config.serialNumber << std::endl;
         boost::interprocess::shared_memory_object::remove(config.serialNumber.c_str());
-        
-        size_t capacity = (sizeof(SharedFrameHeader) + config.width * config.height) * 
-                          (_bufferSize + 1);
 
+        // std::cout << config.width << " " << config.height << " " << _bufferSize << std::endl;
+        
+        size_t capacity = (sizeof(SharedFrameHeader) + config.frameBytes) * 
+                          (_bufferSize + 1);
+        // std::cout <<capacity << std::endl;
         _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
             boost::interprocess::create_only, config.serialNumber.c_str(), capacity);
 
@@ -27,12 +30,19 @@ namespace vidre {
         }
 
         vidre::SharedFrameHeader* result = static_cast<vidre::SharedFrameHeader *>(buffer_ptr);
+        if (result == nullptr) {
+            return nullptr;
+        }
+        
+        //std::cout << (result->frameID == 0 ? "" : "AGSDG") << std::endl;
+
         if (result == nullptr || result->frameID == 0 || _nextFrameToPop >= result->frameID) {
             return nullptr;
         }
         
         if (result->frameID > _previouslyPopedFrame + 1) {
-            std::cout << "WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+            std::cout << result->frameID << " " << _previouslyPopedFrame + 1;
+            std::cout << " WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
         }
         
         _previouslyPopedFrame = result->frameID;

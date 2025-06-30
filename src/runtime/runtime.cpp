@@ -49,6 +49,7 @@ namespace vidre
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate =  _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
+        cameraConfig.frameBytes = _camera->GetFrameBytes();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
@@ -58,6 +59,7 @@ namespace vidre
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
+        std::cout << "S1" << std::endl;
         if (_camera != nullptr) {
             std::cout << "Camera is set already \n";
             return;
@@ -69,9 +71,11 @@ namespace vidre
         }
 
         _camera = std::move(camera);
+        std::cout << "S2" << std::endl;
     }
 
     void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format) {
+        std::cout << "c1" << std::endl;
         if (_storage != nullptr) {
             std::cout << "Storage is created already \n";
             return;
@@ -90,12 +94,17 @@ namespace vidre
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate = _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
+        cameraConfig.frameBytes = _camera->GetFrameBytes();
 
+        std::cout << "c3" << std::endl;
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
+        std::cout << "c4" << std::endl;
 
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
+        std::cout << "c5" << std::endl;
 
         _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
+        std::cout << "c2" << std::endl;
     }
 
 

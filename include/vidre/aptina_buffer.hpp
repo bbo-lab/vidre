@@ -5,6 +5,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include "shared_frame_header.hpp"
+#include <iostream>
 
 class AptinaBuffer  {
 public:
@@ -21,7 +22,6 @@ public:
 
     void AllocateBuffer(size_t bufferSize)  {
         ++m_lastBufferContext;
-
         void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
         auto *pCreatedBuffer =
             (void *)((vidre::SharedFrameHeader *)(allocatedMemory) + 1);
@@ -33,6 +33,7 @@ public:
         
         shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
     }
+
 
     void* CurrentBuffer(unsigned int buffer_num) {
         auto buffer_idx = ptr_counter % buffer_num;

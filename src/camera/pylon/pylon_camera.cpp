@@ -159,6 +159,10 @@ namespace vidre {
         return camera.MaxNumBuffer.GetValue();
     }
 
+    unsigned int PylonCamera::GetFrameBytes() {
+        return GetFrameWidth() * GetFrameHeight();
+    }
+
     double PylonCamera::GetFrameRate() {
         Pylon::CFloatParameter frameRate(GetGenAPINodeMap(), "AcquisitionFrameRate");
 

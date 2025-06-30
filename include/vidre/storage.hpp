@@ -24,6 +24,7 @@ namespace vidre {
         size_t paddingX;
         double frameRate;
         std::string serialNumber;
+        uint32_t frameBytes;
     };
 
     class Storage {

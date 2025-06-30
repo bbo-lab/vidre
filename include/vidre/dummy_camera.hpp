@@ -65,9 +65,13 @@ namespace vidre {
         virtual unsigned int GetMaxNumBuffer() {
             return 1;
         };
+        virtual unsigned int GetFrameBytes() {
+            return 1;
+        };
         virtual double GetFrameRate() {
             return 1;
         };
+
         virtual std::string GetSerialNumber()
         {
             return "";

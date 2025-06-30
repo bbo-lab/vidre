@@ -20,9 +20,16 @@ namespace vidre {
                 std::chrono::system_clock::now() - vidre::StartTime).count();
 
             
-            SharedFrameHeader *result = (SharedFrameHeader *)(current_ptr) - 1;
+            SharedFrameHeader *result = (SharedFrameHeader *)(current_ptr);
             
-            result->frameID = ap_GetFrameData(_handle, "frameNumber");
+            
+
+            // TODO: 
+            // auto fid = ap_GetFrameData(_handle, "frameNumber");
+            // std::cout << fid << std::endl;
+            // result->frameID = fid;
+
+            result->frameID = retrievedFramesNumber;
             result->timeStamp = ap_GetFrameData(_handle, "frameTime");
             result->computerTimeStamp = computerTimeStamp;
 
@@ -36,7 +43,10 @@ namespace vidre {
     }
 
     bool AptinaCamera::Init(std::string serial) {
+        _serial = serial;
+        std::cout << "H1" << std::endl;
         _handle = ap_Create(0);
+        std::cout << "H2" << std::endl;
         return _handle != nullptr;
     }
 
@@ -65,11 +75,11 @@ namespace vidre {
     }
 
     unsigned int AptinaCamera::GetFrameWidth() {
-       return 0;
+       return _w;
     }
 
     unsigned int AptinaCamera::GetFrameHeight() {
-        return 0;
+        return _h;
     }
 
     unsigned int AptinaCamera::GetFrameOffsetX() {
@@ -83,6 +93,10 @@ namespace vidre {
     unsigned int AptinaCamera::GetMaxNumBuffer() {
         return _buffer_num;
     }
+    unsigned int AptinaCamera::GetFrameBytes() {
+        return _buffer_size;
+    }
+
 
     double AptinaCamera::GetFrameRate() {
         return 0;
@@ -90,7 +104,7 @@ namespace vidre {
 
     std::string AptinaCamera::GetSerialNumber()
     {
-        return "";
+        return _serial;
     }
 
     void AptinaCamera::SetFrameWidth(unsigned int newFrameWidth) {
@@ -116,7 +130,8 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
-        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "Reset");
+        std::cout <<"L1"<< std::endl;
+        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
 
         if (result != AP_INI_SUCCESS) {
             return false;
@@ -125,6 +140,7 @@ namespace vidre {
         ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
 
         _buffer_size = ap_GrabFrame(_handle, nullptr, 0);
+        std::cout <<"L2"<< std::endl;
     }
 
     bool AptinaCamera::SaveConfiguration(std::string filepath) {
@@ -133,10 +149,16 @@ namespace vidre {
 
     void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
+        std::cout << "H3" << std::endl;
         _buffer.SetSharedMemory(sharedMemory, ptrs, memory_name);
-        
+        std::cout << "H5" << std::endl;
+        std:: cout << ptrs->size() << std::endl;
+
+        std::cout << _buffer_size << std::endl;
+
         for (int i = 0; i < _buffer_num; ++i) {
             _buffer.AllocateBuffer(_buffer_size);
         }
+        std::cout << "H4" << std::endl;
     }
 }  // namespace vidre
