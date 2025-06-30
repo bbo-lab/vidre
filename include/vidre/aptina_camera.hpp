@@ -1,5 +1,6 @@
 #pragma once
 #include "vidre/camera.hpp"
+#include "vidre/aptina_buffer.hpp"
 
 #include <thread>
 
@@ -58,8 +59,9 @@ namespace vidre {
 
         int64_t retrievedFramesNumber = 0;
 
-        /// aptina_buffer
+        AptinaBuffer _buffer;
         unsigned int _buffer_size = 0;
+        unsigned int _buffer_num = 500;
 
         unsigned int _w;
         unsigned int _h;

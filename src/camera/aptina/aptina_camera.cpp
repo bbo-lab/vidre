@@ -1,5 +1,7 @@
 #include "vidre/aptina_camera.hpp"
 
+#include <iostream>
+
 namespace vidre {
     AptinaCamera::AptinaCamera() : running(false), armed(false) , _handle(nullptr) {}
     AptinaCamera::~AptinaCamera() {
@@ -7,6 +9,26 @@ namespace vidre {
     }
 
     void AptinaCamera::run() {
+        running.store(true);
+        
+        while (running.load()) {
+            void* current_ptr = _buffer.CurrentBuffer(_buffer_num);
+
+            ap_GrabFrame(_handle, static_cast<uint8_t*>(current_ptr), _buffer_size);
+            
+            auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now() - vidre::StartTime).count();
+
+            
+            SharedFrameHeader *result = (SharedFrameHeader *)(current_ptr) - 1;
+            
+            result->frameID = ap_GetFrameData(_handle, "frameNumber");
+            result->timeStamp = ap_GetFrameData(_handle, "frameTime");
+            result->computerTimeStamp = computerTimeStamp;
+
+            retrievedFramesNumber++;
+        }
+        std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
     }
 
     void AptinaCamera::Init() {
@@ -23,8 +45,12 @@ namespace vidre {
     void AptinaCamera::Disarm() {
     }
     void AptinaCamera::Start() {
+        grabber = std::thread(&AptinaCamera::run, this);
     }
     void AptinaCamera::Stop() {
+        running.store(false);
+        if (grabber.joinable())
+            grabber.join();
     }
 
     const SharedFrameHeader* AptinaCamera::RetrieveLatestFrame() {
@@ -55,7 +81,7 @@ namespace vidre {
     }
 
     unsigned int AptinaCamera::GetMaxNumBuffer() {
-        return 0;
+        return _buffer_num;
     }
 
     double AptinaCamera::GetFrameRate() {
@@ -107,5 +133,10 @@ namespace vidre {
 
     void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
+        _buffer.SetSharedMemory(sharedMemory, ptrs, memory_name);
+        
+        for (int i = 0; i < _buffer_num; ++i) {
+            _buffer.AllocateBuffer(_buffer_size);
+        }
     }
 }  // namespace vidre

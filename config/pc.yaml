@@ -42,3 +42,14 @@ cam3:
 #     type: storage
 #     output_file: G:/yamlsaving/pylon4.ccv
 #   trigger_in: 3
+
+aptina1:
+  type: camera
+  vendor: aptina
+  serial: 123
+  config_file: ../../../vidre/MT9V024-REV4.ini
+  is_config_local: true
+  description: For monitoring.
+  storage:
+    type: storage
+    output_file: H:/yamlsaving/aptin1.ccv
