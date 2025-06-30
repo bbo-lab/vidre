@@ -45,6 +45,8 @@ namespace vidre {
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
     private:
+        AP_HANDLE _handle;
+        
         void run();
 
         std::thread grabber;
@@ -54,10 +56,12 @@ namespace vidre {
 
         std::atomic<SharedFrameHeader *> latestFrame;
 
-        // -------- Pylon specific --------
-        // ShrBufferFactory shrBufferFactory;
-
         int64_t retrievedFramesNumber = 0;
-        // --------------------------------
+
+        /// aptina_buffer
+        unsigned int _buffer_size = 0;
+
+        unsigned int _w;
+        unsigned int _h;
     };
 }  // namespace vidre

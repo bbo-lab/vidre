@@ -1,18 +1,23 @@
-#include "aptina_camera.hpp"
+#include "vidre/aptina_camera.hpp"
 
 namespace vidre {
-    AptinaCamera::AptinaCamera() : running(false), armed(false) {}
+    AptinaCamera::AptinaCamera() : running(false), armed(false) , _handle(nullptr) {}
     AptinaCamera::~AptinaCamera() {
+        ap_Finalize();
     }
 
     void AptinaCamera::run() {
     }
 
     void AptinaCamera::Init() {
+        _handle = ap_Create(0);
     }
+
     bool AptinaCamera::Init(std::string serial) {
-        return true;
+        _handle = ap_Create(0);
+        return _handle != nullptr;
     }
+
     void AptinaCamera::Arm() {
     }
     void AptinaCamera::Disarm() {
@@ -85,7 +90,15 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
-        return true;
+        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "Reset");
+
+        if (result != AP_INI_SUCCESS) {
+            return false;
+        }
+
+        ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
+
+        _buffer_size = ap_GrabFrame(_handle, nullptr, 0);
     }
 
     bool AptinaCamera::SaveConfiguration(std::string filepath) {

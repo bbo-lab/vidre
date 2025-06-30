@@ -16,6 +16,8 @@ set(public_headers
     ../include/vidre/presenter.hpp
     ../include/vidre/header.hpp
     ../include/vidre/buffer.hpp
+    ../include/vidre/aptina_camera.hpp
+    ../include/vidre/aptina_buffer.hpp
 )
 
 source_group(public FILES ${public_headers})

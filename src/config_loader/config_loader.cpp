@@ -13,9 +13,13 @@ namespace vidre {
         else if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
             camera = std::make_unique<vidre::PylonCamera>();
         }
-        else
+        else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0) {
+            camera = std::make_unique<vidre::AptinaCamera>();
+        }
+        else {
             return nullptr;
-
+        }
+        
         if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
             return nullptr;
