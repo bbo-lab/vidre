@@ -1,4 +1,4 @@
-vidre_library(vidreffmpeg SHARED
+vidre_library(vidre-ffmpeg SHARED
     ALIAS Vidre::FFmpeg
     EXPORT VidreTargets-${Vidre_RELEASE}
     VERSION ${Vidre_VERSION}
@@ -38,5 +38,3 @@ vidre_library(vidreffmpeg SHARED
         vidre/ffmpeg/codec.hh
             vidre/ffmpeg/codec/packet.hh
 )
-
-message("FFMPEG_LIBRARIES=${FFMPEG_LIBRARIES}")

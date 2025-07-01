@@ -10,7 +10,7 @@ struct show_memory {
 
     template <typename Stream>
     Stream &operator()(Stream &outs) const noexcept {
-        outs << std::format("{:8}", n / 1024) << " kiB";
+        outs << std::format("{:8}", n / (1024*1024)) << " MiB";
         return outs;
     }
 };

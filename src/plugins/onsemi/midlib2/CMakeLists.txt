@@ -36,7 +36,7 @@ if(NOT Vidre_HAVE_MIDLIB2)
 endif()
 
 if(Vidre_HAVE_MIDLIB2)
-    vidre_library(vidredev-midlib2 SHARED
+    vidre_library(vidre-midlib2 SHARED
         ALIAS Vidre::Device::MIDlib2
         EXPORT VidreTargets-${Vidre_RELEASE}
         VERSION ${Vidre_VERSION}
