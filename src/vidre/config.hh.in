@@ -29,7 +29,6 @@
 namespace vidre {}
 
 /**@addtogroup api-config
- * @brief Compile-time configuration
  * @details
  * @fileinfo
  * 
