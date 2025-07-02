@@ -22,6 +22,7 @@ vidre_library(vidrecore SHARED
                 Boost::exception
                 Boost::system
             PUBLIC
+                DeLua::Library::CXX
                 ${UUIDLIB}
                 ${UNITSLIB}
                 # ${TERMINALLIB}
