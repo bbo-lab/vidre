@@ -12,17 +12,16 @@ namespace vidre {
         running.store(true);
         
         while (running.load()) {
-            void* current_ptr = _buffer.CurrentBuffer(_buffer_num);
+            auto* result = _buffer.CurrentBuffer(_buffer_num);
 
-            ap_GrabFrame(_handle, static_cast<uint8_t*>(current_ptr + 1), _buffer_size);
+            ap_GrabFrame(_handle, (uint8_t*)(result + 1), _buffer_size);
+            ++retrievedFramesNumber;
             
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now() - vidre::StartTime).count();
+                std::chrono::system_clock::now() - vidre::StartTime
+            ).count();
 
             
-            SharedFrameHeader *result = (SharedFrameHeader *)(current_ptr);
-            
-
             // TODO: 
             // auto fid = ap_GetFrameData(_handle, "frameNumber");
             // std::cout << fid << std::endl;
@@ -31,8 +30,6 @@ namespace vidre {
             result->frameID = retrievedFramesNumber;
             result->timeStamp = ap_GetFrameData(_handle, "frameTime");
             result->computerTimeStamp = computerTimeStamp;
-
-            retrievedFramesNumber++;
         }
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
     }
@@ -153,7 +150,7 @@ namespace vidre {
         std::cout << "H5" << std::endl;
         std:: cout << ptrs->size() << std::endl;
 
-        std::cout << _buffer_size << std::endl;
+        std::cout << "BS "<<_buffer_size << std::endl;
 
         for (int i = 0; i < _buffer_num; ++i) {
             _buffer.AllocateBuffer(_buffer_size);

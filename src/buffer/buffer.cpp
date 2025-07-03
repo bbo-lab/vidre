@@ -33,15 +33,11 @@ namespace vidre {
         if (result == nullptr) {
             return nullptr;
         }
-        
-        //std::cout << (result->frameID == 0 ? "" : "AGSDG") << std::endl;
-
         if (result == nullptr || result->frameID == 0 || _nextFrameToPop >= result->frameID) {
             return nullptr;
         }
         
         if (result->frameID > _previouslyPopedFrame + 1) {
-            std::cout << result->frameID << " " << _previouslyPopedFrame + 1;
             std::cout << " WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
         }
         

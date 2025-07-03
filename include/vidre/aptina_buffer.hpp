@@ -7,48 +7,49 @@
 #include "shared_frame_header.hpp"
 #include <iostream>
 
-class AptinaBuffer  {
-public:
-    AptinaBuffer() : m_lastBufferContext(-1) {}
+namespace vidre {
+    class AptinaBuffer {
+    public:
+        AptinaBuffer() : m_lastBufferContext(-1) {}
 
-    ~AptinaBuffer() {} // todo
+        ~AptinaBuffer() {}  // todo
 
-
-    void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name) {
-        shared_memory_ptrs = ptrs;
-        memoryName = memory_name;
-        shared_memory = sharedMemory;
-    }
-
-    void AllocateBuffer(size_t bufferSize)  {
-        ++m_lastBufferContext;
-        void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
-        auto *pCreatedBuffer =
-            (void *)((vidre::SharedFrameHeader *)(allocatedMemory) + 1);
-        
-        uint8_t* bytePointer = (uint8_t *)(pCreatedBuffer);
-        for (size_t i = 0; i < bufferSize; ++i) {
-            bytePointer[i] = 0;
+        void SetSharedMemory(boost::interprocess::managed_shared_memory *sharedMemory, std::vector<void *> *ptrs,
+                             std::string memory_name) {
+            shared_memory_ptrs = ptrs;
+            memoryName = memory_name;
+            shared_memory = sharedMemory;
         }
-        
-        shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
-    }
 
+        void AllocateBuffer(size_t bufferSize) {
+            ++m_lastBufferContext;
+            void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
+            
+            auto* header = static_cast<vidre::SharedFrameHeader*>(allocatedMemory);
 
-    void* CurrentBuffer(unsigned int buffer_num) {
-        auto buffer_idx = ptr_counter % buffer_num;
+            auto *buffer_data = static_cast<uint8_t *>(static_cast<void *>(header + 1));
+            for (size_t i = 0; i < bufferSize; ++i) {
+                buffer_data[i] = 0;
+            }
 
-        void* buffer_ptr = shared_memory_ptrs->at(buffer_idx);
+            shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
+        }
 
-        ptr_counter++;
+        SharedFrameHeader* CurrentBuffer(unsigned int buffer_num) {
+            auto buffer_idx = ptr_counter % buffer_num;
 
-        return buffer_ptr;
-    }
+            auto* buffer_ptr = static_cast<vidre::SharedFrameHeader*>(shared_memory_ptrs->at(buffer_idx));
 
-protected:
-    std::string memoryName;
-    std::vector<void *>* shared_memory_ptrs;
-    boost::interprocess::managed_shared_memory* shared_memory;
-    int64_t m_lastBufferContext;
-    int64_t ptr_counter = 0;
-};
+            ptr_counter++;
+
+            return buffer_ptr;
+        }
+
+    protected:
+        std::string memoryName;
+        std::vector<void *> *shared_memory_ptrs;
+        boost::interprocess::managed_shared_memory *shared_memory;
+        int64_t m_lastBufferContext;
+        int64_t ptr_counter = 0;
+    };
+}  // namespace vidre
