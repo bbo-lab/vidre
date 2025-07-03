@@ -14,14 +14,13 @@ namespace vidre {
         while (running.load()) {
             void* current_ptr = _buffer.CurrentBuffer(_buffer_num);
 
-            ap_GrabFrame(_handle, static_cast<uint8_t*>(current_ptr), _buffer_size);
+            ap_GrabFrame(_handle, static_cast<uint8_t*>(current_ptr + 1), _buffer_size);
             
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime).count();
 
             
             SharedFrameHeader *result = (SharedFrameHeader *)(current_ptr);
-            
             
 
             // TODO: 
