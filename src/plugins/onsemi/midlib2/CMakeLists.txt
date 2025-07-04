@@ -28,14 +28,14 @@ if(MIDLIB2_LIB)
                 IMPORTED_LOCATION ${MIDLIB2_LIB})
 
         message(STATUS "Using midlib2 (Micron Imaging Device LIBrary, DevWareX SDK, OnSemi).")
-        set(Vidre_HAVE_MIDLIB2 TRUE CACHE BOOL "DevWareX midlib2 library and includes found")
+        set(VIDRE_HAVE_MIDLIB2 TRUE CACHE BOOL "DevWareX midlib2 library and includes found")
     endif()
 endif()
-if(NOT Vidre_HAVE_MIDLIB2)
-    set(Vidre_HAVE_MIDLIB2 FALSE CACHE BOOL "DevWareX midlib2 library and includes found")
+if(NOT VIDRE_HAVE_MIDLIB2)
+    set(VIDRE_HAVE_MIDLIB2 FALSE CACHE BOOL "DevWareX midlib2 library and includes found")
 endif()
 
-if(Vidre_HAVE_MIDLIB2)
+if(VIDRE_HAVE_MIDLIB2)
     vidre_library(vidre-midlib2 SHARED
         ALIAS Vidre::Device::MIDlib2
         EXPORT VidreTargets-${Vidre_RELEASE}

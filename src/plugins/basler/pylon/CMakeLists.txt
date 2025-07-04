@@ -1,12 +1,12 @@
 find_package(PYLON 8 QUIET)
 if(PYLON_FOUND)
     message(STATUS "Using pylon SDK (Basler AG)")
-    set(Vidre_HAVE_PYLON TRUE CACHE BOOL "Basler pylon library and includes found")
+    set(VIDRE_HAVE_PYLON TRUE CACHE BOOL "Basler pylon library and includes found")
 else()
-    set(Vidre_HAVE_PYLON FALSE CACHE BOOL "Basler pylon library and includes found")
+    set(VIDRE_HAVE_PYLON FALSE CACHE BOOL "Basler pylon library and includes found")
 endif()
 
-if(Vidre_HAVE_PYLON)
+if(VIDRE_HAVE_PYLON)
     vidre_module(pylon-preload
         PROPERTIES
             OUTPUT_NAME preload

@@ -30,7 +30,7 @@ if(FFmpeg_FOUND)
     )
 endif()
 
-if(Vidre_HAVE_MIDLIB2)
+if(VIDRE_HAVE_MIDLIB2)
     vidre_test(aptina EXCLUDE
         BUILD
             COMPILE_OPTIONS
