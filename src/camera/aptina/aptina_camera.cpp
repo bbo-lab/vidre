@@ -12,9 +12,9 @@ namespace vidre {
         running.store(true);
         
         while (running.load()) {
-            auto* result = _buffer.CurrentBuffer(_buffer_num);
+            auto [buffer, header] = _buffer.CurrentBuffer(_buffer_num);
 
-            ap_GrabFrame(_handle, (uint8_t*)(result + 1), _buffer_size_min);
+            ap_GrabFrame(_handle, buffer, _buffer_size_min);
             
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime
@@ -34,9 +34,9 @@ namespace vidre {
             // std::cout << fid << std::endl;
             // result->frameID = fid;
 
-            result->frameID = retrievedFramesNumber;
-            result->timeStamp = ap_GetFrameData(_handle, "frameTime");
-            result->computerTimeStamp = computerTimeStamp;
+            header->frameID = retrievedFramesNumber;
+            header->timeStamp = ap_GetFrameData(_handle, "frameTime");
+            header->computerTimeStamp = computerTimeStamp;
         }
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
     }

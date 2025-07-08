@@ -27,7 +27,7 @@ namespace vidre {
             
             auto* header = static_cast<vidre::SharedFrameHeader*>(allocatedMemory);
 
-            auto *buffer_data = static_cast<uint8_t *>(static_cast<void *>(header + 1));
+            auto *buffer_data = static_cast<uint8_t*>(allocatedMemory) + sizeof(vidre::SharedFrameHeader);
             for (size_t i = 0; i < bufferSize; ++i) {
                 buffer_data[i] = 0;
             }
@@ -35,14 +35,14 @@ namespace vidre {
             shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
         }
 
-        SharedFrameHeader* CurrentBuffer(unsigned int buffer_num) {
+        std::pair<uint8_t*, SharedFrameHeader*> CurrentBuffer(unsigned int buffer_num) {
             auto buffer_idx = ptr_counter % buffer_num;
 
-            auto* buffer_ptr = static_cast<vidre::SharedFrameHeader*>(shared_memory_ptrs->at(buffer_idx));
+            auto* buffer_ptr = shared_memory_ptrs->at(buffer_idx);
 
             ptr_counter++;
 
-            return buffer_ptr;
+            return {static_cast<uint8_t*>(buffer_ptr) + sizeof(vidre::SharedFrameHeader),  static_cast<vidre::SharedFrameHeader*>(buffer_ptr)};
         }
 
     protected:

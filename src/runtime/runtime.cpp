@@ -114,16 +114,16 @@ namespace vidre
         }
 
         while (_camera->IsRunning()) {
-            const auto* result = _buffer->pop();
+            const auto [result, header] = _buffer->pop();
             if (result == nullptr) {
                 continue;
             }
            
-            _storage->appendFrame(static_cast<const void *>(result + 1));
-            _storage->appendTail(result->frameID, result->timeStamp, result->computerTimeStamp);
+            _storage->appendFrame(static_cast<const void *>(result));
+            _storage->appendTail(header->frameID, header->timeStamp, header->computerTimeStamp);
 
             if (_saveTIFF) {
-                _storage->save(static_cast<const void *>(result + 1), result->frameID);
+                _storage->save(static_cast<const void *>(result), header->frameID);
             }
         }
 
