@@ -14,12 +14,19 @@ namespace vidre {
         while (running.load()) {
             auto* result = _buffer.CurrentBuffer(_buffer_num);
 
-            ap_GrabFrame(_handle, (uint8_t*)(result + 1), _buffer_size);
-            ++retrievedFramesNumber;
+            ap_GrabFrame(_handle, (uint8_t*)(result + 1), _buffer_size_min);
             
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime
             ).count();
+
+            ++retrievedFramesNumber;
+            
+            auto success = ap_GetLastError();
+            if (success != AP_CAMERA_SUCCESS) {
+                std::cout << "APTINA FAILED TO GRAB\n";
+                return;
+            }
 
             
             // TODO: 
@@ -90,8 +97,12 @@ namespace vidre {
         return _buffer_num;
     }
     unsigned int AptinaCamera::GetFrameBytes() {
-        return _buffer_size;
+        return _buffer_size_save;
     }
+    unsigned int AptinaCamera::GetBufferSize() {
+        return _buffer_size_min;
+    }
+
 
 
     double AptinaCamera::GetFrameRate() {
@@ -126,6 +137,12 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
+
+        // target frame size on disk in B:
+        // 1. w * h * depth / 8 (depth depends on image_type, i.e Bpp / bayer-X values)
+        // 2. create dummy buf and run grabframe again
+
+
         std::cout <<"L1"<< std::endl;
         int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
 
@@ -135,8 +152,27 @@ namespace vidre {
 
         ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
 
-        _buffer_size = ap_GrabFrame(_handle, nullptr, 0);
+        _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
+        std::cout << "TO ALLOCATE : " << _buffer_size_min << std::endl;
+
+        uint8_t* b = new uint8_t[_buffer_size_min];
+        _buffer_size_save = ap_GrabFrame(_handle, b, _buffer_size_min);
+        delete[] b;
+
+        std::cout << "TO save : " << _buffer_size_save << std::endl;
+
+
+        // BAYER STAFF
+        // char image_type[64];
+        // uint32_t width, height;
+        // ap_GetImageFormat(_handle, &width, &height, image_type,
+            // sizeof (image_type));
+        // printf("im type %s \n", image_type);
+
+
+
         std::cout <<"L2"<< std::endl;
+        return true;
     }
 
     bool AptinaCamera::SaveConfiguration(std::string filepath) {
@@ -150,10 +186,9 @@ namespace vidre {
         std::cout << "H5" << std::endl;
         std:: cout << ptrs->size() << std::endl;
 
-        std::cout << "BS "<<_buffer_size << std::endl;
-
+        std::cout << "ALLOCATED : " << _buffer_size_min << std::endl;
         for (int i = 0; i < _buffer_num; ++i) {
-            _buffer.AllocateBuffer(_buffer_size);
+            _buffer.AllocateBuffer(_buffer_size_min);
         }
         std::cout << "H4" << std::endl;
     }

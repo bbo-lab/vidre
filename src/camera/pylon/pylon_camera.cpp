@@ -162,6 +162,9 @@ namespace vidre {
     unsigned int PylonCamera::GetFrameBytes() {
         return GetFrameWidth() * GetFrameHeight();
     }
+    unsigned int PylonCamera::GetBufferSize() {
+        return GetFrameWidth() * GetFrameHeight();
+    }
 
     double PylonCamera::GetFrameRate() {
         Pylon::CFloatParameter frameRate(GetGenAPINodeMap(), "AcquisitionFrameRate");

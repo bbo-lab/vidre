@@ -36,6 +36,7 @@ namespace vidre {
         virtual unsigned int GetFrameOffsetY() override;
         virtual unsigned int GetMaxNumBuffer() override;
         virtual unsigned int GetFrameBytes() override;
+        virtual unsigned int GetBufferSize() override;
         virtual double GetFrameRate() override;
         virtual std::string GetSerialNumber() override;
         virtual void SetFrameWidth(unsigned int newFrameWidth) override;
@@ -61,7 +62,8 @@ namespace vidre {
         int64_t retrievedFramesNumber = 0;
 
         AptinaBuffer _buffer;
-        unsigned int _buffer_size = 0;
+        unsigned int _buffer_size_min = 0;
+        unsigned int _buffer_size_save = 0;
         unsigned int _buffer_num = 500;
 
         unsigned int _w;

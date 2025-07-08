@@ -29,6 +29,7 @@ namespace vidre {
 
         frameBytesOnDisk = config.frameBytes * bytesPerPixel;
         frameBytesOnDisk += 21; // size of tail
+        std::cout << "WILL BE SAVED +21 : " << frameBytesOnDisk << std::endl;
         
         frameRate = config.frameRate;  
 

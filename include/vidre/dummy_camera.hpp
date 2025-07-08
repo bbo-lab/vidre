@@ -68,6 +68,10 @@ namespace vidre {
         virtual unsigned int GetFrameBytes() {
             return 1;
         };
+        virtual unsigned int GetBufferSize() {
+            return 1;
+        };
+
         virtual double GetFrameRate() {
             return 1;
         };
