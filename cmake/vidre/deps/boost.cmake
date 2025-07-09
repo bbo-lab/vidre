@@ -17,6 +17,7 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/boostorg/boost.git
   GIT_TAG boost-1.88.0
   GIT_SHALLOW TRUE
+  GIT_PROGRESS ON
   FIND_PACKAGE_ARGS
         CONFIG
         COMPONENTS 

@@ -6,6 +6,7 @@ set(MP_UNITS_API_CONTRACTS NONE)
 FetchContent_Declare(mp-units
   GIT_REPOSITORY https://github.com/mpusz/mp-units
   GIT_TAG 2.2
+  GIT_PROGRESS ON
   SOURCE_SUBDIR src
 )
 FetchContent_MakeAvailable(mp-units)
