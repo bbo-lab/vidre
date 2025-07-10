@@ -35,7 +35,8 @@ namespace vidre {
             // result->frameID = fid;
 
             header->frameID = retrievedFramesNumber;
-            header->timeStamp = ap_GetFrameData(_handle, "frameTime");
+            // header->timeStamp = ap_GetFrameData(_handle, "frameTime");
+            header->timeStamp = computerTimeStamp;
             header->computerTimeStamp = computerTimeStamp;
         }
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
