@@ -106,7 +106,7 @@ namespace vidre {
 
 
     double AptinaCamera::GetFrameRate() {
-        return 0;
+        return 50;
     }
 
     std::string AptinaCamera::GetSerialNumber()

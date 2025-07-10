@@ -1,14 +1,14 @@
-cam1:
-  type: camera
-  vendor: pylon
-  serial: 40412371
-  config_file: ../../../vidre/master_cam.config
-  is_config_local: true
-  description: For monitoring.
-  storage:
-    type: storage
-    output_file: D:/yamlsaving/pylon1.ccv
-  trigger_out: 3
+# cam1:
+#   type: camera
+#   vendor: pylon
+#   serial: 40412371
+#   config_file: ../../../vidre/master_cam.config
+#   is_config_local: true
+#   description: For monitoring.
+#   storage:
+#     type: storage
+#     output_file: D:/yamlsaving/pylon1.ccv
+#   trigger_out: 3
 # cam2:
 #   type: camera
 #   vendor: pylon

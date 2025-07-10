@@ -40,6 +40,9 @@ namespace vidre {
     }
 
     void vidre::CamCommandoHeader::initiateHeader(FILE* out_file) {
+        std::cout << "Width " << width << std::endl;
+        std::cout << "height " << height << std::endl;
+        std::cout << "frameBytesOnDisk " << frameBytesOnDisk << std::endl;
         writeHeader(out_file);
     }
 
