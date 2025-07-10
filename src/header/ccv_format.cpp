@@ -5,6 +5,48 @@
 #include <iostream>
 
 namespace vidre {
+
+    inline int pack_bits_16_10(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out, size_t buffersize_out) {
+        size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
+        buffersize_out_in_samples = (size_t) floor(((double) buffersize_out) * 0.8);
+        nsamples = nbytes_in / 2; //rounds down
+        size_t n = min(nsamples, buffersize_out_in_samples);
+        
+        size_t nblocks = n / 4; //rounds down
+        
+        byte_offset_out = 0;
+        byte_offset_in = 0;
+        for (size_t jj = 0; jj < nblocks; jj++) {
+            data_out[byte_offset_out    ] = data_in[byte_offset_in];
+            data_out[byte_offset_out + 1] = data_in[byte_offset_in + 1] | (data_in[byte_offset_in + 2] << 2);
+            data_out[byte_offset_out + 2] = (data_in[byte_offset_in + 2] >> 6) | (data_in[byte_offset_in + 3] << 2) | (data_in[byte_offset_in + 4] << 4);
+            data_out[byte_offset_out + 3] = (data_in[byte_offset_in + 4] >> 4) | (data_in[byte_offset_in + 5] << 4) | (data_in[byte_offset_in + 6] << 6);
+            data_out[byte_offset_out + 4] = (data_in[byte_offset_in + 6] >> 2) | (data_in[byte_offset_in + 7] << 6);
+            byte_offset_out += 5;
+            byte_offset_in += 8;
+        }
+        remaining_samples = n - 4 * nblocks;
+
+        int nb_written = byte_offset_out;
+        if (remaining_samples > 0) {
+            data_out[byte_offset_out] = data_in[byte_offset_in];
+            data_out[byte_offset_out + 1] = data_in[byte_offset_in + 1];
+            nb_written += 2;
+            if (remaining_samples > 1) {
+                data_out[byte_offset_out + 1] |= (data_in[byte_offset_in + 2] << 2);
+                data_out[byte_offset_out + 2] = (data_in[byte_offset_in + 2] >> 6) | (data_in[byte_offset_in + 3] << 2);
+                nb_written++;
+                if (remaining_samples > 2) {
+                    data_out[byte_offset_out + 2] |= (data_in[byte_offset_in + 4] << 4);
+                    data_out[byte_offset_out + 3] = (data_in[byte_offset_in + 4] >> 4) | (data_in[byte_offset_in + 5] << 4);
+                    nb_written++;
+                }
+            }
+        }
+
+        return nb_written;
+    }
+
     vidre::CamCommandoHeader::CamCommandoHeader() {
         headerSize += (cameraType.length + 1) + (imageType.length + 1);
         
@@ -31,7 +73,8 @@ namespace vidre {
         frameBytesOnDisk += 21; // size of tail
         std::cout << "WILL BE SAVED +21 : " << frameBytesOnDisk << std::endl;
         
-        frameRate = config.frameRate;  
+        frameRate = config.frameRate;
+        pb = (uint32_t) ceil(1.25 * width * height);  
 
 #if CCV_HEADER_VERSION >= 120
         packed = 0;
@@ -43,17 +86,26 @@ namespace vidre {
         std::cout << "Width " << width << std::endl;
         std::cout << "height " << height << std::endl;
         std::cout << "frameBytesOnDisk " << frameBytesOnDisk << std::endl;
+    #if CCV_HEADER_VERSION >= 120
+        std::cout << "IS packed " << packed << std::endl;
+    #endif
         writeHeader(out_file);
     }
 
     void vidre::CamCommandoHeader::updateHeader(FILE* out_file, int frames) {
         frameCount = frames;
+        frameBytesOnDisk = pb + 21;
         rewind(out_file);
         writeHeader(out_file);
     }
 
     void vidre::CamCommandoHeader::writeFrame(const void* buffer, FILE* out_file) {
-        fwrite(reinterpret_cast<const char*>(buffer), 1, frameBytesOnDisk - 21, out_file);
+        uint8_t* packed = new uint8_t[frameBytesOnDisk - 21];
+
+        pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packed, pb);
+        fwrite(reinterpret_cast<const char*>(packed), 1, pb, out_file);
+        delete[] packed;
+
         // file.write(static_cast<const char*>(buffer), frameBytesOnDisk - 21);
     }
 

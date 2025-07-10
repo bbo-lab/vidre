@@ -66,6 +66,8 @@ namespace vidre {
 
         uint32_t width;
         uint32_t height;
+
+        uint32_t pb;
         double frameRate;
 
 #if CCV_HEADER_VERSION >= 120
