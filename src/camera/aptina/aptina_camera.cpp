@@ -48,9 +48,7 @@ namespace vidre {
 
     bool AptinaCamera::Init(std::string serial) {
         _serial = serial;
-        std::cout << "H1" << std::endl;
         _handle = ap_Create(0);
-        std::cout << "H2" << std::endl;
         return _handle != nullptr;
     }
 
@@ -139,12 +137,6 @@ namespace vidre {
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
 
-        // target frame size on disk in B:
-        // 1. w * h * depth / 8 (depth depends on image_type, i.e Bpp / bayer-X values)
-        // 2. create dummy buf and run grabframe again
-
-
-        std::cout <<"L1"<< std::endl;
         int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
 
         if (result != AP_INI_SUCCESS) {
@@ -154,25 +146,11 @@ namespace vidre {
         ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
 
         _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
-        std::cout << "TO ALLOCATE : " << _buffer_size_min << std::endl;
 
         uint8_t* b = new uint8_t[_buffer_size_min];
-        _buffer_size_save = ap_GrabFrame(_handle, b, _buffer_size_min);
+        _buffer_size_save = ap_GrabFrame(_handle, b, _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
         delete[] b;
 
-        std::cout << "TO save : " << _buffer_size_save << std::endl;
-
-
-        // BAYER STAFF
-        // char image_type[64];
-        // uint32_t width, height;
-        // ap_GetImageFormat(_handle, &width, &height, image_type,
-            // sizeof (image_type));
-        // printf("im type %s \n", image_type);
-
-
-
-        std::cout <<"L2"<< std::endl;
         return true;
     }
 
@@ -182,15 +160,10 @@ namespace vidre {
 
     void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
-        std::cout << "H3" << std::endl;
         _buffer.SetSharedMemory(sharedMemory, ptrs, memory_name);
-        std::cout << "H5" << std::endl;
-        std:: cout << ptrs->size() << std::endl;
 
-        std::cout << "ALLOCATED : " << _buffer_size_min << std::endl;
         for (int i = 0; i < _buffer_num; ++i) {
             _buffer.AllocateBuffer(_buffer_size_min);
         }
-        std::cout << "H4" << std::endl;
     }
 }  // namespace vidre

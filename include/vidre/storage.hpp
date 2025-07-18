@@ -17,14 +17,25 @@ namespace vidre {
     struct CCVFrameTail;
 
     struct Config {
+        // todo: rm
         Pylon::EPixelType pixelType;
+        
+        // frame
         uint32_t width;
         uint32_t height;
         uint32_t maxNumBuffer;
         size_t paddingX;
         double frameRate;
-        std::string serialNumber;
+
+        // cam specific
         uint32_t frameBytes;
+        std::string serialNumber;
+        
+        // for header
+        uint64_t bitsPerPixel;
+        bool packed;
+        std::string cameraVendor;
+        std::string imageType;
     };
 
     class Storage {

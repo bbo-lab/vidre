@@ -20,7 +20,7 @@ namespace vidre {
         void stop();
 
         void setCamera(std::unique_ptr<ICamera> camera);
-        void createStorage(std::string output_file_name = "some.ccv", std::string header_format = "ccv");
+        void createStorage(std::string output_file_name = "some.ccv", std::string header_format = "ccv", uint64_t bits_per_pixel = 8, uint8_t packed = 0);
 
         bool checkCamera();
 

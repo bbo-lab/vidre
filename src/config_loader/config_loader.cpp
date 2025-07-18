@@ -70,8 +70,14 @@ namespace vidre {
                 cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
                 
                 cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));
+                
+                auto storage_config = it->second["storage"];
+                auto output_file = storage_config["output_file"].as<std::string>();
+                auto header_format = storage_config["header"].as<std::string>();
+                auto bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
+                auto packed = storage_config["packed"].as<uint8_t>();
 
-                cameras[it->first.as<std::string>()]->createStorage(it->second["storage"]["output_file"].as<std::string>());  
+                cameras[it->first.as<std::string>()]->createStorage(output_file, header_format, bits_per_pixel, packed);  
             }
         }
 

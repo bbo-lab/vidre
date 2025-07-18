@@ -20,17 +20,7 @@ namespace vidre
     }
 
     RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
-        // switch (configuration.cameraVendor)  {
-        //     // cameravendor is enum
-        //     case CameraVendor::Pylon:
-        //         _camera = std::make_unique<vidre::PylonCamera>();
-        //     case CameraVendor::Aptina:
-        //         _camera = std::make_unique<vidre::AptinaCamera>();
-        //     default:
-        //         _camera = nullptr;
-        // }
         _camera = std::make_unique<vidre::PylonCamera>();
-
 
         // Initialize and start the camera
         _camera->Init();
@@ -59,7 +49,6 @@ namespace vidre
     }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
-        std::cout << "S1" << std::endl;
         if (_camera != nullptr) {
             std::cout << "Camera is set already \n";
             return;
@@ -71,11 +60,9 @@ namespace vidre
         }
 
         _camera = std::move(camera);
-        std::cout << "S2" << std::endl;
     }
 
-    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format) {
-        std::cout << "c1" << std::endl;
+    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format, uint64_t bits_per_pixel, uint8_t packed) {
         if (_storage != nullptr) {
             std::cout << "Storage is created already \n";
             return;
@@ -95,16 +82,14 @@ namespace vidre
         cameraConfig.frameRate = _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
         cameraConfig.frameBytes = _camera->GetFrameBytes();
+        cameraConfig.bitsPerPixel = bits_per_pixel;
+        cameraConfig.packed = packed;
 
-        std::cout << "c3" << std::endl;
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
-        std::cout << "c4" << std::endl;
 
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
-        std::cout << "c5" << std::endl;
 
         _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
-        std::cout << "c2" << std::endl;
     }
 
 

@@ -53,3 +53,6 @@ aptina1:
   storage:
     type: storage
     output_file: H:/yamlsaving/aptina1.ccv
+    bits_per_pixel: 10
+    packed: 1
+    header: ccv
