@@ -1,45 +1,45 @@
-cam1:
-  type: camera
-  vendor: pylon
-  serial: 40412371
-  config_file: ../../../vidre/master_cam.config
-  is_config_local: true
-  description: For monitoring.
-  storage:
-    type: storage
-    output_file: D:/yamlsaving/pylon1.ccv
-    bits_per_pixel: 8
-    packed: 0
-    header: ccv
-  trigger_out: 3
-cam2:
-  type: camera
-  vendor: pylon
-  serial: 40424305
-  config_file: ../../../vidre/trigger_cam.config
-  is_config_local: true
-  description: For monitoring.
-  storage:
-    type: storage
-    output_file: E:/yamlsaving/pylon2.ccv
-    bits_per_pixel: 8
-    packed: 0
-    header: ccv
-  trigger_in: 3
-cam3:
-  type: camera
-  vendor: pylon
-  serial: 40435624
-  config_file: ../../../vidre/trigger_cam.config
-  is_config_local: true
-  description: For monitoring.
-  storage:
-    type: storage
-    output_file: F:/yamlsaving/pylon3.ccv
-    bits_per_pixel: 8
-    packed: 0
-    header: ccv
-  trigger_in: 3
+# cam1:
+#   type: camera
+#   vendor: pylon
+#   serial: 40412371
+#   config_file: ../../../vidre/master_cam.config
+#   is_config_local: true
+#   description: For monitoring.
+#   storage:
+#     type: storage
+#     output_file: D:/yamlsaving/pylon1.ccv
+#     bits_per_pixel: 8
+#     packed: 0
+#     header: ccv
+#   trigger_out: 3
+# cam2:
+#   type: camera
+#   vendor: pylon
+#   serial: 40424305
+#   config_file: ../../../vidre/trigger_cam.config
+#   is_config_local: true
+#   description: For monitoring.
+#   storage:
+#     type: storage
+#     output_file: E:/yamlsaving/pylon2.ccv
+#     bits_per_pixel: 8
+#     packed: 0
+#     header: ccv
+#   trigger_in: 3
+# cam3:
+#   type: camera
+#   vendor: pylon
+#   serial: 40435624
+#   config_file: ../../../vidre/trigger_cam.config
+#   is_config_local: true
+#   description: For monitoring.
+#   storage:
+#     type: storage
+#     output_file: F:/yamlsaving/pylon3.ccv
+#     bits_per_pixel: 8
+#     packed: 0
+#     header: ccv
+#   trigger_in: 3
 # cam4:
 #   type: camera
 #   vendor: pylon

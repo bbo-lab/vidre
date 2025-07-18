@@ -44,12 +44,22 @@ namespace vidre {
 
     void AptinaCamera::Init() {
         _handle = ap_Create(0);
+        if (_handle == nullptr) {
+            std::cout << "Failed to Init aptina\n";
+            
+        }
     }
 
     bool AptinaCamera::Init(std::string serial) {
         _serial = serial;
+
         _handle = ap_Create(0);
-        return _handle != nullptr;
+        if (_handle == nullptr) {
+            std::cout << "Failed to Init aptina\n";
+            return false;
+        }
+
+        return true;
     }
 
     void AptinaCamera::Arm() {
@@ -139,10 +149,11 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
-
+        // get buffer data
         int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
 
         if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to load config for  aptina\n";
             return false;
         }
 
@@ -153,6 +164,22 @@ namespace vidre {
         uint8_t* b = new uint8_t[_buffer_size_min];
         _buffer_size_save = ap_GrabFrame(_handle, b, _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
         delete[] b;
+
+        // actually load triggered config
+        ap_Destroy(_handle);
+        ap_Finalize();
+
+        _handle = ap_Create(0);
+        if (_handle == nullptr) {
+            std::cout << "Failed to re-create aptina\n";
+            return false;
+        }
+
+        result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM Triggered");
+        if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to load trigger config for aptina\n";
+            return false;
+        }
 
         return true;
     }
