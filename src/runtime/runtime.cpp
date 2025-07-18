@@ -82,6 +82,7 @@ namespace vidre
         cameraConfig.frameRate = _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
         cameraConfig.frameBytes = _camera->GetFrameBytes();
+        cameraConfig.cameraVendor = _camera->GetVendorName();
         cameraConfig.bitsPerPixel = bits_per_pixel;
         cameraConfig.packed = packed;
 

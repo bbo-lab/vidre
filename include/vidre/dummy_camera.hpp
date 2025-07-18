@@ -76,10 +76,14 @@ namespace vidre {
             return 1;
         };
 
-        virtual std::string GetSerialNumber()
-        {
+        virtual std::string GetSerialNumber() {
             return "";
-        }
+        };
+
+        virtual std::string GetVendorName() {
+            return "";
+        };
+
         virtual void SetFrameWidth(unsigned int newFrameWidth) {};
         virtual void SetFrameHeight(unsigned int newFrameHeight) {};
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) {};

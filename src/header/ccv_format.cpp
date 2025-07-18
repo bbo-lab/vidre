@@ -59,7 +59,7 @@ namespace vidre {
         width = config.width;
         height = config.height;
 
-        frameBytesOnDisk = config.frameBytes * bytesPerPixel;
+        frameBytesOnDisk = config.frameBytes ;//* bytesPerPixel;
         frameBytesOnDisk += 21; // size of tail
         
         frameRate = config.frameRate;

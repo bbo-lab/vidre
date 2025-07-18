@@ -108,9 +108,12 @@ namespace vidre {
         return 50;
     }
 
-    std::string AptinaCamera::GetSerialNumber()
-    {
+    std::string AptinaCamera::GetSerialNumber() {
         return _serial;
+    }
+
+    std::string AptinaCamera::GetVendorName() {
+        return "aptina";
     }
 
     void AptinaCamera::SetFrameWidth(unsigned int newFrameWidth) {
