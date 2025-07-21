@@ -158,28 +158,46 @@ namespace vidre {
         }
 
         ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
+        std::cout << _w << " " << _h << std::endl;
 
         _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
-
-        uint8_t* b = new uint8_t[_buffer_size_min];
-        _buffer_size_save = ap_GrabFrame(_handle, b, _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
-        delete[] b;
-
-        // actually load triggered config
-        ap_Destroy(_handle);
-        ap_Finalize();
-
-        _handle = ap_Create(0);
-        if (_handle == nullptr) {
-            std::cout << "Failed to re-create aptina\n";
+        auto success = ap_GetLastError();
+        if (success != AP_CAMERA_SUCCESS) {
+            std::cout << "APTINA FAILED TO GRAB 1 \n";
             return false;
         }
+        // _buffer_size_min *= 2;
+        // std::cout << _buffer_size_min << " " << _buffer_size_save << std::endl;
+        
+        for (int i = 0; i < 5; ++i) { 
+            uint8_t* b = new uint8_t[_buffer_size_min];
+            _buffer_size_save = ap_GrabFrame(_handle, b, _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
+            delete[] b;
+            success = ap_GetLastError();
+            if (success != AP_CAMERA_SUCCESS) {
+                std::cout << "APTINA FAILED TO GRAB 2 \n";
+                // return false;
+            }
+            // _buffer_size_save =  _buffer_size_min; // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
 
-        result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM Triggered");
-        if (result != AP_INI_SUCCESS) {
-            std::cout << "Failed to load trigger config for aptina\n";
-            return false;
+            std::cout << _buffer_size_min << " " << _buffer_size_save << std::endl;
         }
+
+        // // actually load triggered config
+        // ap_Destroy(_handle);
+        // ap_Finalize();
+
+        // _handle = ap_Create(0);
+        // if (_handle == nullptr) {
+        //     std::cout << "Failed to re-create aptina\n";
+        //     return false;
+        // }
+
+        // result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM Triggered");
+        // if (result != AP_INI_SUCCESS) {
+        //     std::cout << "Failed to load trigger config for aptina\n";
+        //     return false;
+        // }
 
         return true;
     }

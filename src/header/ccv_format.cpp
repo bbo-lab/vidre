@@ -64,13 +64,15 @@ namespace vidre {
         
         frameRate = config.frameRate;
         
-        if (config.cameraVendor == "aptina") {
-            aptinaBuffer = (uint64_t) ceil((bitsPerPixel / 8.0) * width * height);  
-        }
 
 #if CCV_HEADER_VERSION >= 120
         packed = config.packed;
+        if (cameraType.data == "aptina" && packed) {
+            aptinaBuffer = (uint64_t) ceil((bitsPerPixel / 8.0) * width * height);  
+        }
 #endif
+        
+
         frameCount = 0;
     }
 
@@ -82,25 +84,29 @@ namespace vidre {
         frameCount = frames;
         
         // Update with actual Aptina Buffer size ()
-        if (cameraType.data == "aptina") {
+#if CCV_HEADER_VERSION >= 120
+        if (cameraType.data == "aptina" && packed) {
             frameBytesOnDisk = aptinaBuffer + 21;
         }
+#endif
 
         rewind(out_file);
         writeHeader(out_file);
     }
 
     void vidre::CamCommandoHeader::writeFrame(const void* buffer, FILE* out_file) {
-        if (cameraType.data != "aptina") {
-            fwrite(reinterpret_cast<const char *>(buffer), 1, frameBytesOnDisk - 21, out_file);
+#if CCV_HEADER_VERSION >= 120
+        if (cameraType.data == "aptina" && packed) {
+            // aptina packing and saving
+            uint8_t* packed_buffer = new uint8_t[frameBytesOnDisk - 21];
+            pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packed_buffer, aptinaBuffer);
+            fwrite(reinterpret_cast<const char*>(packed_buffer), 1, aptinaBuffer, out_file);
+            delete[] packed_buffer;
+
             return;
         }
-        
-        // aptina packing and saving
-        uint8_t* packed_buffer = new uint8_t[frameBytesOnDisk - 21];
-        pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packed_buffer, aptinaBuffer);
-        fwrite(reinterpret_cast<const char*>(packed_buffer), 1, aptinaBuffer, out_file);
-        delete[] packed_buffer;
+#endif        
+        fwrite(reinterpret_cast<const char *>(buffer), 1, frameBytesOnDisk - 21, out_file);
     }
 
     void vidre::CamCommandoHeader::writeTail(FILE* out_file, const CCVFrameTail& tail) {

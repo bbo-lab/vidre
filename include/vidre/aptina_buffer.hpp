@@ -23,8 +23,9 @@ namespace vidre {
 
         void AllocateBuffer(size_t bufferSize) {
             ++m_lastBufferContext;
+            try {
             void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
-            
+           
             auto* header = static_cast<vidre::SharedFrameHeader*>(allocatedMemory);
 
             auto *buffer_data = static_cast<uint8_t*>(allocatedMemory) + sizeof(vidre::SharedFrameHeader);
@@ -33,6 +34,10 @@ namespace vidre {
             }
 
             shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
+            } catch 
+                (const boost::interprocess::interprocess_exception& ex) {
+                    std::cerr << "Interprocess exception: " << ex.what() << std::endl;
+            }
         }
 
         std::pair<uint8_t*, SharedFrameHeader*> CurrentBuffer(unsigned int buffer_num) {
