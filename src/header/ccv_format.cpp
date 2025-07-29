@@ -59,7 +59,7 @@ namespace vidre {
         width = config.width;
         height = config.height;
 
-        frameBytesOnDisk = config.frameBytes ;//* bytesPerPixel;
+        frameBytesOnDisk = config.frameBytesBuffer; //* bytesPerPixel;
         frameBytesOnDisk += 21; // size of tail
         
         frameRate = config.frameRate;
@@ -67,8 +67,12 @@ namespace vidre {
 
 #if CCV_HEADER_VERSION >= 120
         packed = config.packed;
-        if (cameraType.data == "aptina" && packed) {
-            aptinaBuffer = (uint64_t) ceil((bitsPerPixel / 8.0) * width * height);  
+        if (cameraType.data == "aptina") {
+            if (packed) {
+                aptinaBuffer = (uint64_t) ceil((bitsPerPixel / 8.0) * width * height);  
+            } else {
+                aptinaBuffer = config.frameBytesActual;
+            }
         }
 #endif
         
@@ -85,7 +89,7 @@ namespace vidre {
         
         // Update with actual Aptina Buffer size ()
 #if CCV_HEADER_VERSION >= 120
-        if (cameraType.data == "aptina" && packed) {
+        if (cameraType.data == "aptina") {
             frameBytesOnDisk = aptinaBuffer + 21;
         }
 #endif
@@ -106,7 +110,11 @@ namespace vidre {
             return;
         }
 #endif        
-        fwrite(reinterpret_cast<const char *>(buffer), 1, frameBytesOnDisk - 21, out_file);
+        if (cameraType.data == "aptina") {
+            fwrite(reinterpret_cast<const char *>(buffer), 1, aptinaBuffer, out_file);
+        } else {
+            fwrite(reinterpret_cast<const char *>(buffer), 1, frameBytesOnDisk - 21, out_file);
+        }
     }
 
     void vidre::CamCommandoHeader::writeTail(FILE* out_file, const CCVFrameTail& tail) {

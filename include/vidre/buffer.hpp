@@ -15,7 +15,7 @@ namespace vidre {
     public:
         Buffer() = default;
         Buffer(const Config& config);
-        ~Buffer() {};
+        ~Buffer() = default;
 
         std::vector<void*>* getSharedMemoryPtrs() {
             return _sharedMemoryPtrs.get();

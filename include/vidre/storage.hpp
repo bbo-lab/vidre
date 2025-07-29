@@ -28,7 +28,8 @@ namespace vidre {
         double frameRate;
 
         // cam specific
-        uint32_t frameBytes;
+        uint32_t frameBytesActual;
+        uint32_t frameBytesBuffer;
         std::string serialNumber;
         
         // for header

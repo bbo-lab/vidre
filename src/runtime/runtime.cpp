@@ -39,7 +39,8 @@ namespace vidre
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate =  _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
-        cameraConfig.frameBytes = _camera->GetFrameBytes();
+        cameraConfig.frameBytesActual = _camera->GetFrameBytes();
+        cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
@@ -81,7 +82,8 @@ namespace vidre
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate = _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
-        cameraConfig.frameBytes = _camera->GetFrameBytes();
+        cameraConfig.frameBytesActual = _camera->GetFrameBytes();
+        cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
         cameraConfig.cameraVendor = _camera->GetVendorName();
         cameraConfig.bitsPerPixel = bits_per_pixel;
         cameraConfig.packed = packed;

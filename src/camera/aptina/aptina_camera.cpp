@@ -60,13 +60,13 @@ namespace vidre {
         }
         ap_SetState(_handle, "Sensor Reset", 1);
         #ifdef _WIN32
-            Sleep(10);
+            Sleep(1000);
         #else
             sleep(1);
         #endif
             ap_SetState(_handle, "Sensor Reset", 0);
         #ifdef _WIN32
-            Sleep(10);
+            Sleep(1000);
         #else
             sleep(1);
         #endif
@@ -163,27 +163,43 @@ namespace vidre {
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
         // get buffer data
         // int result = ap_LoadIniPreset(_handle, filepath.c_str(), "Reset");
-        // int result = ap_LoadIniPreset(_handle, filepath.c_str(), "Reset");
+        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
 
-        // if (result != AP_INI_SUCCESS) {
-        //     std::cout << "Failed to load config for  aptina\n";
-        //     return false;
-        // }
+        if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to load config for  aptina\n";
+            return false;
+        }
 
-        // Sleep(500);
+        Sleep(500);
 
-        // ap_CheckSensorState(_handle, 0);
+        ap_CheckSensorState(_handle, 0);
 
-        // ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
-        // std::cout << _w << " " << _h << std::endl;
+        ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
+        std::cout << _w << " " << _h << std::endl;
 
-        // _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
-        // auto success = ap_GetLastError();
+        _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
+        std::cout << "APTINA WANTS PER FRAME : " << _buffer_size_min << std::endl;
+        auto success = ap_GetLastError();
+        if (success != AP_CAMERA_SUCCESS) {
+            std::cout << "APTINA FAILED TO GRAB 1 \n";
+            return false;
+        }
+        uint8_t* b = new uint8_t[_buffer_size_min * 2];
+        for (auto cnt = 0; cnt < 100; ++cnt) {
+            _buffer_size_save = ap_GrabFrame(_handle, b, 2 * _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
+            success = ap_GetLastError();
+            if (success == AP_CAMERA_SUCCESS) {
+                break;
+            }
+        }
+        delete[] b;
+        b = NULL;
+        //  success = ap_GetLastError();
         // if (success != AP_CAMERA_SUCCESS) {
-        //     std::cout << "APTINA FAILED TO GRAB 1 \n";
+        //     std::cout << "APTINA FAILED TO GRAB 2 \n";
         //     return false;
         // }
-        
+        std::cout << "APTINA MIN WANTS PER FRAME : " << _buffer_size_save << std::endl;
         // char image_type[64];
         // ap_GetImageFormat (_handle, &_w, &_h, image_type,
         //     sizeof (image_type));
@@ -195,8 +211,8 @@ namespace vidre {
         // } else if (std::string(image_type) == "BAYER-8") {
         //     int bpp = 8;
         // }
-        _buffer_size_save = (int)ceil(752 * 480 * 10 / 8.0);
-        _buffer_size_min = _buffer_size_save * 2;
+        // _buffer_size_save = (int)ceil(752 * 480 * 10 / 8.0);
+        // _buffer_size_min = _buffer_size_save * 2;
 
         // _buffer_size_save =  _buffer_size_min; // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
 
