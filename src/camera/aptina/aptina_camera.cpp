@@ -194,11 +194,6 @@ namespace vidre {
         }
         delete[] b;
         b = NULL;
-        //  success = ap_GetLastError();
-        // if (success != AP_CAMERA_SUCCESS) {
-        //     std::cout << "APTINA FAILED TO GRAB 2 \n";
-        //     return false;
-        // }
         std::cout << "APTINA MIN WANTS PER FRAME : " << _buffer_size_save << std::endl;
         // char image_type[64];
         // ap_GetImageFormat (_handle, &_w, &_h, image_type,
@@ -217,20 +212,17 @@ namespace vidre {
         // _buffer_size_save =  _buffer_size_min; // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
 
         // // actually load triggered config
-        // ap_Destroy(_handle);
-        // ap_Finalize();
+        ap_Destroy(_handle);
+        ap_Finalize();
 
-        // _handle = ap_Create(0);
-        // if (_handle == nullptr) {
-        //     std::cout << "Failed to re-create aptina\n";
-        //     return false;
-        // }
+        Init(_serial);
 
-        // result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM Triggered");
-        // if (result != AP_INI_SUCCESS) {
-        //     std::cout << "Failed to load trigger config for aptina\n";
-        //     return false;
-        // }
+
+        result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM-Triggered");
+        if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to load trigger config for aptina\n";
+            return false;
+        }
 
         return true;
     }
