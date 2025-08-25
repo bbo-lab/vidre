@@ -7,18 +7,13 @@ namespace vidre {
     Buffer::Buffer(const Config& config) 
     : _nextFrameToPop(0), _bufferSize(config.maxNumBuffer), _previouslyPopedFrame(0)
     {
-        // std::cout << config.serialNumber << std::endl;
         boost::interprocess::shared_memory_object::remove(config.serialNumber.c_str());
 
-        std::cout << config.width << " " << config.height << " " << _bufferSize << std::endl;
-        
         size_t capacity = (sizeof(SharedFrameHeader) + config.frameBytesBuffer) * 
                           (_bufferSize + 1);
-        std::cout <<capacity << std::endl;
+
         _sharedMemory = std::make_unique<boost::interprocess::managed_shared_memory>(
             boost::interprocess::create_only, config.serialNumber.c_str(), capacity);
-
-        std::cout << " FRee mem  : " << _sharedMemory->get_free_memory() << std::endl;
 
         _sharedMemoryPtrs = std::make_unique<std::vector<void *>>(_bufferSize, nullptr);
     }

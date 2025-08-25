@@ -156,13 +156,23 @@ namespace vidre {
 
     
     void AptinaCamera::SetTriggerIn(unsigned int line) {
+        ap_Destroy(_handle);
+        ap_Finalize();
+
+        Init(_serial);
+
+
+        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM-Triggered");
+        if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to load trigger config for aptina\n";
+            return;
+        }
     }
+    
     void AptinaCamera::SetTriggerOut(unsigned int line) {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
-        // get buffer data
-        // int result = ap_LoadIniPreset(_handle, filepath.c_str(), "Reset");
         int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
 
         if (result != AP_INI_SUCCESS) {
@@ -175,15 +185,15 @@ namespace vidre {
         ap_CheckSensorState(_handle, 0);
 
         ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
-        std::cout << _w << " " << _h << std::endl;
 
         _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
-        std::cout << "APTINA WANTS PER FRAME : " << _buffer_size_min << std::endl;
+
         auto success = ap_GetLastError();
         if (success != AP_CAMERA_SUCCESS) {
             std::cout << "APTINA FAILED TO GRAB 1 \n";
             return false;
         }
+
         uint8_t* b = new uint8_t[_buffer_size_min * 2];
         for (auto cnt = 0; cnt < 100; ++cnt) {
             _buffer_size_save = ap_GrabFrame(_handle, b, 2 * _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
@@ -194,35 +204,6 @@ namespace vidre {
         }
         delete[] b;
         b = NULL;
-        std::cout << "APTINA MIN WANTS PER FRAME : " << _buffer_size_save << std::endl;
-        // char image_type[64];
-        // ap_GetImageFormat (_handle, &_w, &_h, image_type,
-        //     sizeof (image_type));
-
-
-        // int bpp = 0;
-        // if (std::string(image_type) == "BAYER-10") {
-        //     int bpp = 10;
-        // } else if (std::string(image_type) == "BAYER-8") {
-        //     int bpp = 8;
-        // }
-        // _buffer_size_save = (int)ceil(752 * 480 * 10 / 8.0);
-        // _buffer_size_min = _buffer_size_save * 2;
-
-        // _buffer_size_save =  _buffer_size_min; // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
-
-        // // actually load triggered config
-        ap_Destroy(_handle);
-        ap_Finalize();
-
-        Init(_serial);
-
-
-        result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM-Triggered");
-        if (result != AP_INI_SUCCESS) {
-            std::cout << "Failed to load trigger config for aptina\n";
-            return false;
-        }
 
         return true;
     }
