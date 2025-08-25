@@ -39,8 +39,8 @@ namespace vidre {
 
     class CamCommandoHeader : public IHeader {
     public:
-        CamCommandoHeader();
-        CamCommandoHeader(Config config, std::string camera_type = "basler", std::string image_type = "basler");
+        CamCommandoHeader() = delete;
+        CamCommandoHeader(Config config);
         virtual void initiateHeader(FILE* out_file) override;
         virtual void updateHeader(FILE* out_file, int frames) override;
         virtual void writeFrame(const void* buffer, FILE* out_file) override;        
@@ -66,6 +66,11 @@ namespace vidre {
 
         uint32_t width;
         uint32_t height;
+
+        // Actual aptina buffer to be saved is smaller than minimum allocated
+        uint64_t aptinaBuffer = 0;
+
+
         double frameRate;
 
 #if CCV_HEADER_VERSION >= 120

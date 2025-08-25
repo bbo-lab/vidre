@@ -20,17 +20,7 @@ namespace vidre
     }
 
     RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
-        // switch (configuration.cameraVendor)  {
-        //     // cameravendor is enum
-        //     case CameraVendor::Pylon:
-        //         _camera = std::make_unique<vidre::PylonCamera>();
-        //     case CameraVendor::Aptina:
-        //         _camera = std::make_unique<vidre::AptinaCamera>();
-        //     default:
-        //         _camera = nullptr;
-        // }
         _camera = std::make_unique<vidre::PylonCamera>();
-
 
         // Initialize and start the camera
         _camera->Init();
@@ -49,6 +39,8 @@ namespace vidre
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate =  _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
+        cameraConfig.frameBytesActual = _camera->GetFrameBytes();
+        cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
@@ -71,7 +63,7 @@ namespace vidre
         _camera = std::move(camera);
     }
 
-    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format) {
+    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format, uint64_t bits_per_pixel, uint8_t packed) {
         if (_storage != nullptr) {
             std::cout << "Storage is created already \n";
             return;
@@ -90,6 +82,11 @@ namespace vidre
         cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
         cameraConfig.frameRate = _camera->GetFrameRate();
         cameraConfig.serialNumber = _camera->GetSerialNumber();
+        cameraConfig.frameBytesActual = _camera->GetFrameBytes();
+        cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
+        cameraConfig.cameraVendor = _camera->GetVendorName();
+        cameraConfig.bitsPerPixel = bits_per_pixel;
+        cameraConfig.packed = packed;
 
         _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
 
@@ -105,16 +102,16 @@ namespace vidre
         }
 
         while (_camera->IsRunning()) {
-            const auto* result = _buffer->pop();
+            const auto [result, header] = _buffer->pop();
             if (result == nullptr) {
                 continue;
             }
            
-            _storage->appendFrame(static_cast<const void *>(result + 1));
-            _storage->appendTail(result->frameID, result->timeStamp, result->computerTimeStamp);
+            _storage->appendFrame(static_cast<const void *>(result));
+            _storage->appendTail(header->frameID, header->timeStamp, header->computerTimeStamp);
 
             if (_saveTIFF) {
-                _storage->save(static_cast<const void *>(result + 1), result->frameID);
+                _storage->save(static_cast<const void *>(result), header->frameID);
             }
         }
 

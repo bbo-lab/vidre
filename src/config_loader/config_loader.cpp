@@ -13,9 +13,13 @@ namespace vidre {
         else if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
             camera = std::make_unique<vidre::PylonCamera>();
         }
-        else
+        else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0) {
+            camera = std::make_unique<vidre::AptinaCamera>();
+        }
+        else {
             return nullptr;
-
+        }
+        
         if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
             std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
             return nullptr;
@@ -66,8 +70,14 @@ namespace vidre {
                 cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
                 
                 cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));
+                
+                auto storage_config = it->second["storage"];
+                auto output_file = storage_config["output_file"].as<std::string>();
+                auto header_format = storage_config["header"].as<std::string>();
+                auto bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
+                auto packed = storage_config["packed"].as<uint8_t>();
 
-                cameras[it->first.as<std::string>()]->createStorage(it->second["storage"]["output_file"].as<std::string>());  
+                cameras[it->first.as<std::string>()]->createStorage(output_file, header_format, bits_per_pixel, packed);  
             }
         }
 

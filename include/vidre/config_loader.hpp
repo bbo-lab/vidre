@@ -8,6 +8,7 @@
 #include "vidre/camera.hpp"
 #include "vidre/pylon_camera.hpp"
 #include "vidre/dummy_camera.hpp"
+#include "vidre/aptina_camera.hpp"
 #include "vidre/runtime.hpp"
 
 #include "yaml-cpp/yaml.h"

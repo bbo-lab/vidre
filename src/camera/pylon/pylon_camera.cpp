@@ -159,16 +159,27 @@ namespace vidre {
         return camera.MaxNumBuffer.GetValue();
     }
 
+    unsigned int PylonCamera::GetFrameBytes() {
+        return GetFrameWidth() * GetFrameHeight();
+    }
+    unsigned int PylonCamera::GetBufferSize() {
+        return GetFrameWidth() * GetFrameHeight();
+    }
+
     double PylonCamera::GetFrameRate() {
         Pylon::CFloatParameter frameRate(GetGenAPINodeMap(), "AcquisitionFrameRate");
 
         return frameRate.GetValue();
     }
 
-    std::string PylonCamera::GetSerialNumber()
-    {
+    std::string PylonCamera::GetSerialNumber() {
         return std::string(camera.GetDeviceInfo().GetSerialNumber().c_str());
     }
+
+    std::string PylonCamera::GetVendorName() {
+        return "basler";
+    }
+
 
     void PylonCamera::SetFrameWidth(unsigned int newFrameWidth) {
         if (!camera.IsOpen())

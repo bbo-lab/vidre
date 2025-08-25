@@ -15,7 +15,7 @@ namespace vidre {
     public:
         Buffer() = default;
         Buffer(const Config& config);
-        ~Buffer() {};
+        ~Buffer() = default;
 
         std::vector<void*>* getSharedMemoryPtrs() {
             return _sharedMemoryPtrs.get();
@@ -27,7 +27,7 @@ namespace vidre {
         
         int getSavedFramesNumber();
         
-        SharedFrameHeader* pop();
+        std::pair<void*, SharedFrameHeader*> pop();
     private:
         int _nextFrameToPop;
         int _bufferSize;

@@ -41,8 +41,11 @@ namespace vidre {
         virtual unsigned int GetFrameOffsetX() override;
         virtual unsigned int GetFrameOffsetY() override;
         virtual unsigned int GetMaxNumBuffer() override;
+        virtual unsigned int GetFrameBytes() override;
+        virtual unsigned int GetBufferSize() override;
         virtual double GetFrameRate() override;
         virtual std::string GetSerialNumber() override;
+        virtual std::string GetVendorName() override;
         virtual void SetFrameWidth(unsigned int newFrameWidth) override;
         virtual void SetFrameHeight(unsigned int newFrameHeight) override;
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) override;

@@ -16,6 +16,8 @@ set(public_headers
     ../include/vidre/presenter.hpp
     ../include/vidre/header.hpp
     ../include/vidre/buffer.hpp
+    ../include/vidre/aptina_camera.hpp
+    ../include/vidre/aptina_buffer.hpp
 )
 
 source_group(public FILES ${public_headers})
@@ -29,6 +31,11 @@ target_include_directories(vidre PUBLIC ${CMAKE_BINARY_DIR})
 if(PYLON_ENABLED)
     message(STATUS "Using pylon SDK (Basler AG)")
     target_link_libraries(vidre PUBLIC pylon::pylon)
+endif()
+
+if(APTINA_ENABLED)
+    target_include_directories(vidre PUBLIC ${APTINA_INCLUDE_DIR})
+    target_link_libraries(vidre PUBLIC ${APTINA_LIBRARIES})
 endif()
 
 target_link_libraries(vidre PUBLIC Boost::headers)
