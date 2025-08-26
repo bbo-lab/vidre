@@ -6,7 +6,6 @@
 
 #include "vidre/config_loader.hpp"
 #include "vidre/camera.hpp"
-#include "vidre/presenter.hpp"
 
 namespace po = boost::program_options;
 
@@ -63,7 +62,6 @@ int main(int argc, const char *argv[]) {
     std::cout.flush();
 
 
-    // vidre::Presenter presenter;
 
     // Simple Mock CLI
     // Mainly for testing out multiple cameras.
@@ -76,7 +74,6 @@ int main(int argc, const char *argv[]) {
         std::vector<std::string> tokens = split(input.c_str());
         if (tokens[0].compare("exit") == 0) {
             running = false;
-            // presenter.Stop();
             std::cout << "Exiting" << std::endl;
             continue;
         }

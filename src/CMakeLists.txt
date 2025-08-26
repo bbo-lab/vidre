@@ -13,7 +13,6 @@ set(public_headers
     ../include/vidre/shared_frame_header.hpp
     ../include/vidre/camera.hpp
     ../include/vidre/config_loader.hpp
-    ../include/vidre/presenter.hpp
     ../include/vidre/header.hpp
     ../include/vidre/buffer.hpp
     ../include/vidre/aptina_camera.hpp
