@@ -1,3 +1,4 @@
+#include "pylon_api_loader.hpp"
 #include "vidre/pylon_camera.hpp"
 
 namespace vidre {
@@ -16,8 +17,7 @@ namespace vidre {
         camera.Close();
         if (camera.IsPylonDeviceAttached())
             camera.DestroyDevice();
-
-        Pylon::PylonTerminate();
+        if (PylonTerminate) PylonTerminate();
     }
 
     void PylonCamera::run() {
