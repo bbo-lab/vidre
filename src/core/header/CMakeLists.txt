@@ -1,3 +1,4 @@
 target_sources(vidre PRIVATE
-    ccv_format.hpp ccv_format.cpp
+    header.hpp
 )
+add_subdirectory(ccv)

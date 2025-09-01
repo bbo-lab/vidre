@@ -5,18 +5,6 @@ configure_file("${CMAKE_SOURCE_DIR}/include/vidre/config.h.in" "${CMAKE_BINARY_D
 
 set(public_headers
     ${CMAKE_BINARY_DIR}/config.h
-    ../include/vidre/storage.hpp
-    ../include/vidre/runtime.hpp
-    ../include/vidre/pylon_camera.hpp
-    ../include/vidre/dummy_camera.hpp
-    ../include/vidre/shared_frame_buffer_controller.hpp
-    ../include/vidre/shared_frame_header.hpp
-    ../include/vidre/camera.hpp
-    ../include/vidre/config_loader.hpp
-    ../include/vidre/header.hpp
-    ../include/vidre/buffer.hpp
-    ../include/vidre/aptina_camera.hpp
-    ../include/vidre/aptina_buffer.hpp
 )
 
 source_group(public FILES ${public_headers})
@@ -43,12 +31,9 @@ target_link_libraries(vidre PUBLIC Boost::filesystem)
 
 target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 
-add_subdirectory(runtime)
-add_subdirectory(storage)
 add_subdirectory(camera)
-add_subdirectory(config_loader)
-add_subdirectory(header)
-add_subdirectory(buffer)
+add_subdirectory(core)
+add_subdirectory(utils)
 
 install(FILES ${public_headers} DESTINATION include/vidre)
 

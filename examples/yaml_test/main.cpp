@@ -4,8 +4,7 @@
 
 #include <boost/program_options.hpp>
 
-#include "vidre/config_loader.hpp"
-#include "vidre/camera.hpp"
+#include "../src/utils/config_loader/config_loader.hpp"
 #include "../src/camera/aptina/aptina_api_loader.hpp"
 #include "../src/camera/pylon/pylon_api_loader.hpp"
 

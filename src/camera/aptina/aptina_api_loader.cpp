@@ -1,5 +1,5 @@
 #include "aptina_api_loader.hpp"
-#include "../../utils/dynamic_library_loader.hpp"
+#include "utils/dynamic_loader/dynamic_library_loader.hpp"
 #include <stdexcept>
 
 ap_Create_t ap_Create = nullptr;

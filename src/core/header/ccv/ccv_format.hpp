@@ -2,7 +2,7 @@
 
 #include "config.h"
 
-#include "vidre/header.hpp"
+#include "core/header/header.hpp"
 
 
 namespace vidre {

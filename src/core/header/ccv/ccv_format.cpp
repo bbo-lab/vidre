@@ -1,5 +1,5 @@
 #include "ccv_format.hpp"
-#include "vidre/storage.hpp"
+#include "core/storage/storage.hpp"
 
 #include <fstream>
 #include <iostream>

@@ -1,6 +1,6 @@
 #pragma once
-#include "vidre/camera.hpp"
-#include "vidre/aptina_buffer.hpp"
+#include "camera/camera.hpp"
+#include "core/buffer/aptina/aptina_buffer.hpp"
 
 #include <thread>
 
@@ -72,5 +72,6 @@ namespace vidre {
 
 
         std::string _serial;
+        std::string _config_file;
     };
 }  // namespace vidre

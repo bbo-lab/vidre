@@ -1,7 +1,7 @@
-#include "vidre/storage.hpp"
-#include "vidre/shared_frame_header.hpp"
+#include "storage.hpp"
+#include "core/runtime/shared_frame_header.hpp"
 
-#include "header/ccv_format.hpp"
+#include "core/header/ccv/ccv_format.hpp"
 
 namespace vidre {
 

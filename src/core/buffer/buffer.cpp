@@ -1,5 +1,5 @@
-#include "vidre/buffer.hpp"
-#include "vidre/storage.hpp"
+#include "buffer.hpp"
+#include "core/storage/storage.hpp"
 
 #include <limits>
 

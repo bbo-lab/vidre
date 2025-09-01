@@ -1,7 +1,7 @@
-#include "vidre/runtime.hpp"
-#include "vidre/pylon_camera.hpp"
-#include "vidre/shared_frame_header.hpp"
-#include "vidre/storage.hpp"
+#include "runtime.hpp"
+#include "camera/pylon/pylon_camera.hpp"
+#include "shared_frame_header.hpp"
+#include "core/storage/storage.hpp"
 #include <string>
 
 

@@ -1,7 +1,7 @@
 #include <memory>
 #include <atomic>
 
-#include "shared_frame_header.hpp"
+#include "core/runtime/shared_frame_header.hpp"
 
 // Just one for now. In the future other plugins should have the ability to create their own SharedFrameBufferController.
 // That way e.g. the following pipeline can be realised:

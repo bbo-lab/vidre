@@ -4,7 +4,7 @@
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 
-#include "shared_frame_header.hpp"
+#include "core/runtime/shared_frame_header.hpp"
 #include <iostream>
 
 namespace vidre {

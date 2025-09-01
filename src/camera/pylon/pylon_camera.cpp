@@ -1,5 +1,5 @@
 #include "pylon_api_loader.hpp"
-#include "vidre/pylon_camera.hpp"
+#include "pylon_camera.hpp"
 
 namespace vidre {
     // class CSampleImageEventHandler : public Pylon::CImageEventHandler {

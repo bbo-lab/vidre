@@ -1,2 +1,1 @@
-add_subdirectory(pylon_playground)
 add_subdirectory(yaml_test)

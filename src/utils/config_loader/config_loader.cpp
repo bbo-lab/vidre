@@ -1,4 +1,7 @@
-#include "vidre/config_loader.hpp"
+#include "config_loader.hpp"
+#include "camera/camera.hpp"
+#include "camera/pylon/pylon_camera.hpp"
+#include "camera/aptina/aptina_camera.hpp"
 
 namespace vidre {
     std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
@@ -7,10 +10,7 @@ namespace vidre {
 
         // Vendor is specified
         std::unique_ptr<vidre::ICamera> camera;
-        if (cameraNode["vendor"].as<std::string>().compare("dummy") == 0) {
-            camera = std::make_unique<vidre::DummyCamera>();
-        }
-        else if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
+        if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0) {
             camera = std::make_unique<vidre::PylonCamera>();
         }
         else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0) {

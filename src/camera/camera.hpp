@@ -2,8 +2,8 @@
 #include <string>
 #include <memory>
 
-#include "shared_frame_header.hpp"
-#include "shared_frame_buffer_controller.hpp"
+#include "core/buffer/pylon/pylon_shr_mem_buffer_factory.hpp"
+#include "core/buffer/pylon/shared_frame_buffer_controller.hpp"
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 namespace vidre {

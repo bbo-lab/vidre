@@ -1,5 +1,5 @@
 #include "pylon_api_loader.hpp"
-#include "../../utils/dynamic_library_loader.hpp"
+#include "utils/dynamic_loader/dynamic_library_loader.hpp"
 #include <stdexcept>
 
 PylonInitialize_t PylonInitialize = nullptr;

@@ -35,7 +35,7 @@ class Vidre(ConanFile):
         self.folders.build = "build"
         self.folders.generators = os.path.join(self.folders.build, "generators")
 
-        self.cpp.source.includedirs = ["include"]
+        self.cpp.source.includedirs = ["src", "include"]
 
         self.cpp.build.bindirs = ["bin"]
         self.cpp.build.libdirs = ["lib"]
@@ -68,6 +68,6 @@ class Vidre(ConanFile):
     def package_info(self):
         self.cpp_info.components.libdirs = ['lib']
         self.cpp_info.components.libs = ['vidre']
-        self.cpp_info.components.includedirs = ['include']
+        self.cpp_info.components.includedirs = ['src', 'include']
         self.cpp_info.components.requires = ["boost::headers", "boost::program_options", "boost::filesystem"]
         self.cpp_info.components.set_property("cmake_target_name", "vidre::vidre")

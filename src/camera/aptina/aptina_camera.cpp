@@ -1,5 +1,5 @@
 #include "aptina_api_loader.hpp"
-#include "vidre/aptina_camera.hpp"
+#include "aptina_camera.hpp"
 
 #include <iostream>
 
@@ -168,7 +168,7 @@ namespace vidre {
         ap_Destroy(_handle);
         ap_Finalize();
         Init(_serial);
-        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM-Triggered");
+        int result = ap_LoadIniPreset(_handle, _config_file.c_str(), "EyeCAM-Triggered");
         if (result != AP_INI_SUCCESS) {
             std::cout << "Failed to load trigger config for aptina\n";
             return;
@@ -207,6 +207,9 @@ namespace vidre {
         }
         delete[] b;
         b = NULL;
+
+        _config_file = filepath;
+
         return true;
     }
 

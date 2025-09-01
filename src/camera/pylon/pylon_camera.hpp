@@ -1,5 +1,5 @@
 #pragma once
-#include "camera.hpp"
+#include "camera/camera.hpp"
 
 #include <thread>
 
@@ -7,7 +7,7 @@
 #include <pylon/PylonGUI.h>
 // #endif
 #include <pylon/PylonIncludes.h>
-#include "pylon_shr_mem_buffer_factory.hpp"
+#include "core/buffer/pylon/pylon_shr_mem_buffer_factory.hpp"
 
 namespace vidre {
     // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?

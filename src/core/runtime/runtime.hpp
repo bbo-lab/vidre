@@ -1,9 +1,12 @@
 #pragma once
+
 #include <pylon/PylonIncludes.h>
 #include <pylon/ImagePersistence.h>
-#include "storage.hpp"
-#include "camera.hpp"
-#include "buffer.hpp"
+
+#include "core/storage/storage.hpp"
+#include "core/buffer/buffer.hpp"
+#include "camera/camera.hpp"
+
 #include <thread>
 
 namespace vidre {

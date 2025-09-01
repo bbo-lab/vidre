@@ -6,8 +6,8 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include "config.h"
-#include "vidre/header.hpp"
-#include "vidre/shared_frame_header.hpp"
+#include "core/header/header.hpp"
+#include "core/runtime/shared_frame_header.hpp"
 
 #include <variant>
 
