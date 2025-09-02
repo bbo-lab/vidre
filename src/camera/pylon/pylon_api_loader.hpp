@@ -1,10 +1,8 @@
 #pragma once
 #include <string>
 
-extern "C" {
-    typedef void (*PylonInitialize_t)();
-    typedef void (*PylonTerminate_t)();
-}
+using PylonInitialize_t = void (*)(void);
+using PylonTerminate_t = void (*)(void);
 
 extern PylonInitialize_t PylonInitialize;
 extern PylonTerminate_t PylonTerminate;

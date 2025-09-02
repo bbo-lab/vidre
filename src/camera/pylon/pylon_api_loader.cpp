@@ -5,18 +5,19 @@
 PylonInitialize_t PylonInitialize = nullptr;
 PylonTerminate_t PylonTerminate = nullptr;
 
-static DynamicLibraryLoader* loader = nullptr;
+static std::unique_ptr<DynamicLibraryLoader> g_pylon_lib;
 
 bool load_pylon_library(const std::string& lib_path) {
-    if (loader) return true;
+    if (g_pylon_lib) return true;
     try {
-        loader = new DynamicLibraryLoader(lib_path);
-        PylonInitialize = loader->loadSymbol<PylonInitialize_t>("PylonInitialize");
-        PylonTerminate = loader->loadSymbol<PylonTerminate_t>("PylonTerminate");
+        auto library = std::make_unique<DynamicLibraryLoader>(lib_path);
+        PylonInitialize = library->loadSymbol<PylonInitialize_t>("PylonInitialize");
+        PylonTerminate  = library->loadSymbol<PylonTerminate_t>("PylonTerminate");
+
+        g_pylon_lib = std::move(library);
         return true;
     } catch (const std::exception& e) {
-        delete loader;
-        loader = nullptr;
+        g_pylon_lib.reset();
         return false;
     }
 }

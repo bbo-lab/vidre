@@ -12,25 +12,30 @@ ap_LoadIniPreset_t ap_LoadIniPreset = nullptr;
 ap_CheckSensorState_t ap_CheckSensorState = nullptr;
 ap_GetImageFormat_t ap_GetImageFormat = nullptr;
 
-static DynamicLibraryLoader* loader = nullptr;
+static std::unique_ptr<DynamicLibraryLoader> g_aptina_lib;
 
 bool load_aptina_library(const std::string& lib_path) {
-    if (loader) return true;
+    if (g_aptina_lib) {
+        return true;
+    }
     try {
-        loader = new DynamicLibraryLoader(lib_path);
-        ap_Create = loader->loadSymbol<ap_Create_t>("ap_Create");
-        ap_GrabFrame = loader->loadSymbol<ap_GrabFrame_t>("ap_GrabFrame");
-        ap_GetLastError = loader->loadSymbol<ap_GetLastError_t>("ap_GetLastError");
-        ap_Finalize = loader->loadSymbol<ap_Finalize_t>("ap_Finalize");
-        ap_Destroy = loader->loadSymbol<ap_Destroy_t>("ap_Destroy");
-        ap_SetState = loader->loadSymbol<ap_SetState_t>("ap_SetState");
-        ap_LoadIniPreset = loader->loadSymbol<ap_LoadIniPreset_t>("ap_LoadIniPreset");
-        ap_CheckSensorState = loader->loadSymbol<ap_CheckSensorState_t>("ap_CheckSensorState");
-        ap_GetImageFormat = loader->loadSymbol<ap_GetImageFormat_t>("ap_GetImageFormat");
+        auto library = std::make_unique<DynamicLibraryLoader>(lib_path);
+        
+        ap_Create = library->loadSymbol<ap_Create_t>("ap_Create");
+        ap_GrabFrame = library->loadSymbol<ap_GrabFrame_t>("ap_GrabFrame");
+        ap_GetLastError = library->loadSymbol<ap_GetLastError_t>("ap_GetLastError");
+        ap_Finalize = library->loadSymbol<ap_Finalize_t>("ap_Finalize");
+        ap_Destroy = library->loadSymbol<ap_Destroy_t>("ap_Destroy");
+        ap_SetState = library->loadSymbol<ap_SetState_t>("ap_SetState");
+        ap_LoadIniPreset = library->loadSymbol<ap_LoadIniPreset_t>("ap_LoadIniPreset");
+        ap_CheckSensorState = library->loadSymbol<ap_CheckSensorState_t>("ap_CheckSensorState");
+        ap_GetImageFormat = library->loadSymbol<ap_GetImageFormat_t>("ap_GetImageFormat");
+
+        g_aptina_lib = std::move(library);
+        
         return true;
     } catch (const std::exception& e) {
-        delete loader;
-        loader = nullptr;
+        g_aptina_lib.reset();
         return false;
     }
 }
