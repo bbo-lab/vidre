@@ -3,6 +3,8 @@
 #include "camera/pylon/pylon_camera.hpp"
 #include "camera/aptina/aptina_camera.hpp"
 
+#include "core/runtime/runtime.hpp"
+
 namespace vidre {
     std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
         if (!cameraNode["vendor"])

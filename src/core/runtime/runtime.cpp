@@ -1,53 +1,41 @@
 #include "runtime.hpp"
-#include "camera/pylon/pylon_camera.hpp"
 #include "shared_frame_header.hpp"
-#include "core/storage/storage.hpp"
-#include <string>
 
-
-static void presentFrame(void *dataBuffer, const vidre::Config &config) {
-    Pylon::CPylonImage image;
-    image.AttachUserBuffer(dataBuffer, config.width * config.height, config.pixelType, config.width,
-                           config.height, config.paddingX);
-    Pylon::DisplayImage(1, image);
-}
 
 namespace vidre
 {
-    RuntimeInstance::~RuntimeInstance() {
-        // Unsure where this last (and to be closed) PylonInit comes from.
-        Pylon::PylonTerminate();
-    }
+    // RuntimeInstance::~RuntimeInstance() {
+    // }
 
-    RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
-        _camera = std::make_unique<vidre::PylonCamera>();
+    // RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
+    //     _camera = std::make_unique<vidre::PylonCamera>();
 
-        // Initialize and start the camera
-        _camera->Init();
+    //     // Initialize and start the camera
+    //     _camera->Init();
 
-        if (!_camera->LoadConfiguration(configuration.c_str())) {
-            std::cout << "Could not load configuration file \"" << configuration << "\" \n";
-        }
+    //     if (!_camera->LoadConfiguration(configuration.c_str())) {
+    //         std::cout << "Could not load configuration file \"" << configuration << "\" \n";
+    //     }
 
 
         
-        vidre::Config cameraConfig{};
-        cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
-        cameraConfig.paddingX = _camera->GetFrameOffsetX();
-        cameraConfig.width = _camera->GetFrameWidth();
-        cameraConfig.height = _camera->GetFrameHeight();
-        cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
-        cameraConfig.frameRate =  _camera->GetFrameRate();
-        cameraConfig.serialNumber = _camera->GetSerialNumber();
-        cameraConfig.frameBytesActual = _camera->GetFrameBytes();
-        cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
+    //     vidre::Config cameraConfig{};
+    //     cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+    //     cameraConfig.paddingX = _camera->GetFrameOffsetX();
+    //     cameraConfig.width = _camera->GetFrameWidth();
+    //     cameraConfig.height = _camera->GetFrameHeight();
+    //     cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
+    //     cameraConfig.frameRate =  _camera->GetFrameRate();
+    //     cameraConfig.serialNumber = _camera->GetSerialNumber();
+    //     cameraConfig.frameBytesActual = _camera->GetFrameBytes();
+    //     cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
 
-        _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
+    //     _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
 
-        _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
+    //     _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
 
-        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
-    }
+    //     _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
+    // }
 
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
         if (_camera != nullptr) {
@@ -75,7 +63,7 @@ namespace vidre
         }
         
         vidre::Config cameraConfig{};
-        cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
+        // cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
         cameraConfig.paddingX = _camera->GetFrameOffsetX();
         cameraConfig.width = _camera->GetFrameWidth();
         cameraConfig.height = _camera->GetFrameHeight();
@@ -152,6 +140,9 @@ namespace vidre
 
     bool RuntimeInstance::checkCamera() {
         return _camera != nullptr;
+    }
+    bool RuntimeInstance:: isRunning() {
+            return _camera->IsRunning();
     }
 
 }

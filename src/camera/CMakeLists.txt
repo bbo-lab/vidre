@@ -1,6 +1,6 @@
 target_sources(vidre PRIVATE
     camera.hpp
-    dynamic_load.hpp
+    # dynamic_load.hpp
 )
 
 add_subdirectory(pylon)

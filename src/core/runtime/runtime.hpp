@@ -1,13 +1,10 @@
 #pragma once
 
-#include <pylon/PylonIncludes.h>
-#include <pylon/ImagePersistence.h>
-
+#include <thread>
 #include "core/storage/storage.hpp"
 #include "core/buffer/buffer.hpp"
 #include "camera/camera.hpp"
-
-#include <thread>
+#include <string>
 
 namespace vidre {
     struct Config;
@@ -16,7 +13,7 @@ namespace vidre {
     public:
         RuntimeInstance() = default;
         RuntimeInstance(std::string configuration, std::string header_format = "ccv");
-        ~RuntimeInstance();
+        ~RuntimeInstance() = default;
         
         void retrieveFrames();
         void run();
@@ -27,10 +24,7 @@ namespace vidre {
 
         bool checkCamera();
 
-        bool isRunning()
-        {
-            return _camera->IsRunning();
-        }
+        bool isRunning();
 
     private:
         int _currentFrame = 0;

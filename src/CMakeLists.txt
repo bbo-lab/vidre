@@ -11,7 +11,7 @@ source_group(public FILES ${public_headers})
 
 add_library(vidre STATIC ${public_headers})
 
-target_include_directories(vidre PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(vidre PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(vidre PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(vidre PUBLIC ${CMAKE_BINARY_DIR})
 
@@ -30,6 +30,10 @@ target_link_libraries(vidre PUBLIC Boost::program_options)
 target_link_libraries(vidre PUBLIC Boost::filesystem)
 
 target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
+
+
+find_package(dylib REQUIRED)
+target_link_libraries(vidre PUBLIC dylib::dylib)
 
 add_subdirectory(camera)
 add_subdirectory(core)

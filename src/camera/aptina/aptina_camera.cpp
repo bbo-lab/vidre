@@ -1,4 +1,4 @@
-#include "aptina_api_loader.hpp"
+// #include "aptina_api_loader.hpp"
 #include "aptina_camera.hpp"
 
 #include <iostream>

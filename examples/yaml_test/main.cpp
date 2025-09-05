@@ -5,8 +5,9 @@
 #include <boost/program_options.hpp>
 
 #include "../src/utils/config_loader/config_loader.hpp"
-#include "../src/camera/aptina/aptina_api_loader.hpp"
-#include "../src/camera/pylon/pylon_api_loader.hpp"
+#include "../src/core/runtime/runtime.hpp"
+// #include "../src/camera/aptina/aptina_api_loader.hpp"
+// #include "../src/camera/pylon/pylon_api_loader.hpp"
 
 namespace po = boost::program_options;
 
@@ -31,14 +32,14 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
 
 int main(int argc, const char *argv[]) {
     // Load dynamic libraries for camera APIs before using any camera
-    const char* aptinaLibPath = "libaptina.so"; //
-    const char* pylonLibPath = "libpylon.so"; // 
-    if (!load_aptina_library(aptinaLibPath)) {
-        std::cerr << "Failed to load Aptina dynamic library: " << aptinaLibPath << std::endl;
-    }
-    if (!load_pylon_library(pylonLibPath)) {
-        std::cerr << "Failed to load Pylon dynamic library: " << pylonLibPath << std::endl;
-    }
+    //const char* aptinaLibPath = "libaptina.so"; //
+    //const char* pylonLibPath = "libpylon.so"; // 
+    //if (!load_aptina_library(aptinaLibPath)) {
+    //    std::cerr << "Failed to load Aptina dynamic library: " << aptinaLibPath << std::endl;
+    //}
+    //if (!load_pylon_library(pylonLibPath)) {
+    //    std::cerr << "Failed to load Pylon dynamic library: " << pylonLibPath << std::endl;
+    //}
     // Parse arguments and set relevant variables.
     po::options_description desc("Allowed options");
     desc.add_options()("help", "Print this help message")("config", po::value<std::string>(),
