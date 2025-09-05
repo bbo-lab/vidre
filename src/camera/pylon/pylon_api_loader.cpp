@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <memory>
 
-PylonInitialize_t PylonInitialize = nullptr;
-PylonTerminate_t PylonTerminate = nullptr;
+PylonInitialize_t* PylonInitialize = nullptr;
+PylonTerminate_t* PylonTerminate = nullptr;
 
 static std::unique_ptr<DynamicLibraryLoader> g_pylon_lib;
 
@@ -12,8 +12,8 @@ bool load_pylon_library(const std::string& lib_path) {
     if (g_pylon_lib) return true;
     try {
         auto library = std::make_unique<DynamicLibraryLoader>(lib_path);
-        PylonInitialize = library->loadSymbol<PylonInitialize_t>("PylonInitialize");
-        PylonTerminate  = library->loadSymbol<PylonTerminate_t>("PylonTerminate");
+        PylonInitialize = library->lib.get_function<PylonInitialize_t>("PylonInitialize");
+        PylonTerminate  = library->lib.get_function<PylonTerminate_t>("PylonTerminate");
 
         g_pylon_lib = std::move(library);
         return true;

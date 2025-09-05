@@ -9,6 +9,9 @@
 // #include "../src/camera/aptina/aptina_api_loader.hpp"
 // #include "../src/camera/pylon/pylon_api_loader.hpp"
 
+#include "dylib.hpp"
+
+
 namespace po = boost::program_options;
 
 // std::string systemConfigFilepath = "C:/Not/A/Real/Path.yaml";
