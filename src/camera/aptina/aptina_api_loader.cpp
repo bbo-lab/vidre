@@ -1,6 +1,7 @@
 #include "aptina_api_loader.hpp"
 #include "utils/dynamic_loader/dynamic_library_loader.hpp"
 #include <stdexcept>
+#include <iostream> 
 
  ap_Create_t* ap_Create = nullptr;
  ap_GrabFrame_t* ap_GrabFrame = nullptr;
@@ -12,30 +13,24 @@
  ap_CheckSensorState_t* ap_CheckSensorState = nullptr;
  ap_GetImageFormat_t* ap_GetImageFormat = nullptr;
 
-static std::unique_ptr<DynamicLibraryLoader> g_aptina_lib;
 
 bool load_aptina_library(const std::string& lib_path) {
-    if (g_aptina_lib) {
-        return true;
-    }
     try {
-        auto library = std::make_unique<DynamicLibraryLoader>(lib_path);
-        
-        ap_Create = library->lib.get_function<ap_Create_t>("ap_Create");
-        ap_GrabFrame = library->lib.get_function<ap_GrabFrame_t>("ap_GrabFrame");
-        ap_GetLastError = library->lib.get_function<ap_GetLastError_t>("ap_GetLastError");
-        ap_Finalize = library->lib.get_function<ap_Finalize_t>("ap_Finalize");
-        ap_Destroy = library->lib.get_function<ap_Destroy_t>("ap_Destroy");
-        ap_SetState = library->lib.get_function<ap_SetState_t>("ap_SetState");
-        ap_LoadIniPreset = library->lib.get_function<ap_LoadIniPreset_t>("ap_LoadIniPreset");
-        ap_CheckSensorState = library->lib.get_function<ap_CheckSensorState_t>("ap_CheckSensorState");
-        ap_GetImageFormat = library->lib.get_function<ap_GetImageFormat_t>("ap_GetImageFormat");
+        dylib lib(lib_path, dylib::no_filename_decorations);
+        std::cout << ap_Create << std::endl;
+        ap_Create = lib.get_function<ap_Create_t>("ap_Create");
+        ap_GrabFrame = lib.get_function<ap_GrabFrame_t>("ap_GrabFrame");
+        ap_GetLastError = lib.get_function<ap_GetLastError_t>("ap_GetLastError");
+        ap_Finalize = lib.get_function<ap_Finalize_t>("ap_Finalize");
+        ap_Destroy = lib.get_function<ap_Destroy_t>("ap_Destroy");
+        ap_SetState = lib.get_function<ap_SetState_t>("ap_SetState");
+        ap_LoadIniPreset = lib.get_function<ap_LoadIniPreset_t>("ap_LoadIniPreset");
+        ap_CheckSensorState = lib.get_function<ap_CheckSensorState_t>("ap_CheckSensorState");
+        ap_GetImageFormat = lib.get_function<ap_GetImageFormat_t>("ap_GetImageFormat");
 
-        g_aptina_lib = std::move(library);
-        
         return true;
     } catch (const std::exception& e) {
-        g_aptina_lib.reset();
+        std::cerr << "An exception occurred." << std::endl << e.what() << std::endl;
         return false;
     }
 }

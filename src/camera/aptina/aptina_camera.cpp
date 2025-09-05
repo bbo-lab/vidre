@@ -58,8 +58,12 @@ namespace vidre {
         if (!ap_Create || !ap_SetState) {
             std::cerr << "Aptina API not loaded!\n";
             return false;
+        } else {
+            std::cout << "Loaded init\n";
         }
+        std::cout << ap_Create << std::endl;
         _handle = ap_Create(0);
+        std::cout << "H1\n";
         if (_handle == nullptr) {
             std::cout << "Failed to Init aptina\n";
             return false;
