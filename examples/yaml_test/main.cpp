@@ -6,10 +6,9 @@
 
 #include "../src/utils/config_loader/config_loader.hpp"
 #include "../src/core/runtime/runtime.hpp"
-#include "../src/camera/aptina/aptina_api_loader.hpp"
+#include "utils/dynamic_loader/dynamic_library_loader.hpp"
 // #include "../src/camera/pylon/pylon_api_loader.hpp"
 
-#include "dylib.hpp"
 
 
 namespace po = boost::program_options;
@@ -36,16 +35,16 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
 int main(int argc, const char *argv[]) {
     // Load dynamic libraries for camera APIs before using any camera
     // const char* aptinaLibPath = "C:/Aptina Imaging/lib/apbase.lib"; //
-    const char* aptinaLibPath = "C:/Aptina Imaging/bin/apbase.dll"; //
+    vidre::APTINA_LIBRARY_PATH = "C:/Aptina Imaging/bin/apbase.dll"; //
 
     //const char* pylonLibPath = "libpylon.so"; // 
-    if (!load_aptina_library(aptinaLibPath)) {
-       std::cerr << "Failed to load Aptina dynamic library: " << aptinaLibPath << std::endl;
-        return -1;
-    }
-    else{
-        std::cout << "LOADED APTINA\n";
-    }
+    // if (!load_aptina_library(aptinaLibPath)) {
+    //    std::cerr << "Failed to load Aptina dynamic library: " << aptinaLibPath << std::endl;
+    //     return -1;
+    // }
+    // else{
+    //     std::cout << "LOADED APTINA\n";
+    // }
     //if (!load_pylon_library(pylonLibPath)) {
     //    std::cerr << "Failed to load Pylon dynamic library: " << pylonLibPath << std::endl;
     //}

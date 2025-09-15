@@ -32,8 +32,8 @@ target_link_libraries(vidre PUBLIC Boost::filesystem)
 target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 
 
-find_package(dylib REQUIRED)
-target_link_libraries(vidre PUBLIC dylib::dylib)
+# find_package(dylib REQUIRED)
+# target_link_libraries(vidre PUBLIC dylib::dylib)
 
 add_subdirectory(camera)
 add_subdirectory(core)

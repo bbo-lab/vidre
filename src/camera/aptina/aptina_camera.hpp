@@ -1,7 +1,6 @@
 #pragma once
 #include "camera/camera.hpp"
 #include "core/buffer/aptina/aptina_buffer.hpp"
-#include "aptina_api_loader.hpp"
 #include <thread>
 
 //#include "apbase.h"
@@ -51,7 +50,7 @@ namespace vidre {
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
     private:
-        ap_handle_t _handle;
+        void* _handle;
         
         void run();
 

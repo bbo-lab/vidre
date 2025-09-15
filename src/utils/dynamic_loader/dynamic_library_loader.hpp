@@ -1,23 +1,24 @@
 #pragma once
+
 #include <string>
-#include <stdexcept>
-
-#include "dylib.hpp"
-
-// #ifdef _WIN32
-// #include <windows.h>
-// #else
-// #include <dlfcn.h>
-// #endif
 
 
-class DynamicLibraryLoader {
-public:
-    DynamicLibraryLoader(const std::string& path) {
-        lib = dylib(path);
+
+namespace vidre {
+    inline std::string APTINA_LIBRARY_PATH = "";
+    inline std::string PYLON_LIBRARY_PATH = "";
+
+    namespace util {
+
+    namespace impl {
+        void* get_function(const std::string& library_name, const std::string& function);
+    } // namespace impl
+
+
+    template<typename T>
+    T get_function(const std::string& library_name, const std::string& function) {
+        return reinterpret_cast<T>(impl::get_function(library_name, function));
     }
 
-    ~DynamicLibraryLoader() = default;
-
-    dylib lib = dylib("");
-};
+    } // namespace util
+} // namespace vidre

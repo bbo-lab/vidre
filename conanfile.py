@@ -27,7 +27,7 @@ class Vidre(ConanFile):
         self.requires("boost/1.86.0")
         self.requires("cli11/[2.3.2]")
         self.requires("fmt/11.1.1")
-        self.requires("dylib/2.2.1")
+        # self.requires("dylib/2.2.1")
 
     def build_requirements(self):
         self.tool_requires("cmake/3.29.6")
