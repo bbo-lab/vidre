@@ -10,6 +10,8 @@ set(public_headers
 source_group(public FILES ${public_headers})
 
 add_library(vidre STATIC ${public_headers})
+# add_library(vidre::pylon STATIC ${public_headers})
+# add_library(vidre::aptina STATIC ${public_headers})
 
 target_include_directories(vidre PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(vidre PUBLIC ${CMAKE_SOURCE_DIR}/include)
