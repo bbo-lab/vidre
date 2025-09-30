@@ -1,35 +1,22 @@
+// #include "aptina_api_loader.hpp"
 #include "aptina_camera.hpp"
-#include "utils/dynamic_loader/dynamic_library_loader.hpp"
-#include "core/runtime/shared_frame_header.hpp"
-
 
 #include <iostream>
 
 namespace vidre {
     AptinaCamera::AptinaCamera() : running(false), armed(false) , _handle(nullptr) {}
     AptinaCamera::~AptinaCamera() {
-        using ap_Finalize_t = void(void);
-        ap_Finalize_t* ap_Finalize = util::get_function<ap_Finalize_t*>(APTINA_LIBRARY_PATH, "ap_Finalize");
         if (ap_Finalize) ap_Finalize();
     }
 
     void AptinaCamera::run() {
         running.store(true);
-
-        using ap_GrabFrame_t        = unsigned int(void*, unsigned char*, unsigned int);
-        ap_GrabFrame_t* ap_GrabFrame = util::get_function<ap_GrabFrame_t*>(APTINA_LIBRARY_PATH, "ap_GrabFrame");
-        using ap_GetLastError_t     = int(void);
-        ap_GetLastError_t* ap_GetLastError = util::get_function<ap_GetLastError_t*>(APTINA_LIBRARY_PATH, "ap_GetLastError");
-        
-        if (!ap_GrabFrame || !ap_GetLastError) {
-            std::cerr << "Aptina API not loaded!\n";
-            return;
-        }
-
-
         while (running.load()) {
             auto [buffer, header] = _buffer.CurrentBuffer(_buffer_num);
-
+            if (!ap_GrabFrame || !ap_GetLastError) {
+                std::cerr << "Aptina API not loaded!\n";
+                return;
+            }
             ap_GrabFrame(_handle, buffer, _buffer_size_min);
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime
@@ -56,14 +43,10 @@ namespace vidre {
     }
 
     void AptinaCamera::Init() {
-        using ap_Create_t = void*(int);
-        ap_Create_t* ap_Create = util::get_function<ap_Create_t*>(APTINA_LIBRARY_PATH, "ap_Create");
-        
         if (!ap_Create) {
             std::cerr << "Aptina API not loaded!\n";
             return;
         }
-
         _handle = ap_Create(0);
         if (_handle == nullptr) {
             std::cout << "Failed to Init aptina\n";
@@ -72,24 +55,11 @@ namespace vidre {
 
     bool AptinaCamera::Init(std::string serial) {
         _serial = serial;
-
-        using ap_Create_t = void*(int);
-        ap_Create_t* ap_Create = util::get_function<ap_Create_t*>(APTINA_LIBRARY_PATH, "ap_Create");
-        
-        using ap_SetState_t = int(void*, const char*, int);
-        ap_SetState_t* ap_SetState = util::get_function<ap_SetState_t*>(APTINA_LIBRARY_PATH, "ap_SetState");
-
-
-
         if (!ap_Create || !ap_SetState) {
             std::cerr << "Aptina API not loaded!\n";
             return false;
-        } else {
-            std::cout << "Loaded init\n";
         }
-        std::cout << ap_Create << std::endl;
         _handle = ap_Create(0);
-        std::cout << "H1\n";
         if (_handle == nullptr) {
             std::cout << "Failed to Init aptina\n";
             return false;
@@ -191,15 +161,6 @@ namespace vidre {
 
     
     void AptinaCamera::SetTriggerIn(unsigned int line) {
-        using ap_Destroy_t = void(void*);
-        ap_Destroy_t* ap_Destroy = util::get_function<ap_Destroy_t*>(APTINA_LIBRARY_PATH, "ap_Destroy");
-
-        using ap_Finalize_t = void(void);
-        ap_Finalize_t* ap_Finalize = util::get_function<ap_Finalize_t*>(APTINA_LIBRARY_PATH, "ap_Finalize");
-        
-        using ap_LoadIniPreset_t    = int(void*, const char*, const char*);
-        ap_LoadIniPreset_t* ap_LoadIniPreset = util::get_function<ap_LoadIniPreset_t*>(APTINA_LIBRARY_PATH, "ap_LoadIniPreset");
-
         if (!ap_Destroy || !ap_Finalize || !ap_LoadIniPreset) {
             std::cerr << "Aptina API not loaded!\n";
             return;
@@ -218,28 +179,10 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
-        using ap_LoadIniPreset_t = int(void*, const char*, const char*);
-        ap_LoadIniPreset_t* ap_LoadIniPreset = util::get_function<ap_LoadIniPreset_t*>(APTINA_LIBRARY_PATH, "ap_LoadIniPreset");
-
-        using ap_CheckSensorState_t = int(void*, unsigned int);
-        ap_CheckSensorState_t* ap_CheckSensorState = util::get_function<ap_CheckSensorState_t*>(APTINA_LIBRARY_PATH, "ap_CheckSensorState");
-
-        using ap_GetImageFormat_t = int(void*, unsigned int*, unsigned int*, char*, unsigned int);
-        ap_GetImageFormat_t* ap_GetImageFormat = util::get_function<ap_GetImageFormat_t*>(APTINA_LIBRARY_PATH, "ap_GetImageFormat");
-
-        using ap_GrabFrame_t = unsigned int(void*, unsigned char*, unsigned int);
-        ap_GrabFrame_t* ap_GrabFrame = util::get_function<ap_GrabFrame_t*>(APTINA_LIBRARY_PATH, "ap_GrabFrame");
-        
-        using ap_GetLastError_t = int(void);
-        ap_GetLastError_t* ap_GetLastError = util::get_function<ap_GetLastError_t*>(APTINA_LIBRARY_PATH, "ap_GetLastError");
-        
-
-
         if (!ap_LoadIniPreset || !ap_CheckSensorState || !ap_GetImageFormat || !ap_GrabFrame || !ap_GetLastError) {
             std::cerr << "Aptina API not loaded!\n";
             return false;
         }
-        
         int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
         if (result != AP_INI_SUCCESS) {
             std::cout << "Failed to load config for  aptina\n";

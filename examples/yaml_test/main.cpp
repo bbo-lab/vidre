@@ -35,7 +35,7 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
 int main(int argc, const char *argv[]) {
     // Load dynamic libraries for camera APIs before using any camera
     // const char* aptinaLibPath = "C:/Aptina Imaging/lib/apbase.lib"; //
-    vidre::APTINA_LIBRARY_PATH = "C:/Aptina Imaging/bin/apbase.dll"; //
+    std::string aptinaLibPath= "C:/Aptina Imaging/bin/apbase.dll"; //
 
     //const char* pylonLibPath = "libpylon.so"; // 
     // if (!load_aptina_library(aptinaLibPath)) {

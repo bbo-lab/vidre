@@ -1,11 +1,10 @@
 #pragma once
 #include "camera/camera.hpp"
 #include "core/buffer/aptina/aptina_buffer.hpp"
+
 #include <thread>
 
-//#include "apbase.h"
-static int AP_CAMERA_SUCCESS = 0x00;
-static int AP_INI_SUCCESS  = 0x100;
+#include "apbase.h"
 
 namespace vidre {
     class AptinaCamera : public ICamera {
@@ -50,7 +49,7 @@ namespace vidre {
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
     private:
-        void* _handle;
+        AP_HANDLE _handle;
         
         void run();
 
