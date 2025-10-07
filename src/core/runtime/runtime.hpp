@@ -1,10 +1,12 @@
 #pragma once
 
 #include <thread>
+#include <string>
+#include <iostream>
+
 #include "core/storage/storage.hpp"
 #include "core/buffer/buffer.hpp"
 #include "camera/camera.hpp"
-#include <string>
 
 namespace vidre {
     struct Config;

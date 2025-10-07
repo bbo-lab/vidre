@@ -297,3 +297,14 @@ namespace vidre {
         shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
     }
 }  // namespace vidre
+
+
+extern "C" {
+VIDRE_CAMERA_API vidre::ICamera* create_pylon_camera() {
+    return new vidre::PylonCamera();
+}
+
+VIDRE_CAMERA_API void destroy_pylon_camera(vidre::ICamera* camera) {
+    delete camera;
+}
+}

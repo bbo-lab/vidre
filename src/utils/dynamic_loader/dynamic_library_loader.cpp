@@ -12,7 +12,23 @@
 namespace vidre {
 namespace util {
 
-void* load_library(const std::string& library_name) {
+    bool IsLibraryAvailable(const std::string& library_name) {
+    #ifdef _WIN32
+        auto result = LoadLibraryExA(library_name.c_str(), NULL, 0);
+    #else
+        dlerror();
+        auto result = dlopen(library_name.c_str(), RTLD_LAZY);
+    #endif
+        if (result == nullptr) {
+            std::cout << "Failed to load " << library_name << std::endl;
+            return false;
+        }
+
+        std::cout << "Library " << library_name << " is available " << std::endl;
+        return true;
+    }
+
+void* LoadLibrary(const std::string& library_name) {
 #ifdef _WIN32
     auto result = LoadLibraryExA(library_name.c_str(), NULL, 0);
 #else
@@ -27,13 +43,13 @@ void* load_library(const std::string& library_name) {
 }
 
 namespace impl{
-void* get_function(const std::string& library_name, const std::string& function) {
+void* GetFunction(const std::string& library_name, const std::string& function) {
 #ifdef _WIN32
-    auto handle = load_library(library_name);
+    auto handle = LoadLibrary(library_name);
     
     auto result = GetProcAddress((HMODULE)handle, function.c_str());
     if (result == nullptr) {
-        std::cout << "Failed to get function" << function << " of library " << library_name << std::endl;
+        std::cout << "Failed to get function " << function << " of library " << library_name << std::endl;
         return nullptr;
     }
 #else

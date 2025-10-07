@@ -18,7 +18,7 @@ namespace vidre {
 
     struct Config {
         // todo: rm
-        Pylon::EPixelType pixelType;
+        //Pylon::EPixelType pixelType;
         
         // frame
         uint32_t width;

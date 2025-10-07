@@ -1,6 +1,6 @@
 #pragma once
 #include "camera/camera.hpp"
-#include "core/buffer/aptina/aptina_buffer.hpp"
+#include "aptina_buffer.hpp"
 
 #include <thread>
 

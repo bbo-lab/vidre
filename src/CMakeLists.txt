@@ -17,29 +17,22 @@ target_include_directories(vidre PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(vidre PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(vidre PUBLIC ${CMAKE_BINARY_DIR})
 
-if(PYLON_ENABLED)
-    message(STATUS "Using pylon SDK (Basler AG)")
-    target_link_libraries(vidre PUBLIC pylon::pylon)
-endif()
 
-if(APTINA_ENABLED)
-    target_include_directories(vidre PUBLIC ${APTINA_INCLUDE_DIR})
-    target_link_libraries(vidre PUBLIC ${APTINA_LIBRARIES})
-endif()
 
 target_link_libraries(vidre PUBLIC Boost::headers)
 target_link_libraries(vidre PUBLIC Boost::program_options)
 target_link_libraries(vidre PUBLIC Boost::filesystem)
-
 target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 
 
-# find_package(dylib REQUIRED)
-# target_link_libraries(vidre PUBLIC dylib::dylib)
 
-add_subdirectory(camera)
+
+
+
+
 add_subdirectory(core)
 add_subdirectory(utils)
+add_subdirectory(camera)
 
 install(FILES ${public_headers} DESTINATION include/vidre)
 

@@ -3,6 +3,15 @@
 #include <memory>
 
 #include <boost/interprocess/managed_shared_memory.hpp>
+#include "core/storage/storage.hpp"
+
+
+
+#ifdef _WIN32
+    #define VIDRE_CAMERA_API __declspec(dllexport)
+#else
+    #define VIDRE_CAMERA_API __attribute__((visibility("default")))
+#endif
 
 namespace vidre {
     // Aptina camera does not seem to support GenICam cameras. Is adapting Aptina to

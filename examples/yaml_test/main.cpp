@@ -4,13 +4,18 @@
 
 #include <boost/program_options.hpp>
 
-#include "../src/utils/config_loader/config_loader.hpp"
 #include "../src/core/runtime/runtime.hpp"
 #include "utils/dynamic_loader/dynamic_library_loader.hpp"
 // #include "../src/camera/pylon/pylon_api_loader.hpp"
 
+#include <boost/filesystem.hpp>
 
 
+
+
+#include <unordered_map>
+#include "yaml-cpp/yaml.h"
+#include <filesystem>
 namespace po = boost::program_options;
 
 // std::string systemConfigFilepath = "C:/Not/A/Real/Path.yaml";
@@ -32,10 +37,120 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
     return result;
 }
 
+
+// struct CamDeleter {
+//     CamDeleter() {};
+//     void operator()(vidre::ICamera* camera) const {
+//         delete camera;
+//     };
+// }
+
+
+std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
+
+    std::string ap_base_str = "C:/Aptina Imaging/bin/apbase.dll"; 
+    vidre::APTINA_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_aptina.dll";
+
+    if (!cameraNode["vendor"])
+        return nullptr;
+
+    // Vendor is specified
+    std::unique_ptr<vidre::ICamera> camera;
+    if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0 && vidre::util::IsLibraryAvailable(ap_base_str)) {
+        using camera_ref_t = vidre::ICamera*();
+        using destroy_ref_t = void(vidre::ICamera*);
+        auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::PYLON_LIBRARY_PATH, "create_pylon_camera");
+        auto destroy = vidre::util::GetFunction<destroy_ref_t*>(vidre::PYLON_LIBRARY_PATH, "destroy_pylon_camera");
+        if (create == nullptr || destroy == nullptr) {
+            return nullptr;
+        }
+        camera = std::unique_ptr<vidre::ICamera>(create());
+    }
+    else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0 && vidre::util::IsLibraryAvailable(ap_base_str)) {
+        using camera_ref_t = vidre::ICamera*();
+        using destroy_ref_t = void(vidre::ICamera*);
+        auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::APTINA_LIBRARY_PATH, "create_aptina_camera");
+        auto destroy = vidre::util::GetFunction<destroy_ref_t*>(vidre::APTINA_LIBRARY_PATH, "destroy_aptina_camera");
+        if (create == nullptr || destroy == nullptr) {
+            return nullptr;
+        }
+        camera = std::unique_ptr<vidre::ICamera>(create());
+    }
+    else {
+        return nullptr;
+    }
+    
+    if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
+        std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
+        return nullptr;
+    }
+    std::cout << "CREATED CAM\n";
+    if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
+        std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
+        return nullptr;
+    }  // TODO: Delegate to Factory
+
+    // camera->SaveConfiguration("./" + cameraNode["serial"].as<std::string>());
+    if (cameraNode["trigger_in"]) {
+        camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
+    }
+    if (cameraNode["trigger_out"]) {
+        camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
+    }
+
+    return camera;
+}
+
+std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
+    // Idea for future: Create packages of commands per module from YAML. Afterwards properly distribute
+    // over network. Currently just execute those packages locally and just have multiple cameras
+    // be able to be started.
+    // Example:
+    // YAML File has cam1 of type camera:
+    // - prepare command with attributes from the YAML file (e.g. what config file to use)
+    // YAML File has storage1 of type storage:
+    // - ...
+    // YAML File has a pipe between cam1 and storage1. Both are on the same node:
+    // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
+
+    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
+    if (!boost::filesystem::exists(setupFilepath))
+        return cameras;
+
+    YAML::Node config = YAML::LoadFile(setupFilepath);
+
+    for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
+        if (!it->second.IsMap())
+            continue;
+        if (!it->second["type"])
+            continue;
+            
+        // Create camera from file-defined details if the node is a camera node.
+        if (!it->second["type"].as<std::string>().compare("camera") != 0) {
+            cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
+            
+            cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));
+            
+            auto storage_config = it->second["storage"];
+            auto output_file = storage_config["output_file"].as<std::string>();
+            auto header_format = storage_config["header"].as<std::string>();
+            auto bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
+            auto packed = storage_config["packed"].as<uint8_t>();
+
+            cameras[it->first.as<std::string>()]->createStorage(output_file, header_format, bits_per_pixel, packed);  
+        }
+    }
+
+    return cameras;
+}
+
 int main(int argc, const char *argv[]) {
+
+    std::cout << std::filesystem::current_path() << std::endl;
     // Load dynamic libraries for camera APIs before using any camera
     // const char* aptinaLibPath = "C:/Aptina Imaging/lib/apbase.lib"; //
-    std::string aptinaLibPath= "C:/Aptina Imaging/bin/apbase.dll"; //
+
+    
 
     //const char* pylonLibPath = "libpylon.so"; // 
     // if (!load_aptina_library(aptinaLibPath)) {
@@ -48,6 +163,11 @@ int main(int argc, const char *argv[]) {
     //if (!load_pylon_library(pylonLibPath)) {
     //    std::cerr << "Failed to load Pylon dynamic library: " << pylonLibPath << std::endl;
     //}
+
+    
+
+
+
     // Parse arguments and set relevant variables.
     po::options_description desc("Allowed options");
     desc.add_options()("help", "Print this help message")("config", po::value<std::string>(),
@@ -66,7 +186,7 @@ int main(int argc, const char *argv[]) {
     }
 
     // Create system from YAML and check constructed cameras.
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras = vidre::LoadSystemSetup(systemConfigFilepath);
+    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras = LoadSystemSetup(systemConfigFilepath);
     if (cameras.size() == 0) {
         std::cout << "Error in loading system config file." << std::endl;
         return 1;

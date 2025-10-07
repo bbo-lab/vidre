@@ -226,3 +226,15 @@ namespace vidre {
         }
     }
 }  // namespace vidre
+
+
+extern "C" {
+
+VIDRE_CAMERA_API vidre::ICamera* create_aptina_camera() {
+    return new vidre::AptinaCamera();
+}
+
+VIDRE_CAMERA_API void destroy_aptina_camera(vidre::ICamera* camera) {
+    delete camera;
+}
+}

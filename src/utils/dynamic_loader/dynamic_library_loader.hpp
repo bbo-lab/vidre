@@ -5,22 +5,21 @@
 
 
 namespace vidre {
-    namespace util {
-        bool isLibraryAvailable(const std::string& library_name) {
-        #ifdef _WIN32
-            auto result = LoadLibraryExA(library_name.c_str(), NULL, 0);
-        #else
-            dlerror();
-            auto result = dlopen(library_name.c_str(), RTLD_LAZY);
-        #endif
-            if (result == nullptr) {
-                std::cout << "Failed to load " << library_name << std::endl;
-                return false;
-            }
+    inline std::string APTINA_LIBRARY_PATH = "";
+    inline std::string PYLON_LIBRARY_PATH = "";
 
-            std::cout << "Library " << library_name << "is available" << std::endl;
-            return true;
+    namespace util {
+        bool IsLibraryAvailable(const std::string& library_name);
+
+
+        namespace impl {
+            void* GetFunction(const std::string& library_name, const std::string& function);
+        } // namespace impl
+
+        template<typename T>
+        T GetFunction(const std::string& library_name, const std::string& function) {
+            return reinterpret_cast<T>(impl::GetFunction(library_name, function));
         }
-    
+
     } // namespace util
 } // namespace vidre

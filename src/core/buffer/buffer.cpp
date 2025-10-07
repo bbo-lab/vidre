@@ -2,6 +2,7 @@
 #include "core/storage/storage.hpp"
 
 #include <limits>
+#include <iostream>
 
 namespace vidre {
     Buffer::Buffer(const Config& config) 
