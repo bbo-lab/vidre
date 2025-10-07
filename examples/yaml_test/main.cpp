@@ -48,15 +48,18 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
 
 std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
 
+    // TODO : FROM CLI/ USUER INPUT 
     std::string ap_base_str = "C:/Aptina Imaging/bin/apbase.dll"; 
+    std::string pylon_base_str = "C:/Program Files/Basler/pylon 8/Runtime/x64/PylonBase_v9.dll";
     vidre::APTINA_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_aptina.dll";
+    vidre::PYLON_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_pylon.dll";
 
     if (!cameraNode["vendor"])
         return nullptr;
 
     // Vendor is specified
     std::unique_ptr<vidre::ICamera> camera;
-    if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0 && vidre::util::IsLibraryAvailable(ap_base_str)) {
+    if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0 && vidre::util::IsLibraryAvailable(pylon_base_str)) {
         using camera_ref_t = vidre::ICamera*();
         using destroy_ref_t = void(vidre::ICamera*);
         auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::PYLON_LIBRARY_PATH, "create_pylon_camera");
