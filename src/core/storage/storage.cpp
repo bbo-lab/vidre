@@ -29,16 +29,17 @@ namespace vidre {
         return _config;
     }
 
-    void Storage::save(const void* buffer, uint32_t frameID) {
-        Pylon::CPylonImage pylonImage;
+    void Storage::save(const void* buffer, uint32_t frameID) { // TODO: ? 
+        // Pylon::CPylonImage pylonImage;
 
-        Pylon::CImageFormatConverter formatConverter;
-        formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        formatConverter.Convert(pylonImage, buffer, _config.width * _config.height, _config.pixelType, _config.width, _config.height,
-                                _config.paddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
+        // Pylon::CImageFormatConverter formatConverter;
+        // formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
+        // formatConverter.Convert(pylonImage, buffer, _config.width * _config.height, _config.pixelType, _config.width, _config.height,
+        //                         _config.paddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
 
-        std::string fileName = std::to_string(frameID) + ".tiff";
-        Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
+        // std::string fileName = std::to_string(frameID) + ".tiff";
+        // Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
+        return;
     }
 
     void Storage::updateHeader(int frames) {

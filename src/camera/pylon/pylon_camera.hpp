@@ -7,7 +7,7 @@
 #include <pylon/PylonGUI.h>
 // #endif
 #include <pylon/PylonIncludes.h>
-#include "core/buffer/pylon/pylon_shr_mem_buffer_factory.hpp"
+#include "pylon_buffer.hpp"
 
 namespace vidre {
     // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
