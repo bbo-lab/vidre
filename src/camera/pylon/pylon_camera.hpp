@@ -10,23 +10,30 @@
 #include "pylon_buffer.hpp"
 
 namespace vidre {
-    // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
-
+    /// @brief Camera Interface Implementation for Pylon API
     class PylonCamera : public ICamera {
     public:
         PylonCamera();
         ~PylonCamera();
 
+        /// @brief creates Pylon::CInstantCamera
         virtual void Init() override;
+        /// @brief creates Pylon::CInstantCamera from given serial number
+        /// @param serial serial number of a camera
         virtual bool Init(std::string serial) override;
+        /// @brief Preallocates buffer for camera
         virtual void Arm() override;
         virtual void Disarm() override;
+        /// @brief Starts a new thread and executes run where frame grabbing happens
         virtual void Start() override;
         virtual void Stop() override;
 
         virtual bool IsArmed() override;
         virtual bool IsRunning() override;
-
+        /// @brief Sets shared memory owned by vidre::Storage for Pylon::IBufferFactory which handles frame allocation
+        /// @param sharedMemory shared memory instance
+        /// @param ptrs vector of pointers to each of the shared memory block
+        /// @param memory_name shared memory name (boost related)
         virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 

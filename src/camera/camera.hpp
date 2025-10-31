@@ -14,15 +14,10 @@
 #endif
 
 namespace vidre {
-    // Aptina camera does not seem to support GenICam cameras. Is adapting Aptina to
-    // GenICam interface a valid and reliable option?
-
-    // Might be needed adding another inheritance layer between
-    // ICamera and PylonCamera: GenICamera. That way mainly the
-    // aspects around camera parameters can be combined.
-
+    /// @brief Camera Interface - abstract class for vendor camera classes
     class ICamera {
     public:
+        
         // virtual ~ICamera() = default;
 
         // -------------------
