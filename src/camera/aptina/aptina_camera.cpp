@@ -1,27 +1,30 @@
-#include "vidre/aptina_camera.hpp"
+// #include "aptina_api_loader.hpp"
+#include "aptina_camera.hpp"
 
 #include <iostream>
+
+
+// TODO: check whether if(ap_F) is needed
 
 namespace vidre {
     AptinaCamera::AptinaCamera() : running(false), armed(false) , _handle(nullptr) {}
     AptinaCamera::~AptinaCamera() {
-        ap_Finalize();
+        if (ap_Finalize) ap_Finalize();
     }
 
     void AptinaCamera::run() {
         running.store(true);
-        
         while (running.load()) {
             auto [buffer, header] = _buffer.CurrentBuffer(_buffer_num);
-
+            if (!ap_GrabFrame || !ap_GetLastError) {
+                std::cerr << "Aptina API not loaded!\n";
+                return;
+            }
             ap_GrabFrame(_handle, buffer, _buffer_size_min);
-            
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime
             ).count();
-
             ++retrievedFramesNumber;
-            
             auto success = ap_GetLastError();
             if (success != AP_CAMERA_SUCCESS) {
                 std::cout << "APTINA FAILED TO GRAB\n";
@@ -43,16 +46,22 @@ namespace vidre {
     }
 
     void AptinaCamera::Init() {
+        if (!ap_Create) {
+            std::cerr << "Aptina API not loaded!\n";
+            return;
+        }
         _handle = ap_Create(0);
         if (_handle == nullptr) {
             std::cout << "Failed to Init aptina\n";
-            
         }
     }
 
     bool AptinaCamera::Init(std::string serial) {
         _serial = serial;
-
+        if (!ap_Create || !ap_SetState) {
+            std::cerr << "Aptina API not loaded!\n";
+            return false;
+        }
         _handle = ap_Create(0);
         if (_handle == nullptr) {
             std::cout << "Failed to Init aptina\n";
@@ -70,7 +79,6 @@ namespace vidre {
         #else
             sleep(1);
         #endif
-
         return true;
     }
 
@@ -156,13 +164,14 @@ namespace vidre {
 
     
     void AptinaCamera::SetTriggerIn(unsigned int line) {
+        if (!ap_Destroy || !ap_Finalize || !ap_LoadIniPreset) {
+            std::cerr << "Aptina API not loaded!\n";
+            return;
+        }
         ap_Destroy(_handle);
         ap_Finalize();
-
         Init(_serial);
-
-
-        int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM-Triggered");
+        int result = ap_LoadIniPreset(_handle, _config_file.c_str(), "EyeCAM-Triggered");
         if (result != AP_INI_SUCCESS) {
             std::cout << "Failed to load trigger config for aptina\n";
             return;
@@ -173,30 +182,27 @@ namespace vidre {
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {
+        if (!ap_LoadIniPreset || !ap_CheckSensorState || !ap_GetImageFormat || !ap_GrabFrame || !ap_GetLastError) {
+            std::cerr << "Aptina API not loaded!\n";
+            return false;
+        }
         int result = ap_LoadIniPreset(_handle, filepath.c_str(), "EyeCAM");
-
         if (result != AP_INI_SUCCESS) {
             std::cout << "Failed to load config for  aptina\n";
             return false;
         }
-
         Sleep(500);
-
         ap_CheckSensorState(_handle, 0);
-
         ap_GetImageFormat(_handle, &_w, &_h, nullptr, 0);
-
         _buffer_size_min = ap_GrabFrame(_handle, nullptr, 0);
-
         auto success = ap_GetLastError();
         if (success != AP_CAMERA_SUCCESS) {
             std::cout << "APTINA FAILED TO GRAB 1 \n";
             return false;
         }
-
         uint8_t* b = new uint8_t[_buffer_size_min * 2];
         for (auto cnt = 0; cnt < 100; ++cnt) {
-            _buffer_size_save = ap_GrabFrame(_handle, b, 2 * _buffer_size_min); // actual buffer size to save (can also be acquired through BAYER value and /8 etc.)
+            _buffer_size_save = ap_GrabFrame(_handle, b, 2 * _buffer_size_min);
             success = ap_GetLastError();
             if (success == AP_CAMERA_SUCCESS) {
                 break;
@@ -204,6 +210,8 @@ namespace vidre {
         }
         delete[] b;
         b = NULL;
+
+        _config_file = filepath;
 
         return true;
     }
@@ -221,3 +229,15 @@ namespace vidre {
         }
     }
 }  // namespace vidre
+
+
+extern "C" {
+
+VIDRE_CAMERA_API vidre::ICamera* create_aptina_camera() {
+    return new vidre::AptinaCamera();
+}
+
+VIDRE_CAMERA_API void destroy_aptina_camera(vidre::ICamera* camera) {
+    delete camera;
+}
+}

@@ -1,4 +1,5 @@
-#include "vidre/pylon_camera.hpp"
+// #include "pylon_api_loader.hpp"
+#include "pylon_camera.hpp"
 
 namespace vidre {
     // class CSampleImageEventHandler : public Pylon::CImageEventHandler {
@@ -16,8 +17,8 @@ namespace vidre {
         camera.Close();
         if (camera.IsPylonDeviceAttached())
             camera.DestroyDevice();
-
-        Pylon::PylonTerminate();
+        // if (PylonTerminate) 
+            Pylon::PylonTerminate();
     }
 
     void PylonCamera::run() {
@@ -296,3 +297,14 @@ namespace vidre {
         shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
     }
 }  // namespace vidre
+
+
+extern "C" {
+VIDRE_CAMERA_API vidre::ICamera* create_pylon_camera() {
+    return new vidre::PylonCamera();
+}
+
+VIDRE_CAMERA_API void destroy_pylon_camera(vidre::ICamera* camera) {
+    delete camera;
+}
+}
