@@ -3,6 +3,9 @@
 
 #include <iostream>
 
+
+// TODO: check whether if(ap_F) is needed
+
 namespace vidre {
     AptinaCamera::AptinaCamera() : running(false), armed(false) , _handle(nullptr) {}
     AptinaCamera::~AptinaCamera() {

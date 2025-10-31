@@ -6,7 +6,6 @@
 
 #include "../src/core/runtime/runtime.hpp"
 #include "utils/dynamic_loader/dynamic_library_loader.hpp"
-// #include "../src/camera/pylon/pylon_api_loader.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -36,14 +35,6 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
 
     return result;
 }
-
-
-// struct CamDeleter {
-//     CamDeleter() {};
-//     void operator()(vidre::ICamera* camera) const {
-//         delete camera;
-//     };
-// }
 
 
 std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
