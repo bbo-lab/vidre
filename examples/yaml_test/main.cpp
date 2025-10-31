@@ -148,7 +148,9 @@ std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSys
 }
 
 int main(int argc, const char *argv[]) {
-
+    // TODO: Separate Record System option/button
+    // TODO: automatically detect master/triggered cam
+    // TODO: first start all triggered cams, first finish master cam 
     std::cout << std::filesystem::current_path() << std::endl;
     // Load dynamic libraries for camera APIs before using any camera
     // const char* aptinaLibPath = "C:/Aptina Imaging/lib/apbase.lib"; //
