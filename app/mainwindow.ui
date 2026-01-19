@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Vidre Camera Control</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+    background-color: #2b2b2b;
+}
+
+QToolBar {
+    background-color: #3c3f41;
+    border: none;
+    spacing: 3px;
+    padding: 2px;
+}
+
+QToolButton {
+    background-color: #3c3f41;
+    border: 1px solid #555555;
+    border-radius: 3px;
+    padding: 5px;
+    color: #bbbbbb;
+}
+
+QToolButton:hover {
+    background-color: #4b4b4b;
+    border: 1px solid #6b6b6b;
+}
+
+QToolButton:pressed {
+    background-color: #2b2b2b;
+}
+
+QDockWidget {
+    background-color: #3c3f41;
+    color: #bbbbbb;
+}
+
+QDockWidget::title {
+    background-color: #3c3f41;
+    padding: 4px;
+    border: 1px solid #555555;
+}
+
+QMdiArea {
+    background-color: #2b2b2b;
+}
+
+QTextEdit {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    border: 1px solid #555555;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 10pt;
+}
+
+QMenuBar {
+    background-color: #3c3f41;
+    color: #bbbbbb;
+}
+
+QMenuBar::item {
+    background-color: #3c3f41;
+    color: #bbbbbb;
+}
+
+QMenuBar::item:selected {
+    background-color: #4b4b4b;
+}
+
+QMenu {
+    background-color: #3c3f41;
+    color: #bbbbbb;
+    border: 1px solid #555555;
+}
+
+QMenu::item:selected {
+    background-color: #4b4b4b;
+}
+
+QStatusBar {
+    background-color: #3c3f41;
+    color: #bbbbbb;
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoadConfig"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionDeviceList"/>
+    <addaction name="actionLog"/>
+    <addaction name="separator"/>
+    <addaction name="actionTileWindows"/>
+    <addaction name="actionCascadeWindows"/>
+   </widget>
+   <widget class="QMenu" name="menuCamera">
+    <property name="title">
+     <string>Camera</string>
+    </property>
+    <addaction name="actionStartAll"/>
+    <addaction name="actionStopAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionRefreshDevices"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuView"/>
+   <addaction name="menuCamera"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionLoadConfig">
+   <property name="text">
+    <string>Load Configuration...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionStartAll">
+   <property name="text">
+    <string>Start All Cameras</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionStopAll">
+   <property name="text">
+    <string>Stop All Cameras</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+T</string>
+   </property>
+  </action>
+  <action name="actionRefreshDevices">
+   <property name="text">
+    <string>Refresh Device List</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionDeviceList">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Device List</string>
+   </property>
+  </action>
+  <action name="actionLog">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Log Window</string>
+   </property>
+  </action>
+  <action name="actionTileWindows">
+   <property name="text">
+    <string>Tile Windows</string>
+   </property>
+  </action>
+  <action name="actionCascadeWindows">
+   <property name="text">
+    <string>Cascade Windows</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionExit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>399</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

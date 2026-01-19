@@ -201,3 +201,4 @@ add_subdirectory(src) # TODO for future: don't add if used as API
 # add_subdirectory(tests)
 # endif()
 add_subdirectory(examples)
+add_subdirectory(app)

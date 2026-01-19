@@ -1,7 +1,11 @@
 #include "storage.hpp"
 #include "core/runtime/shared_frame_header.hpp"
-
 #include "core/header/ccv/ccv_format.hpp"
+
+#include <format>
+#include <chrono>
+#include <filesystem>
+
 
 namespace vidre {
 
@@ -62,6 +66,21 @@ namespace vidre {
             }
             
             _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
+        }
+    }
+
+    void Storage::addISOName() {
+        auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
+        std::string timestamp = std::format("{:%Y%m%dT%H%M%S}", time);
+        
+        old_name = _outputFileName;
+        _outputFileName = timestamp + "_" + _outputFileName;
+
+        try {
+            std::filesystem::rename(old_name, _outputFileName);
+        } 
+        catch (const std::filesystem::filesystem_error& e) {
+            std::cerr << "Error: " << e.what() << "\n";
         }
     }
 }  // namespace vidre

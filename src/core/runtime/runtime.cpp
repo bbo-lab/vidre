@@ -84,7 +84,7 @@ namespace vidre
     }
 
 
-    void RuntimeInstance::retrieveFrames() {
+    void RuntimeInstance::retrieveFramesWithSave() {
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
@@ -94,6 +94,8 @@ namespace vidre
             if (result == nullptr) {
                 continue;
             }
+            _latestFrameData = result;
+            _currentFrame++;
            
             _storage->appendFrame(static_cast<const void *>(result));
             _storage->appendTail(header->frameID, header->timeStamp, header->computerTimeStamp);
@@ -108,6 +110,20 @@ namespace vidre
         std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
     }
 
+    void RuntimeInstance::showFrames() { // showing is implemented in app, otherwise -> run + ccv_tools
+        while (!_camera->IsRunning()) {
+            std::this_thread::yield();
+        }
+
+        while (_camera->IsRunning()) {
+            const auto [result, header] = _buffer->pop();
+            if (result == nullptr) {
+                continue;
+            }
+            _latestFrameData = result;
+        }
+    }
+
     void RuntimeInstance::run() {
         if (_camera == nullptr) {
             return;
@@ -118,9 +134,27 @@ namespace vidre
         }
 
         _camera->Arm();
+        
+        _storage->addISOName();
+        
         _camera->Start();
         
-        _thread = std::thread(&RuntimeInstance::retrieveFrames, this);
+        _thread = std::thread(&RuntimeInstance::retrieveFramesWithSave, this);
+    }
+    void RuntimeInstance::show() {
+        if (_camera == nullptr) {
+            return;
+        }
+
+        if (_storage == nullptr) {
+            return;
+        }
+
+        _camera->Arm();
+        
+        _camera->Start();
+        
+        _thread = std::thread(&RuntimeInstance::showFrames, this);
     }
 
     void RuntimeInstance::stop() {
