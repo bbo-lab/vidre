@@ -5,6 +5,7 @@
 #include <format>
 #include <chrono>
 #include <filesystem>
+#include <iostream>
 
 
 namespace vidre {
@@ -73,7 +74,7 @@ namespace vidre {
         auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
         std::string timestamp = std::format("{:%Y%m%dT%H%M%S}", time);
         
-        old_name = _outputFileName;
+        auto old_name = _outputFileName;
         _outputFileName = timestamp + "_" + _outputFileName;
 
         try {

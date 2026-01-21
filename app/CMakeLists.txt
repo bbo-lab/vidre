@@ -6,10 +6,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
-
+if(NOT Qt6_FOUND)
+    message(STATUS "Qt6 not found")
+endif()
 # Boost
 find_package(Boost REQUIRED COMPONENTS program_options filesystem)
-
 # YAML
 # find_package(yaml-cpp REQUIRED)
 

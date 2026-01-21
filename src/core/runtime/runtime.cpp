@@ -94,7 +94,7 @@ namespace vidre
             if (result == nullptr) {
                 continue;
             }
-            _latestFrameData = result;
+            _latestFrameData = static_cast<uint8_t*>(result);
             _currentFrame++;
            
             _storage->appendFrame(static_cast<const void *>(result));
@@ -120,7 +120,7 @@ namespace vidre
             if (result == nullptr) {
                 continue;
             }
-            _latestFrameData = result;
+            _latestFrameData = static_cast<uint8_t*>(result);
         }
     }
 
