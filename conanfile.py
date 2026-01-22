@@ -29,6 +29,10 @@ class Vidre(ConanFile):
         self.requires("fmt/11.1.1")
         # self.requires("qt/6.10.1")
         # self.requires("dylib/2.2.1")
+        self.requires("yaml-cpp/0.8.0")
+
+    def configure(self):
+        self.options.rm_safe("fPIC")
 
     def build_requirements(self):
         self.tool_requires("cmake/3.29.6")
@@ -46,6 +50,7 @@ class Vidre(ConanFile):
         tc = CMakeToolchain(self)
         
         tc.cache_variables["PYLON_ROOT"] = os.getenv("PYLON_ROOT")
+        tc.cache_variables["Qt6_ROOT"] = os.getenv("Qt6_DIR")
         tc.cache_variables["PYLON_DEV_DIR"] = os.getenv("PYLON_DEV_DIR")
 
         version = str(self.options.get_safe("ccv_header_version", "0.12"))

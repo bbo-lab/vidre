@@ -97,13 +97,13 @@ find_package(Boost CONFIG REQUIRED COMPONENTS ALL)
 # find_package(Boost CONFIG REQUIRED COMPONENTS exception)
 
 # YAML Parser
-include(FetchContent)
+# include(FetchContent)
 
-FetchContent_Declare(
-    yaml-cpp
-    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-)
-FetchContent_MakeAvailable(yaml-cpp)
+# FetchContent_Declare(
+#     yaml-cpp
+#     GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+# )
+# FetchContent_MakeAvailable(yaml-cpp)
 
 # UUID
 # check_include_file_cxx("uuid/uuid.h" HAVE_LIBUUID)
@@ -123,6 +123,7 @@ FetchContent_MakeAvailable(yaml-cpp)
 
 # pylon
 list(APPEND CMAKE_PREFIX_PATH ${PYLON_ROOT})
+list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.10.1/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${PYLON_DEV_DIR})
 find_package(pylon 8.0.0 REQUIRED)
 
