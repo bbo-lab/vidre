@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QDockWidget>
+#include <QTextEdit>
 #include <memory>
 #include <unordered_map>
 #include <string>
