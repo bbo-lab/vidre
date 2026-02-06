@@ -42,6 +42,10 @@ namespace vidre {
             return {_latestFrameData, _currentFrame}; 
         }
 
+        uint64_t getBitsPerPixel() {
+            return _storage->getConfig().bitsPerPixel;
+        }
+
         private:
         int _currentFrame = 0;
         std::thread _thread;

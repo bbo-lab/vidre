@@ -65,11 +65,11 @@ void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std:
         item->setText(0, QString::fromStdString(cam.first));
         item->setText(1, cam.second->isRunning() ? "Running" : "Stopped");
         
-        QString vendor = "Unknown";
-        QString camName = QString::fromStdString(cam.first).toLower();
-        if (camName.contains("pylon") || camName.contains("basler")) {
+        QString vendor = "Unknown"; //
+        QString camVendorName = QString::fromStdString(cam.second->getCamera()->GetVendorName()).toLower();
+        if (camVendorName.contains("pylon") || camVendorName.contains("basler")) {
             vendor = "Pylon";
-        } else if (camName.contains("aptina")) {
+        } else if (camVendorName.contains("aptina")) {
             vendor = "Aptina";
         }
         item->setText(2, vendor);

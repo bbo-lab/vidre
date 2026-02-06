@@ -221,6 +221,8 @@ void CameraWidget::onStartClicked()
 {
     if (runtimeInstance_ && !runtimeInstance_->isRunning()) {
         runtimeInstance_->run();
+    } 
+    if (!frameTimer_->isActive()) {
         frameTimer_->start();
         lastFrameID_ = -1;
         frameCount_ = 0;
@@ -258,43 +260,34 @@ void CameraWidget::updateFrame()
     // Get frame dimensions
     unsigned int width = runtimeInstance_->getFrameWidth();
     unsigned int height = runtimeInstance_->getFrameHeight();
-    unsigned int frameBytes = runtimeInstance_->getFrameBytes();
     
     if (width == 0 || height == 0) {
         return;
     }
     
-    // Calculate bytes per pixel
-    int bytesPerPixel = frameBytes / (width * height);
-    if (bytesPerPixel <= 0) {
-        bytesPerPixel = 1; // Assume grayscale
-    }
-    
-
-    displayFrame(imageData, width, height, bytesPerPixel);
+    auto bitsPerPixel = runtimeInstance_->getBitsPerPixel();
+    displayFrame(imageData, width, height, bitsPerPixel);
     
     updateInfoDisplay();
 }
 
-void CameraWidget::displayFrame(const uint8_t* imageData, int width, int height, int bytesPerPixel)
+void CameraWidget::displayFrame(const uint8_t* imageData, int width, int height, int bitsPerPixel)
 {
     if (!imageData || width <= 0 || height <= 0) {
         return;
     }
     
     QImage::Format format;
-    if (bytesPerPixel == 1) {
+    if (bitsPerPixel == 8) {
         format = QImage::Format_Grayscale8;
-    } else if (bytesPerPixel == 3) {
-        format = QImage::Format_RGB888;
-    } else if (bytesPerPixel == 4) {
-        format = QImage::Format_RGBA8888;
+    } else if (bitsPerPixel == 10) {
+        format = QImage::Format_Grayscale16; // todo aptina 10bit like ccvtools maybe
     } else {
         return; // Unsupported format
     }
     
     // Create QImage from raw data
-    QImage image(imageData, width, height, width * bytesPerPixel, format);
+    QImage image(imageData, width, height,format);//, width * (bitsPerPixel / 8), format);
     
     // Scale to fit the label while maintaining aspect ratio
     QPixmap pixmap = QPixmap::fromImage(image);

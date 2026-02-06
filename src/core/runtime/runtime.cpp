@@ -120,6 +120,7 @@ namespace vidre
             if (result == nullptr) {
                 continue;
             }
+            _currentFrame++;
             _latestFrameData = static_cast<uint8_t*>(result);
         }
     }

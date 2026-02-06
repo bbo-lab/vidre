@@ -120,7 +120,7 @@ void MainWindow::createDockWidgets()
 }
 
 void MainWindow::onLoadConfigClicked()
-{
+{   
     QString filename = QFileDialog::getOpenFileName(this,
         tr("Open Configuration File"), "",
         tr("YAML Files (*.yaml *.yml);;All Files (*)"));
@@ -251,6 +251,7 @@ void MainWindow::updateCameraStatus()
     // Update all open camera widgets
     for (auto& widget : cameraWidgets_) {
         widget.second->updateStatus();
+        widget.second->setRunning();
     }
 }
 
@@ -278,17 +279,8 @@ std::unique_ptr<vidre::ICamera> MainWindow::loadCamera(const std::string& camera
     // TODO: cli/userinput/config
     std::string ap_base_str = "C:/Aptina Imaging/bin/apbase.dll"; 
     std::string pylon_base_str = "C:/Program Files/Basler/pylon 8/Runtime/x64/PylonBase_v9.dll";
-    
-// #ifdef _WIN32
-    vidre::APTINA_LIBRARY_PATH = "vidre_aptina.dll";
-    vidre::PYLON_LIBRARY_PATH = "vidre_pylon.dll";
-// #elif __APPLE__
-//     vidre::APTINA_LIBRARY_PATH = "libvidre_aptina.dylib";
-//     vidre::PYLON_LIBRARY_PATH = "libvidre_pylon.dylib";
-// #else
-//     vidre::APTINA_LIBRARY_PATH = "libvidre_aptina.so";
-//     vidre::PYLON_LIBRARY_PATH = "libvidre_pylon.so";
-// #endif
+    vidre::APTINA_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_aptina.dll";
+    vidre::PYLON_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_pylon.dll";
     
     if (!cameraNode["vendor"]) {
         logMessage(QString("ERROR: No vendor specified for camera %1").arg(QString::fromStdString(cameraName)));

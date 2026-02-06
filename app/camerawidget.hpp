@@ -30,6 +30,7 @@ public:
 
     QString getCameraName() const { return cameraName_; }
     void updateStatus();
+    void setRunning() {onStartClicked();}
 
 signals:
     void windowClosed(const QString& cameraName);
@@ -61,7 +62,7 @@ private:
     
     void setupUI();
     void updateInfoDisplay();
-    void displayFrame(const uint8_t* imageData, int width, int height, int bytesPerPixel);
+    void displayFrame(const uint8_t* imageData, int width, int height, int bitsPerPixel);
 };
 
 #endif // CAMERAWIDGET_HPP
