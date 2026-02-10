@@ -30,6 +30,8 @@ public:
 
 private slots:
     void onLoadConfigClicked();
+    void onShowAllClicked();
+    void onStopShowAllClicked();
     void onStartAllClicked();
     void onStopAllClicked();
     void onRefreshDevicesClicked();

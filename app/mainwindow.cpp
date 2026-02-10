@@ -59,6 +59,8 @@ void MainWindow::setupUI()
     
     // Connect menu actions
     connect(ui->actionLoadConfig, &QAction::triggered, this, &MainWindow::onLoadConfigClicked);
+    connect(ui->actionShowAll, &QAction::triggered, this, &MainWindow::onShowAllClicked);
+    connect(ui->actionStopShowAll, &QAction::triggered, this, &MainWindow::onStopShowAllClicked);
     connect(ui->actionStartAll, &QAction::triggered, this, &MainWindow::onStartAllClicked);
     connect(ui->actionStopAll, &QAction::triggered, this, &MainWindow::onStopAllClicked);
     connect(ui->actionRefreshDevices, &QAction::triggered, this, &MainWindow::onRefreshDevicesClicked);
@@ -80,6 +82,12 @@ void MainWindow::createToolBar()
     connect(loadAction, &QAction::triggered, this, &MainWindow::onLoadConfigClicked);
     
     mainToolBar_->addSeparator();
+
+    QAction *showAllAction = mainToolBar_->addAction("Show All");
+    connect(showAllAction, &QAction::triggered, this, &MainWindow::onShowAllClicked);
+    
+    QAction *stopShowAllAction = mainToolBar_->addAction("Stop Showing All");
+    connect(stopShowAllAction, &QAction::triggered, this, &MainWindow::onStopShowAllClicked);
     
     QAction *startAllAction = mainToolBar_->addAction("Start All");
     connect(startAllAction, &QAction::triggered, this, &MainWindow::onStartAllClicked);
@@ -158,6 +166,39 @@ void MainWindow::onLoadConfigClicked()
     deviceListDock_->updateDeviceList(cameras_);
     
     statusBar()->showMessage(QString("%1 camera(s) loaded").arg(cameras_.size()), 3000);
+}
+
+void MainWindow::onShowAllClicked()
+{
+    logMessage("Showing all cameras...");
+    
+    int started = 0;
+    for (auto& cam : cameras_) {
+        if (!cam.second->isRunning()) {
+            cam.second->show();
+            logMessage(QString("Showing: %1").arg(QString::fromStdString(cam.first)));
+            started++;
+        }
+    }
+    
+    updateCameraStatus();
+    statusBar()->showMessage(QString("Showing %1 camera(s)").arg(started), 3000);
+}
+void MainWindow::onStopShowAllClicked()
+{
+    logMessage("Stop Showing all cameras...");
+    
+    int started = 0;
+    for (auto& cam : cameras_) {
+        if (!cam.second->isRunning()) {
+            cam.second->stop();
+            logMessage(QString("Stop Showing: %1").arg(QString::fromStdString(cam.first)));
+            started++;
+        }
+    }
+    
+    updateCameraStatus();
+    statusBar()->showMessage(QString("Stop Showing %1 camera(s)").arg(started), 3000);
 }
 
 void MainWindow::onStartAllClicked()

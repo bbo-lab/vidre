@@ -101,7 +101,7 @@ QStatusBar {
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>24</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -126,6 +126,9 @@ QStatusBar {
     <property name="title">
      <string>Camera</string>
     </property>
+    <addaction name="actionShowAll"/>
+    <addaction name="actionStopShowAll"/>
+    <addaction name="separator"/>
     <addaction name="actionStartAll"/>
     <addaction name="actionStopAll"/>
     <addaction name="separator"/>
@@ -206,6 +209,16 @@ QStatusBar {
   <action name="actionCascadeWindows">
    <property name="text">
     <string>Cascade Windows</string>
+   </property>
+  </action>
+  <action name="actionShowAll">
+   <property name="text">
+    <string>Show All Cameras</string>
+   </property>
+  </action>
+  <action name="actionStopShowAll">
+   <property name="text">
+    <string>Stop Showing Cameras</string>
    </property>
   </action>
  </widget>
