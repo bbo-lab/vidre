@@ -271,6 +271,47 @@ void CameraWidget::updateFrame()
     updateInfoDisplay();
 }
 
+inline int pack_bits_16_10(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out, size_t buffersize_out) {
+    size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
+    buffersize_out_in_samples = (size_t) floor(((double) buffersize_out) * 0.8);
+    nsamples = nbytes_in / 2; //rounds down
+    size_t n = std::min(nsamples, buffersize_out_in_samples);
+    
+    size_t nblocks = n / 4; //rounds down
+    
+    byte_offset_out = 0;
+    byte_offset_in = 0;
+    for (size_t jj = 0; jj < nblocks; jj++) {
+        data_out[byte_offset_out    ] = data_in[byte_offset_in];
+        data_out[byte_offset_out + 1] = data_in[byte_offset_in + 1] | (data_in[byte_offset_in + 2] << 2);
+        data_out[byte_offset_out + 2] = (data_in[byte_offset_in + 2] >> 6) | (data_in[byte_offset_in + 3] << 2) | (data_in[byte_offset_in + 4] << 4);
+        data_out[byte_offset_out + 3] = (data_in[byte_offset_in + 4] >> 4) | (data_in[byte_offset_in + 5] << 4) | (data_in[byte_offset_in + 6] << 6);
+        data_out[byte_offset_out + 4] = (data_in[byte_offset_in + 6] >> 2) | (data_in[byte_offset_in + 7] << 6);
+        byte_offset_out += 5;
+        byte_offset_in += 8;
+    }
+    remaining_samples = n - 4 * nblocks;
+
+    int nb_written = byte_offset_out;
+    if (remaining_samples > 0) {
+        data_out[byte_offset_out] = data_in[byte_offset_in];
+        data_out[byte_offset_out + 1] = data_in[byte_offset_in + 1];
+        nb_written += 2;
+        if (remaining_samples > 1) {
+            data_out[byte_offset_out + 1] |= (data_in[byte_offset_in + 2] << 2);
+            data_out[byte_offset_out + 2] = (data_in[byte_offset_in + 2] >> 6) | (data_in[byte_offset_in + 3] << 2);
+            nb_written++;
+            if (remaining_samples > 2) {
+                data_out[byte_offset_out + 2] |= (data_in[byte_offset_in + 4] << 4);
+                data_out[byte_offset_out + 3] = (data_in[byte_offset_in + 4] >> 4) | (data_in[byte_offset_in + 5] << 4);
+                nb_written++;
+            }
+        }
+    }
+
+    return nb_written;
+}
+
 void CameraWidget::displayFrame(const uint8_t* imageData, int width, int height, int bitsPerPixel)
 {
     if (!imageData || width <= 0 || height <= 0) {
@@ -278,16 +319,20 @@ void CameraWidget::displayFrame(const uint8_t* imageData, int width, int height,
     }
     
     QImage::Format format;
+    QImage image;
     if (bitsPerPixel == 8) {
         format = QImage::Format_Grayscale8;
+        image = QImage(imageData, width, height, format);
     } else if (bitsPerPixel == 10) {
-        format = QImage::Format_Grayscale16; // todo aptina 10bit like ccvtools maybe
+        format = QImage::Format_Grayscale16;
+        auto buffer_size =  (uint64_t) ceil((bitsPerPixel / 8.0) * width * height);
+        uint8_t* packed_buffer = new uint8_t[buffer_size];
+        pack_bits_16_10(imageData, buffer_size, packed_buffer, buffer_size);
+        image = QImage(packed_buffer, width, height, format);
     } else {
         return; // Unsupported format
     }
     
-    // Create QImage from raw data
-    QImage image(imageData, width, height,format);//, width * (bitsPerPixel / 8), format);
     
     // Scale to fit the label while maintaining aspect ratio
     QPixmap pixmap = QPixmap::fromImage(image);
