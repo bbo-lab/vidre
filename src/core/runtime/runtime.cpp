@@ -136,7 +136,7 @@ namespace vidre
 
         _camera->Arm();
         
-        _storage->addISOName();
+        _storage->initiateHeader();
         
         _camera->Start();
         
