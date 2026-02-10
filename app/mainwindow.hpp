@@ -28,6 +28,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    /// Load a YAML configuration file (same as "Load Config" button).
+    void loadConfigFile(const QString& filepath);
+
 private slots:
     void onLoadConfigClicked();
     void onShowAllClicked();

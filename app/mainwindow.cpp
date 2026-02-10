@@ -137,6 +137,11 @@ void MainWindow::onLoadConfigClicked()
         return;
     }
     
+    loadConfigFile(filename);
+}
+
+void MainWindow::loadConfigFile(const QString& filename)
+{
     logMessage("Loading configuration from: " + filename);
     
     // Close all MDI windows
