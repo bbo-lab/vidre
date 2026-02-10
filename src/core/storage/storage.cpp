@@ -75,10 +75,15 @@ namespace vidre {
         std::string timestamp = std::format("{:%Y%m%dT%H%M%S}", time);
         
         auto old_name = _outputFileName;
-        _outputFileName = timestamp + "_" + _outputFileName;
+        std::filesystem::path p(_outputFileName);
+        std::filesystem::path newPath = p.parent_path() / (p.stem().string() + "_" + timestamp + p.extension().string());
+
+        _outputFileName = newPath.string();
 
         try {
+            output_file.reset();
             std::filesystem::rename(old_name, _outputFileName);
+            output_file.reset(fopen(_outputFileName.c_str(), "ab"));
         } 
         catch (const std::filesystem::filesystem_error& e) {
             std::cerr << "Error: " << e.what() << "\n";
