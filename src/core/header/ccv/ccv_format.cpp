@@ -99,6 +99,7 @@ namespace vidre {
         if (cameraType.data == "aptina" && packed) {
             // aptina packing and saving
             uint8_t* packed_buffer = new uint8_t[frameBytesOnDisk - 21];
+            // std::cout << "CCV: " << frameBytesOnDisk - 21 << " " << aptinaBuffer << std::endl;
             pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packed_buffer, aptinaBuffer);
             fwrite(reinterpret_cast<const char*>(packed_buffer), 1, aptinaBuffer, out_file);
             delete[] packed_buffer;

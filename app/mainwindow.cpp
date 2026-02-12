@@ -13,7 +13,6 @@
 #include <QIcon>
 
 #include <iostream>
-#include <boost/filesystem.hpp>
 #include "yaml-cpp/yaml.h"
 
 #include "utils/dynamic_loader/dynamic_library_loader.hpp"
@@ -398,8 +397,9 @@ MainWindow::loadSystemSetup(const std::string& setupFilepath)
 {
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
     
-    if (!boost::filesystem::exists(setupFilepath)) {
-        logMessage("ERROR: Configuration file does not exist");
+    if (!std::filesystem::exists(setupFilepath)) {
+        logMessage(QString("ERROR: Configuration file %1 does not exist")
+            .arg(QString::fromStdString(setupFilepath)));
         return cameras;
     }
     

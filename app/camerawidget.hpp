@@ -62,7 +62,7 @@ private:
     
     void setupUI();
     void updateInfoDisplay();
-    void displayFrame(const uint8_t* imageData, int width, int height, int bitsPerPixel);
+    void displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes);
 };
 
 #endif // CAMERAWIDGET_HPP

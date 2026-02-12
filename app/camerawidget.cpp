@@ -260,59 +260,72 @@ void CameraWidget::updateFrame()
     // Get frame dimensions
     unsigned int width = runtimeInstance_->getFrameWidth();
     unsigned int height = runtimeInstance_->getFrameHeight();
+    unsigned int frameBytes = runtimeInstance_->getFrameBytes();
     
-    if (width == 0 || height == 0) {
+    if (width == 0 || height == 0 || frameBytes == 0) {
         return;
     }
     
     auto bitsPerPixel = runtimeInstance_->getBitsPerPixel();
-    displayFrame(imageData, width, height, bitsPerPixel);
+    displayFrame(imageData, width, height, bitsPerPixel, frameBytes);
     
     updateInfoDisplay();
 }
 
-inline int pack_bits_16_10(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out, size_t buffersize_out) {
-    size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
-    buffersize_out_in_samples = (size_t) floor(((double) buffersize_out) * 0.8);
-    nsamples = nbytes_in / 2; //rounds down
-    size_t n = std::min(nsamples, buffersize_out_in_samples);
-    
-    size_t nblocks = n / 4; //rounds down
-    
-    byte_offset_out = 0;
-    byte_offset_in = 0;
-    for (size_t jj = 0; jj < nblocks; jj++) {
-        data_out[byte_offset_out    ] = data_in[byte_offset_in];
-        data_out[byte_offset_out + 1] = data_in[byte_offset_in + 1] | (data_in[byte_offset_in + 2] << 2);
-        data_out[byte_offset_out + 2] = (data_in[byte_offset_in + 2] >> 6) | (data_in[byte_offset_in + 3] << 2) | (data_in[byte_offset_in + 4] << 4);
-        data_out[byte_offset_out + 3] = (data_in[byte_offset_in + 4] >> 4) | (data_in[byte_offset_in + 5] << 4) | (data_in[byte_offset_in + 6] << 6);
-        data_out[byte_offset_out + 4] = (data_in[byte_offset_in + 6] >> 2) | (data_in[byte_offset_in + 7] << 6);
-        byte_offset_out += 5;
-        byte_offset_in += 8;
-    }
-    remaining_samples = n - 4 * nblocks;
+void pack_bits_16_10(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out, size_t buffersize_out) {
+    int nsamples_in = floor(nbytes_in * 8.0 / 10.0);
 
-    int nb_written = byte_offset_out;
+    size_t nblocks = nsamples_in / 4;
+    
+    for (size_t i = 0; i < nblocks; ++i) {
+        size_t in_idx = i * 5;
+        size_t out_idx = i * 8; // 4 samples * 2 bytes
+
+        const uint8_t* src = &data_in[in_idx];
+        uint8_t* dst = &data_out[out_idx];
+
+        dst[0] = src[0];
+        dst[1] = src[1] & 0x03;
+
+        dst[2] = (src[1] >> 2) | ((src[2] & 0x03) << 6);
+        dst[3] = (src[2] >> 2) & 0x03;
+
+        dst[4] = (src[2] >> 4) | (src[3] << 4);
+        dst[5] = (src[3] >> 4) & 0x03;
+
+        dst[6] = (src[3] >> 6) | (src[4] << 2);
+        dst[7] = src[4] >> 6;
+    }
+
+    size_t remaining_samples = nsamples_in - (nblocks * 4);
+
     if (remaining_samples > 0) {
-        data_out[byte_offset_out] = data_in[byte_offset_in];
-        data_out[byte_offset_out + 1] = data_in[byte_offset_in + 1];
-        nb_written += 2;
+        size_t in_idx = nblocks * 5;
+        size_t out_idx = nblocks * 8;
+
+        const uint8_t* src = &data_in[in_idx];
+        uint8_t* dst = &data_out[out_idx];
+
+        // Sample 0 logic
+        dst[0] = src[0];
+        dst[1] = src[1] & 0x03;
+
         if (remaining_samples > 1) {
-            data_out[byte_offset_out + 1] |= (data_in[byte_offset_in + 2] << 2);
-            data_out[byte_offset_out + 2] = (data_in[byte_offset_in + 2] >> 6) | (data_in[byte_offset_in + 3] << 2);
-            nb_written++;
+            // Sample 1 logic
+            dst[2] = (src[1] >> 2) | ((src[2] & 0x03) << 6);
+            dst[3] = (src[2] >> 2) & 0x03;
+
             if (remaining_samples > 2) {
-                data_out[byte_offset_out + 2] |= (data_in[byte_offset_in + 4] << 4);
-                data_out[byte_offset_out + 3] = (data_in[byte_offset_in + 4] >> 4) | (data_in[byte_offset_in + 5] << 4);
-                nb_written++;
+                // Sample 2 logic
+                dst[4] = (src[2] >> 4) | (src[3] << 4);
+                dst[5] = (src[3] >> 4) & 0x03;
             }
         }
     }
-
-    return nb_written;
+    
 }
 
-void CameraWidget::displayFrame(const uint8_t* imageData, int width, int height, int bitsPerPixel)
+void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes)
 {
     if (!imageData || width <= 0 || height <= 0) {
         return;
@@ -324,11 +337,17 @@ void CameraWidget::displayFrame(const uint8_t* imageData, int width, int height,
         format = QImage::Format_Grayscale8;
         image = QImage(imageData, width, height, format);
     } else if (bitsPerPixel == 10) {
-        format = QImage::Format_Grayscale16;
-        auto buffer_size =  (uint64_t) ceil((bitsPerPixel / 8.0) * width * height);
-        uint8_t* packed_buffer = new uint8_t[buffer_size];
-        pack_bits_16_10(imageData, buffer_size, packed_buffer, buffer_size);
-        image = QImage(packed_buffer, width, height, format);
+        format = QImage::Format_Grayscale8;
+        int nsamples_in = floor(frameBytes * 8.0 / 10.0);
+        int bytes_per_sample_unpacked = 2;
+        int nbytes_out = bytes_per_sample_unpacked * nsamples_in;
+        // // std::cout << "QT: " << frameBytes << " " << buffer_size << std::endl;
+        uint8_t* packed_buffer = new uint8_t[nbytes_out];
+        for (int i = 0; i < nbytes_out; ++i) {
+            packed_buffer[i] =  ((uint64_t)imageData[i]) * 255 / 1024.0;
+        }
+        // pack_bits_16_10(imageData, frameBytes, packed_buffer, nbytes_out);
+        image = QImage(imageData, width, height, format);
     } else {
         return; // Unsupported format
     }

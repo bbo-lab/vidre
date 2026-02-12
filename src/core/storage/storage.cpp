@@ -68,14 +68,14 @@ namespace vidre {
         }
     }
 
-    void Storage::initiateHeader() {
+    void Storage::initiateHeader() { // todo -> start all unified time  for all cameras
         // adding ISO format for output file
         auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
-        std::string timestamp = std::format("{:%Y%m%dT%H%M}", time);
-        
+        std::string timestamp = std::format("{:%Y%m%dT%H%M seconds %S}", time); // seconds
+        https://github.com/bbo-lab/calipy
         auto old_name = _outputFileName;
         std::filesystem::path p(_outputFileName);
-        std::filesystem::path newPath = p.parent_path() / (p.stem().string() + "_" + timestamp + p.extension().string());
+        std::filesystem::path newPath = date first p.parent_path() / (p.stem().string() + "_" + timestamp + p.extension().string());
 
         _outputFileName = newPath.string();
         try {
