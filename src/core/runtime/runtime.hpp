@@ -11,6 +11,14 @@
 namespace vidre {
     struct Config;
 
+    enum class RecordingStatus {
+        Stopped,
+        Streaming,
+        RecordingFine,
+        RecordingDroppedFrames,
+        RecordingError
+    };
+
     class RuntimeInstance {
     public:
         RuntimeInstance() = default;
@@ -29,6 +37,8 @@ namespace vidre {
         bool checkCamera();
 
         bool isRunning();
+        
+        RecordingStatus getRecordingStatus();
         
         // Get camera pointer for direct access (e.g., for live preview)
         ICamera* getCamera() { return _camera.get(); }
@@ -55,5 +65,6 @@ namespace vidre {
         bool _saveTIFF = false;
         bool _presentFrame = false;
         uint8_t* _latestFrameData = nullptr;
+        RecordingStatus _recordingStatus = RecordingStatus::Stopped;
     };
 }  // namespace vidre

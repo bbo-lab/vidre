@@ -7,6 +7,7 @@
 #include <QToolBar>
 #include <QDockWidget>
 #include <QTextEdit>
+#include <QLabel>
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -51,6 +52,7 @@ private:
     QToolBar *mainToolBar_;
     QDockWidget *logDock_;
     QTextEdit *logTextEdit_;
+    QLabel *statusIndicator_;
     
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras_;
     std::unordered_map<QString, CameraWidget*> cameraWidgets_;

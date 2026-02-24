@@ -42,3 +42,7 @@ build/
 
 # conan
 CMakeUserPresets.json
+
+
+#OSX
+.DS_Store

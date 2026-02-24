@@ -89,11 +89,24 @@ namespace vidre
             std::this_thread::yield();
         }
 
+        _recordingStatus = RecordingStatus::RecordingFine;
+        uint32_t expectedFrameID = 0;
+        bool firstFrame = true;
+
         while (_camera->IsRunning()) {
             const auto [result, header] = _buffer->pop();
             if (result == nullptr) {
                 continue;
             }
+            
+            if (firstFrame) {
+                expectedFrameID = header->frameID;
+                firstFrame = false;
+            } else if (header->frameID > expectedFrameID) {
+                _recordingStatus = RecordingStatus::RecordingDroppedFrames;
+            }
+            expectedFrameID = header->frameID + 1;
+
             _latestFrameData = static_cast<uint8_t*>(result);
             _currentFrame++;
            
@@ -114,6 +127,8 @@ namespace vidre
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
+
+        _recordingStatus = RecordingStatus::Streaming;
 
         while (_camera->IsRunning()) {
             const auto [result, header] = _buffer->pop();
@@ -171,6 +186,7 @@ namespace vidre
         }
         
         _camera->Disarm();
+        _recordingStatus = RecordingStatus::Stopped;
     }
 
     bool RuntimeInstance::checkCamera() {
@@ -178,6 +194,10 @@ namespace vidre
     }
     bool RuntimeInstance:: isRunning() {
             return _camera->IsRunning();
+    }
+
+    RecordingStatus RuntimeInstance::getRecordingStatus() {
+        return _recordingStatus;
     }
 
 }

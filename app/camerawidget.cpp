@@ -272,57 +272,51 @@ void CameraWidget::updateFrame()
     updateInfoDisplay();
 }
 
-void pack_bits_16_10(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out, size_t buffersize_out) {
+void unpack_10bit_to_8bit(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out) {
     int nsamples_in = floor(nbytes_in * 8.0 / 10.0);
-
     size_t nblocks = nsamples_in / 4;
     
     for (size_t i = 0; i < nblocks; ++i) {
         size_t in_idx = i * 5;
-        size_t out_idx = i * 8; // 4 samples * 2 bytes
+        size_t out_idx = i * 4;
 
         const uint8_t* src = &data_in[in_idx];
         uint8_t* dst = &data_out[out_idx];
 
-        dst[0] = src[0];
-        dst[1] = src[1] & 0x03;
+        uint16_t s0 = src[0] | ((src[1] & 0x03) << 8);
+        dst[0] = s0 >> 2;
 
-        dst[2] = (src[1] >> 2) | ((src[2] & 0x03) << 6);
-        dst[3] = (src[2] >> 2) & 0x03;
+        uint16_t s1 = (src[1] >> 2) | ((src[2] & 0x0F) << 6);
+        dst[1] = s1 >> 2;
 
-        dst[4] = (src[2] >> 4) | (src[3] << 4);
-        dst[5] = (src[3] >> 4) & 0x03;
+        uint16_t s2 = (src[2] >> 4) | ((src[3] & 0x3F) << 4);
+        dst[2] = s2 >> 2;
 
-        dst[6] = (src[3] >> 6) | (src[4] << 2);
-        dst[7] = src[4] >> 6;
+        uint16_t s3 = (src[3] >> 6) | (src[4] << 2);
+        dst[3] = s3 >> 2;
     }
 
     size_t remaining_samples = nsamples_in - (nblocks * 4);
-
     if (remaining_samples > 0) {
         size_t in_idx = nblocks * 5;
-        size_t out_idx = nblocks * 8;
+        size_t out_idx = nblocks * 4;
 
         const uint8_t* src = &data_in[in_idx];
         uint8_t* dst = &data_out[out_idx];
 
-        // Sample 0 logic
-        dst[0] = src[0];
-        dst[1] = src[1] & 0x03;
+        uint16_t s0 = src[0] | ((src[1] & 0x03) << 8);
+        dst[0] = s0 >> 2;
 
         if (remaining_samples > 1) {
-            // Sample 1 logic
-            dst[2] = (src[1] >> 2) | ((src[2] & 0x03) << 6);
-            dst[3] = (src[2] >> 2) & 0x03;
+            uint16_t s1 = (src[1] >> 2) | ((src[2] & 0x0F) << 6);
+            dst[1] = s1 >> 2;
 
             if (remaining_samples > 2) {
-                // Sample 2 logic
-                dst[4] = (src[2] >> 4) | (src[3] << 4);
-                dst[5] = (src[3] >> 4) & 0x03;
+                uint16_t s2 = (src[2] >> 4) | ((src[3] & 0x3F) << 4);
+                dst[2] = s2 >> 2;
             }
         }
     }
-    
 }
 
 void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes)
@@ -333,31 +327,32 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
     
     QImage::Format format;
     QImage image;
+    uint8_t* unpacked_buffer = nullptr;
+
     if (bitsPerPixel == 8) {
         format = QImage::Format_Grayscale8;
         image = QImage(imageData, width, height, format);
     } else if (bitsPerPixel == 10) {
         format = QImage::Format_Grayscale8;
         int nsamples_in = floor(frameBytes * 8.0 / 10.0);
-        int bytes_per_sample_unpacked = 2;
-        int nbytes_out = bytes_per_sample_unpacked * nsamples_in;
-        // // std::cout << "QT: " << frameBytes << " " << buffer_size << std::endl;
-        uint8_t* packed_buffer = new uint8_t[nbytes_out];
-        for (int i = 0; i < nbytes_out; ++i) {
-            packed_buffer[i] =  ((uint64_t)imageData[i]) * 255 / 1024.0;
-        }
-        // pack_bits_16_10(imageData, frameBytes, packed_buffer, nbytes_out);
-        image = QImage(imageData, width, height, format);
+        unpacked_buffer = new uint8_t[nsamples_in];
+        
+        unpack_10bit_to_8bit(imageData, frameBytes, unpacked_buffer);
+        
+        image = QImage(unpacked_buffer, width, height, format);
     } else {
         return; // Unsupported format
     }
-    
     
     // Scale to fit the label while maintaining aspect ratio
     QPixmap pixmap = QPixmap::fromImage(image);
     QPixmap scaled = pixmap.scaled(imageLabel_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     
     imageLabel_->setPixmap(scaled);
+    
+    if (unpacked_buffer) {
+        delete[] unpacked_buffer;
+    }
     
     frameCount_++;
 }

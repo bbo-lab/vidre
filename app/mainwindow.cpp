@@ -98,6 +98,18 @@ void MainWindow::createToolBar()
     
     QAction *refreshAction = mainToolBar_->addAction("Refresh");
     connect(refreshAction, &QAction::triggered, this, &MainWindow::onRefreshDevicesClicked);
+
+    // Add spacer to push indicator to the right
+    QWidget* spacer = new QWidget();
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    mainToolBar_->addWidget(spacer);
+
+    // Add status indicator
+    statusIndicator_ = new QLabel(this);
+    statusIndicator_->setFixedSize(20, 20);
+    statusIndicator_->setStyleSheet("background-color: grey; border-radius: 10px;");
+    statusIndicator_->setToolTip("System Status");
+    mainToolBar_->addWidget(statusIndicator_);
 }
 
 void MainWindow::createDockWidgets()
@@ -143,8 +155,14 @@ void MainWindow::loadConfigFile(const QString& filename)
 {
     logMessage("Loading configuration from: " + filename);
     
-    // Close all MDI windows
+    // Close all MDI windows and dock widgets
     mdiArea_->closeAllSubWindows();
+    for (auto& widget : cameraWidgets_) {
+        QDockWidget *dock = qobject_cast<QDockWidget*>(widget.second->parentWidget());
+        if (dock) {
+            dock->close();
+        }
+    }
     cameraWidgets_.clear();
     
     // Stop all running cameras first
@@ -252,12 +270,11 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     // Check if window already exists
     if (cameraWidgets_.find(deviceName) != cameraWidgets_.end()) {
         // Activate existing window
-        QMdiSubWindow *subWindow = mdiArea_->currentSubWindow();
-        for (auto *window : mdiArea_->subWindowList()) {
-            if (window->widget() == cameraWidgets_[deviceName]) {
-                mdiArea_->setActiveSubWindow(window);
-                return;
-            }
+        QDockWidget *dock = qobject_cast<QDockWidget*>(cameraWidgets_[deviceName]->parentWidget());
+        if (dock) {
+            dock->show();
+            dock->raise();
+            return;
         }
     }
     
@@ -265,15 +282,23 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     auto it = cameras_.find(deviceName.toStdString());
     if (it != cameras_.end()) {
         CameraWidget *cameraWidget = new CameraWidget(deviceName, it->second.get(), this);
-        QMdiSubWindow *subWindow = mdiArea_->addSubWindow(cameraWidget);
-        subWindow->setAttribute(Qt::WA_DeleteOnClose);
+        
+        QDockWidget *dockWidget = new QDockWidget(deviceName, this);
+        dockWidget->setWidget(cameraWidget);
+        dockWidget->setAllowedAreas(Qt::AllDockWidgetAreas);
+        dockWidget->setAttribute(Qt::WA_DeleteOnClose);
+        
+        addDockWidget(Qt::RightDockWidgetArea, dockWidget);
         
         cameraWidgets_[deviceName] = cameraWidget;
         
         connect(cameraWidget, &CameraWidget::windowClosed, 
                 this, &MainWindow::onCameraWindowClosed);
+        connect(dockWidget, &QDockWidget::destroyed, [this, deviceName]() {
+            onCameraWindowClosed(deviceName);
+        });
         
-        subWindow->show();
+        dockWidget->show();
         logMessage(QString("Opened window for: %1").arg(deviceName));
     }
 }
@@ -287,6 +312,8 @@ void MainWindow::onCameraWindowClosed(const QString& cameraName)
 void MainWindow::updateCameraStatus()
 {
     if (cameras_.empty()) {
+        statusIndicator_->setStyleSheet("background-color: grey; border-radius: 10px;");
+        statusIndicator_->setToolTip("No cameras loaded");
         return;
     }
     
@@ -297,6 +324,49 @@ void MainWindow::updateCameraStatus()
     for (auto& widget : cameraWidgets_) {
         widget.second->updateStatus();
         widget.second->setRunning();
+    }
+
+    // Determine overall system status
+    bool anyRunning = false;
+    bool anyRecording = false;
+    bool anyDroppedFrames = false;
+    bool anyError = false;
+
+    for (const auto& cam : cameras_) {
+        if (cam.second) {
+            vidre::RecordingStatus status = cam.second->getRecordingStatus();
+            if (status != vidre::RecordingStatus::Stopped) {
+                anyRunning = true;
+            }
+            if (status == vidre::RecordingStatus::RecordingFine || 
+                status == vidre::RecordingStatus::RecordingDroppedFrames ||
+                status == vidre::RecordingStatus::RecordingError) {
+                anyRecording = true;
+            }
+            if (status == vidre::RecordingStatus::RecordingDroppedFrames) {
+                anyDroppedFrames = true;
+            }
+            if (status == vidre::RecordingStatus::RecordingError) {
+                anyError = true;
+            }
+        }
+    }
+
+    if (anyError) {
+        statusIndicator_->setStyleSheet("background-color: red; border-radius: 10px;");
+        statusIndicator_->setToolTip("Recording Error");
+    } else if (anyDroppedFrames) {
+        statusIndicator_->setStyleSheet("background-color: yellow; border-radius: 10px;");
+        statusIndicator_->setToolTip("Recording (Dropped Frames)");
+    } else if (anyRecording) {
+        statusIndicator_->setStyleSheet("background-color: green; border-radius: 10px;");
+        statusIndicator_->setToolTip("Recording Fine");
+    } else if (anyRunning) {
+        statusIndicator_->setStyleSheet("background-color: blue; border-radius: 10px;");
+        statusIndicator_->setToolTip("Streaming (Not Recording)");
+    } else {
+        statusIndicator_->setStyleSheet("background-color: grey; border-radius: 10px;");
+        statusIndicator_->setToolTip("Stopped");
     }
 }
 
