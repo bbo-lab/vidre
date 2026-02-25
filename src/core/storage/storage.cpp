@@ -75,7 +75,7 @@ namespace vidre {
         https://github.com/bbo-lab/calipy
         auto old_name = _outputFileName;
         std::filesystem::path p(_outputFileName);
-        std::filesystem::path newPath = date first p.parent_path() / (p.stem().string() + "_" + timestamp + p.extension().string());
+        std::filesystem::path newPath =  p.parent_path() / (p.stem().string() + "_" + timestamp + p.extension().string()); // TODO: date first
 
         _outputFileName = newPath.string();
         try {
