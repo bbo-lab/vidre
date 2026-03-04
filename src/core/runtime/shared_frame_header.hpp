@@ -4,7 +4,7 @@
 #include <chrono>
 
 namespace vidre {
-    const auto StartTime = std::chrono::system_clock::now();
+    const auto StartTime = std::chrono::system_clock::now(); // static
 
     struct SharedFrameHeader {
         int64_t frameID = 0;

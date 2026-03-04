@@ -1,7 +1,12 @@
 #include "storage.hpp"
 #include "core/runtime/shared_frame_header.hpp"
-
 #include "core/header/ccv/ccv_format.hpp"
+
+#include <format>
+#include <chrono>
+#include <filesystem>
+#include <iostream>
+
 
 namespace vidre {
 
@@ -17,8 +22,6 @@ namespace vidre {
         }
 
         _outputFileName = output_file_name;
-
-        _header->initiateHeader(output_file.get());
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -62,6 +65,28 @@ namespace vidre {
             }
             
             _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
+        }
+    }
+
+    void Storage::initiateHeader() { // todo -> start all unified time  for all cameras
+        // adding ISO format for output file
+        auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
+        std::string timestamp = std::format("{:%Y%m%dT%H%M%S}", time); // seconds
+
+        auto old_name = _outputFileName;
+        std::filesystem::path p(_outputFileName);
+        std::filesystem::path newPath =  p.parent_path() / (timestamp + "_" + p.stem().string() + p.extension().string());
+
+        _outputFileName = newPath.string();
+        try {
+            output_file.reset();
+            std::filesystem::rename(old_name, _outputFileName);
+            output_file.reset(fopen(_outputFileName.c_str(), "wb"));
+            // allocating header
+            _header->initiateHeader(output_file.get());
+        } 
+        catch (const std::filesystem::filesystem_error& e) {
+            std::cerr << "Error: " << e.what() << "\n";
         }
     }
 }  // namespace vidre

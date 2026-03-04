@@ -85,6 +85,8 @@ namespace vidre {
     void AptinaCamera::Arm() {
     }
     void AptinaCamera::Disarm() {
+        _buffer.Reset();
+        retrievedFramesNumber = 0;
     }
     void AptinaCamera::Start() {
         grabber = std::thread(&AptinaCamera::run, this);
@@ -161,7 +163,20 @@ namespace vidre {
 
     void AptinaCamera::SetFrameRate(double newFrameRate) {
     }
+    
+    void AptinaCamera::SetExposure(double newExposure) { 
+        int result = ap_SetSensorRegister(_handle, "xstdat", nullptr, newExposure, nullptr); // Might be casted to uint
+        if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to set sensor register\n";
+        }
+    }
 
+    void AptinaCamera::SetGain(double newGain) { // TODO
+        int result = ap_SetSensorRegister(_handle, "xstdat", nullptr, newGain, nullptr); // ANALOG_GAIN/global // Might be casted to uint
+        if (result != AP_INI_SUCCESS) {
+            std::cout << "Failed to set sensor register\n";
+        }
+    }
     
     void AptinaCamera::SetTriggerIn(unsigned int line) {
         if (!ap_Destroy || !ap_Finalize || !ap_LoadIniPreset) {

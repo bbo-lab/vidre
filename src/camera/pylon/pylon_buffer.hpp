@@ -24,6 +24,12 @@ public:
         m_lastBufferContext = -1;
     }
 
+    void Reset() {
+        m_lastBufferContext = -1;
+        shared_memory_ptrs = nullptr;
+        shared_memory = nullptr;
+    }
+
     void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext) override {
         try {
             // Allocation should be delegated to a seperate object so that the data can be accessed by other resources.

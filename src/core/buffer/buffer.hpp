@@ -26,6 +26,7 @@ namespace vidre {
         }
         
         int getSavedFramesNumber();
+        void reset();
         
         std::pair<void*, SharedFrameHeader*> pop();
     private:

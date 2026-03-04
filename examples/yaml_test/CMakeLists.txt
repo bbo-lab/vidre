@@ -1,6 +1,7 @@
 add_executable(yaml_test main.cpp)
+find_package(yaml-cpp REQUIRED)
 
-target_link_libraries(yaml_test PRIVATE vidre)
+target_link_libraries(yaml_test PRIVATE vidre yaml-cpp::yaml-cpp)
 
 install(TARGETS yaml_test RUNTIME DESTINATION bin)
 

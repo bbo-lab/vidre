@@ -99,6 +99,8 @@ namespace vidre {
     void PylonCamera::Disarm() {
         // Free Shared Memory Buffers
         armed.store(false);
+        shrBufferFactory.Reset();
+        retrievedFramesNumber = 0;
         // camera.Open();
     }
     void PylonCamera::Start() {
@@ -232,6 +234,26 @@ namespace vidre {
         if (frameRateEnable.TrySetValue(true)) {
             if (!frameRate.TrySetValue(newFrameRate))
                 std::cout << "Could not set frame rate!" << std::endl;
+        }
+    }
+
+    void PylonCamera::SetExposure(double newExposure) {
+        if (!camera.IsOpen())
+            return;
+        Pylon::CFloatParameter exposure(GetGenAPINodeMap(), "ExposureTime");
+
+        if (!exposure.TrySetValue(newExposure)) {
+            std::cout << "Could not set exposure!" << std::endl;
+        }
+    }
+
+    void PylonCamera::SetGain(double newGain) {
+        if (!camera.IsOpen())
+            return;
+        Pylon::CFloatParameter gain(GetGenAPINodeMap(), "Gain");
+
+        if (!gain.TrySetValue(newGain)) {
+            std::cout << "Could not set gain!" << std::endl;
         }
     }
 

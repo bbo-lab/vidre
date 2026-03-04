@@ -49,5 +49,15 @@ namespace vidre {
     int Buffer::getSavedFramesNumber() {
         return _nextFrameToPop;
     }
+
+    void Buffer::reset() {
+        _nextFrameToPop = 0;
+        _previouslyPopedFrame = 0;
+        
+        
+        if (_sharedMemoryPtrs) {
+            std::fill(_sharedMemoryPtrs->begin(), _sharedMemoryPtrs->end(), nullptr);
+        }
+    }
         
 }  // namespace vidre
