@@ -99,6 +99,8 @@ namespace vidre {
     void PylonCamera::Disarm() {
         // Free Shared Memory Buffers
         armed.store(false);
+        shrBufferFactory.Reset();
+        retrievedFramesNumber = 0;
         // camera.Open();
     }
     void PylonCamera::Start() {

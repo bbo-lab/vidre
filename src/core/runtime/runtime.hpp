@@ -53,7 +53,7 @@ namespace vidre {
         }
 
         uint64_t getBitsPerPixel() {
-            return _storage->getConfig().bitsPerPixel;
+            return _storageBitsPerPixel;
         }
 
         private:
@@ -66,5 +66,15 @@ namespace vidre {
         bool _presentFrame = false;
         uint8_t* _latestFrameData = nullptr;
         RecordingStatus _recordingStatus = RecordingStatus::Stopped;
+
+        // Stored parameters for recreating storage/buffer on subsequent runs
+        std::string _storageOutputFileName;
+        std::string _storageHeaderFormat;
+        uint64_t _storageBitsPerPixel = 8;
+        uint8_t _storagePacked = 0;
+        bool _storageConfigured = false;
+
+        void resetForNextRun();
+        void recreateStorageAndBuffer();
     };
 }  // namespace vidre

@@ -21,6 +21,13 @@ namespace vidre {
             shared_memory = sharedMemory;
         }
 
+        void Reset() {
+            m_lastBufferContext = -1;
+            ptr_counter = 0;
+            shared_memory_ptrs = nullptr;
+            shared_memory = nullptr;
+        }
+
         void AllocateBuffer(size_t bufferSize) {
             ++m_lastBufferContext;
             try {

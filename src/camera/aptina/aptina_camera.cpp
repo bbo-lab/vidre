@@ -85,6 +85,8 @@ namespace vidre {
     void AptinaCamera::Arm() {
     }
     void AptinaCamera::Disarm() {
+        _buffer.Reset();
+        retrievedFramesNumber = 0;
     }
     void AptinaCamera::Start() {
         grabber = std::thread(&AptinaCamera::run, this);
