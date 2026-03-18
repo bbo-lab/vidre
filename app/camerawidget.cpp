@@ -59,9 +59,8 @@ void CameraWidget::setupUI()
     QGridLayout *controlLayout = new QGridLayout(controlGroup);
     
     startButton_ = new QPushButton("Record", this);
-    // TODO show only cam/system 
-    // TODO record system / stop system
     stopButton_ = new QPushButton("Stop", this);
+    showButton_ = new QPushButton("Show", this);
     singleGrabButton_ = new QPushButton("Single Frame", this);
     
     QString buttonStyle = 
@@ -87,10 +86,12 @@ void CameraWidget::setupUI()
     
     startButton_->setStyleSheet(buttonStyle);
     stopButton_->setStyleSheet(buttonStyle);
+    showButton_->setStyleSheet(buttonStyle);
     // singleGrabButton_->setStyleSheet(buttonStyle);
     
     controlLayout->addWidget(startButton_, 0, 0);
-    controlLayout->addWidget(stopButton_, 0, 1);
+    controlLayout->addWidget(showButton_, 0, 1);
+    controlLayout->addWidget(stopButton_, 0, 2);
     // controlLayout->addWidget(singleGrabButton_, 1, 0, 1, 2);
     
     // Status label
@@ -147,6 +148,7 @@ void CameraWidget::setupUI()
     // Connect signals
     connect(startButton_, &QPushButton::clicked, this, &CameraWidget::onStartClicked);
     connect(stopButton_, &QPushButton::clicked, this, &CameraWidget::onStopClicked);
+    connect(showButton_, &QPushButton::clicked, this, &CameraWidget::onShowClicked);
     // connect(singleGrabButton_, &QPushButton::clicked, this, &CameraWidget::onSingleGrabClicked);
     
     // Set dark background
@@ -175,6 +177,7 @@ void CameraWidget::updateStatus()
             "}"
         );
         startButton_->setEnabled(false);
+        showButton_->setEnabled(false);
         stopButton_->setEnabled(true);
         // singleGrabButton_->setEnabled(false);
     } else {
@@ -191,6 +194,7 @@ void CameraWidget::updateStatus()
             "}"
         );
         startButton_->setEnabled(true);
+        showButton_->setEnabled(true);
         stopButton_->setEnabled(false);
         // singleGrabButton_->setEnabled(true);
     }
@@ -221,6 +225,19 @@ void CameraWidget::onStartClicked()
 {
     if (runtimeInstance_ && !runtimeInstance_->isRunning()) {
         runtimeInstance_->run();
+    } 
+    if (!frameTimer_->isActive()) {
+        frameTimer_->start();
+        lastFrameID_ = -1;
+        frameCount_ = 0;
+        updateStatus();
+    }
+}
+
+void CameraWidget::onShowClicked()
+{
+    if (runtimeInstance_ && !runtimeInstance_->isRunning()) {
+        runtimeInstance_->show();
     } 
     if (!frameTimer_->isActive()) {
         frameTimer_->start();

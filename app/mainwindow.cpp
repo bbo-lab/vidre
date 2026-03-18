@@ -286,6 +286,7 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
         QDockWidget *dockWidget = new QDockWidget(deviceName, this);
         dockWidget->setWidget(cameraWidget);
         dockWidget->setAllowedAreas(Qt::AllDockWidgetAreas);
+        dockWidget->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
         dockWidget->setAttribute(Qt::WA_DeleteOnClose);
         
         addDockWidget(Qt::RightDockWidgetArea, dockWidget);
@@ -323,7 +324,7 @@ void MainWindow::updateCameraStatus()
     // Update all open camera widgets
     for (auto& widget : cameraWidgets_) {
         widget.second->updateStatus();
-        widget.second->setRunning();
+        // widget.second->setRunning();
     }
 
     // Determine overall system status
@@ -333,7 +334,7 @@ void MainWindow::updateCameraStatus()
     bool anyError = false;
 
     for (const auto& cam : cameras_) {
-        if (cam.second) {
+        if (cam.second) { //TODO fix logic
             vidre::RecordingStatus status = cam.second->getRecordingStatus();
             if (status != vidre::RecordingStatus::Stopped) {
                 anyRunning = true;
