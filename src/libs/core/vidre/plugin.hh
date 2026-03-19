@@ -46,7 +46,7 @@
  *        basler/
  *        onsemi/
  *    filter/
- *    endcode/
+ *    encode/
  *        lossless/
  *        mp4/
  *    etc.

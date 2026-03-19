@@ -31,15 +31,10 @@
  * There are many pro's and con's for using exceptions versus error return
  * types—which we shall not repeat here. We should note, though, that the
  * mantra that exceptions are generally slower is [untenable](https://www.youtube.com/watch?v=bY2FlayomlE).
- * 
- * We shold advice, though, that Boost's exception [annotations](https://www.boost.org/doc/libs/1_88_0/libs/exception/doc/tutorial_transporting_data.html)
- * are used and encouraged for transporting terse and human readable 
- * information, which may add computational overhead.
  *
- * @TBD{Either we need a pulled-in version of
- * https://www.boost.org/doc/libs/latest/libs/exception/doc/tutorial_transporting_data.html
- * interface, or we implement our own "arbitrary data passing". I should note also, that after some
- * trials the Boost API seems quite cumbersome...}
+ * We shold advice, though, that Boost's exception
+ * [annotations](https://www.boost.org/doc/libs/latest/libs/exception/doc/tutorial_transporting_data.html) are used and encouraged
+ * for transporting terse and human readable information, which may add computational overhead.
  *
  * */
 #include <vidre/core/config.hh>
@@ -55,12 +50,9 @@ namespace vidre {
      * */
     ///@{
 
-    /** Buffer size for messages.
-     * */
-#define VIDRE_EXCEPTION_BUFSIZE 1024
-
     /** Exception info factory.
-     * FIXME
+     * See Boost's ["Transporting of Arbitrary
+     * Data"](https://www.boost.org/doc/libs/latest/libs/exception/doc/tutorial_transporting_data.html) for further information.
      * */
     template <class Tag, class T>
     using error_info = boost::error_info<Tag, T>;
@@ -69,7 +61,61 @@ namespace vidre {
      * */
     using throw_message = error_info<struct throw_message_, const char *>;
 
-    /// ...
+    /** Buffer size for messages.
+     * @todo This should be in the config.hh!
+     * */
+#define VIDRE_EXCEPTION_BUFSIZE 1024
+
+    /** Static error message.
+     *
+     * Some implementations passing error messages (for example std::error_code::message()) create
+     * temporary strings which are not usable with exceptions. This class provides a mechanism
+     * with static storage for passing such messages.
+     *
+     * Usage:
+     * @code
+     * const char *system_error::what() const noexcept {
+     *     static thread_local static_error_message msg;
+     *
+     *     msg = ec_.message();
+     *
+     *     return msg;
+     * }
+     * @endcode
+     *
+     * */
+    class VIDRE_CORE_VISIBILITY static_error_message {
+    public:
+        static_error_message() = default;
+
+    protected:
+        char buf_[VIDRE_EXCEPTION_BUFSIZE] = {};
+
+    public:
+        /** Implicit constant C-string conversion.
+         * */
+        operator const char *() const noexcept {
+            return buf_;
+        }
+
+        /** Assign C-string.
+         * */
+        static_error_message &operator=(const char *s) noexcept {
+            auto n = std::min(size_t(VIDRE_EXCEPTION_BUFSIZE - 1), strlen(s));
+            std::copy_n(s, n, buf_);
+            buf_[n] = 0;
+            return *this;
+        }
+
+        /** Assign std::string.
+         * */
+        static_error_message &operator=(const std::string &s) noexcept {
+            auto n = std::min(size_t(VIDRE_EXCEPTION_BUFSIZE - 1), s.size());
+            std::copy_n(s.data(), n, buf_);
+            buf_[n] = 0;
+            return *this;
+        }
+    };
 
     /** Default VidRe exception.
      * */
@@ -81,12 +127,16 @@ namespace vidre {
     };
 
     inline exception::exception(const std::source_location location) : boost::exception(), std::exception() {
+#if VIDRE_DEVELOP
         (*this)                                                 //
             << boost::throw_function(location.function_name())  //
             << boost::throw_file(location.file_name())          //
             << boost::throw_line(location.line());
+#endif
     }
 
+    /** Exception originating from a std::error_code. 
+     * */
     class VIDRE_CORE_VISIBILITY system_error : public virtual exception {
     protected:
         const std::error_code ec_{};
