@@ -52,6 +52,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "test.core.plugin",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test.core.plugin",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "test.core.exceptions",
             "type": "cppdbg",
             "request": "launch",

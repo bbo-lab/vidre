@@ -25,6 +25,8 @@
 #pragma once
 
 #include <vidre/core/config.hh>
+#include <vidre/exception.hh>
+#include <vidre/plugin/information.hh>
 
 #include <system_error>
 
@@ -45,7 +47,7 @@ namespace vidre {
              * */
             ///@{
 
-#if defined VIDRE_USING_DLFCN
+#if defined(VIDRE_USING_DLFCN)
             /// Operating system abstraction for DLL module handle.
             using handle_type = void *;
 
@@ -62,7 +64,8 @@ namespace vidre {
             // FIXME inline void libclose(handle_type handle) noexcept {}
             // FIXME inline symbol_type libget(handle_type handle, const char *symbol) noexcept {}
             // FIXME inline const char *liberror(handle_type handle); ???
-#elif defined VIDRE_USING_LIBLOADERAPI
+
+#elif defined(VIDRE_USING_LIBLOADERAPI)
             using handle_type = HMODULE;
 
             enum mode {
@@ -78,16 +81,26 @@ namespace vidre {
          * */
         ///@{
 
-        /** Dynamically linked object plugin loader.
+        /** General plugin handler and base class.
          *
-         * @TBD{there will also be a plugin::python and maybe others,
-         *     so, this class should actually be derived from a virtual
-         *     loader class (and register itself as a loader in some other
-         *     handler class, that finds, lists, searches, etc... all
-         *     available modules)}
+         * FIXME
          *
          * */
-        class VIDRE_CORE_VISIBILITY dynamic {
+        class VIDRE_CORE_VISIBILITY handler {
+        public:
+        public:
+            handler() = default;
+
+        public:
+            /** Load plugin by name.
+             * @param name Module name with path (but no extension, e.g. "my/plugin").
+             * */
+            virtual void load(const std::string &name) = 0;
+        };
+
+        /** Dynamically linked object plugin loader.
+         * */
+        class VIDRE_CORE_VISIBILITY dynamic : public handler {
         public:
             static constexpr const char *extension = VIDRE_DLL_EXTENSION;
 
@@ -135,6 +148,20 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY library {
             public:
+                class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
+                protected:
+                    std::string msg_{};
+
+                public:
+                    exception(const char *msg, const std::source_location location = std::source_location::current())
+                        : vidre::exception(location), msg_(msg) {}
+
+                    const char *what() const noexcept override {
+                        return msg_.c_str();
+                    }
+                };
+
+            public:
                 using handle_type = detail::handle_type;
 
                 enum mode {
@@ -146,32 +173,85 @@ namespace vidre {
 
             public:
                 library() = default;
-                library(const char *path, int flags = mode::lazy);
+                library(const char *path, mode flags = mode::lazy) {
+                    open(path, flags);
+                }
+                library(const std::string &path, mode flags = mode::lazy) : library(path.c_str(), flags) {}
+
+                library(const library &other) = delete;
+                library(library &&other) = delete;
+
                 ~library();
 
             protected:
                 handle_type handle_ = {};
-                std::error_code ecode_ = {};
+                const char *emsg_ = {};
 
             public:
-                /** Check if valid. */
+                /** Open library by path.
+                 * */
+                bool open(const char *path, mode flags = mode::lazy) noexcept;
+                bool open(const std::string &path, mode flags = mode::lazy) noexcept {
+                    return open(path.c_str(), flags);
+                }
+
+                /** Close library.
+                 * */
+                void close() noexcept;
+
+                /** Check if valid.
+                 * */
                 bool isvalid() const noexcept {
                     return handle_ != nullptr;
                 }
 
-                // ...
+                /** Get last error.
+                 * */
+                std::string error() const noexcept {
+                    return emsg_;
+                }
+
+                /** Get library symbol. */
+                handle_type get(const std::string &symname) noexcept;
+
+                /** Get library symbol.
+                 * */
+                template <typename T>
+                T get(const std::string &symname) {
+                    auto sym = get(symname);
+                    if (not sym)
+                        throw exception(emsg_);
+                    return reinterpret_cast<T>(sym);
+                }
             };
 
         public:
             dynamic() = default;
 
         protected:
-            // FIXME
+            // FIXME path_
+            library module_{};
+            information *info_{};
 
         public:
+            void load(const std::string &name) override;
+
+            /** Check if valid.
+             * */
+            bool isvalid() const noexcept {
+                return info_ != nullptr;
+            }
+
+            /** Get module information.
+             * */
+            const information info() const noexcept {
+                return *info_;
+            }
+
         };
 
         ///@}
+
     }  // namespace plugin
 
 }  // namespace vidre

@@ -36,9 +36,7 @@ namespace vidre {
         /** Module information.
          *
          * @TBD{maybe it's better, to just hold a JSON string}
-         * 
-         * @TBD{maybe put the module init function here, too}
-         * 
+         *
          * @see VIDRE_MODULE
          * */
         struct VIDRE_CORE_VISIBILITY information {
@@ -54,6 +52,8 @@ namespace vidre {
             const char *description = {};  ///< Detailed description of the module.
 
             const char *category;  ///< Module category (see FIXME).
+
+            void (*init)() = {};  ///< Module initialization function.
         };
 
         /** Symbol name of the information structure.
@@ -77,10 +77,9 @@ namespace vidre {
          * @endcode
          *
          */
-#define VIDRE_MODULE(...)                                                 \
-    VIDRE_API_MODULE struct vidre::plugin::information VIDRE_PLUGIN_INFO; \
-    struct vidre::plugin::information VIDRE_PLUGIN_INFO {                 \
-        __VA_ARGS__                                                       \
+#define VIDRE_MODULE(...)                                                  \
+    VIDRE_API_MODULE struct vidre::plugin::information VIDRE_PLUGIN_INFO { \
+        __VA_ARGS__                                                        \
     }
 
         ///@}

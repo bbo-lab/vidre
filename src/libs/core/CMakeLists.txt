@@ -37,7 +37,7 @@ vidre_library(vidrecore SHARED
         vidre/os/tty.hh
         vidre/cpp/format.hh
         vidre/cpp/util.hh
-        vidre/exception.hh
+        vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
         vidre/storage.hh
         vidre/plugin.hh 

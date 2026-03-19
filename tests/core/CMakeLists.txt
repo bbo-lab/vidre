@@ -9,3 +9,14 @@ vidre_test(GROUP
 
 vidre_test(exceptions SOURCES exceptions.cc)
 vidre_test(uuid SOURCES uuid.cc)
+vidre_test(plugin SOURCES plugin.cc)
+
+vidre_module(null 
+    SOURCES plugin/null.cc
+    PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/test"
+    BUILD
+        LINK_LIBRARIES
+            PUBLIC
+                Vidre::Core
+)

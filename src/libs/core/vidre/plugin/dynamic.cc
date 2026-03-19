@@ -21,33 +21,90 @@
  */
 #include "information.hh"
 #include "dynamic.hh"
+#include "../util/macros.hh"
 
 using namespace vidre;
 
 #if defined VIDRE_USING_DLFCN
 
-plugin::dynamic::library::library(const char *path, int flags) {
-    handle_ = dlopen(path, flags);
-    if (not handle_)
-        ecode_ = std::make_error_code(static_cast<std::errc>(errno));
-}
-
 plugin::dynamic::library::~library() {
     if (handle_)
         dlclose(handle_);
 }
 
-#else
+bool plugin::dynamic::library::open(const char *path, mode flags) noexcept {
+    if (handle_)
+        close();
 
-plugin::dynamic::library::library(const char *path, int flags) {
-    handle_ = dlopen(path, flags);
+    handle_ = dlopen(path, (int)flags);
     if (not handle_)
-        ecode_ = std::make_error_code(static_cast<std::errc>(errno));
+        emsg_ = dlerror();
+
+    return handle_;
+}
+
+void plugin::dynamic::library::close() noexcept {
+    if (handle_)
+        dlclose(handle_);
+    handle_ = nullptr;
+}
+
+plugin::dynamic::library::handle_type plugin::dynamic::library::get(const std::string &symname) noexcept {
+    dlerror();  // clears old error
+    auto sym = dlsym(handle_, symname.c_str());
+    if (not sym) {
+        emsg_ = dlerror();
+        if (not emsg_)
+            emsg_ = "Cannot handle a NULL result";  // see man dlsym, NOTES
+    }
+    return sym;
+}
+
+#elif defined(VIDRE_USING_LIBLOADERAPI)
+
+FIXME
+
+plugin::dynamic::library::library(const char *path, mode flags) {
+    handle_ = LoadLibraryExA(library_name.c_str(), NULL, DWORD(flags));
+    if (not handle_)
+        // FIXME need to check if we actually got a static string...???
+        emsg_ = std::error_code(GetLastError(), std::system_category()).message().c_str();
 }
 
 plugin::dynamic::library::~library() {
     if (handle_)
-        dlclose(handle_);
+        FreeLibrary(handle_);
+}
+
+plugin::dynamic::library::handle_type plugin::dynamic::library::get(const std::string &symname) noexecpt {
+    auto sym = GetProcAddress(handle_, symname.c_str());
+    if (not sym)
+        emsg_ = std::error_code(GetLastError(), std::system_category()).message().c_str();
+    return sym;
 }
 
 #endif
+
+void plugin::dynamic::load(const std::string &name) {
+    // FIXME check if already loaded (this would require library to use shared_ptr for the handle...)
+
+    // open module
+    module_.open(name + extension, library::mode::lazy);
+    if (not module_.isvalid()) {
+        // FIXME error handling, user information, etc.
+        return;
+    }
+
+    // check info
+    try {
+        info_ = module_.get<information *>(VIDRE_STRINGIFY_EXPAND(VIDRE_PLUGIN_INFO));
+    }
+    catch(...) {
+        return;
+    }
+
+    // initialize
+    info_->init();
+
+    // FIXME register with handler
+}
