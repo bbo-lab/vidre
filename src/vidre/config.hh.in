@@ -74,7 +74,7 @@ namespace vidre {}
 #define VIDRE_API_MODULE @Vidre_API_MODULE@
 
 /** File extension for dynamically linked libraries.  */
-#define VIDRE_DLL_EXTENSION "@vidre_DLL_EXTENSION@"
+#define VIDRE_DLL_EXTENSION "@Vidre_DLL_EXTENSION@"
 
 ///@}
 
