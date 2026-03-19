@@ -35,9 +35,9 @@
  * with an exception than with a simple error code.
  *
  * @TBD{Either we need a pulled-in version of
- * https://www.boost.org/doc/libs/1_75_0/libs/exception/doc/tutorial_transporting_data.html and the rest of it's exception
- * interface, or we implement our own "arbitrary data passing". I should note also, that after some trials the Boost API seems quite
- * cumbersome...}
+ * https://www.boost.org/doc/libs/latest/libs/exception/doc/tutorial_transporting_data.html
+ * interface, or we implement our own "arbitrary data passing". I should note also, that after some
+ * trials the Boost API seems quite cumbersome...}
  *
  * */
 #include <vidre/core/config.hh>
@@ -53,8 +53,12 @@ namespace vidre {
      * */
     ///@{
 
+    /** Buffer size for messages.
+     * */
+#define VIDRE_EXCEPTION_BUFSIZE 1024
+
     /** Exception info factory.
-     * FIXME 
+     * FIXME
      * */
     template <class Tag, class T>
     using error_info = boost::error_info<Tag, T>;
@@ -81,7 +85,19 @@ namespace vidre {
             << boost::throw_line(location.line());
     }
 
+    class VIDRE_CORE_VISIBILITY system_error : public virtual exception {
+    protected:
+        const std::error_code ec_{};
+
+    public:
+        system_error(std::error_code ec, const std::source_location location = std::source_location::current())
+            : exception(location), ec_(ec) {}
+
+        const char *what() const noexcept override;
+    };
+
     ///@}
+
 }  // namespace vidre
 
 #endif  // VIDRE_CORE_EXCEPTION_HH

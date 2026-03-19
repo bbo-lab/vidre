@@ -26,7 +26,7 @@ vidre_library(vidrecore SHARED
     SOURCES
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
-        vidre/exception.hh
+        vidre/exception.hh vidre/exception.cc
         vidre/storage.hh
         vidre/plugin.hh 
             vidre/plugin/information.hh
