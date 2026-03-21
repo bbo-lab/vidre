@@ -203,8 +203,8 @@ namespace vidre {
                 return *this;
             }
 
-            template<typename T>
-            requires functor<handler,T>
+            template <typename T>
+            requires functor<handler, T>
             handler &operator<<(T &&fn) noexcept {
                 return fn(*this);
             }
@@ -544,7 +544,10 @@ namespace vidre {
             }
         };
 #else
-        class VIDRE_CORE_VISIBILITY trace : public null {};
+        class VIDRE_CORE_VISIBILITY trace : public null {
+        public:
+            static void pattern(std::string_view pat) {}
+        };
 #endif
 
         ///@}

@@ -7,6 +7,7 @@ using namespace vidre;
 int main(int argc, const char **argv) {
     log::io::stream::threshold(0, log::level::trace);
     log::trace::pattern("*");
+
     log::trace tr;
 
     tr << "Exploring plugins...\n";

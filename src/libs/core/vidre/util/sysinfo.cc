@@ -81,7 +81,9 @@ vidre::sysinfo::memory vidre::sysinfo::memory::get() noexcept {
 
         char lbuf[256];
         while (not feof(memf)) {
-            fgets(lbuf, sizeof(lbuf), memf);
+            if (not fgets(lbuf, sizeof(lbuf), memf))
+                break;
+
             auto n = strlen(lbuf);
 
             auto colon = std::find(lbuf, lbuf + n, ':');

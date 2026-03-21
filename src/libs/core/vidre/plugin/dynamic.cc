@@ -39,8 +39,8 @@ std::pair<plugin::detail::library::handle_type, std::string> plugin::detail::lib
 }
 
 std::pair<bool, std::string> plugin::detail::library::close(handle_type handle) noexcept {
-    if (not handle) {
-        if (not dlclose(handle))
+    if (handle) {
+        if (dlclose(handle))
             return std::make_pair(false, dlerror());
     }
     return std::make_pair(true, std::string{});
