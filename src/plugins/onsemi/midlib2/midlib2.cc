@@ -33,7 +33,6 @@ VIDRE_MODULE(                    //
         .category = "device/camera"    //
 );
 
-
 VIDRE_API_MODULE void vidre_plugin() noexcept {
     // FIXME
 }

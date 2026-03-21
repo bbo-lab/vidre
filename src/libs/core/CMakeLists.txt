@@ -41,8 +41,10 @@ vidre_library(vidrecore SHARED
         vidre/log.hh vidre/log.cc
         vidre/storage.hh
         vidre/plugin.hh 
+            vidre/plugin/exception.hh
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
+            vidre/plugin/hub.hh vidre/plugin/hub.cc
         vidre/util/version.hh
         vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc

@@ -30,31 +30,18 @@
  *
  * This header provides an implementation to declare, load and deal
  * with plugins, specifically but not limited to dynamic modules.
- * It's implementation takes into account, that not all libraries,
- * specifically proprietry software, are not distributed along VidRe.
+ * It's implementation takes into account, that libraries, specifically 
+ * proprietry software, may not be distributed along VidRe.
  *
- * @internal
- *
- * @endinternal
+ * @see vidre::plugin::hub
+ * 
  * */
 
-/* TODO
- *  - decide on a config file format (JSON)
- *    -> must list, e.g. for proprietry software, were to download to enable the feature
- *  - decide category/directory structure, e.g.
- *    device/
- *        basler/
- *        onsemi/
- *    filter/
- *    encode/
- *        lossless/
- *        mp4/
- *    etc.
- */
-
 #include <vidre/core/config.hh>
+#include <vidre/plugin/exception.hh>
 #include <vidre/plugin/information.hh>
 #include <vidre/plugin/dynamic.hh>
+#include <vidre/plugin/hub.hh>
 
 namespace vidre {
 

@@ -23,66 +23,72 @@
 #include "dynamic.hh"
 #include "../util/macros.hh"
 
+#include <utility>
+#include <system_error>
+
 using namespace vidre;
 
-#if defined VIDRE_USING_DLFCN
-
-plugin::dynamic::library::~library() {
-    if (handle_)
-        dlclose(handle_);
+#if defined(VIDRE_USING_DLFCN)
+std::pair<plugin::detail::library::handle_type, std::string> plugin::detail::library::open(const char *filename,
+                                                                                           int flags) noexcept {
+    handle_type handle = dlopen(filename, flags);
+    if (not handle)
+        return std::make_pair(nullptr, dlerror());
+    else
+        return std::make_pair(handle, std::string{});
 }
 
-bool plugin::dynamic::library::open(const char *path, mode flags) noexcept {
-    if (handle_)
-        close();
-
-    handle_ = dlopen(path, (int)flags);
-    if (not handle_)
-        emsg_ = dlerror();
-
-    return handle_;
-}
-
-void plugin::dynamic::library::close() noexcept {
-    if (handle_)
-        dlclose(handle_);
-    handle_ = nullptr;
-}
-
-plugin::dynamic::library::handle_type plugin::dynamic::library::get(const std::string &symname) noexcept {
-    dlerror();  // clears old error
-    auto sym = dlsym(handle_, symname.c_str());
-    if (not sym) {
-        emsg_ = dlerror();
-        if (not emsg_)
-            emsg_ = "Cannot handle a NULL result";  // see man dlsym, NOTES
+std::pair<bool, std::string> plugin::detail::library::close(handle_type handle) noexcept {
+    if (not handle) {
+        if (not dlclose(handle))
+            return std::make_pair(false, dlerror());
     }
-    return sym;
+    return std::make_pair(true, std::string{});
+}
+
+std::pair<plugin::detail::library::symbol_type, std::string> plugin::detail::library::symbol(handle_type handle,
+                                                                                             const char *symname) noexcept {
+    // see man dlsym, NOTES
+    dlerror();
+    symbol_type symbol = dlsym(handle, symname);
+    if (not symbol) {
+        const char *emsg = dlerror();
+        if (not emsg)
+            emsg = "weak symbol access or nullptr access not possible";
+        return std::make_pair(nullptr, emsg);
+    }
+    return std::make_pair(symbol, std::string{});
 }
 
 #elif defined(VIDRE_USING_LIBLOADERAPI)
+using handle_type = HMODULE;
 
-FIXME
+enum mode {
+    lazy = DONT_RESOLVE_DLL_REFERENCES,
+    now = 0
+};
 
-plugin::dynamic::library::library(const char *path, mode flags) {
-    handle_ = LoadLibraryExA(library_name.c_str(), NULL, DWORD(flags));
-    if (not handle_)
-        // FIXME need to check if we actually got a static string...???
-        emsg_ = std::error_code(GetLastError(), std::system_category()).message().c_str();
+std::pair<handle_type, std::string> plugin::detail::library::open(const char *filename, mode flags) noexcept {
+    handle_type handle = LoadLibraryExA(library_name.c_str(), NULL, DWORD(flags));
+    if (not handle)
+        return std::make_pair(nullptr, std::error_code(GetLastError(), std::system_category()).message().c_str());
+    else
+        return std::make_pair(handle, std::string{});
 }
 
-plugin::dynamic::library::~library() {
+std::pair<bool, std::string> plugin::detail::library::close(handle_type handle) noexcept {
     if (handle_)
         FreeLibrary(handle_);
+    return std::make_pair(true, std::string{});
 }
 
-plugin::dynamic::library::handle_type plugin::dynamic::library::get(const std::string &symname) noexecpt {
+std::pair<symbol_type, std::string> plugin::detail::library::symbol(handle_type handle, const char *symname) noexcept {
     auto sym = GetProcAddress(handle_, symname.c_str());
     if (not sym)
-        emsg_ = std::error_code(GetLastError(), std::system_category()).message().c_str();
-    return sym;
-}
+        return std::make_pair(nullptr, std::error_code(GetLastError(), std::system_category()).message().c_str());
 
+    return std::make_pair(sym, std::string{});
+}
 #endif
 
 void plugin::dynamic::load(const std::string &name) {
@@ -98,8 +104,7 @@ void plugin::dynamic::load(const std::string &name) {
     // check info
     try {
         info_ = module_.get<information *>(VIDRE_STRINGIFY_EXPAND(VIDRE_PLUGIN_INFO));
-    }
-    catch(...) {
+    } catch (...) {
         return;
     }
 

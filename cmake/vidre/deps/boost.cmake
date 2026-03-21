@@ -15,7 +15,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 FetchContent_Declare(
   Boost
   GIT_REPOSITORY https://github.com/boostorg/boost.git
-  GIT_TAG boost-1.88.0
+  GIT_TAG boost-1.90.0
   GIT_SHALLOW TRUE
   GIT_PROGRESS ON
   FIND_PACKAGE_ARGS

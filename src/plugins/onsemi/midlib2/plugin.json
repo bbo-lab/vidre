@@ -3,8 +3,8 @@
     "name": "onsemi/midlib2",
     "description": {},
     "device": {},
+    "type": "dll",
     "load": {
-        "type": "dll",
         "file": "preload",
         "when": "always"
     }

@@ -16,7 +16,8 @@ if(VIDRE_HAVE_PYLON)
                 PUBLIC 
                     Vidre::Core
                     pylon::PylonBase
-                    # GenICam::GCBase GenICam::GenApi ??
+                    GenICam::GCBase 
+                    GenICam::GenApi
                     # pylon::PylonUtility ??
             INSTALL
                 DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/basler/pylon

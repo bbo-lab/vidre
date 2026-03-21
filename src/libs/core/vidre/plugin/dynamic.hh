@@ -25,84 +25,90 @@
 #pragma once
 
 #include <vidre/core/config.hh>
-#include <vidre/exception.hh>
+#include <vidre/plugin/exception.hh>
 #include <vidre/plugin/information.hh>
-
-#include <system_error>
-
-#if defined(_MSC_VER)
-#include <libloaderapi.h>
-#define VIDRE_USING_LIBLOADERAPI
-#else
-#include <dlfcn.h>
-#define VIDRE_USING_DLFCN
-#endif
 
 namespace vidre {
 
     namespace plugin {
 
         namespace detail {
-            /**@addtogroup api-core-details
-             * */
-            ///@{
 
-#if defined(VIDRE_USING_DLFCN)
-            /// Operating system abstraction for DLL module handle.
-            using handle_type = void *;
+            namespace library {
 
-            /// Operating system abstraction for DLL symbol handle.
-            using symbol_type = void *;
+                /**@addtogroup api-core-details
+                 * */
+                ///@{
 
-            /// Operating system abstraction for DLL module modes.
-            enum mode {
-                lazy = RTLD_LAZY,
-                now = RTLD_NOW,
-            };
+#if defined(VIDRE_USING_DLFCN) or defined(DOXYGEN)
+                /// Operating system abstraction for DLL module handle.
+                using handle_type = void *;
 
-            // FIXME inline handle_type libopen(const char *filename, int flags) noexcept {}
-            // FIXME inline void libclose(handle_type handle) noexcept {}
-            // FIXME inline symbol_type libget(handle_type handle, const char *symbol) noexcept {}
-            // FIXME inline const char *liberror(handle_type handle); ???
+                /// Operating system abstraction for DLL symbol handle.
+                using symbol_type = void *;
+
+                /// Operating system abstraction for DLL module modes.
+                enum mode : int {
+                    lazy = RTLD_LAZY,
+                    now = RTLD_NOW,
+                };
 
 #elif defined(VIDRE_USING_LIBLOADERAPI)
-            using handle_type = HMODULE;
+                using handle_type = HMODULE;
 
-            enum mode {
-                lazy = DONT_RESOLVE_DLL_REFERENCES,
-                now = 0
-            };
+                enum mode {
+                    lazy = DONT_RESOLVE_DLL_REFERENCES,
+                    now = 0
+                };
 #endif
 
-            ///@}
+                /** Open library.
+                 * @return handle (nullptr on error) and error message (nullptr on success)
+                 * */
+                std::pair<handle_type, std::string> open(const char *filename, int flags) noexcept;
+
+                /** Close library.
+                 * @return error message on failure, nullptr otherwise
+                 */
+                std::pair<bool, std::string> close(handle_type handle) noexcept;
+
+                /** Get library symbol by name.
+                 * @return handle (nullptr on error) and error message (nullptr on success)
+                 * */
+                std::pair<symbol_type, std::string> symbol(handle_type handle, const char *symname) noexcept;
+
+                ///@}
+
+            }  // namespace library
+
         }  // namespace detail
 
         /**@addtogroup api-core-plugin
          * */
         ///@{
 
-        /** General plugin handler and base class.
-         *
-         * FIXME
-         *
-         * */
-        class VIDRE_CORE_VISIBILITY handler {
-        public:
-        public:
-            handler() = default;
-
-        public:
-            /** Load plugin by name.
-             * @param name Module name with path (but no extension, e.g. "my/plugin").
-             * */
-            virtual void load(const std::string &name) = 0;
-        };
-
         /** Dynamically linked object plugin loader.
          * */
-        class VIDRE_CORE_VISIBILITY dynamic : public handler {
+        class VIDRE_CORE_VISIBILITY dynamic {
         public:
+            /** File extension for dynamic load libraries.
+             * */
             static constexpr const char *extension = VIDRE_DLL_EXTENSION;
+
+            /** Exception.
+             * */
+            class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
+            protected:
+                std::string msg_{};
+
+            public:
+                exception(const std::string &msg, const std::source_location location = std::source_location::current())
+                    : vidre::exception(location), msg_(msg) {}
+
+                const char *what() const noexcept override {
+                    return msg_.c_str();
+                }
+            };
 
             /** DLL handler abstraction.
              *
@@ -112,67 +118,22 @@ namespace vidre {
              * proprietry libraries which are not distributed together with
              * VidRe.
              *
-             * @internal
-             * In the case of propriertry libraries the module should not
-             * just fail to load. Instead, it should, itself, be able to
-             * detect, if it is required and instead of failing report
-             * detailed instructions on how to install the correction version
-             * of the proprietry software VidRe was compiled for. This
-             * can be for example achieved by using the pattern:
-             * @code
-             * const char * (*foreign_version_function)() = {};
-             * //...
-             * void *foreign_lib = {};
-             *
-             * void init() {
-             *     foreign_lib = dlopen("libforeign" VIDRE_DLL_EXTENSION);
-             *     if (not foreign_lib) {
-             *         // ... report ..
-             *         return;
-             *     }
-             *     foreign_version_function = (const char *(*)()) dlsym(foreign_lib, "version_function");
-             *     if (not foreign_version_function) {
-             *         // ... report ..
-             *         return;
-             *     }
-             *
-             *     // ... check version ...
-             *     // etc.
-             * }
-             * @endcode
-             * Another method would be to provide a secondary "analysis module".
-             * A third method could be to have two plugins, the first loads the
-             * the actual plugin.
-             * @endinternal
-             *
              * */
             class VIDRE_CORE_VISIBILITY library {
             public:
-                class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
-                protected:
-                    std::string msg_{};
+                using handle_type = detail::library::handle_type;
+                using symbol_type = detail::library::symbol_type;
 
-                public:
-                    exception(const char *msg, const std::source_location location = std::source_location::current())
-                        : vidre::exception(location), msg_(msg) {}
-
-                    const char *what() const noexcept override {
-                        return msg_.c_str();
-                    }
-                };
-
-            public:
-                using handle_type = detail::handle_type;
-
-                enum mode {
-                    lazy = detail::mode::lazy,  ///< Perform lazy binding.
-                                                ///< Resolve symbols only as the code that references them is executed.
-                    now =
-                        detail::mode::now  ///< All undefined symbols in the shared object are resolved before constructor returns.
+                enum mode : int {
+                    lazy = detail::library::mode::lazy,  ///< Perform lazy binding.
+                                                         ///< Resolve symbols only as the code that references them is executed.
+                    now = detail::library::mode::now     ///< All undefined symbols in the shared object are resolved before
+                                                         ///< constructor returns.
                 };
 
             public:
                 library() = default;
+
                 library(const char *path, mode flags = mode::lazy) {
                     open(path, flags);
                 }
@@ -181,23 +142,35 @@ namespace vidre {
                 library(const library &other) = delete;
                 library(library &&other) = delete;
 
-                ~library();
+                ~library() {
+                    detail::library::close(handle_);
+                }
 
             protected:
                 handle_type handle_ = {};
-                const char *emsg_ = {};
 
             public:
                 /** Open library by path.
+                 * @throws plugin::exception
                  * */
-                bool open(const char *path, mode flags = mode::lazy) noexcept;
-                bool open(const std::string &path, mode flags = mode::lazy) noexcept {
+                bool open(const char *path, mode flags = mode::lazy) {
+                    auto lib = detail::library::open(path, flags);
+                    handle_ = lib.first;
+                    if (not handle_)
+                        throw exception(lib.second);
+                    return handle_;
+                }
+
+                bool open(const std::string &path, mode flags = mode::lazy) {
                     return open(path.c_str(), flags);
                 }
 
                 /** Close library.
                  * */
-                void close() noexcept;
+                void close() noexcept {
+                    detail::library::close(handle_);
+                    handle_ = nullptr;
+                }
 
                 /** Check if valid.
                  * */
@@ -205,23 +178,20 @@ namespace vidre {
                     return handle_ != nullptr;
                 }
 
-                /** Get last error.
-                 * */
-                std::string error() const noexcept {
-                    return emsg_;
-                }
-
                 /** Get library symbol. */
-                handle_type get(const std::string &symname) noexcept;
+                symbol_type get(const std::string &symname) {
+                    auto sym = detail::library::symbol(handle_, symname.c_str());
+                    if (not sym.first)
+                        throw exception(sym.second);
+                    return sym.first;
+                }
 
                 /** Get library symbol.
                  * */
                 template <typename T>
                 T get(const std::string &symname) {
-                    auto sym = get(symname);
-                    if (not sym)
-                        throw exception(emsg_);
-                    return reinterpret_cast<T>(sym);
+                    auto sym = detail::library::symbol(handle_, symname.c_str());
+                    return reinterpret_cast<T>(sym.first);
                 }
             };
 
@@ -234,7 +204,7 @@ namespace vidre {
             information *info_{};
 
         public:
-            void load(const std::string &name) override;
+            void load(const std::string &name);
 
             /** Check if valid.
              * */
@@ -247,7 +217,6 @@ namespace vidre {
             const information info() const noexcept {
                 return *info_;
             }
-
         };
 
         ///@}
