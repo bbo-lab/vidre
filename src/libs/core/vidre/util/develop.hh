@@ -35,11 +35,13 @@ namespace vidre {
          * @ingroup api-core-util
          * @details
          * @fileinfo
-         *
-         * @todo
-         *      The development tools should be disabled for releases. Maybe
-         *      a "devel.cmake" or some "release.cmake" file could be used
-         *      (see VIDRE_DEVELOP)
+         * 
+         * The development utilities are only available for development
+         * (see VIDRE_DEVELOP setting in CMake). For releases, empty stubs are
+         * present.
+         * 
+         * @see @ref examples/core/develop.cc
+         * 
          * */
         ///@{
 

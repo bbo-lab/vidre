@@ -30,11 +30,12 @@
  *
  * This header provides an implementation to declare, load and deal
  * with plugins, specifically but not limited to dynamic modules.
- * It's implementation takes into account, that libraries, specifically 
+ * It's implementation takes into account, that libraries, specifically
  * proprietry software, may not be distributed along VidRe.
  *
  * @see vidre::plugin::hub
- * 
+ * @see @ref examples/core/plugins.cc
+ *
  * */
 
 #include <vidre/core/config.hh>

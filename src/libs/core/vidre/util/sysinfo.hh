@@ -41,6 +41,10 @@ namespace vidre {
         ///@{
 
         /** Physical system memory overview.
+         *
+         * <b>Example</b>:
+         * @include examples/core/sysinfo.cc
+         *
          * */
         struct VIDRE_CORE_VISIBILITY memory {
             std::size_t total = 0;      ///< Total physical system memory.

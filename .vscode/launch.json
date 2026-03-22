@@ -43,6 +43,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.script",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.script",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.playground.aptina",
             "type": "cppdbg",
             "request": "launch",

@@ -20,6 +20,6 @@ int main(int argc, const char **argv) {
 }
 
 /**@example examples/core/plugins.cc
- * @brief FIXME
- *
+ * @brief Introduction to the plugin interface.
+ * 
  * */

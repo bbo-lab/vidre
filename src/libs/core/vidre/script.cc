@@ -26,19 +26,19 @@
 
 using namespace vidre;
 
-void vidre_lua_init(script::impl &g) {
+void vidre_lua_init(script::interface &g) {
     if (develop::inbuild()) {
         g.addpath(PROJECT_SOURCE_DIR "/src/scripts");
-        g.addcpath(PROJECT_BINARY_DIR "/plugins");
+        g.addcpath(PROJECT_BINARY_DIR "/lib");
     }
 
     // FIXME
-    //g.require("vidre.init");
+    g.require("vidre");
 }
 
-vidre::script::impl vidre::script::g(vidre_lua_init);
+vidre::script::interface vidre::script::g(vidre_lua_init);
 
-void script::impl::addpath(const std::filesystem::path &path) {
+void script::interface::addpath(const std::filesystem::path &path) {
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
@@ -57,7 +57,7 @@ void script::impl::addpath(const std::filesystem::path &path) {
     setfield(-2, "path");
 }
 
-void script::impl::addcpath(const std::filesystem::path &path) {
+void script::interface::addcpath(const std::filesystem::path &path) {
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
@@ -76,19 +76,29 @@ void script::impl::addcpath(const std::filesystem::path &path) {
     setfield(-2, "cpath");
 }
 
-void script::impl::require(const std::string &lib) {
+void script::interface::require(const std::string &lib) {
     getglobal("require");
-    pushlstring(lib.data(),lib.size());
+    pushlstring(lib.data(), lib.size());
     call(1);
 }
 
-void script::impl::run(const std::string &scr) {
-    auto res = dostring(scr.c_str());
+lua::status script::interface::exec(const std::string &s) {
+    lua::status res = loadstring(s.c_str());
+    if (res == lua::status::ok)
+        res = pcall(0, lua::multret, 0);
     switch (res) {
         case lua::status::ok:
-            return;
+        case lua::status::yield:
+            return res;
+        case lua::status::error_run:
+            throw vidre::exception() << throw_message("runtime error");
+        case lua::status::syntax:
+            throw vidre::exception() << throw_message("syntax error");
+        case lua::status::memory:
+            throw vidre::exception() << throw_message("memory allocation error");
+        case lua::status::error:
+            throw vidre::exception() << throw_message("error handler failure");
         default:
-            // FIXME
-            throw vidre::exception() << throw_message("FIXME");
+            throw vidre::exception() << throw_message("unrecognized error return code");
     }
 }

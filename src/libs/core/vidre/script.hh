@@ -29,12 +29,12 @@
  * @fileinfo
  *
  * VidRe provides scripting functionality through Lua (version 5.4 at the
- * moment of writing). Its maor purpose is to facilitate complex configuration
- * scripts of devices, such as cameras, where
+ * moment of writing). Its major purpose is to facilitate complex configuration
+ * scripts of devices, such as cameras, where, for example, setting or
+ * retrieving the frame rate involves setting several registers (note, that
+ * the USB3Vision standard implements this using XML files).
  *
- * @internal
- *
- * @endinternal
+ * @see @ref examples/core/script.cc
  *
  * */
 
@@ -49,25 +49,32 @@ namespace vidre {
      * */
     ///@{
 
-    /** FIXME
+    /** Scripting.
      * */
-    class VIDRE_CORE_VISIBILITY script {
-    public:
-        /** Low-level interface.
+    struct script {
+        /** Script interface.
+         *
+         * The script interface is based on <a href="https://github.com:jsawbbo/delua">Delua</a>,
+         * which provides a low-level C++ interface to Lua (version 5.4 at the moment
+         * of writing). We add a number of high-level methods for convenience.
+         *
+         * @see vidre::script::g
+         * @see @ref examples/core/script.cc
+         *
          * */
-        class VIDRE_CORE_VISIBILITY impl : public lua::state {
+        class VIDRE_CORE_VISIBILITY interface : public lua::state {
         public:
             class stack;
 
         public:
-            impl() = default;
-            ~impl() {
+            interface() = default;
+            ~interface() {
                 if (L)
                     close();
             }
 
         protected:
-            impl(void (*init)(impl &)) : lua::state(lua::state::newstate()) {
+            interface(void (*init)(interface &)) : lua::state(lua::state::newstate()) {
                 luaL_openlibs(L);  // FIXME this should be in lua::state
 
                 if (init)
@@ -83,45 +90,49 @@ namespace vidre {
              * */
             void addcpath(const std::filesystem::path &path);
 
-            /** Run a script.
+            /** Execute a string.
+             * Example:
+             * @snippet examples/core/script.cc hello-world
              * */
-            void run(const std::string &scr);
+            lua::status exec(const std::string &s);
 
             /** Require library.
+             * @returns lua::status::ok or lua::status::yield, otherwise an exception is thrown
              * */
             void require(const std::string &lib);
 
         private:
-            friend class vidre::script;
+            friend struct vidre::script;
         };
 
-        /** Global VidRe state.
+        /** Global script state.
+         * @see @ref examples/core/script.cc
          * */
-        static impl g;
-
-    public:
-    public:
+        static interface g;
     };
 
     /** Stack scope.
-     * FIXME
+     * This class facilitates automatic Lua stack cleanup by scope.
+     * 
+     * Example:
+     * @snippet examples/core/script.cc stack-top
      * */
-    class VIDRE_CORE_VISIBILITY script::impl::stack {
+    class VIDRE_CORE_VISIBILITY script::interface::stack {
     public:
         stack() = delete;
-        stack(impl &L) : L_(L), top_(L.gettop()) {}
+        stack(interface &L) : L_(L), top_(L.gettop()) {}
         ~stack() {
             L_.settop(top_);
         }
 
     protected:
-        impl &L_;
+        interface &L_;
         index_type top_;
 
     public:
         /** Get number of elements on stack. */
         size_type size() const noexcept {
-            return size_type(L_.gettop()-top_);
+            return size_type(L_.gettop() - top_);
         }
     };
 

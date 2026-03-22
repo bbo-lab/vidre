@@ -83,9 +83,9 @@ int main(int argc, const char **argv) {
 /**@example examples/core/log.cc
  * @brief This file demonstrates logging.
  *
- * This file demonstrates logging covering the following topics:
+ * This example covers the following topics:
  * - simple log use,
- * - block-wise logging,
- * - etc.
+ * - block-wise logging, and,
+ * - tracing.
  *
- */
+ * */

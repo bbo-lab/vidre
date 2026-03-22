@@ -14,4 +14,4 @@ int main(int argc, const char **argv) {
 
 /**@example examples/core/develop.cc
  * @brief Development utilities.
- */
+ * */
