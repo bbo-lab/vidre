@@ -16,3 +16,5 @@ vidre_test(develop SOURCES develop.cc)
 vidre_test(plugins SOURCES plugins.cc)
 vidre_test(sysinfo SOURCES sysinfo.cc)
 vidre_test(script SOURCES script.cc)
+vidre_test(settings SOURCES settings.cc)
+

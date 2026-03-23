@@ -41,6 +41,8 @@ vidre_library(vidrecore SHARED
         vidre/log.hh vidre/log.cc
         vidre/script.hh vidre/script.cc
         vidre/settings.hh vidre/settings.cc
+            vidre/settings/node.hh 
+            vidre/settings/file.hh 
         vidre/storage.hh
         vidre/plugin.hh 
             vidre/plugin/exception.hh

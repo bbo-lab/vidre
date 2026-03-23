@@ -20,3 +20,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "settings.hh"
+
+using namespace vidre;
+
+lua::type settings::node::get(const std::string &field) {
+    if (push() != lua::type::table) {
+        script::g.pop();
+        throw vidre::exception() << throw_message("requested field is not a table");
+    }
+
+    script::g.getfield(-1, field.c_str());
+    script::g.remove(-2);
+    return script::g.type(-1);
+}

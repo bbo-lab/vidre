@@ -28,24 +28,31 @@
  * @details
  * @fileinfo
  *
- * 
+ * Configuration files are, as also stated elsewhere, implemented using Lua
+ * (see @ref api-core-script).
+ * The advantage of using Lua as a configuration language is, that it also
+ * allows to implement complex functions, such as is required for abstracting
+ * camera interfaces, where, for example setting the frame rate or exposure time,
+ * would require, first to do calculations and, second, update multiple registers
+ * at once.
+ *
  * @internal
- * 
+ *
  * @endinternal
- * 
+ *
  * */
 
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
+#include <vidre/settings/node.hh>
 
 namespace vidre {
-    /**@addtogroup api-core-settings
+
+    /** Settings/configuration related.
+     * @ingroup api-core-settings
      * */
-    ///@{
+    namespace settings {}  // namespace settings
 
-    //
-
-    ///@}
 }  // namespace vidre
 
 #endif  // VIDRE_CORE_SETTINGS_HH

@@ -17,7 +17,7 @@ int main(int, const char **) {
     // automatically using a stack scope. Here, we log the package.path
     // and package.cpath, noting the number of elements on the stack.
     {
-        script::interface::stack scope(script::g);
+        script::stack scope(script::g);
 
         if (script::g.getglobal("package") != lua::type::table) // +1
             throw exception();

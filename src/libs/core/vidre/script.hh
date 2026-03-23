@@ -39,6 +39,7 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/exception.hh>
 #include <delua.hpp>
 
 #include <filesystem>
@@ -52,6 +53,9 @@ namespace vidre {
     /** Scripting.
      * */
     struct script {
+        class exception;
+        class stack;
+
         /** Script interface.
          *
          * The script interface is based on <a href="https://github.com:jsawbbo/delua">Delua</a>,
@@ -63,9 +67,6 @@ namespace vidre {
          *
          * */
         class VIDRE_CORE_VISIBILITY interface : public lua::state {
-        public:
-            class stack;
-
         public:
             interface() = default;
             ~interface() {
@@ -81,14 +82,33 @@ namespace vidre {
                     init(*this);
             }
 
-        public:
-            /** Add a dynamic library loader path.
-             * */
-            void addpath(const std::filesystem::path &path);
+        protected:
+            /** Helper to clear package.path or package.cpath. */
+            void clearpackage(const std::string &field);
 
-            /** Add a script loader path.
+            /** Helper to add to package.path or package.cpath. */
+            void addpackage(const std::string &path, const std::string &field);
+
+        public:
+            /** Clear loader path.
+             * @param field "cpath" or "path"
              * */
-            void addcpath(const std::filesystem::path &path);
+            void clearpath(const std::string &field = std::string{}) {
+                if (field.empty()) {
+                    clearpackage("path");
+                    clearpackage("cpath");
+                }
+                else
+                    clearpackage(field);
+            }
+
+            /** Add loader path.
+             * @param path   Filesystem path.
+             * @param field  "cpath" or "path"
+             * */
+            void addpath(const std::filesystem::path &path, const std::string &field) {
+                addpackage(path, field);
+            }
 
             /** Execute a string.
              * Example:
@@ -105,6 +125,9 @@ namespace vidre {
             friend struct vidre::script;
         };
 
+        using index_type = interface::index_type;
+        using size_type = interface::size_type;
+
         /** Global script state.
          * @see @ref examples/core/script.cc
          * */
@@ -113,11 +136,15 @@ namespace vidre {
 
     /** Stack scope.
      * This class facilitates automatic Lua stack cleanup by scope.
-     * 
+     *
      * Example:
      * @snippet examples/core/script.cc stack-top
      * */
-    class VIDRE_CORE_VISIBILITY script::interface::stack {
+    class VIDRE_CORE_VISIBILITY script::stack {
+    public:
+        using index_type = interface::index_type;
+        using size_type = interface::size_type;
+
     public:
         stack() = delete;
         stack(interface &L) : L_(L), top_(L.gettop()) {}
@@ -134,6 +161,29 @@ namespace vidre {
         size_type size() const noexcept {
             return size_type(L_.gettop() - top_);
         }
+    };
+
+    class VIDRE_CORE_VISIBILITY script::exception : public virtual vidre::exception {
+    public:
+        exception(const std::string &message, const std::source_location location = std::source_location::current())
+            : vidre::exception(location), error_(message) {}
+        exception(script::interface &L = script::g, const std::source_location location = std::source_location::current())
+            : vidre::exception(location) {
+            getinfo(L);
+        }
+
+        const char *what() const noexcept override {
+            return error_.c_str();
+        }
+
+    protected:
+        std::string error_{};         ///< Lua error message.
+        std::string chunk_{};         ///< Chunk name.
+        script::size_type line_{};    ///< Line.
+        script::size_type column_{};  ///< Column.
+
+    protected:
+        void getinfo(script::interface &L);
     };
 
     ///@}

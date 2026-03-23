@@ -27,9 +27,16 @@
 using namespace vidre;
 
 void vidre_lua_init(script::interface &g) {
+    // set up package.path and package.cpath
+    // FIXME this should be done initially in cmake/vidre/deps/lua.cmake
+    g.clearpath();
+    g.addpath(VIDRE_INSTALL_SCRIPTDIR, "path");
+    g.addpath(VIDRE_INSTALL_PLUGINDIR, "cpath");
+
+    // developer help
     if (develop::inbuild()) {
-        g.addpath(PROJECT_SOURCE_DIR "/src/scripts");
-        g.addcpath(PROJECT_BINARY_DIR "/lib");
+        g.addpath(PROJECT_SOURCE_DIR "/src/scripts", "path");
+        g.addpath(PROJECT_BINARY_DIR "/lib", "cpath");
     }
 
     // FIXME
@@ -38,42 +45,60 @@ void vidre_lua_init(script::interface &g) {
 
 vidre::script::interface vidre::script::g(vidre_lua_init);
 
-void script::interface::addpath(const std::filesystem::path &path) {
-    stack top(*this);
-
-    if (getglobal("package") != lua::type::table)
-        throw exception() << throw_message("package table not accessible");
-
-    if (getfield(-1, "path") != lua::type::string)
-        throw exception() << throw_message("package.path not accessible");
-
-    std::string search = tostring(-1);
-    pop();
-
-    search += LUA_PATH_SEP + std::string(path / LUA_PATH_MARK ".lua");
-    search += LUA_PATH_SEP + std::string(path / LUA_PATH_MARK / "init.lua");
-
-    pushlstring(search.data(), search.size());
-    setfield(-2, "path");
+std::string makepath(const std::string &path, int i) {
+    switch (i) {
+        case 'p':
+            return path + "/" LUA_PATH_MARK ".lua" +  //
+                   LUA_PATH_SEP + path + "/" LUA_PATH_MARK "/init.lua";
+        case 'c':
+            return path + "/" LUA_PATH_MARK VIDRE_DLL_EXTENSION +  //
+                   LUA_PATH_SEP + path + "/" LUA_PATH_MARK "/loadall" VIDRE_DLL_EXTENSION;
+        default:
+            // must not happen
+            throw exception();
+    }
 }
 
-void script::interface::addcpath(const std::filesystem::path &path) {
+void script::interface::clearpackage(const std::string &field) {
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
         throw exception() << throw_message("package table not accessible");
 
-    if (getfield(-1, "cpath") != lua::type::string)
+    if (field == "path") {
+    }
+    else if (field == "cpath") {
+    }
+    else
+        throw vidre::exception() << throw_message("trying to set unknown package field");
+
+    pushlstring("", 0);
+    setfield(-2, field.c_str());
+}
+
+void script::interface::addpackage(const std::string &path, const std::string &field) {
+    stack top(*this);
+
+    if (getglobal("package") != lua::type::table)
+        throw exception() << throw_message("package table not accessible");
+
+    if (getfield(-1, field.c_str()) != lua::type::string)
         throw exception() << throw_message("package.path not accessible");
 
     std::string search = tostring(-1);
-    pop();
+    if (not search.empty())
+        search += LUA_PATH_SEP;
 
-    search += LUA_PATH_SEP + std::string(path / LUA_PATH_MARK VIDRE_DLL_EXTENSION);
-    search += LUA_PATH_SEP + std::string(path / LUA_PATH_MARK / "loadall" VIDRE_DLL_EXTENSION);
+    if (field == "path")
+        search += makepath(path, 'p');
+    else if (field == "cpath")
+        search += makepath(path, 'c');
+    else {
+        throw vidre::exception() << throw_message("trying to add to unknown package field");
+    }
 
     pushlstring(search.data(), search.size());
-    setfield(-2, "cpath");
+    setfield(-3, field.c_str());
 }
 
 void script::interface::require(const std::string &lib) {
@@ -91,14 +116,18 @@ lua::status script::interface::exec(const std::string &s) {
         case lua::status::yield:
             return res;
         case lua::status::error_run:
-            throw vidre::exception() << throw_message("runtime error");
+            throw exception("runtime error");
         case lua::status::syntax:
-            throw vidre::exception() << throw_message("syntax error");
+            throw exception("syntax error");
         case lua::status::memory:
-            throw vidre::exception() << throw_message("memory allocation error");
+            throw exception("memory allocation error");
         case lua::status::error:
-            throw vidre::exception() << throw_message("error handler failure");
+            throw exception("error handler failure");
         default:
-            throw vidre::exception() << throw_message("unrecognized error return code");
+            throw exception("unrecognized error return code");
     }
+}
+
+void script::exception::getinfo(script::interface &L) {
+    // FIXME retrieve debug info, fill chunk_, line_ and column_
 }
