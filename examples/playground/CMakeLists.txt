@@ -39,7 +39,6 @@ if(VIDRE_HAVE_MIDLIB2)
             LINK_LIBRARIES 
                 PUBLIC
                     Vidre::Device::MIDlib2
-                    /opt/Aptina_Imaging/lib/libapbase.so
         SOURCES aptina.cc
     )
 endif()
