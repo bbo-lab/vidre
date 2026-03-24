@@ -49,8 +49,8 @@ std::vector<std::string> settings::node::keys() const {
 
     auto tidx = script::g.absindex(-1);
     script::g.pushnil();
-    while(script::g.next(tidx)) {
-        if (script::g.type(-2) == lua::type::string) 
+    while (script::g.next(tidx)) {
+        if (script::g.type(-2) == lua::type::string)
             retval.push_back(script::g.tostring(-2));
         script::g.pop(1);
     }
@@ -159,4 +159,106 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     script::g.setfield(-2, std::string(file).c_str());
 
     tr << "-> acquired reference " << ref_ << "\n";
+}
+
+std::string longquote(const std::string &s) {
+    for (int i = 0; i < 16; ++i) {
+        std::string q = "[" + std::string(i, '=') + "[";
+
+        if (s.find(q) == std::string::npos) {
+            return q + s + "]" + std::string(i, '=') + "]";
+        }
+    }
+
+    throw vidre::exception() << throw_message("escaping configuration string failed");
+}
+
+std::string quote(const settings::node &t) {
+    std::string retval = t;
+
+    if (retval.find('\n') != std::string::npos) {
+        retval = longquote("\n" + retval);
+    }
+    else {
+        bool has_single = retval.find('\'') != std::string::npos;
+        bool has_double = retval.find('"') != std::string::npos;
+
+        if (has_single or has_double)
+            retval = longquote(retval);
+        else if (has_double)
+            retval = '\'' + retval + '\'';
+        else
+            retval = '"' + retval + '"';
+    }
+
+    return retval;
+}
+
+void dump(std::ofstream &f, const settings::node &t, int indent) {
+    switch (t.type()) {
+        case lua::type::table: {
+            auto keylist = t.keys();
+            if (indent == 0)
+                f << std::string(4 * indent, ' ');
+
+            if (keylist.empty()) {
+                f << "{}";
+            }
+            else {
+                f << "{" << std::endl;
+                if (indent == 0)
+                    indent++;
+
+                std::sort(keylist.begin(), keylist.end());
+
+                for (size_t i = 0; i < keylist.size(); ++i) {
+                    const std::string &key = keylist[i];
+                    const settings::node child = t[key];
+
+                    for (int i = 0; i < indent; ++i)
+                        f << "    ";
+                    f << key << " = ";
+
+                    dump(f, child, indent + 1);
+
+                    if (i + 1 < keylist.size())
+                        f << "," << std::endl;
+                    else
+                        f << std::endl;
+                }
+
+                indent--;
+                f << std::string(4 * indent, ' ') << "}";
+            }
+            break;
+        }
+        case lua::type::number:
+            f << lua::number(t);
+            break;
+        case lua::type::string:
+            f << quote(t);
+            break;
+        default:
+            throw exception();  // FIXME
+    }
+}
+
+void settings::file::save(const std::filesystem::path &file) {
+    std::ofstream out(file);
+    dump(out, *this, 0);
+    out << std::endl;
+}
+
+void settings::file::save() {
+    // find ref_ in vidre::config
+    script::stack scope(script::g);
+    script::g.newmetatable("vidre:config");
+
+    script::g.pushnil();
+    while (script::g.next(-2)) {
+        if (ref_ == script::g.tointeger(-1)) {
+            save(script::g.tostring(-2));
+            return;
+        }
+    }
 }

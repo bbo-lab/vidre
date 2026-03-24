@@ -52,7 +52,7 @@ int main(int, const char **) {
     lua::number version = cfg["version"];
     log::info() << "Config version: " << version << log::endl;
 
-    show(cfg);
+    cfg.save("/dev/stdout");
 
     return 0;
 }

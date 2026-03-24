@@ -47,14 +47,22 @@ namespace vidre {
          * FIXME
          * @endinternal
          *
+         * @see @ref examples/core/settings.cc
          * */
         class VIDRE_CORE_VISIBILITY node {
         protected:
         public:
             node() = default;
 
-            node(node &&other) : ref_(std::exchange(other.ref_, lua::reference::nil)) {}
+            node(node &&other)
+                : type_(other.type_)
+                , ref_(std::exchange(other.ref_, lua::reference::nil))
+                , parent_(other.parent_)
+                , field_(other.field_) {}
             node(const node &) = delete;
+
+            node(const node &parent, const std::string &field) : parent_(parent.ref_), field_(field) {}
+
             ~node() {
                 unref();
             }
@@ -62,6 +70,10 @@ namespace vidre {
         protected:
             lua::type type_ = lua::type::none;                  ///< The Lua type this node represents.
             lua::state::index_type ref_ = lua::reference::nil;  ///< Lua reference of this node.
+
+        private:
+            lua::state::index_type parent_ = lua::reference::nil;  ///< Parent table.
+            std::string field_{};                                  ///< Key in parent table.
 
         protected:
             /** Check if reference is nil.
@@ -101,10 +113,17 @@ namespace vidre {
              * */
             node operator[](const std::string &field) const {
                 get(field);
-                node retval;
+                node retval(*this, field);
                 retval.ref();
                 return retval;
             }
+
+            /** Implicit assignment.
+             * */
+            template <typename T>
+            node &operator=(const T &);
+            template <typename T>
+            node &operator=(const T *);
 
             /** Implicit type conversion for values.
              * @see @ref examples/core/settings.cc
@@ -177,6 +196,34 @@ namespace vidre {
             auto retval = script::g.tostring(-1);
             script::g.pop();
             return retval;
+        }
+
+        template <>
+        inline node &node::operator=(const std::string &value) {
+            if (type_ != lua::type::string)
+                throw script::exception("invalid assignment: must be a string");
+            if (parent_ == lua::reference::nil)
+                throw script::exception("invalid assignment: unconnected node");
+
+            script::g.rawgeti(lua::registry, parent_);
+            script::g.pushlstring(value.data(), value.size());
+            script::g.setfield(-2, field_.c_str());
+
+            return *this;
+        }
+
+        template <>
+        inline node &node::operator=(const char *value) {
+            if (type_ != lua::type::string)
+                throw script::exception("invalid assignment: must be a string");
+            if (parent_ == lua::reference::nil)
+                throw script::exception("invalid assignment: unconnected node");
+
+            script::g.rawgeti(lua::registry, parent_);
+            script::g.pushstring(value);
+            script::g.setfield(-2, field_.c_str());
+
+            return *this;
         }
 
         ///@}

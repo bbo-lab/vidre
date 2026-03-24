@@ -37,12 +37,6 @@ namespace vidre {
         ///@{
 
         /** Configuration file.
-         *
-         * Configuration nodes represent table in the internal Lua script
-         * interface.
-         *
-         * FIXME
-         *
          * */
         class VIDRE_CORE_VISIBILITY file : public node {
         public:
@@ -52,6 +46,11 @@ namespace vidre {
             /** Load configuration file.
              * */
             void load(const std::filesystem::path &file, bool force = false);
+
+            /** Save configuration.
+             * */
+            void save();
+            void save(const std::filesystem::path &file);
         };
 
         ///@}
