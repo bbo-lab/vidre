@@ -111,11 +111,14 @@ namespace vidre {
         public:
             /** Get sub-node by @a field key.
              * */
-            node operator[](const std::string &field) const {
+            node operator[](const char *field) const {
                 get(field);
                 node retval(*this, field);
                 retval.ref();
                 return retval;
+            }
+            node operator[](const std::string &field) const {
+                return operator[](field.c_str());
             }
 
             /** Implicit assignment.

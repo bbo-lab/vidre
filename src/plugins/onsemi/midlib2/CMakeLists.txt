@@ -87,7 +87,7 @@ if(VIDRE_HAVE_MIDLIB2)
             DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/onsemi/devwarex
             COMPONENT "runtime"
         SOURCES
-            preload.cc
+            check.cc
     )
 
     vidre_module(onsemi-midlib2
