@@ -46,19 +46,18 @@
 
 namespace vidre {
 
-    /**@addtogroup api-core-script
-     * */
-    ///@{
-
     /** Scripting.
-     * */
-    struct script {
-        class exception;
-        class stack;
+     * @ingroup api-core-script */
+    namespace script {
+        /**@addtogroup api-core-script
+         * */
+        ///@{
 
-        /** Script interface.
+        class exception;
+
+        /** Scripting engine.
          *
-         * The script interface is based on <a href="https://github.com:jsawbbo/delua">Delua</a>,
+         * The scripting engine is based on <a href="https://github.com:jsawbbo/delua">Delua</a>,
          * which provides a low-level C++ interface to Lua (version 5.4 at the moment
          * of writing). We add a number of high-level methods for convenience.
          *
@@ -66,20 +65,28 @@ namespace vidre {
          * @see @ref examples/core/script.cc
          *
          * */
-        class VIDRE_CORE_VISIBILITY interface : public lua::state {
+        class VIDRE_CORE_VISIBILITY engine : public lua::state {
         public:
-            interface() = default;
-            ~interface() {
-                if (L)
-                    close();
-            }
+            class stack;
 
-        protected:
-            interface(void (*init)(interface &)) : lua::state(lua::state::newstate()) {
-                luaL_openlibs(L);  // FIXME this should be in lua::state
+        public:
+            engine() = delete;
+
+            engine(engine &&other) : lua::state(std::exchange(other.L, nullptr)) {}
+            engine(const engine &) = delete;
+
+            /** Create new state with initialization function.
+             * */
+            engine(void (*init)(engine &)) : lua::state(lua::state::newstate()) {
+                openlibs();
 
                 if (init)
                     init(*this);
+            }
+
+            ~engine() {
+                if (L)
+                    close();
             }
 
         protected:
@@ -91,7 +98,7 @@ namespace vidre {
 
         public:
             /** Clear loader path.
-             * @param field "cpath" or "path"
+             * @param field     "cpath" or "path", if omitted, both.
              * */
             void clearpath(const std::string &field = std::string{}) {
                 if (field.empty()) {
@@ -117,76 +124,74 @@ namespace vidre {
             lua::status exec(const std::string &s);
 
             /** Require library.
-             * @returns lua::status::ok or lua::status::yield, otherwise an exception is thrown
+             * @param modname   Module to load.
              * */
-            void require(const std::string &lib);
-
-        private:
-            friend struct vidre::script;
+            void require(const std::string &modname);
         };
-
-        using index_type = interface::index_type;
-        using size_type = interface::size_type;
 
         /** Global script state.
          * @see @ref examples/core/script.cc
          * */
-        static interface g;
-    };
+        extern engine g;
 
-    /** Stack scope.
-     * This class facilitates automatic Lua stack cleanup by scope.
-     *
-     * Example:
-     * @snippet examples/core/script.cc stack-top
-     * */
-    class VIDRE_CORE_VISIBILITY script::stack {
-    public:
-        using index_type = interface::index_type;
-        using size_type = interface::size_type;
+        /** Stack scope.
+         * 
+         * Lua is a stack based scripting engine requiring proper stack handling.
+         * To simplify the stack handling this class provides a scoped stack
+         * cleanup.
+         *
+         * Example:
+         * @snippet examples/core/script.cc stack-top
+         * */
+        class VIDRE_CORE_VISIBILITY engine::stack {
+        public:
+            using index_type = engine::index_type;
+            using size_type = engine::size_type;
 
-    public:
-        stack() = delete;
-        stack(interface &L) : L_(L), top_(L.gettop()) {}
-        ~stack() {
-            L_.settop(top_);
-        }
+        public:
+            stack() = delete;
+            stack(engine &L) : L_(L), top_(L.gettop()) {}
+            ~stack() {
+                L_.settop(top_);
+            }
 
-    protected:
-        interface &L_;
-        index_type top_;
+        protected:
+            engine &L_;
+            index_type top_;
 
-    public:
-        /** Get number of elements on stack. */
-        size_type size() const noexcept {
-            return size_type(L_.gettop() - top_);
-        }
-    };
+        public:
+            /** Get number of elements on stack. */
+            size_type size() const noexcept {
+                return size_type(L_.gettop() - top_);
+            }
+        };
 
-    class VIDRE_CORE_VISIBILITY script::exception : public virtual vidre::exception {
-    public:
-        exception(const std::string &message, const std::source_location location = std::source_location::current())
-            : vidre::exception(location), error_(message) {}
-        exception(script::interface &L = script::g, const std::source_location location = std::source_location::current())
-            : vidre::exception(location) {
-            getinfo(L);
-        }
+        class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
+        public:
+            exception(const std::string &message, const std::source_location location = std::source_location::current())
+                : vidre::exception(location), error_(message) {}
+            exception(script::engine &L = script::g, const std::source_location location = std::source_location::current())
+                : vidre::exception(location) {
+                getinfo(L);
+            }
 
-        const char *what() const noexcept override {
-            return error_.c_str();
-        }
+            const char *what() const noexcept override {
+                return error_.c_str();
+            }
 
-    protected:
-        std::string error_{};         ///< Lua error message.
-        std::string chunk_{};         ///< Chunk name.
-        script::size_type line_{};    ///< Line.
-        script::size_type column_{};  ///< Column.
+        protected:
+            std::string error_{};         ///< Lua error message.
+            std::string chunk_{};         ///< Chunk name.
+            engine::size_type line_{};    ///< Line.
+            engine::size_type column_{};  ///< Column.
 
-    protected:
-        void getinfo(script::interface &L);
-    };
+        protected:
+            void getinfo(script::engine &L);
+        };
 
-    ///@}
+        ///@}
+
+    }  // namespace script
 
 }  // namespace vidre
 

@@ -26,7 +26,7 @@
 
 using namespace vidre;
 
-void vidre_lua_init(script::interface &g) {
+void vidre_lua_init(script::engine &g) {
     // set up package.path and package.cpath
     // FIXME this should be done initially in cmake/vidre/deps/lua.cmake
     g.clearpath();
@@ -43,7 +43,7 @@ void vidre_lua_init(script::interface &g) {
     g.require("vidre");
 }
 
-vidre::script::interface vidre::script::g(vidre_lua_init);
+vidre::script::engine vidre::script::g(vidre_lua_init);
 
 std::string makepath(const std::string &path, int i) {
     switch (i) {
@@ -59,7 +59,7 @@ std::string makepath(const std::string &path, int i) {
     }
 }
 
-void script::interface::clearpackage(const std::string &field) {
+void script::engine::clearpackage(const std::string &field) {
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
@@ -76,7 +76,7 @@ void script::interface::clearpackage(const std::string &field) {
     setfield(-2, field.c_str());
 }
 
-void script::interface::addpackage(const std::string &path, const std::string &field) {
+void script::engine::addpackage(const std::string &path, const std::string &field) {
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
@@ -101,13 +101,13 @@ void script::interface::addpackage(const std::string &path, const std::string &f
     setfield(-3, field.c_str());
 }
 
-void script::interface::require(const std::string &lib) {
+void script::engine::require(const std::string &lib) {
     getglobal("require");
     pushlstring(lib.data(), lib.size());
     call(1);
 }
 
-lua::status script::interface::exec(const std::string &s) {
+lua::status script::engine::exec(const std::string &s) {
     lua::status res = loadstring(s.c_str());
     if (res == lua::status::ok)
         res = pcall(0, lua::multret, 0);
@@ -128,6 +128,6 @@ lua::status script::interface::exec(const std::string &s) {
     }
 }
 
-void script::exception::getinfo(script::interface &L) {
+void script::exception::getinfo(script::engine &L) {
     // FIXME retrieve debug info, fill chunk_, line_ and column_
 }

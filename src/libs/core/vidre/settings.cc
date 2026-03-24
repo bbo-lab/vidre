@@ -30,29 +30,33 @@ using namespace vidre;
 // --- node.hh ----------------------------------------------------------------
 
 lua::type settings::node::get(const std::string &field) const {
+    using namespace vidre::script;
+
     if (push() != lua::type::table) {
-        script::g.pop();
+        g.pop();
         throw vidre::exception() << throw_message("requested field is not a table");
     }
 
-    script::g.getfield(-1, field.c_str());
-    script::g.remove(-2);
-    return script::g.type(-1);
+    g.getfield(-1, field.c_str());
+    g.remove(-2);
+    return g.type(-1);
 }
 
 std::vector<std::string> settings::node::keys() const {
+    using namespace vidre::script;
+
     if (type_ != lua::type::table)
         return {};
 
     std::vector<std::string> retval;
     push();
 
-    auto tidx = script::g.absindex(-1);
-    script::g.pushnil();
-    while (script::g.next(tidx)) {
-        if (script::g.type(-2) == lua::type::string)
-            retval.push_back(script::g.tostring(-2));
-        script::g.pop(1);
+    auto tidx = g.absindex(-1);
+    g.pushnil();
+    while (g.next(tidx)) {
+        if (g.type(-2) == lua::type::string)
+            retval.push_back(g.tostring(-2));
+        g.pop(1);
     }
     return retval;
 }
@@ -60,6 +64,8 @@ std::vector<std::string> settings::node::keys() const {
 // --- file.hh ----------------------------------------------------------------
 
 void settings::file::load(const std::filesystem::path &fname, bool force) {
+    using namespace vidre::script;
+
     log::trace tr;
     tr << "settings::file::load(" << std::string(fname) << "," << force << ")\n";
 
@@ -75,11 +81,11 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     }
 
     // check if already loaded
-    script::stack scope(script::g);
-    script::g.newmetatable("vidre:config");
-    script::g.getfield(-1, std::string(file).c_str());
-    if (not script::g.isnil(-1)) {
-        ref_ = script::g.tointeger(-1);
+    engine::stack scope(g);
+    g.newmetatable("vidre:config");
+    g.getfield(-1, std::string(file).c_str());
+    if (not g.isnil(-1)) {
+        ref_ = g.tointeger(-1);
         if (not force) {
             tr << "-> already loaded\n";
             return;
@@ -88,7 +94,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
             tr << "- going to reload\n";
         }
     }
-    script::g.pop(1);
+    g.pop(1);
 
     // load file
     std::string config;
@@ -103,15 +109,15 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     auto top = scope.size();
     {
         std::string buffer = "return " + config;
-        auto s = script::g.loadbuffer(buffer.data(), buffer.size(), std::string(file).c_str());
+        auto s = g.loadbuffer(buffer.data(), buffer.size(), std::string(file).c_str());
         if (s == lua::status::ok)
-            s = script::g.pcall(0, 1, 0);
+            s = g.pcall(0, 1, 0);
         switch (s) {
             case lua::status::ok:
                 break;
             case lua::status::yield:
                 // FIXME what to do?
-                throw exception() << throw_message("execution yielded");
+                throw script::exception() << throw_message("execution yielded");
             default:
                 break;
         }
@@ -121,18 +127,18 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
 
     if (top == scope.size()) {
         // possibly a complex file, need to load it with prefixing it with "return"
-        auto s = script::g.loadbuffer(config.data(), config.size(), std::string(file).c_str());
+        auto s = g.loadbuffer(config.data(), config.size(), std::string(file).c_str());
         if (s == lua::status::ok)
-            s = script::g.pcall(0, 1, 0);
+            s = g.pcall(0, 1, 0);
         switch (s) {
             case lua::status::ok:
                 break;
             case lua::status::yield:
                 // FIXME what to do?
-                throw exception() << throw_message("execution yielded");
+                throw script::exception() << throw_message("execution yielded");
             default:
                 // FIXME debug
-                throw exception() << throw_message("failed");
+                throw script::exception() << throw_message("failed");
         }
 
         tr << "- loaded plain, status: " << int(s) << "\n";
@@ -140,12 +146,12 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
 
     if (top == scope.size())
         // FIXME what to do, if empty?
-        script::g.newtable();
+        g.newtable();
 
-    if (script::g.type(-1) != lua::type::table) {
+    if (g.type(-1) != lua::type::table) {
         log::error() << "While loading configuration from\n    " << std::string(file) << "\na value of type '"
-                     << script::g.type_name(script::g.type(-1)) << "' was returned.\n";
-        script::g.checktype(-1, lua::type::table);
+                     << g.type_name(g.type(-1)) << "' was returned.\n";
+        g.checktype(-1, lua::type::table);
     }
 
     // register
@@ -155,8 +161,8 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
         throw vidre::exception() << throw_message("FIXME: not implemented");
     }
     node::ref();
-    script::g.pushinteger(ref_);
-    script::g.setfield(-2, std::string(file).c_str());
+    g.pushinteger(ref_);
+    g.setfield(-2, std::string(file).c_str());
 
     tr << "-> acquired reference " << ref_ << "\n";
 }
@@ -250,14 +256,16 @@ void settings::file::save(const std::filesystem::path &file) {
 }
 
 void settings::file::save() {
-    // find ref_ in vidre::config
-    script::stack scope(script::g);
-    script::g.newmetatable("vidre:config");
+    using namespace script;
 
-    script::g.pushnil();
-    while (script::g.next(-2)) {
-        if (ref_ == script::g.tointeger(-1)) {
-            save(script::g.tostring(-2));
+    // find ref_ in vidre::config
+    engine::stack scope(g);
+    g.newmetatable("vidre:config");
+
+    g.pushnil();
+    while (g.next(-2)) {
+        if (ref_ == g.tointeger(-1)) {
+            save(g.tostring(-2));
             return;
         }
     }
