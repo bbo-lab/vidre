@@ -27,6 +27,8 @@
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
 
+#include <vector>
+
 namespace vidre {
 
     namespace settings {
@@ -37,52 +39,145 @@ namespace vidre {
 
         /** Configuration node.
          *
-         * Configuration nodes represent table in the internal Lua script
-         * interface.
+         * Configuration nodes represent entries in the configuration tree.
+         * These can be sub-nodes or values, such as strings or numbers.
          *
+         * @internal
+         * Any node is, internally, is kept in the Lua registry.
          * FIXME
+         * @endinternal
          *
          * */
         class VIDRE_CORE_VISIBILITY node {
         protected:
-
-
         public:
             node() = default;
+
+            node(node &&other) : ref_(std::exchange(other.ref_, lua::reference::nil)) {}
+            node(const node &) = delete;
             ~node() {
                 unref();
             }
 
         protected:
-            lua::state::index_type ref_ = LUA_REFNIL; ///< Lua reference of this node.
+            lua::type type_ = lua::type::none;                  ///< The Lua type this node represents.
+            lua::state::index_type ref_ = lua::reference::nil;  ///< Lua reference of this node.
 
         protected:
+            /** Check if reference is nil.
+             * */
+            bool isnil() const noexcept {
+                return ref_ == lua::reference::nil;
+            }
+
             /** Get the reference.
              * */
             void ref() {
+                type_ = script::g.type(-1);
                 ref_ = script::g.ref(lua::registry);
             }
 
             /** Unreference table.
              * */
             void unref() {
-                if (ref_ != LUA_REFNIL)
-                    script::g.unref(ref_, lua::registry);
-                ref_ = LUA_REFNIL;
+                if (not isnil()) {
+                    script::g.unref(ref_);
+                    ref_ = lua::reference::nil;
+                }
             }
 
             /** Push the table on the stack.
              * */
-            lua::type push() {
+            lua::type push() const {
                 return script::g.rawgeti(lua::registry, ref_);
             }
 
             /** Get an entry on the stack by name.
              * */
-            lua::type get(const std::string &field);
+            lua::type get(const std::string &field) const;
 
         public:
+            /** Get sub-node by @a field key.
+             * */
+            node operator[](const std::string &field) const {
+                get(field);
+                node retval;
+                retval.ref();
+                return retval;
+            }
+
+            /** Implicit type conversion for values.
+             * @see @ref examples/core/settings.cc
+             * */
+            template <typename T>
+            operator T() const;
+
+            /** Check if node is a table.
+             * */
+            bool istable() const noexcept {
+                return type_ == lua::type::table;
+            }
+
+            /** Get Lua type behind this node.
+             * */
+            lua::type type() const noexcept {
+                return type_;
+            }
+
+            /** Get list of keys.
+             * */
+            std::vector<std::string> keys() const;
         };
+
+        template <>
+        inline node::operator bool() const {
+            auto t = push();
+            if (t != lua::type::boolean)
+                throw script::exception("expected a number");
+            auto retval = script::g.toboolean(-1);
+            script::g.pop();
+            return retval;
+        }
+
+        template <>
+        inline node::operator lua::integer() const {
+            push();
+            if (not script::g.isinteger(-1))
+                throw script::exception("expected an integer");
+            auto retval = script::g.tointeger(-1);
+            script::g.pop();
+            return retval;
+        }
+
+        template <>
+        inline node::operator lua::number() const {
+            auto t = push();
+            if (t != lua::type::number)
+                throw script::exception("expected a number");
+            auto retval = script::g.tonumber(-1);
+            script::g.pop();
+            return retval;
+        }
+
+        template <>
+        inline node::operator std::string() const {
+            auto t = push();
+            if (t != lua::type::string)
+                throw script::exception("expected a string");
+            auto retval = script::g.tostring(-1);
+            script::g.pop();
+            return retval;
+        }
+
+        template <>
+        inline node::operator const char *() const {
+            auto t = push();
+            if (t != lua::type::string)
+                throw script::exception("expected a string");
+            auto retval = script::g.tostring(-1);
+            script::g.pop();
+            return retval;
+        }
 
         ///@}
 

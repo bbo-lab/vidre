@@ -43,6 +43,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.settings",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.settings",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.core.script",
             "type": "cppdbg",
             "request": "launch",

@@ -51,7 +51,7 @@ namespace vidre {
         public:
             /** Load configuration file.
              * */
-            void load(const std::filesystem::path &file);
+            void load(const std::filesystem::path &file, bool force = false);
         };
 
         ///@}
