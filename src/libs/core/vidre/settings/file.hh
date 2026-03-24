@@ -20,8 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_SETTINGS_NODE_HH
-#define VIDRE_CORE_SETTINGS_NODE_HH
+#ifndef VIDRE_CORE_SETTINGS_FILE_HH
+#define VIDRE_CORE_SETTINGS_FILE_HH
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -49,6 +49,9 @@ namespace vidre {
             file() = default;
 
         public:
+            /** Load configuration file.
+             * */
+            void load(const std::filesystem::path &file);
         };
 
         ///@}
@@ -57,4 +60,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_SETTINGS_HH
+#endif  // VIDRE_CORE_SETTINGS_FILE_HH

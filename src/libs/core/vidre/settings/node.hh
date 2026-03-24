@@ -90,4 +90,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_SETTINGS_HH
+#endif  // VIDRE_CORE_SETTINGS_NODE_HH

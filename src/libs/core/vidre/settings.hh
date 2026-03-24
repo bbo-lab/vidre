@@ -45,6 +45,7 @@
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
 #include <vidre/settings/node.hh>
+#include <vidre/settings/file.hh>
 
 namespace vidre {
 
