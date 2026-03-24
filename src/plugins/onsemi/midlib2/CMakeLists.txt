@@ -72,9 +72,9 @@ if(VIDRE_HAVE_MIDLIB2)
             vidre/onsemi/midlib2/types.hh
     )
 
-    vidre_module(onsemi-midlib2-preload
+    vidre_module(onsemi-midlib2-check
         PROPERTIES
-            OUTPUT_NAME preload
+            OUTPUT_NAME check
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/midlib2
         BUILD
             COMPILE_DEFINITIONS
@@ -92,7 +92,7 @@ if(VIDRE_HAVE_MIDLIB2)
 
     vidre_module(onsemi-midlib2
         PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/devwarex
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/midlib2
         BUILD
             LINK_LIBRARIES
                 PUBLIC 

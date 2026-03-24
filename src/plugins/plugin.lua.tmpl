@@ -1,0 +1,18 @@
+{
+    version = "0.0",                    -- This is the VidRe version.
+    name = "<module-name>",             -- The module name.
+    type = "camera",                    -- Device type.
+    description = [[
+]],
+    device = '<device/tree>',           -- Position in device tree.
+    load = {                            -- Plugin loader configuration:
+        type = "dll",                   --      - plugin type ("dll", "<language>")
+        file = "<base-name>",           --      - file-name of plugin to load
+        when = "always",                --      - when to load the file:
+                                        --          * "always": always load the plugin on program start
+                                        --          * "never": never load the plugin unless on explicit request
+                                        --          * "disabled": plugin is disabled due to incompatibilities
+        onfailure = "<extra-plugin>"    --      - when the plugin fails to load, load this plugin (which should have
+                                        --        the capability to analyze the failure and give the user hints).
+    }
+}
