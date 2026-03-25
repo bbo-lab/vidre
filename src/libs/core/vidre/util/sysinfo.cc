@@ -33,6 +33,7 @@ using namespace vidre;
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <cstdlib>
 #include <algorithm>
 #elif defined(__APPLE__)
 #include <sys/types.h>
@@ -130,4 +131,47 @@ vidre::sysinfo::memory vidre::sysinfo::memory::get() noexcept {
 #endif
 
     return info;
+}
+
+
+std::filesystem::path vidre::sysinfo::configdir() noexcept {
+#if defined(_WIN32)
+    FIXME
+#elif defined(__linux__)
+    const char *p = getenv("XDG_CONFIG_HOME");
+    if (p) {
+        if (p[0] == '~') {
+            std::filesystem::path res = getenv("HOME");
+            res /= p + 2;
+            return res;
+        }
+        else
+            return p;
+    }
+    else {
+        std::filesystem::path res = getenv("HOME");
+        res /= ".config";
+        return res;
+    }
+#elif defined(__APPLE__)
+#endif
+}
+
+std::filesystem::path vidre::sysinfo::tmpdir() noexcept {
+#if defined(_WIN32)
+    FIXME
+#elif defined(__linux__)
+    return "/tmp";
+#elif defined(__APPLE__)
+#endif
+}
+
+std::filesystem::path vidre::sysinfo::cachedir() noexcept {
+#if defined(_WIN32)
+    FIXME
+#elif defined(__linux__)
+    std::filesystem::path res = getenv("HOME");
+    return res / ".cache";
+#elif defined(__APPLE__)
+#endif
 }

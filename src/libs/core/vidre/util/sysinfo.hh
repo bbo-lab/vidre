@@ -24,13 +24,15 @@
 #define VIDRE_CORE_UTIL_SYSINFO_HH
 #pragma once
 
-#include <vidre/core/config.hh>
-
 /**@defgroup api-core-util-sysinfo System information
  * @ingroup api-core-util
  * @details
  * @fileinfo
  * */
+
+#include <vidre/core/config.hh>
+
+#include <filesystem>
 
 namespace vidre {
 
@@ -55,6 +57,18 @@ namespace vidre {
              * */
             static memory get() noexcept;
         };
+
+        /** Get user-local configuration directory.
+         * */
+        std::filesystem::path configdir() noexcept;
+
+        /** Get system temporary directory.
+         * */
+        std::filesystem::path tmpdir() noexcept;
+
+        /** Get user-local cache directory.
+         * */
+        std::filesystem::path cachedir() noexcept;
 
         ///@}
 

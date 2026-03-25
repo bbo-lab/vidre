@@ -28,6 +28,11 @@ int main(int, const char **) {
     info << "             free memory: " << show_memory(mem.total - mem.used) << log::endl;
     info << "        available memory: " << show_memory(mem.available) << log::endl;
 
+    info << log::endl;
+    info << " configuration directory: " << std::string(sysinfo::configdir()) << log::endl;
+    info << "     temporary directory: " << std::string(sysinfo::tmpdir()) << log::endl;
+    info << "         cache directory: " << std::string(sysinfo::cachedir()) << log::endl;
+
     return 0;
 }
 
