@@ -1,16 +1,15 @@
 -- Here we defined the device tree including labels for UI use.
 {
-    camera = {
-        label = "Camera",
+    {
+        tag = 'camera',
+        label = 'Camera',
         {
-            usb = {
-                label = "USB"
-            }
+            tag = 'usb',
+            label = 'USB'
         },
         {
-            gige = {
-                label = "GigE"
-            }
+            tag = 'gige',
+            label = 'GigE'
         }
     }
 }

@@ -36,6 +36,8 @@ if(NOT VIDRE_HAVE_MIDLIB2)
 endif()
 
 if(VIDRE_HAVE_MIDLIB2)
+    set(MIDLIB2_PLUGIN_PATH camera/onsemi/midlib2)
+
     vidre_library(vidre-midlib2 SHARED
         ALIAS Vidre::Device::MIDlib2
         EXPORT VidreTargets-${Vidre_RELEASE}
@@ -75,7 +77,7 @@ if(VIDRE_HAVE_MIDLIB2)
     vidre_module(onsemi-midlib2-check
         PROPERTIES
             OUTPUT_NAME check
-            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/midlib2
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
         BUILD
             COMPILE_DEFINITIONS
                 PRIVATE 
@@ -84,7 +86,7 @@ if(VIDRE_HAVE_MIDLIB2)
                 PUBLIC 
                     Vidre::Core
         INSTALL
-            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/onsemi/devwarex
+            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}
             COMPONENT "runtime"
         SOURCES
             check.cc
@@ -92,16 +94,21 @@ if(VIDRE_HAVE_MIDLIB2)
 
     vidre_module(onsemi-midlib2
         PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins/onsemi/midlib2
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
                     Vidre::Core
                     devwarex::midlib2
         INSTALL
-            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/onsemi/devwarex
+            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}
             COMPONENT "runtime"
         SOURCES
             midlib2.cc
     )
+
+    configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}/plugin.cfg COPYONLY)
+    install(FILES ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}/plugin.cfg 
+        DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}
+        COMPONENT "runtime")
 endif()

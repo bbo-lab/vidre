@@ -125,7 +125,7 @@ add_subdirectory(docs)
 
 # TEST ########################################################################
 
-if(NOT Vidre_IS_SUBPROJECT)
+if(NOT Vidre_IS_SUBPROJECT AND (CMAKE_BUILD_TYPE STREQUAL Debug))
     enable_testing()
     find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
 

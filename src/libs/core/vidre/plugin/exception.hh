@@ -27,14 +27,6 @@
 #include <vidre/core/config.hh>
 #include <vidre/exception.hh>
 
-#if defined(_MSC_VER)
-#include <libloaderapi.h>
-#define VIDRE_USING_LIBLOADERAPI
-#else
-#include <dlfcn.h>
-#define VIDRE_USING_DLFCN
-#endif
-
 namespace vidre {
 
     namespace plugin {
