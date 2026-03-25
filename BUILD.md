@@ -45,7 +45,7 @@ but, especially when compiling QT is required, one might consider trusting every
 
 YMMV.
 
-FIXME BtbN.FFmpeg.GPL.Shared.6.1
+FFmpeg FIXME
 
 ### Clone repository
 
