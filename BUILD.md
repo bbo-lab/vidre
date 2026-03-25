@@ -31,9 +31,9 @@ Unclear if needed:
     Microsoft.VisualStudio.BuildTools 
     MartinStorsjo.LLVM-MinGW.MSVCRT
 
-Manual downloads:
+For Qt, choose your poison:
 
-    qt.io/development/download-qt-installer-oss
+    https://doc.qt.io/qt-6/get-and-install-qt.html
 
 **Note**: The author does not understand why git can fail with 
 
@@ -44,6 +44,8 @@ but, especially when compiling QT is required, one might consider trusting every
     git config --global --add safe.directory "*"
 
 YMMV.
+
+FIXME BtbN.FFmpeg.GPL.Shared.6.1
 
 ### Clone repository
 
