@@ -8,7 +8,8 @@ set(CPPTERMINAL_ENABLE_DOCS OFF CACHE BOOL "Set to ON to generate documentation"
 
 FetchContent_Declare(cpp-terminal
   GIT_REPOSITORY https://github.com/jupyter-xeus/cpp-terminal.git
-  GIT_PROGRESS ON
+  GIT_SHALLOW    TRUE
+  GIT_PROGRESS   ON
 )
 FetchContent_MakeAvailable(cpp-terminal)
 set(TERMINALLIB cpp-terminal)

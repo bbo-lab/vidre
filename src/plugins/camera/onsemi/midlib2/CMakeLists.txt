@@ -74,24 +74,6 @@ if(VIDRE_HAVE_MIDLIB2)
             vidre/onsemi/midlib2/types.hh
     )
 
-    vidre_module(onsemi-midlib2-check
-        PROPERTIES
-            OUTPUT_NAME check
-            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
-        BUILD
-            COMPILE_DEFINITIONS
-                PRIVATE 
-                    LIBMIDLIB2_NAME=\"libmilib2${vidre_DLL_EXTENSION}\"
-            LINK_LIBRARIES
-                PUBLIC 
-                    Vidre::Core
-        INSTALL
-            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}
-            COMPONENT "runtime"
-        SOURCES
-            check.cc
-    )
-
     vidre_module(onsemi-midlib2
         PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
@@ -105,6 +87,24 @@ if(VIDRE_HAVE_MIDLIB2)
             COMPONENT "runtime"
         SOURCES
             midlib2.cc
+    )
+
+    vidre_module(onsemi-midlib2-check
+        PROPERTIES
+            OUTPUT_NAME check
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
+        BUILD
+            COMPILE_DEFINITIONS
+                PRIVATE 
+                    LIBMIDLIB2_NAME=\"libmilib2${vidre_DLL_EXTENSION}\"
+            LINK_LIBRARIES
+                PUBLIC 
+                    Vidre::Core
+        INSTALL
+            DESTINATION "${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}"
+            COMPONENT "runtime"
+        SOURCES
+            check.cc
     )
 
     configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}/plugin.cfg COPYONLY)
