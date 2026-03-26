@@ -1,4 +1,4 @@
-# add_subdirectory(onsemi)
-# add_subdirectory(basler)
+add_subdirectory(basler)
 add_subdirectory(dummy)
-# add_subdirectory(uvc)
+add_subdirectory(onsemi)
+add_subdirectory(uvc)

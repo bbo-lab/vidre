@@ -35,7 +35,7 @@ void vidre_lua_init(script::engine &g) {
 
     // developer help
     if (develop::inbuild()) {
-        g.addpath(PROJECT_SOURCE_DIR "/src/scripts", "path");
+        g.addpath(PROJECT_SOURCE_DIR "/scripts", "path");
         g.addpath(PROJECT_BINARY_DIR "/lib", "cpath");
     }
 

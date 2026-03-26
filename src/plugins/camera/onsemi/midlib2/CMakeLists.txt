@@ -36,7 +36,7 @@ if(NOT VIDRE_HAVE_MIDLIB2)
 endif()
 
 if(VIDRE_HAVE_MIDLIB2)
-    set(MIDLIB2_PLUGIN_PATH camera/onsemi/midlib2)
+    set(PLUGIN_CURRENT_DIR camera/onsemi/midlib2)
 
     vidre_library(vidre-midlib2 SHARED
         ALIAS Vidre::Device::MIDlib2
@@ -76,14 +76,15 @@ if(VIDRE_HAVE_MIDLIB2)
 
     vidre_module(onsemi-midlib2
         PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
+            OUTPUT_NAME midlib2
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
                     Vidre::Core
                     devwarex::midlib2
         INSTALL
-            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}
+            DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}
             COMPONENT "runtime"
         SOURCES
             midlib2.cc
@@ -92,7 +93,7 @@ if(VIDRE_HAVE_MIDLIB2)
     vidre_module(onsemi-midlib2-check
         PROPERTIES
             OUTPUT_NAME check
-            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}
         BUILD
             COMPILE_DEFINITIONS
                 PRIVATE 
@@ -101,14 +102,15 @@ if(VIDRE_HAVE_MIDLIB2)
                 PUBLIC 
                     Vidre::Core
         INSTALL
-            DESTINATION "${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}"
+            DESTINATION "${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}"
             COMPONENT "runtime"
         SOURCES
             check.cc
     )
 
-    configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}/plugin.cfg COPYONLY)
-    install(FILES ${PLUGIN_OUTPUT_DIR}/${MIDLIB2_PLUGIN_PATH}/plugin.cfg 
-        DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${MIDLIB2_PLUGIN_PATH}
+    configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}/plugin.cfg COPYONLY)
+    install(FILES plugin.lua
+        RENAME plugin.cfg
+        DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}
         COMPONENT "runtime")
 endif()

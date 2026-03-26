@@ -99,7 +99,6 @@ set(CMAKE_INSTALL_DOCDIR ${CMAKE_INSTALL_DATAROOTDIR}/doc/vidre)
 set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
 
 set(CMAKE_INSTALL_PLUGINDIR ${CMAKE_INSTALL_LIBDIR}/vidre/plugins)
-set(CMAKE_INSTALL_SCRIPTDIR ${CMAKE_INSTALL_DATADIR}/scripts)
 
 set(CMAKE_INSTALL_LUACDIR ${CMAKE_INSTALL_LIBDIR}/vidre/lua)
 set(CMAKE_INSTALL_LUADIR ${CMAKE_INSTALL_DATADIR}/vidre/lua)
@@ -113,6 +112,7 @@ add_definitions(
 
 add_subdirectory(cmake)
 add_subdirectory(src)
+add_subdirectory(scripts)
 
 install(EXPORT VidreTargets-${Vidre_RELEASE}
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}

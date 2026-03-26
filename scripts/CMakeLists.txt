@@ -1,0 +1,3 @@
+install(DIRECTORY vidre
+    DESTINATION ${CMAKE_INSTALL_LUADIR}
+    COMPONENT "runtime")

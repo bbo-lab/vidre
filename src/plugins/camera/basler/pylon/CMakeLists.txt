@@ -7,12 +7,12 @@ else()
 endif()
 
 if(VIDRE_HAVE_PYLON)
-    set(PYLON_PLUGIN_PATH "camera/basler/pylon")
+    set(PLUGIN_CURRENT_DIR "camera/basler/pylon")
 
     vidre_module(pylon
         PROPERTIES
             OUTPUT_NAME pylon
-            LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}/${PYLON_PLUGIN_PATH}"
+            LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}"
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
@@ -22,15 +22,16 @@ if(VIDRE_HAVE_PYLON)
                     GenICam::GenApi
                     # pylon::PylonUtility ??
             INSTALL
-                DESTINATION "${CMAKE_INSTALL_PLUGINDIR}/${PYLON_PLUGIN_PATH}"
+                DESTINATION "${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}"
                 COMPONENT "runtime"
         SOURCES
             pylon.cc
     )
 
-    configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${PYLON_PLUGIN_PATH}/plugin.cfg COPYONLY)
-    install(FILES ${PLUGIN_OUTPUT_DIR}/${PYLON_PLUGIN_PATH}/plugin.cfg 
-        DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${PYLON_PLUGIN_PATH}
+    configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}/plugin.cfg COPYONLY)
+    install(FILES plugin.lua
+        RENAME plugin.cfg
+        DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}
         COMPONENT "runtime")
 endif()
 
