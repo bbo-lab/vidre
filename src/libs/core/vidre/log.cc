@@ -28,12 +28,8 @@
 
 using namespace vidre;
 
-inline bool is_clog_terminal() {
-    return vidre::isatty(stderr);
-}
-
 static log::io::style::type vidre_use_fret() {
-    if (is_clog_terminal())
+    if (vidre::os::isatty())
         return log::io::style::type::color;
     else
         return log::io::style::type::tagged;

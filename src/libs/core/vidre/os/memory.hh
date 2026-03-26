@@ -1,5 +1,5 @@
 /* VidRe
- * Copyright (C) 2024-2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Copyright (C) 2025-2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
  *
@@ -20,25 +20,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_UTIL_SYSINFO_HH
-#define VIDRE_CORE_UTIL_SYSINFO_HH
+#ifndef VIDRE_CORE_OS_MEMORY_HH
+#define VIDRE_CORE_OS_MEMORY_HH
 #pragma once
 
-/**@defgroup api-core-util-sysinfo System information
- * @ingroup api-core-util
+/**@defgroup api-core-os-memory System memory
+ * @ingroup api-core-os
  * @details
  * @fileinfo
+ *
  * */
 
 #include <vidre/core/config.hh>
 
-#include <filesystem>
-
 namespace vidre {
 
-    namespace sysinfo {
+    namespace os {
 
-        /**@addtogroup api-core-util-sysinfo
+        /**@addtogroup api-core-os-memory
          * */
         ///@{
 
@@ -58,22 +57,10 @@ namespace vidre {
             static memory get() noexcept;
         };
 
-        /** Get user-local configuration directory.
-         * */
-        std::filesystem::path configdir() noexcept;
-
-        /** Get system temporary directory.
-         * */
-        std::filesystem::path tmpdir() noexcept;
-
-        /** Get user-local cache directory.
-         * */
-        std::filesystem::path cachedir() noexcept;
-
         ///@}
 
-    }  // namespace sysinfo
+    }  // namespace os
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_UTIL_SYSINFO_HH
+#endif  // VIDRE_CORE_OS_MEMORY_HH

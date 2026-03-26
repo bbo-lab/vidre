@@ -24,7 +24,7 @@
 #define VIDRE_CORE_OS_PATHS_HH
 #pragma once
 
-/**@defgroup api-core-os-paths OS dependent paths.
+/**@defgroup api-core-os-path Paths
  * @ingroup api-core-os
  * @details
  * @fileinfo
@@ -32,22 +32,32 @@
  * */
 
 #include <vidre/core/config.hh>
+
 #include <filesystem>
 
 namespace vidre {
 
-    /** Operating-system related.
-     * @ingroup api-core-os-paths
-     * */
     namespace os {
 
-        /**@addtogroup api-core-os-paths
+        /**@addtogroup api-core-os-path
          * */
         ///@{
 
-        /** Get user-local configuration directory.
+        /** Get user-local configuration directory (for VidRe).
          * */
         std::filesystem::path configdir() noexcept;
+
+        /** Get system temporary directory.
+         * */
+        std::filesystem::path tmpdir() noexcept;
+
+        /** Get user-local cache directory (for VidRe).
+         * */
+        std::filesystem::path cachedir() noexcept;
+
+        /** System installation direction of VidRe.
+         * */
+        std::filesystem::path installdir() noexcept;
 
         ///@}
 

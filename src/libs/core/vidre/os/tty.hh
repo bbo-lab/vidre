@@ -33,7 +33,7 @@
 
 #include <vidre/core/config.hh>
 
-/**@addtogroup api-core-os
+/**@addtogroup api-core-os-tty
  * */
 ///@{
 
@@ -56,17 +56,27 @@
 
 namespace vidre {
 
-    /**@addtogroup api-core-os-tty
-     * */
-    ///@{
+    namespace os {
 
-    /** Check, if a C-stream is a TTY.
-     * */
-    inline bool isatty(FILE *stream) noexcept {
-        return VIDRE_OS_ISATTY(VIDRE_OS_FILENO(stream));
-    }
+        /**@addtogroup api-core-os-tty
+         * */
+        ///@{
 
-    ///@}
+        /** Check, if a C-stream is a TTY.
+         * */
+        inline bool isatty(FILE *stream) noexcept {
+            return VIDRE_OS_ISATTY(VIDRE_OS_FILENO(stream));
+        }
+
+        /** Check, if @c stdout is a TTY.
+         * */
+        inline bool isatty() noexcept {
+            return isatty(::stdout);
+        }
+
+        ///@}
+
+    }  // namespace os
 
 }  // namespace vidre
 

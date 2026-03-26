@@ -34,10 +34,10 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.sysinfo",
+            "name": "example.core.os",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.sysinfo",
+            "program": "${workspaceFolder}/build/bin/example.core.os",
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"

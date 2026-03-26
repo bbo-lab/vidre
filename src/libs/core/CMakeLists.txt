@@ -34,7 +34,10 @@ vidre_library(vidrecore SHARED
     SOURCES
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
-        vidre/os/tty.hh
+        vidre/os.hh
+            vidre/os/tty.hh
+            vidre/os/memory.hh vidre/os/memory.cc
+            vidre/os/paths.hh vidre/os/paths.cc
         vidre/cpp/format.hh
         vidre/cpp/util.hh
         vidre/exception.hh vidre/exception.cc
@@ -52,6 +55,5 @@ vidre_library(vidrecore SHARED
         vidre/util/version.hh
         vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
-        vidre/util/sysinfo.hh vidre/util/sysinfo.cc
         vidre/util/json.hh
 )

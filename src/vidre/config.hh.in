@@ -58,6 +58,22 @@ namespace vidre {}
 
 ///@}
 
+/**@defgroup api-config-paths Installation paths
+ * @ingroup api-config
+ * */
+///@{
+
+/** Installation prefix. */
+#define VIDRE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
+
+/** Plugin directory. */
+#define VIDRE_INSTALL_PLUGINDIR "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_PLUGINDIR@"
+
+/** Script directory. */
+#define VIDRE_INSTALL_SCRIPTDIR "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_SCRIPTDIR@"
+
+///@}
+
 /**@defgroup api-config-abi API/ABI and system settings
  * @ingroup api-config
  * */

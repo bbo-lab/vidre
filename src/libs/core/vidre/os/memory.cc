@@ -1,5 +1,5 @@
 /* VidRe
- * Copyright (C) 2024-2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Copyright (C) 2025-2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
  *
@@ -19,9 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "sysinfo.hh"
-
-#include "vidre/log.hh"
+#include "memory.hh"
 
 using namespace vidre;
 
@@ -33,7 +31,6 @@ using namespace vidre;
 #include <cstdio>
 #include <cstring>
 #include <cctype>
-#include <cstdlib>
 #include <algorithm>
 #elif defined(__APPLE__)
 #include <sys/types.h>
@@ -45,8 +42,10 @@ using namespace vidre;
 #include <mach/mach_host.h>
 #endif
 
-vidre::sysinfo::memory vidre::sysinfo::memory::get() noexcept {
-    vidre::sysinfo::memory info{};
+#include <string_view>
+
+vidre::os::memory vidre::os::memory::get() noexcept {
+    vidre::os::memory info{};
 
 #if defined(_WIN32)
     // FIXME
@@ -73,8 +72,9 @@ vidre::sysinfo::memory vidre::sysinfo::memory::get() noexcept {
         }
     }
     else {
-        // The following lines contain what we're after. Can we rely on this
-        // to never change format, or do we *really* have to parse entries?
+        // The following lines contain what we're after. The format itself 
+        // hasn't changed since Linux kernel version 2.6 (according to DeepSeek),
+        // only fields were added.
 
         // MemTotal:       63427612 kB
         // MemFree:        10586284 kB
@@ -131,47 +131,4 @@ vidre::sysinfo::memory vidre::sysinfo::memory::get() noexcept {
 #endif
 
     return info;
-}
-
-
-std::filesystem::path vidre::sysinfo::configdir() noexcept {
-#if defined(_WIN32)
-    FIXME
-#elif defined(__linux__)
-    const char *p = getenv("XDG_CONFIG_HOME");
-    if (p) {
-        if (p[0] == '~') {
-            std::filesystem::path res = getenv("HOME");
-            res /= p + 2;
-            return res;
-        }
-        else
-            return p;
-    }
-    else {
-        std::filesystem::path res = getenv("HOME");
-        res /= ".config";
-        return res;
-    }
-#elif defined(__APPLE__)
-#endif
-}
-
-std::filesystem::path vidre::sysinfo::tmpdir() noexcept {
-#if defined(_WIN32)
-    FIXME
-#elif defined(__linux__)
-    return "/tmp";
-#elif defined(__APPLE__)
-#endif
-}
-
-std::filesystem::path vidre::sysinfo::cachedir() noexcept {
-#if defined(_WIN32)
-    FIXME
-#elif defined(__linux__)
-    std::filesystem::path res = getenv("HOME");
-    return res / ".cache";
-#elif defined(__APPLE__)
-#endif
 }
