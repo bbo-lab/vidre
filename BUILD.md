@@ -2,18 +2,80 @@
 
 ## Windows
 
+### Prerequisites
+
 Required packages:
 - git
-- clang
 - cmake
-- VS Code
-  (Note: you need to also install "CMake Tools", "C/C++", "Lua", and, "Python" extensions 
-  from within VS Code)
+- LLVM/VS or LLVM/MinGW
+- FFmpeg
+- Qt
 
-These can be installed using winget (PowerShell):
+Further packages used in the build are downloaded and build automatically 
+with CMake.
 
-    winget install Git.Git 
-    winget LLVM.LLVM MartinStorsjo.LLVM-MinGW.UCRT Ninja-build.Ninja Kitware.CMake
+#### GIT
+
+Install git:
+
+    winget install Git.Git
+
+Developers also need to setup SSH. Since Windows 10, OpenSSH is natively included.
+To use it with git, run
+
+    git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+
+To setup OpenSSH you may follow these steps (note that the author uses different public keys
+for different services):
+
+**Generate a public key**
+
+    mkdir ~/.ssh
+    cd ~/.ssh
+    ssh-keygen -t ed25519 -C '<local-user>@<hostname>' -f .ssh/<github-user>.github.com
+
+**Upload key to your github account**
+
+**Create a SSH config**:
+
+    mkdir known_hosts.d
+    edit config
+
+with the following content:
+
+    AddKeysToAgent yes
+    UserKnownHostsFile ~/.ssh/known_hosts.d/%k
+    IdentitiesOnly yes
+
+    Host <github-user>.github.com
+            HostName github.com
+            User <github-user>
+            IdentityFile ~/.ssh/<github-user>.github.com
+
+With this, the repository can now be cloned using
+
+    git clone git@<github-user>.github.com:bbo-lab/vidre.git
+
+#### Compiler
+
+    winget install Ninja-build.Ninja Kitware.CMake
+
+--------------------------------------------------------------------------------
+
+FIXME
+FIXME
+FIXME
+FIXME
+FIXME
+
+see https://dev.to/marcosplusplus/how-to-install-the-new-version-of-clangllvm-on-windows-2flb
+
+https://llvm.org/docs/GettingStartedVS.html
+
+etc.
+
+
+    winget install LLVM.LLVM 
     winget install Microsoft.VisualStudioCode
 
 Additionally the WindowsSDK is required, which at the moment of writing is
@@ -52,41 +114,6 @@ FFmpeg FIXME
 The repository can be downloaded with
 
     git clone https://github.com/bbo-lab/vidre.git
-
-Developers requiring access through ssh should note, that OpenSSH is included natively with 
-Windows 10 and Windows 11. To use it with git, run
-
-    git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
-
-To setup OpenSSH you may follow these steps (note that the author uses different public keys
-for different services):MartinStorsjo.LLVM-MinGW.
-
-1. Generate a public key
-
-    mkdir ~/.ssh
-    cd ~/.ssh
-    ssh-keygen -t ed25519 -C '<local-user>@<hostname>' -f .ssh/<github-user>.github.com
-
-2. Upload key to your github account
-3. Create a SSH config:
-
-    mkdir known_hosts.d
-    edit config
-
-with the following content:
-
-    AddKeysToAgent yes
-    UserKnownHostsFile ~/.ssh/known_hosts.d/%k
-    IdentitiesOnly yes
-
-    Host <github-user>.github.com
-            HostName github.com
-            User <github-user>
-            IdentityFile ~/.ssh/<github-user>.github.com
-
-With this, the repository can now be cloned using
-
-    git clone git@<github-user>.github.com:bbo-lab/vidre.git
 
 ### Building
 
