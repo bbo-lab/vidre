@@ -21,6 +21,7 @@
  */
 #include "settings.hh"
 #include "log.hh"
+#include "exception.hh"
 
 #include <fstream>
 #include <sstream>
@@ -117,7 +118,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
                 break;
             case lua::status::yield:
                 // should not happen
-                throw script::exception() << throw_message("execution yielded");
+                throw vidre::exception() << throw_message("execution yielded");
             default:
                 break;
         }
@@ -135,17 +136,17 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
                 break;
             case lua::status::yield:
                 // should not happen
-                throw script::exception() << throw_message("execution yielded");
+                throw vidre::exception() << throw_message("execution yielded");
             default:
                 // FIXME we need inspection here...
-                throw script::exception() << throw_message("failed");
+                throw vidre::exception() << throw_message("failed");
         }
 
         tr << "- loaded plain, status: " << int(s) << "\n";
     }
 
     if (top == scope.size()) {
-        throw script::exception() << throw_message("file is neither a plain nor a complex configuration file");
+        throw vidre::exception() << throw_message("file is neither a plain nor a complex configuration file");
     }
 
     if (g.type(-1) != lua::type::table) {

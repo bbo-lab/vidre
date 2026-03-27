@@ -26,6 +26,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
+#include <vidre/exception.hh>
 
 #include <vector>
 
@@ -155,7 +156,7 @@ namespace vidre {
         inline node::operator bool() const {
             auto t = push();
             if (t != lua::type::boolean)
-                throw script::exception("expected a number");
+                throw vidre::exception() << throw_message("expected a number");
             auto retval = script::g.toboolean(-1);
             script::g.pop();
             return retval;
@@ -165,7 +166,7 @@ namespace vidre {
         inline node::operator lua::integer() const {
             push();
             if (not script::g.isinteger(-1))
-                throw script::exception("expected an integer");
+                throw vidre::exception() << throw_message("expected an integer");
             auto retval = script::g.tointeger(-1);
             script::g.pop();
             return retval;
@@ -175,7 +176,7 @@ namespace vidre {
         inline node::operator lua::number() const {
             auto t = push();
             if (t != lua::type::number)
-                throw script::exception("expected a number");
+                throw vidre::exception() << throw_message("expected a number");
             auto retval = script::g.tonumber(-1);
             script::g.pop();
             return retval;
@@ -185,7 +186,7 @@ namespace vidre {
         inline node::operator std::string() const {
             auto t = push();
             if (t != lua::type::string)
-                throw script::exception("expected a string");
+                throw vidre::exception() << throw_message("expected a string");
             auto retval = script::g.tostring(-1);
             script::g.pop();
             return retval;
@@ -195,7 +196,7 @@ namespace vidre {
         inline node::operator const char *() const {
             auto t = push();
             if (t != lua::type::string)
-                throw script::exception("expected a string");
+                throw vidre::exception() << throw_message("expected a string");
             auto retval = script::g.tostring(-1);
             script::g.pop();
             return retval;
@@ -204,9 +205,9 @@ namespace vidre {
         template <>
         inline node &node::operator=(const std::string &value) {
             if (type_ != lua::type::string)
-                throw script::exception("invalid assignment: must be a string");
+                throw vidre::exception() << throw_message("invalid assignment: must be a string");
             if (parent_ == lua::reference::nil)
-                throw script::exception("invalid assignment: unconnected node");
+                throw vidre::exception() << throw_message("invalid assignment: unconnected node");
 
             script::g.rawgeti(lua::registry, parent_);
             script::g.pushlstring(value.data(), value.size());
@@ -218,9 +219,9 @@ namespace vidre {
         template <>
         inline node &node::operator=(const char *value) {
             if (type_ != lua::type::string)
-                throw script::exception("invalid assignment: must be a string");
+                throw vidre::exception() << throw_message("invalid assignment: must be a string");
             if (parent_ == lua::reference::nil)
-                throw script::exception("invalid assignment: unconnected node");
+                throw vidre::exception() << throw_message("invalid assignment: unconnected node");
 
             script::g.rawgeti(lua::registry, parent_);
             script::g.pushstring(value);

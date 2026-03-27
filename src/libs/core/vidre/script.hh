@@ -39,9 +39,9 @@
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/exception.hh>
 #include <delua.hpp>
 
+#include <utility>
 #include <filesystem>
 
 namespace vidre {
@@ -52,8 +52,6 @@ namespace vidre {
         /**@addtogroup api-core-script
          * */
         ///@{
-
-        class exception;
 
         /** Scripting engine.
          *
@@ -166,31 +164,15 @@ namespace vidre {
             }
         };
 
-        class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
-        public:
-            exception(script::engine &L = script::g, const std::source_location location = std::source_location::current())
-                : vidre::exception(location) {
-                getinfo(L);
-            }
-            exception(const std::string &message, script::engine &L = script::g,
-                      const std::source_location location = std::source_location::current())
-                : vidre::exception(location), error_(message) {
-                getinfo(L);
-            }
-
-            const char *what() const noexcept override;
-
-        protected:
-            std::string chunk_{};         ///< Chunk name.
-            std::string error_{};         ///< Lua error message.
-            engine::size_type line_{};    ///< Line.
-            engine::size_type column_{};  ///< Column.
-
-        protected:
-            void getinfo(script::engine &L);
-        };
-
         ///@}
+
+        /** Analyze a Lua exception.
+         * @param thr   The Lua thread.
+         * @param chunk Optional chunk name.
+         * @return line in chunk if given.
+         * @return -1 otherwise.
+         * */
+        int analyze(lua::state thr, const std::string &chunk = {});
 
     }  // namespace script
 

@@ -26,7 +26,29 @@
 
 using namespace vidre;
 
+LUALIB_API void luaL_where(lua_State *L, int level) {
+    lua_Debug ar;
+    if (lua_getstack(L, level, &ar)) { /* check function at level */
+        lua_getinfo(L, "Sl", &ar);     /* get info about it */
+        if (ar.currentline > 0) {      /* is there info? */
+            if (ar.source[0] == '@')
+                lua_pushfstring(L, "%s:%d: ", ar.source + 1, ar.currentline);
+            else
+                lua_pushfstring(L, "%s:%d:", ar.short_src, ar.currentline);
+            return;
+        }
+    }
+    lua_pushfstring(L, ""); /* else, no information available... */
+}
+
+LUA_API int vidre_lua_panic(lua_State *L) {
+    // FIXME
+    return 0;
+}
+
 void vidre_lua_init(script::engine &g) {
+    g.atpanic(vidre_lua_panic);
+
     // set up package.path and package.cpath
     // FIXME this should be done initially in cmake/vidre/deps/lua.cmake
     g.clearpath();
@@ -63,14 +85,14 @@ void script::engine::clearpackage(const std::string &field) {
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
-        throw exception() << throw_message("package table not accessible");
+        throw lua::exception(*this, "package table not accessible");
 
     if (field == "path") {
     }
     else if (field == "cpath") {
     }
     else
-        throw vidre::exception() << throw_message("trying to set unknown package field");
+        throw lua::exception(*this, "trying to set unknown package field");
 
     pushlstring("", 0);
     setfield(-2, field.c_str());
@@ -80,10 +102,10 @@ void script::engine::addpackage(const std::string &path, const std::string &fiel
     stack top(*this);
 
     if (getglobal("package") != lua::type::table)
-        throw exception() << throw_message("package table not accessible");
+        lua::exception(*this, "package table not accessible");
 
     if (getfield(-1, field.c_str()) != lua::type::string)
-        throw exception() << throw_message("package.path not accessible");
+        lua::exception(*this, "package.path not accessible");
 
     std::string search = tostring(-1);
     if (not search.empty())
@@ -94,7 +116,7 @@ void script::engine::addpackage(const std::string &path, const std::string &fiel
     else if (field == "cpath")
         search += makepath(path, 'c');
     else {
-        throw vidre::exception() << throw_message("trying to add to unknown package field");
+        throw lua::exception(*this, "trying to add to unknown package field");
     }
 
     pushlstring(search.data(), search.size());
@@ -115,33 +137,7 @@ lua::status script::engine::exec(const std::string &s) {
         case lua::status::ok:
         case lua::status::yield:
             return res;
-        case lua::status::error_run:
-            throw exception("runtime error");
-        case lua::status::syntax:
-            throw exception("syntax error");
-        case lua::status::memory:
-            throw exception("memory allocation error");
-        case lua::status::error:
-            throw exception("error handler failure");
         default:
-            throw exception("unrecognized error return code");
+            throw lua::exception(*this, "FIXME");
     }
 }
-
-const char *script::exception::what() const noexcept {
-    return error_.c_str();
-}
-
-void script::exception::getinfo(script::engine &L) {
-    lua::debug dbg(L);
-
-    lua::debug::info_type info;
-    if (lua::condition::bad == dbg.getstack(info)) {
-        // FIXME 
-        return;
-    }
-
-    // FIXME
-
-}
-
