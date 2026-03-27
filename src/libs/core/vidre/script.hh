@@ -135,7 +135,7 @@ namespace vidre {
         extern engine g;
 
         /** Stack scope.
-         * 
+         *
          * Lua is a stack based scripting engine requiring proper stack handling.
          * To simplify the stack handling this class provides a scoped stack
          * cleanup.
@@ -168,20 +168,21 @@ namespace vidre {
 
         class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
         public:
-            exception(const std::string &message, const std::source_location location = std::source_location::current())
-                : vidre::exception(location), error_(message) {}
             exception(script::engine &L = script::g, const std::source_location location = std::source_location::current())
                 : vidre::exception(location) {
                 getinfo(L);
             }
-
-            const char *what() const noexcept override {
-                return error_.c_str();
+            exception(const std::string &message, script::engine &L = script::g,
+                      const std::source_location location = std::source_location::current())
+                : vidre::exception(location), error_(message) {
+                getinfo(L);
             }
 
+            const char *what() const noexcept override;
+
         protected:
-            std::string error_{};         ///< Lua error message.
             std::string chunk_{};         ///< Chunk name.
+            std::string error_{};         ///< Lua error message.
             engine::size_type line_{};    ///< Line.
             engine::size_type column_{};  ///< Column.
 

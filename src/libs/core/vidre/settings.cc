@@ -116,7 +116,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
             case lua::status::ok:
                 break;
             case lua::status::yield:
-                // FIXME what to do?
+                // should not happen
                 throw script::exception() << throw_message("execution yielded");
             default:
                 break;
@@ -134,19 +134,19 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
             case lua::status::ok:
                 break;
             case lua::status::yield:
-                // FIXME what to do?
+                // should not happen
                 throw script::exception() << throw_message("execution yielded");
             default:
-                // FIXME debug
+                // FIXME we need inspection here...
                 throw script::exception() << throw_message("failed");
         }
 
         tr << "- loaded plain, status: " << int(s) << "\n";
     }
 
-    if (top == scope.size())
-        // FIXME what to do, if empty?
-        g.newtable();
+    if (top == scope.size()) {
+        throw script::exception() << throw_message("file is neither a plain nor a complex configuration file");
+    }
 
     if (g.type(-1) != lua::type::table) {
         log::error() << "While loading configuration from\n    " << std::string(file) << "\na value of type '"

@@ -128,6 +128,20 @@ lua::status script::engine::exec(const std::string &s) {
     }
 }
 
-void script::exception::getinfo(script::engine &L) {
-    // FIXME retrieve debug info, fill chunk_, line_ and column_
+const char *script::exception::what() const noexcept {
+    return error_.c_str();
 }
+
+void script::exception::getinfo(script::engine &L) {
+    lua::debug dbg(L);
+
+    lua::debug::info_type info;
+    if (lua::condition::bad == dbg.getstack(info)) {
+        // FIXME 
+        return;
+    }
+
+    // FIXME
+
+}
+
