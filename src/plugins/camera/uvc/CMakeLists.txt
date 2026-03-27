@@ -3,7 +3,7 @@ set(PLUGIN_CURRENT_DIR "camera/uvc")
 vidre_module(uvc 
     PROPERTIES
         OUTPUT_NAME uvc
-        LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_PATH}/${PLUGIN_CURRENT_DIR}"
     BUILD
         LINK_LIBRARIES
             PUBLIC 
@@ -20,4 +20,4 @@ install(FILES plugin.lua
     DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}
     COMPONENT "runtime")
 
-configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}/plugin.cfg COPYONLY)
+configure_file(plugin.lua ${PLUGIN_OUTPUT_PATH}/${PLUGIN_CURRENT_DIR}/plugin.cfg COPYONLY)

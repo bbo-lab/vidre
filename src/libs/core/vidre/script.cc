@@ -26,23 +26,7 @@
 
 using namespace vidre;
 
-LUALIB_API void luaL_where(lua_State *L, int level) {
-    lua_Debug ar;
-    if (lua_getstack(L, level, &ar)) { /* check function at level */
-        lua_getinfo(L, "Sl", &ar);     /* get info about it */
-        if (ar.currentline > 0) {      /* is there info? */
-            if (ar.source[0] == '@')
-                lua_pushfstring(L, "%s:%d: ", ar.source + 1, ar.currentline);
-            else
-                lua_pushfstring(L, "%s:%d:", ar.short_src, ar.currentline);
-            return;
-        }
-    }
-    lua_pushfstring(L, ""); /* else, no information available... */
-}
-
 LUA_API int vidre_lua_panic(lua_State *L) {
-    // FIXME
     return 0;
 }
 
@@ -52,12 +36,12 @@ void vidre_lua_init(script::engine &g) {
     // set up package.path and package.cpath
     // FIXME this should be done initially in cmake/vidre/deps/lua.cmake
     g.clearpath();
-    g.addpath(VIDRE_INSTALL_SCRIPTDIR, "path");
-    g.addpath(VIDRE_INSTALL_PLUGINDIR, "cpath");
+    g.addpath(CMAKE_INSTALL_LUA_LDIR, "path");
+    g.addpath(CMAKE_INSTALL_LUA_CDIR, "cpath");
 
     // developer help
     if (develop::inbuild()) {
-        g.addpath(PROJECT_SOURCE_DIR "/scripts", "path");
+        g.addpath(PROJECT_SOURCE_DIR "/share/lua", "path");
         g.addpath(PROJECT_BINARY_DIR "/lib", "cpath");
     }
 

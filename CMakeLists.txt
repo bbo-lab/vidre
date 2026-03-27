@@ -14,7 +14,7 @@ set(Vidre_ORGANIZATION_DOMAIN "de.mpg.mpinb")
 
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
     if(WIN32)
-        set(CMAKE_INSTALL_PREFIX "C:\\Programs\\${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
+        set(CMAKE_INSTALL_PREFIX "C:/Programs/${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
     else()
         set(CMAKE_INSTALL_PREFIX "/opt/${Vidre_ORGANIZATION_NAME}" CACHE PATH "Install path prefix, prepended onto install directories.")
     endif()
@@ -22,16 +22,10 @@ endif()
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "VidreInitFlags.cmake")
 
-if(NOT DEFINED PROJECT_NAME)
-    set(Vidre_IS_SUBPROJECT OFF)
-else()
-    set(Vidre_IS_SUBPROJECT ON)
-endif()
-
 project(Vidre
     VERSION 0.0.0
     LANGUAGES CXX
-    DESCRIPTION "VidRe Recording Daemon."
+    DESCRIPTION "Video recording software for scientific purposes."
     HOMEPAGE_URL https://github.com/bbo-lab/vidre
 )
 
@@ -49,6 +43,14 @@ endif(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
 if(NOT DEFINED LIBRARY_OUTPUT_PATH)
     set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 endif(NOT DEFINED LIBRARY_OUTPUT_PATH)
+
+if(NOT DEFINED PLUGIN_OUTPUT_PATH)
+    set(PLUGIN_OUTPUT_PATH ${PROJECT_BINARY_DIR}/plugins)
+endif(NOT DEFINED PLUGIN_OUTPUT_PATH)
+
+if(NOT DEFINED DATA_OUTPUT_PATH)
+    set(DATA_OUTPUT_PATH ${PROJECT_BINARY_DIR}/share)
+endif(NOT DEFINED DATA_OUTPUT_PATH)
 
 include(GNUInstallDirs)
 
@@ -94,25 +96,32 @@ include(vidre/deps/ffmpeg)
 include(vidre/deps/qt)
 
 # PATHS #######################################################################
+
 set(CMAKE_INSTALL_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/vidre)
 set(CMAKE_INSTALL_DOCDIR ${CMAKE_INSTALL_DATAROOTDIR}/doc/vidre)
-set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre) # FIXME system dependent, see https://cmake.org/cmake/help/latest/command/find_package.html
+
+# FIXME see https://cmake.org/cmake/help/latest/command/find_package.html
+set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATAROOTDIR}/cmake/vidre) 
 
 set(CMAKE_INSTALL_PLUGINDIR ${CMAKE_INSTALL_LIBDIR}/vidre/plugins)
+set(CMAKE_INSTALL_SCRIPTDIR ${CMAKE_INSTALL_DATADIR}/scripts)
 
-set(CMAKE_INSTALL_LUACDIR ${CMAKE_INSTALL_LIBDIR}/vidre/lua)
-set(CMAKE_INSTALL_LUADIR ${CMAKE_INSTALL_DATADIR}/vidre/lua)
+set(CMAKE_INSTALL_LUA_CDIR ${CMAKE_INSTALL_PREFIX}/${LUA_CDIR})
+set(CMAKE_INSTALL_LUA_LDIR ${CMAKE_INSTALL_PREFIX}/${LUA_LDIR})
 
 add_definitions(
     -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\"
     -DPROJECT_BINARY_DIR=\"${PROJECT_BINARY_DIR}\"
+    -DCMAKE_INSTALL_LUA_CDIR=\"${CMAKE_INSTALL_LUA_CDIR}\"
+    -DCMAKE_INSTALL_LUA_LDIR=\"${CMAKE_INSTALL_LUA_LDIR}\"
 )
 
 # BUILD #######################################################################
 
 add_subdirectory(cmake)
+add_subdirectory(icons)
+add_subdirectory(share)
 add_subdirectory(src)
-add_subdirectory(scripts)
 
 install(EXPORT VidreTargets-${Vidre_RELEASE}
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
@@ -120,6 +129,12 @@ install(EXPORT VidreTargets-${Vidre_RELEASE}
 )
 
 add_subdirectory(docs)
+
+install(FILES 
+        LICENSE README.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    COMPONENT "runtime")
+
 
 # TEST ########################################################################
 

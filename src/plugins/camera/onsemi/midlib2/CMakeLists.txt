@@ -77,7 +77,7 @@ if(VIDRE_HAVE_MIDLIB2)
     vidre_module(onsemi-midlib2
         PROPERTIES
             OUTPUT_NAME midlib2
-            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_PATH}/${PLUGIN_CURRENT_DIR}
         BUILD
             LINK_LIBRARIES
                 PUBLIC 
@@ -93,7 +93,7 @@ if(VIDRE_HAVE_MIDLIB2)
     vidre_module(onsemi-midlib2-check
         PROPERTIES
             OUTPUT_NAME check
-            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_OUTPUT_PATH}/${PLUGIN_CURRENT_DIR}
         BUILD
             COMPILE_DEFINITIONS
                 PRIVATE 
@@ -108,7 +108,7 @@ if(VIDRE_HAVE_MIDLIB2)
             check.cc
     )
 
-    configure_file(plugin.lua ${PLUGIN_OUTPUT_DIR}/${PLUGIN_CURRENT_DIR}/plugin.cfg COPYONLY)
+    configure_file(plugin.lua ${PLUGIN_OUTPUT_PATH}/${PLUGIN_CURRENT_DIR}/plugin.cfg COPYONLY)
     install(FILES plugin.lua
         RENAME plugin.cfg
         DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/${PLUGIN_CURRENT_DIR}

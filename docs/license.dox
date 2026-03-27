@@ -57,6 +57,9 @@ This project contains code derived from the following external sources:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
+### Qt
 
+Qt is licensed under GPL version 3.0. For further information, please visit
+[Qt for Open Source Development](https://www.qt.io/development/download-open-source).
 
 */

@@ -23,7 +23,7 @@ if(Doxygen_FOUND)
         VERBATIM)
 
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
-        COMPONENT "documentation"
-        DESTINATION share/doc/vidre-service)
+        COMPONENT "documentation" # FIXME sub-category html?
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
 
 endif()
