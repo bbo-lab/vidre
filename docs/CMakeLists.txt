@@ -29,6 +29,13 @@ if(Doxygen_FOUND)
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
 
     if (NOT "$ENV{BBOLAB_GITHUB_IO}" STREQUAL "")
+        add_custom_target(publish-prepare
+            WORKING_DIRECTORY $ENV{BBOLAB_GITHUB_IO}
+            COMMAND git checkout .
+            COMMAND git pull
+            VERBATIM
+        )
+
         add_custom_target(publish 
             COMMAND ${CMAKE_COMMAND} -E echo "Removing existing documentation at $ENV{BBOLAB_GITHUB_IO}/vidre..."
             COMMAND ${CMAKE_COMMAND} -E remove_directory $ENV{BBOLAB_GITHUB_IO}/vidre
@@ -37,15 +44,10 @@ if(Doxygen_FOUND)
                 ${CMAKE_CURRENT_BINARY_DIR}/html
                 $ENV{BBOLAB_GITHUB_IO}/vidre
             COMMAND ${CMAKE_COMMAND} -E echo "Documentation copied successfully!"
-            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
+            DEPENDS 
+                ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
+                publish-prepare
             COMMENT "Deploying documentation to $ENV{BBOLAB_GITHUB_IO}/vidre"
-            VERBATIM
-        )
-
-        add_custom_command(TARGET publish PRE_BUILD
-            WORKING_DIRECTORY $ENV{BBOLAB_GITHUB_IO}
-            COMMAND git checkout .
-            COMMAND git pull
             VERBATIM
         )
 

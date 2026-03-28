@@ -23,8 +23,7 @@
 #include "log.hh"
 #include "exception.hh"
 
-#include <fstream>
-#include <sstream>
+#include "util/filesystem.hh"
 
 using namespace vidre;
 
@@ -98,13 +97,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     g.pop(1);
 
     // load file
-    std::string config;
-    {
-        std::ifstream thefile{std::string(file)};
-        std::stringstream tmpbuf;
-        tmpbuf << thefile.rdbuf();
-        config = tmpbuf.str();
-    }
+    std::string config = loadfile(file);
 
     // assume, it's a config file, and "return" is missing
     auto top = scope.size();
@@ -201,18 +194,20 @@ std::string quote(const settings::node &t) {
     return retval;
 }
 
-void dump(std::ofstream &f, const settings::node &t, int indent) {
+void dump(FILE *f, const settings::node &t, int indent) {
     switch (t.type()) {
         case lua::type::table: {
             auto keylist = t.keys();
+            auto indent_s = std::string(4 * indent, ' ');
+
             if (indent == 0)
-                f << std::string(4 * indent, ' ');
+                fwrite(indent_s.data(), indent_s.size(), 1, f);
 
             if (keylist.empty()) {
-                f << "{}";
+                fprintf(f, "{}");
             }
             else {
-                f << "{" << std::endl;
+                fprintf(f, "{\n");
                 if (indent == 0)
                     indent++;
 
@@ -223,37 +218,45 @@ void dump(std::ofstream &f, const settings::node &t, int indent) {
                     const settings::node child = t[key];
 
                     for (int i = 0; i < indent; ++i)
-                        f << "    ";
-                    f << key << " = ";
+                        fprintf(f, "    ");
+                    fprintf(f, "%s = ", key.c_str());
 
                     dump(f, child, indent + 1);
 
                     if (i + 1 < keylist.size())
-                        f << "," << std::endl;
+                        fprintf(f, ",\n");
                     else
-                        f << std::endl;
+                        fprintf(f, "\n");
                 }
 
                 indent--;
-                f << std::string(4 * indent, ' ') << "}";
+                fwrite(indent_s.data(), indent_s.size(), 1, f);
+                fprintf(f, "}");
             }
             break;
         }
         case lua::type::number:
-            f << lua::number(t);
+            fprintf(f, "%g", lua::number(t));
             break;
-        case lua::type::string:
-            f << quote(t);
+        case lua::type::string: {
+            auto q = quote(t);
+            fwrite(q.data(), q.size(), 1, f);
             break;
+        }
         default:
             throw exception();  // FIXME
     }
 }
 
 void settings::file::save(const std::filesystem::path &file) {
-    std::ofstream out(file);
+    FILE *out = fopen(file.c_str(), "r");
+    if (not out)
+        throw system_error({errno,std::generic_category()}); // FIXME add filename
+
     dump(out, *this, 0);
-    out << std::endl;
+    
+    fprintf(out,"\n");
+    fclose(out);
 }
 
 void settings::file::save() {

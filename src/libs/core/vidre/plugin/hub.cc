@@ -22,6 +22,7 @@
 #include "hub.hh"
 #include "../log.hh"
 #include "../util/develop.hh"
+#include "../util/filesystem.hh"
 
 using namespace vidre;
 
@@ -33,12 +34,18 @@ settings::json plugin::hub::find() noexcept {
 
     if (develop::inbuild()) {
         plugindir = PROJECT_BINARY_DIR "/plugins";
-        scriptdir = PROJECT_BINARY_DIR "/plugins";
+        scriptdir = PROJECT_BINARY_DIR "/scripts"; // FIXME
     }
 
     // search plugins
     tr << "Searching for plugins in " << (std::string) plugindir << log::endl;
-    // FIXME
+    auto cfg = find_files(plugindir, R"(^plugin[.]cfg$)");
+    for(auto const &item: cfg) {
+        tr << "- found " << std::string(item) << log::endl;
+    }
+
+    // search scripts
+    // FIXME ?
 
     return {};
 }

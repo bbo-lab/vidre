@@ -25,10 +25,10 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.plugin",
+            "name": "example.core.plugins",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.plugin",
+            "program": "${workspaceFolder}/build/bin/example.core.plugins",
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"
@@ -43,19 +43,19 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.settings",
+            "name": "example.core.script",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.settings",
+            "program": "${workspaceFolder}/build/bin/example.core.script",
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.script",
+            "name": "example.core.settings",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.script",
+            "program": "${workspaceFolder}/build/bin/example.core.settings",
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"

@@ -29,6 +29,7 @@
 namespace vidre {
 
     namespace plugin {
+        
         /**@addtogroup api-core-plugin
          * */
         ///@{

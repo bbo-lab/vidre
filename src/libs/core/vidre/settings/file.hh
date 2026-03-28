@@ -37,6 +37,7 @@ namespace vidre {
         ///@{
 
         /** Configuration file.
+         * @todo needs a dump() function
          * */
         class VIDRE_CORE_VISIBILITY file : public node {
         public:
