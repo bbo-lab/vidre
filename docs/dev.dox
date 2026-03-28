@@ -4,7 +4,10 @@
 
 @subpage dev/overview
 
-@subpage dev/attic
+@subpage dev/style
 
+@subpage dev/structure
+
+@subpage dev/goals
 
 */

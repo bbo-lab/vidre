@@ -4,7 +4,9 @@
 
 Video recording software for scientific purposes.
 
-## Introduction
+<b>Status</b>: discovery phase
+
+@section Introduction
 
 VidRe delivers a modular videography suite designed for scientific applications. 
 It enables recording from any video source with synchronized timing, audio, and 

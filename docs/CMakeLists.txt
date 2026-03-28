@@ -28,4 +28,35 @@ if(Doxygen_FOUND)
         COMPONENT "documentation" # FIXME sub-category html?
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
 
+    if (NOT "$ENV{BBOLAB_GITHUB_IO}" STREQUAL "")
+        add_custom_target(publish 
+            COMMAND ${CMAKE_COMMAND} -E echo "Removing existing documentation at $ENV{BBOLAB_GITHUB_IO}/vidre..."
+            COMMAND ${CMAKE_COMMAND} -E remove_directory $ENV{BBOLAB_GITHUB_IO}/vidre
+            COMMAND ${CMAKE_COMMAND} -E echo "Copying new documentation..."
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_BINARY_DIR}/html
+                $ENV{BBOLAB_GITHUB_IO}/vidre
+            COMMAND ${CMAKE_COMMAND} -E echo "Documentation copied successfully!"
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
+            COMMENT "Deploying documentation to $ENV{BBOLAB_GITHUB_IO}/vidre"
+            VERBATIM
+        )
+
+        add_custom_command(TARGET publish PRE_BUILD
+            WORKING_DIRECTORY $ENV{BBOLAB_GITHUB_IO}
+            COMMAND git checkout .
+            COMMAND git pull
+            VERBATIM
+        )
+
+        add_custom_command(TARGET publish POST_BUILD
+            WORKING_DIRECTORY $ENV{BBOLAB_GITHUB_IO}
+            COMMAND git add vidre
+            COMMAND git commit -m "update vidre ${Vidre_VERSION_MAJOR}.${Vidre_VERSION_MINOR} documentation"
+            COMMAND git push
+            COMMAND ${CMAKE_COMMAND} -E echo "Documentation published successfully!"
+            COMMENT "Published documentation to $ENV{BBOLAB_GITHUB_IO}"
+            VERBATIM
+        )
+    endif()
 endif()

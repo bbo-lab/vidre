@@ -1,17 +1,4 @@
-/**@page dev/attic Information (ATTIC)
-
-@section dev-objective Objective
-
-The objective is to create a videography software suite, that allows to record 
-scientifically relevant data from different types of video sources including 
-supplemental information and data streams (such as timing, audio, etc.). 
-Ultimately we aim at a modular framework that allows to supplement real-time 
-features, such as object recognition combined with feedback.
-
-
-
-
-@section dev-design Design
+/**@page dev/goals Design goals
 
 To facilitate remote data acquisition, which may happen on a headless system,
 recording and displaying data are separated into a backend (the recording 
@@ -19,6 +6,7 @@ service or daemon, respectively) and the frontend (the user interface). The
 following diagram gives an idea of the components and the acquisition data flow: 
 
 @image html overview.svg
+
 
 
 @subsection dev-backend Backend
@@ -29,17 +17,12 @@ of a system service (which also means, it should automatically start on system
 boot). The service must not crash on partial failures (such as device errors) 
 but continue to operate.
 
-@TBD{
-Worst-case: error recovery.
-
-BBO had some issues with DevWareX software. The software records in MP4 format.
-The exact details are unknown, but it seems, that MP4 files can only be read
-when meta-information is written at the end of the recording. This was missing
-in some cases and recovery is only possible if the meta-information is known.
-Therefore, we suggest, that all necessary information, that is required to 
-recover data, is written immediately, and, when the service starts again, will
-"fix" the situation.
-}
+The software must avoid blocking, for example caused by the hardware. In case
+of failures, data should be recoverable (bad example: the DevWareX software, while
+recording a camera in triggered mode, cannot be stopped when the camera does
+not receive any trigger any more. Then, the only option is to kill the software.
+In this case, additional information is not written to the disk, so that, for
+example MP4 files, are corrupted).
 
 
 @subsubsection dev-backend-monitoring Monitoring
@@ -78,7 +61,9 @@ as basis for benchmarking.}
 Storage, here, refers both to how data is stored on the hard-disk as well as 
 how data is provisioned for transmission as well as real-time analysis. 
 Additionally, plugins may provide video compression or data formats (such as
-HDF5). @TBD{Encoding (lossy or lossless) may happen after data is recorded
+HDF5). 
+
+@TBD{Encoding (lossy or lossless) may happen after data is recorded
 in a raw format.}
 
 <b>Requires</b>:<br/>
@@ -159,7 +144,6 @@ Note, however, that the software must be compilable on at least Linux® and
 Windows®. For user-interface applications [Qt6](https://www.qt.io/product/framework) 
 forms the basis. 
 
-A clang-format file is provided.
 
 While the backend (the recording service or daemon, respectively) will rely
 on compiled code, interfaces to other languages (mainly Python, but also
@@ -326,9 +310,11 @@ UDP is sufficient.
 
 @subsubsection core-settings Settings
 
-As core configuration and settings format, VidRe will use JSON. This can
-also be similarly represented in C++ using initializer lists. We propose a
-class, e.g.
+As core configuration and settings format, VidRe will use Lua. The advantage of
+Lua is, that configuration files for cameras, where settings may require to
+adjust multiple camera registers, may implement wrapper functions.
+
+For easy use, the following should be implemented:
 ```.cpp
 class options {
     class entry; // basically a variant, that can hold maps, arrays and values

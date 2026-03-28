@@ -1,5 +1,25 @@
 /** @page dev/overview Overview
 
+With VidRe, acquisition and control are separated as backend and frontend, 
+respectively. They backend is implemented as a service 
+[daemon](https://en.wikipedia.org/wiki/Daemon_(computing)) 
+(src/apps/daemon) that is responsible for acquisition without requiring a 
+graphical display (suitable for embedded use). 
+The frontend provides two options, either a command-line interface 
+(src/apps/cli)
+or a graphical user-interface 
+(src/apps/gui). Additional tools, for example to convert a video stream to MP4, are
+provided (src/apps/tools).
 
+Core functionality is provided in C++ (at least [C++20](https://en.cppreference.com/w/cpp/20),
+see @ref api). At the moment of writing, we framework targets Linux® and 
+Windows®. For graphical user-interface applications [Qt6](https://www.qt.io/product/framework) 
+is used. 
+
+The objective is to provide a videography software suite, that allows to record 
+scientifically relevant data from different types of video sources including 
+supplemental information and data streams (such as timing, audio, etc.). 
+Ultimately we aim at a modular framework that allows to supplement real-time 
+features, such as object recognition combined with feedback.
 
 */

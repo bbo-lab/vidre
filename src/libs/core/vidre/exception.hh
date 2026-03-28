@@ -135,7 +135,7 @@ namespace vidre {
 #endif
     }
 
-    /** Exception originating from a std::error_code. 
+    /** Exception originating from a std::error_code.
      * */
     class VIDRE_CORE_VISIBILITY system_error : public virtual exception {
     protected:

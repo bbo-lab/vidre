@@ -24,7 +24,10 @@ FixNamespaceComments: true
 AlignConsecutiveMacros: true
 AttributeMacros:
     [
-        "VIDRE_BASE_VISIBILITY"
+        "VIDRE_CORE_VISIBILITY",
+        "VIDRE_DEVICE_VISIBILITY",
+        "VIDRE_NETWORK_VISIBILITY",
+        "VIDRE_FFMPEG_VISIBILITY"
     ]
 StatementAttributeLikeMacros: []
 IndentPPDirectives: None

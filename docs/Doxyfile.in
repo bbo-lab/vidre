@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = VidRe
-PROJECT_NUMBER         = @vidre_VERSION_MAJOR@.@vidre_VERSION_MINOR@
+PROJECT_NUMBER         = @Vidre_VERSION_MAJOR@.@Vidre_VERSION_MINOR@
 PROJECT_BRIEF          = "Video recording suite."
 PROJECT_LOGO           = @PROJECT_SOURCE_DIR@/docs/vidre.svg
 PROJECT_ICON           = @PROJECT_SOURCE_DIR@/docs/vidre.svg

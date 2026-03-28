@@ -1,0 +1,131 @@
+/** @page dev/style Coding style and documentation
+
+## C++
+
+For C++, the coding style is provided in form of a <tt>.clang-format</tt> file. The 
+major rules are:
+- indentation of 4 space, no tabs,
+- maximum width is 132
+- preprocessor statements are not indented
+- namespaces indent
+- braces are in line
+- etc.
+
+For documentation, VidRe relies on Doxygen.
+
+Example header and source:
+@code
+/* Copyright ...
+ */
+#ifndef PROJECT_MODULE_CLASS_H
+#define PROJECT_MODULE_CLASS_H
+#pragma once
+
+/**@addtogroup api-style
+ * @details
+ * @fileinfo
+ *
+ * Documentation...
+ *
+ */
+
+#include <vidre/exception.hh>
+
+#include <string>
+#include <vector>
+
+namespace vidre {
+
+    namespace style {
+
+        /**@addtogroup api-style
+         * */
+        ///@{
+
+        /** An example class.
+         * */
+        class VIDRE_EXAMPLE_VISIBILITY ExampleClass {
+        public:
+            explicit ExampleClass(const std::string &name) : name_(name) {
+                if (name_.empty()) {
+                    throw vidre::exception() << throw_message("Name cannot be empty");
+                }
+            }
+
+            /** Cache integers from 0 to 100.
+             * */
+            void processData(const std::vector<int> &values);
+
+            /** Get the name.
+             * */
+            std::string getName() const noexcept {
+                return name_;
+            }
+
+            /** Check if valid.
+             * @return true if name and cache is not empty.
+             * @return false otherwise
+             */
+            bool isValid() const noexcept;
+
+        private:
+            std::string name_;              ///< The name.
+            std::vector<int> cached_data_;  ///< Internal number cache.
+
+            void validateInternal() const;
+            bool checkCondition(int value) const;
+        };
+
+        ///@}
+
+    }  // namespace style
+
+}  // namespace vidre
+
+#endif  // PROJECT_MODULE_CLASS_H
+@endcode
+
+@code
+/* Copyright ...
+ */
+#include "style.h"
+#include <algorithm>
+#include <iostream>
+
+using namespace vidre;
+
+style::ExampleClass::ExampleClass(const std::string &name)
+
+    void style::ExampleClass::processData(const std::vector<int> &values) {
+    for (const auto &value : values) {
+        if (checkCondition(value)) {
+            cached_data_.push_back(value);
+        }
+        else {
+            std::cout << "Skipping invalid value: " << value << std::endl;
+        }
+    }
+
+    validateInternal();
+}
+
+bool style::ExampleClass::isValid() const noexcept {
+    return !name_.empty() && !cached_data_.empty();
+}
+
+void style::ExampleClass::validateInternal() const {
+    if (cached_data_.empty()) {
+        throw std::runtime_error("No valid data to process");
+    }
+}
+
+bool style::ExampleClass::checkCondition(int value) const {
+    return value > 0 && value < 100;
+}
+@endcode
+
+## Lua
+
+@TBD{Coding style for Lua must be decided.}
+
+*/
