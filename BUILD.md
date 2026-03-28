@@ -4,6 +4,11 @@
 
 ### Prerequisites
 
+Check building on Windows
+  see https://github.com/conan-io/conan, 
+  https://github.com/cpp-pm/hunter?tab=readme-ov-file, 
+  https://github.com/microsoft/vcpkg?tab=readme-ov-file
+
 Required packages:
 - git
 - cmake
