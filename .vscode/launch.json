@@ -61,6 +61,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.app",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.app",
+            "args": [ "-h" ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.playground.aptina",
             "type": "cppdbg",
             "request": "launch",

@@ -57,4 +57,6 @@ vidre_library(vidrecore SHARED
         vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/util/filesystem.hh vidre/util/filesystem.cc
+        vidre/application.hh vidre/application.cc
+            vidre/application/arguments.hh vidre/application/arguments.cc
 )

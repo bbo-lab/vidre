@@ -21,6 +21,7 @@
  * @defgroup api-core-util          Utilities
  * @defgroup api-core-cpp           C++ compatibility
  * @defgroup api-core-os            OS utilities
+ * @defgroup api-core-app           Application tools
  * @defgroup api-core-details       Implementation details
  * @}
  * */
