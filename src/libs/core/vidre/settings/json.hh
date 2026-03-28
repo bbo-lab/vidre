@@ -20,8 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_UTIL_JSON_HH
-#define VIDRE_CORE_UTIL_JSON_HH
+#ifndef VIDRE_CORE_SETTINGS_JSON_HH
+#define VIDRE_CORE_SETTINGS_JSON_HH
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -29,18 +29,23 @@
 #include <nlohmann/json.hpp>
 
 namespace vidre {
-    /**@defgroup api-core-util-json JSON
-     * @ingroup api-core-util
-     * @details
-     * @fileinfo
-     * */
-    ///@{
 
-    /** Variant (JSON node).
-     * */
-    using json = nlohmann::json;
+    namespace settings {
 
-    ///@}
+        /**@addtogroup api-core-settings
+         * */
+        ///@{
+
+        /** Variant (JSON node).
+         * @see @ref examples/core/settings.cc
+         * @see https://json.nlohmann.me/
+         * */
+        using json = nlohmann::json;
+
+        ///@}
+
+    }  // namespace settings
+
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_UTIL_JSON_HH
+#endif  // VIDRE_CORE_SETTINGS_JSON_HH

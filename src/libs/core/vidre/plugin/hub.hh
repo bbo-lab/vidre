@@ -26,7 +26,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/plugin/exception.hh>
-#include <vidre/util/json.hh>
+#include <vidre/settings.hh>
 
 #include <filesystem>
 
@@ -60,13 +60,12 @@ namespace vidre {
          *
          * */
         struct VIDRE_CORE_VISIBILITY hub {
-            static std::filesystem::path plugindir; 
-            static std::filesystem::path scriptdir; 
+            static std::filesystem::path plugindir;
+            static std::filesystem::path scriptdir;
 
             /** Find all modules.
              * */
-            static json find() noexcept;
-
+            static settings::json find() noexcept;
 
         protected:
             // FIXME

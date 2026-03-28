@@ -314,30 +314,8 @@ As core configuration and settings format, VidRe will use Lua. The advantage of
 Lua is, that configuration files for cameras, where settings may require to
 adjust multiple camera registers, may implement wrapper functions.
 
-For easy use, the following should be implemented:
-```.cpp
-class options {
-    class entry; // basically a variant, that can hold maps, arrays and values
+For simple message passing, VidRe, however, relies on JSON.
 
-    options(const std::string &json);
-    options(const std::initializer_list<entry> &table);
-};
-```
-which would allow to write
-```.cpp
-plugin["device/video/uvc"].setup({ 
-    { "fps", 20 }, 
-    { "geometry", {
-        {"x", 0}, 
-        {"y", 0}, 
-        {"width", 320},
-        {"height", 200}
-    }}
-});
-```
-instead of 
-```.cpp
-plugin["device/video/uvc"].setup("{ \"fps\": 20, … }");
-```
+See @ref api-core-settings for further information.
 
 */

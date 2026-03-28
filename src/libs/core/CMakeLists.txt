@@ -46,6 +46,7 @@ vidre_library(vidrecore SHARED
         vidre/settings.hh vidre/settings.cc
             vidre/settings/node.hh 
             vidre/settings/file.hh 
+            vidre/settings/json.hh
         vidre/storage.hh
         vidre/plugin.hh 
             vidre/plugin/exception.hh
@@ -55,5 +56,4 @@ vidre_library(vidrecore SHARED
         vidre/util/version.hh
         vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
-        vidre/util/json.hh
 )

@@ -6,44 +6,24 @@
 
 using namespace vidre;
 
-void show(const settings::node &t, int indent = 0) {
-    auto info = log::info();
-
-    switch (t.type()) {
-        case lua::type::table: {
-            if (indent > 0)
-                info << log::endl;
-
-            for (int i = 0; i < indent; ++i)
-                info << "    ";
-
-            auto keylist = t.keys();
-            std::sort(keylist.begin(), keylist.end());
-
-            for (auto key : keylist) {
-                info << key << " = ";
-                show(t[key], indent + 1);
-            }
-
-            return;
-        } 
-        case lua::type::number:
-            info << lua::number(t);
-            break;
-        case lua::type::string:
-            info << std::string(t);
-            break;
-        default:
-            info << "<" << script::g.type_name(t.type()) << "]";
-    }
-    info << log::endl;
+//! [settings-json]
+void setup(const std::string &optstring) {
+    settings::json options = settings::json::parse(optstring);
+    log::info() << "\nOptions as string (JSON):\n" << options.dump(4) << log::endl;
 }
+
+void setup(settings::json options) {
+    log::info() << "\nOptions as variant (JSON):\n" << options.dump(4) << log::endl;
+    setup(options.dump());
+}
+//! [settings-json]
 
 int main(int, const char **) {
     log::io::stream::threshold(0, log::level::trace);
     log::trace::pattern("*/core/*");
     log::trace tr;
 
+    //! [settings-file]
     std::filesystem::path cfgpath = PROJECT_SOURCE_DIR "/examples/core/settings.lua";
 
     settings::file cfg;
@@ -52,7 +32,20 @@ int main(int, const char **) {
     lua::number version = cfg["version"];
     log::info() << "Config version: " << version << log::endl;
 
+    log::info() << "File contents (Lua): " << log::endl;
     cfg.save("/dev/stdout");
+    //! [settings-file]
+
+    //! [settings-json]
+    setup({{"fps", 20},  //
+           {"geometry",
+            {
+                {"x", 0},        //
+                {"y", 0},        //
+                {"width", 320},  //
+                {"height", 200}  //
+            }}});
+    //! [settings-json]
 
     return 0;
 }
@@ -60,6 +53,7 @@ int main(int, const char **) {
 /**@example examples/core/settings.cc
  * @brief Using settings.
  *
- * This file demonstrates how to load configurations and display the contents.
+ * This file demonstrates how to load a configuration file (Lua) and passing
+ * options to functions (JSON).
  *
  * */

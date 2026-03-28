@@ -28,7 +28,7 @@ using namespace vidre;
 std::filesystem::path vidre::plugin::hub::plugindir = VIDRE_INSTALL_PLUGINDIR;
 std::filesystem::path vidre::plugin::hub::scriptdir = VIDRE_INSTALL_SCRIPTDIR;
 
-json plugin::hub::find() noexcept {
+settings::json plugin::hub::find() noexcept {
     log::trace tr;
 
     if (develop::inbuild()) {

@@ -29,7 +29,8 @@
  * @fileinfo
  *
  * Configuration files are, as also stated elsewhere, implemented using Lua
- * (see @ref api-core-script).
+ * (see @ref api-core-script). For passing settings, 
+ * 
  * The advantage of using Lua as a configuration language is, that it also
  * allows to implement complex functions, such as is required for abstracting
  * camera interfaces, where, for example setting the frame rate or exposure time,
@@ -39,13 +40,15 @@
  * @internal
  *
  * @endinternal
- *
+ * 
+ * @see @ref examples/core/settings.cc
  * */
 
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
 #include <vidre/settings/node.hh>
 #include <vidre/settings/file.hh>
+#include <vidre/settings/json.hh>
 
 namespace vidre {
 
