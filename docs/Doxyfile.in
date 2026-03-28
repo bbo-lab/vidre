@@ -6,9 +6,9 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = VidRe
 PROJECT_NUMBER         = @vidre_VERSION_MAJOR@.@vidre_VERSION_MINOR@
-PROJECT_BRIEF          = "Video recording software for scientific purposes."
+PROJECT_BRIEF          = "Video recording suite."
 PROJECT_LOGO           = @PROJECT_SOURCE_DIR@/docs/vidre.svg
-PROJECT_ICON           = 
+PROJECT_ICON           = @PROJECT_SOURCE_DIR@/docs/vidre.svg
 OUTPUT_DIRECTORY       =
 CREATE_SUBDIRS         = NO
 CREATE_SUBDIRS_LEVEL   = 8
@@ -167,14 +167,16 @@ IGNORE_PREFIX          =
 GENERATE_HTML          = YES
 HTML_OUTPUT            = html
 HTML_FILE_EXTENSION    = .html
-HTML_HEADER            =
+HTML_HEADER            = @PROJECT_SOURCE_DIR@/docs/header.html
 HTML_FOOTER            =
 HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = \
-    @PROJECT_BINARY_DIR@/docs/doxygen-awesome-css/doxygen-awesome.css \
-    @PROJECT_BINARY_DIR@/docs/doxygen-awesome-css/doxygen-awesome-sidebar-only.css 
-HTML_EXTRA_FILES       = 
-HTML_COLORSTYLE        = AUTO_LIGHT
+    @AWESOME_CSS_DIR@/doxygen-awesome.css \
+    @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only.css \
+    @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only-darkmode-toggle.css 
+HTML_EXTRA_FILES       = \
+    @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js
+HTML_COLORSTYLE        = LIGHT
 HTML_COLORSTYLE_HUE    = 177
 HTML_COLORSTYLE_SAT    = 85
 HTML_COLORSTYLE_GAMMA  = 42

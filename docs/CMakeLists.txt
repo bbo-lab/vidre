@@ -2,13 +2,15 @@ find_package(Doxygen)
 
 if(Doxygen_FOUND)
 
-    FetchContent_Populate(doxygen_awesome_css QUIET
+    FetchContent_Declare(doxygen-awesome-css QUIET
         GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
-        GIT_TAG        v2.3.3
+        GIT_TAG        v2.4.2
         GIT_PROGRESS   ON
+        GIT_SHALLOW    ON
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen-awesome-css"
     )
-    # FIXME disable patch/configure/etc. steps
+    FetchContent_MakeAvailable(doxygen-awesome-css)
+    FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
     set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
     set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
