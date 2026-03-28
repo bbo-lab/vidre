@@ -21,4 +21,6 @@ and backend cleanly separated, the same core can power a full GUI desktop
 application or run silently as a headless service—ideal for server-based or 
 embedded research setups.
 
+## Status
 
+The project is still in **discovery phase**.
