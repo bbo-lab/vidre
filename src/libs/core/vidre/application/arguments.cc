@@ -25,59 +25,61 @@
 
 using namespace vidre;
 
-std::string arg::parser::make_option_help(const arg::option &opt) {
-    std::string retval;
-
-    retval += "--";
-    retval += opt.long_option;
-    if (opt.short_option) {
-        retval += ",-";
-        retval += opt.short_option;
-    }
-
-    return retval;
-}
-
-int arg::parser::help() {
-    // APPLICATON
-    std::cout << std::string(invocation_.filename()) << std::endl;
-    // FIXME version
-    std::cout << std::endl;
-
-    // FIXME description if available
-
-    // USAGE
-    std::cout << "Usage:" << std::endl;
-    std::cout << "    " << std::string(invocation_.filename()) << " [options]";
-    // FIXME positional arguments
-    std::cout << std::endl << std::endl;
-
-    // OPTIONS
-    std::cout << "Options:" << std::endl;
-    for (auto &opt : opts_) {
-        switch (opt.flags_) {
-            case arg::option::flags::no_argument:
-                std::cout << make_option_help(opt) << " " << opt.brief << std::endl;
-                break;
-            case arg::option::flags::optional_argument:
-            case arg::option::flags::requires_argument:
-                break;
-            default:
-                break;
+arg::map &arg::map::set(const std::string &key, variant value) {
+    for (auto &item : *this) {
+        if (item.first == key) {
+            item.second = value;
+            return *this;
         }
     }
 
-    return 0;
+    emplace_back(key, value);
+
+    return *this;
 }
 
-static arg::option nooption{};
-
-const arg::option &arg::parser::find_short(char c) {
-    for (auto &opt : opts_) {
-        if (opt.short_option == c)
-            return opt;
+arg::variant arg::map::get(const std::string &key) {
+    for (auto &item : *this) {
+        if (item.first == key)
+            return item.second;
     }
-    return nooption;
+    throw vidre::exception() << throw_message("internal error: key lookup failed");
+}
+
+bool arg::map::has(const std::string &key) {
+    for (auto &item : *this) {
+        if (item.first == key)
+            return true;
+    }
+    return false;
+}
+
+std::filesystem::path arg::parser::invocation_{};
+arg::map arg::parser::parsed_{};
+std::vector<std::string> arg::parser::unparsed_{};
+
+const arg::option *arg::parser::find_short(char c) {
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+
+        if (opt.short_option == c)
+            return &opt;
+    }
+
+    return nullptr;
+}
+
+const arg::option *arg::parser::find_long(const std::string &name) {
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+
+        if (opt.long_option == name)
+            return &opt;
+    }
+
+    return nullptr;
 }
 
 void arg::parser::handle(const option &opt) {
@@ -85,24 +87,49 @@ void arg::parser::handle(const option &opt) {
         throw vidre::exception() << throw_message("internal error");
 
     switch (opt.flags_) {
-        case arg::option::flags::no_argument:
-            if (opt.callback)
+        case arg::option::flag_type::no_argument: {
+            long value = parsed_.get(opt.long_option);
+            parsed_.set(opt.long_option, value + 1);
+
+            if (opt.callback) {
                 opt.callback(*this);
-            else {
-                // FIXME
+            }
+
+            break;
+        }
+        case arg::option::flag_type::requires_argument:
+            if ((unparsed_.size() < 2) or (unparsed_[1][0] == '-')) {
+                std::cerr << "expected an argument for '" << opt.long_option << "'\n\n";
+                help();
+                std::exit(1);
+            }
+            [[fallthrough]];
+        case arg::option::flag_type::optional_argument:
+            if ((unparsed_.size() > 1) and (unparsed_[1][0] != '-')) {
+                // FIXME handle type in options
+                parsed_.set(opt.long_option, unparsed_[1]);
+                unparsed_.erase(unparsed_.begin() + 1);
             }
             break;
-        case arg::option::flags::optional_argument:
-            break;
-        case arg::option::flags::requires_argument:
-            break;
-        case arg::option::flags::positional_argument:
+        case arg::option::flag_type::positional_argument:
+            parsed_.set(opt.long_option, unparsed_[0]);
             break;
     }
 }
 
 void arg::parser::parse(int argc, const char **argv) {
     log::trace tr;
+
+    // set defaults
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+
+        if (not opt.value.empty())
+            parsed_.set(opt.long_option, opt.value);
+        else if (opt.flags_ == arg::option::flag_type::no_argument)
+            parsed_.set(opt.long_option, 0);
+    }
 
     // copy everything to unparsed_, first
     invocation_ = argv[0];
@@ -122,14 +149,28 @@ void arg::parser::parse(int argc, const char **argv) {
                     break;
                 }
 
-                // FIXME
+                auto opt = find_long(cur.c_str() + 2);
+                if (opt)
+                    handle(*opt);
+                else {
+                    std::cerr << "Argument error: unknown option '" << cur << "'\n\n";
+                    help();
+                    std::exit(1);
+                }
+
+                unparsed_.erase(unparsed_.begin());
             }
             else {
                 // short option(s)
                 for (size_t s = 1; s < cur.size(); ++s) {
-                    auto &opt = find_short(cur[s]);
-                    if (&opt != &nooption)
-                        handle(opt);
+                    auto opt = find_short(cur[s]);
+                    if (opt)
+                        handle(*opt);
+                    else {
+                        std::cerr << "Argument error: unknown option '-" << cur[s] << "'\n\n";
+                        help();
+                        std::exit(1);
+                    }
                 }
 
                 unparsed_.erase(unparsed_.begin());
@@ -139,5 +180,180 @@ void arg::parser::parse(int argc, const char **argv) {
             break;
     }
 
-    // positional arguments...
+    // positional arguments
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+        if (unparsed_.empty())
+            break;
+
+        switch (opt.flags_) {
+            case arg::option::flag_type::positional_argument:
+                handle(opt);
+                unparsed_.erase(unparsed_.begin());
+                break;
+            default:
+                break;
+        }
+    }
+
+    // check unset positional arguments
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+
+        switch (opt.flags_) {
+            case arg::option::flag_type::positional_argument:
+                if (not parsed_.has(opt.long_option)) {
+                    std::cerr << "missing positional argument '" << opt.long_option << "'\n\n";
+                    help();
+                    std::exit(1);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void arg::parser::show() const noexcept {
+    log::info info;
+    for (auto &item : parsed_) {
+        info << item.first << " = ";
+
+        switch (item.second.type()) {
+            case arg::variant::none:
+                info << "<none>";
+                break;
+            case arg::variant::natural:
+                info << (unsigned long)(item.second);
+                break;
+            case arg::variant::integer:
+                info << long(item.second);
+                break;
+            case arg::variant::number:
+                info << double(item.second);
+                break;
+            case arg::variant::cstring:
+                info << "\"" << (const char *)(item.second) << "\"";
+                break;
+            case arg::variant::string:
+                info << "\"" << std::string(item.second) << "\"";
+                break;
+            default:
+                info << "???";
+        }
+
+        info << log::endl;
+    }
+}
+
+int arg::parser::help() {
+    // make list (used for indentation of "brief")
+    std::vector<std::pair<std::string, std::string>> optlist;
+    size_t leftlen = 0;
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+        std::string opttxt;
+
+        opttxt = "--" + std::string(opt.long_option);
+        if (opt.short_option)
+            opttxt += ",-" + std::string(&opt.short_option, 1);
+
+        switch (opt.flags_) {
+            case arg::option::no_argument:
+                break;
+            case arg::option::flag_type::optional_argument:
+                opttxt += " [";
+                opttxt += "value";
+                opttxt += "]";
+                break;
+            case arg::option::flag_type::requires_argument:
+                opttxt += " ";
+                opttxt += "value";
+                break;
+            default:
+                continue;
+        }
+
+        if (leftlen < opttxt.size())
+            leftlen = opttxt.size();
+        optlist.push_back({opttxt, opt.brief});
+    }
+
+    // APPLICATON
+    std::cout << std::string(invocation_.filename()) << brief_ << std::endl;
+    std::cout << std::endl;
+
+    if (description_)
+        std::cout << description_ << std::endl << std::endl;
+
+    // USAGE
+    std::cout << "Usage:" << std::endl << std::endl;
+    std::cout << "    " << std::string(invocation_.filename()) << " [options]";
+
+    bool has_positional = false;
+    for (auto &opt : opts_) {
+        if (not opt.long_option)
+            break;
+
+        switch (opt.flags_) {
+            case arg::option::flag_type::positional_argument:
+                has_positional = true;
+                if (opt.value.empty())
+                    std::cout << " <" << opt.long_option << ">";
+                else
+                    std::cout << " [<" << opt.long_option << ">]";
+                break;
+            default:
+                break;
+        }
+    }
+    std::cout << std::endl << std::endl;
+
+    if (has_positional) {
+        std::cout << "  with" << std::endl << std::endl;
+
+        // adjust left indentation
+        for (auto &opt : opts_) {
+            if (not opt.long_option)
+                break;
+
+            switch (opt.flags_) {
+                case arg::option::flag_type::positional_argument:
+                    if (leftlen < strlen(opt.long_option))
+                        leftlen = strlen(opt.long_option);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // output positional
+        for (auto &opt : opts_) {
+            if (not opt.long_option)
+                break;
+
+            switch (opt.flags_) {
+                case arg::option::flag_type::positional_argument:
+                    std::cout << std::format("    {:<{}}  {}", opt.long_option, leftlen, opt.brief) << std::endl;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        std::cout << std::endl;
+    }
+
+    // OPTIONS
+
+    // output
+    std::cout << "Options:" << std::endl;
+    for (auto &opt : optlist) {
+        std::cout << std::format("    {:<{}}  {}", opt.first, leftlen, opt.second) << std::endl;
+    }
+
+    return 0;
 }

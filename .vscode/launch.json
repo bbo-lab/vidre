@@ -65,7 +65,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/example.core.app",
-            "args": [ "-h" ],
+            "args": [ "-vvvv", "/path/to/an/input" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },

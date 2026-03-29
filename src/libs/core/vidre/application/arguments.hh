@@ -26,6 +26,16 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/settings/json.hh>
+#include <vidre/exception.hh>
+
+#include <array>
+
+#if not defined(VIDRE_MAX_OPTIONS)
+/** Maximum number of options that can be passed to @c vidre::arg::parser.
+ * @ingroup api-core-app
+ * */
+#define VIDRE_MAX_OPTIONS 16
+#endif
 
 namespace vidre {
 
@@ -39,9 +49,261 @@ namespace vidre {
 
         class parser;
 
-        /** Variant.
+        /** A variant.
+         *
+         * This variant is, except for std::string, constant evaluated, allowing
+         * the parser options also to be constant evaluated.
+         *
          * */
-        using variant = settings::json;
+        class VIDRE_CORE_VISIBILITY variant {
+        public:
+            /** Internally stored value types.
+             * */
+            enum value_type : unsigned {
+                none,     ///< The variant is "empty".
+                natural,  ///< Natural (ie. unsigned) number.
+                integer,  ///< Signed integer.
+                number,   ///< Floating-point number.
+                cstring,  ///< Constant C-string.
+                string,   ///< A string (@c std::string).
+            };
+
+            /** FIXME
+             * */
+            template <typename T>
+            struct deduce {
+                static constexpr value_type type = none;
+            };
+
+        public:
+            consteval variant() = default;
+
+            constexpr variant(variant &&other) = default;
+            constexpr variant &operator=(variant &&) = default;
+            constexpr variant(const variant &other) = default;
+            constexpr variant &operator=(const variant &) = default;
+
+            constexpr variant(unsigned long v) noexcept : data_{v}, type_{natural} {}
+            constexpr variant(unsigned int v) noexcept : data_{(unsigned long)v}, type_{natural} {}
+            constexpr variant(unsigned short v) noexcept : data_{(unsigned long)v}, type_{natural} {}
+            constexpr variant(long v) noexcept : data_{v}, type_{integer} {}
+            constexpr variant(int v) noexcept : data_{(long)v}, type_{integer} {}
+            constexpr variant(short v) noexcept : data_{(long)v}, type_{integer} {}
+            constexpr variant(double v) noexcept : data_{v}, type_{number} {}
+            constexpr variant(const char *v) noexcept : data_{v}, type_{cstring} {}
+            variant(const std::string &v) noexcept : data_{v}, type_{string} {}
+
+        protected:
+            std::variant<unsigned long, long, double, const char *, std::string> data_{};
+            value_type type_{none};
+
+        public:
+            /** Get the value type.
+             * */
+            constexpr value_type type() const noexcept {
+                return type_;
+            }
+
+            /** Check if "empty".
+             * */
+            constexpr bool empty() const noexcept {
+                return (type_ == none);
+            }
+
+            /** Get value.
+             * */
+            template <typename T>
+            constexpr operator T() const;
+
+            /** Assign value.
+             * @note The value must be of the same type.
+             * */
+            template <typename T>
+            constexpr variant &operator=(const T &);
+            template <typename T>
+            constexpr variant &operator=(const T *);
+        };
+
+#if not defined(DOXYGEN)
+        // FIXME the following needs to go into "implementation details"
+        template <>
+        struct variant::deduce<unsigned long> {
+            static constexpr value_type id = natural;
+            using type = unsigned long;
+        };
+
+        template <>
+        struct variant::deduce<unsigned int> {
+            static constexpr value_type id = natural;
+            using type = unsigned long;
+        };
+
+        template <>
+        struct variant::deduce<unsigned short> {
+            static constexpr value_type id = natural;
+            using type = unsigned long;
+        };
+
+        template <>
+        struct variant::deduce<long> {
+            static constexpr value_type id = integer;
+            using type = long;
+        };
+
+        template <>
+        struct variant::deduce<int> {
+            static constexpr value_type id = integer;
+            using type = long;
+        };
+
+        template <>
+        struct variant::deduce<short> {
+            static constexpr value_type id = integer;
+            using type = long;
+        };
+
+        template <>
+        struct variant::deduce<char> {
+            static constexpr value_type id = integer;
+            using type = long;
+        };
+
+        template <>
+        struct variant::deduce<double> {
+            static constexpr value_type id = number;
+            using type = double;
+        };
+
+        template <>
+        struct variant::deduce<float> {
+            static constexpr value_type id = number;
+            using type = double;
+        };
+
+        template <>
+        struct variant::deduce<const char *> {
+            static constexpr value_type id = cstring;
+            using type = const char *;
+        };
+
+        template <>
+        struct variant::deduce<std::string> {
+            static constexpr value_type id = string;
+            using type = std::string;
+        };
+
+        template <typename T>
+        inline constexpr variant::operator T() const {
+            if (deduce<T>::id != type_) {
+                if (std::is_constant_evaluated())
+                    throw "implicit type conversion is not supported";
+                else
+                    throw vidre::exception() << throw_message("implicit type conversion is not supported");
+            }
+
+            return static_cast<T>(std::get<typename deduce<T>::type>(data_));
+        }
+
+        template <>
+        inline constexpr variant::operator const char *() const {
+            switch (type_) {
+                case cstring:
+                    return std::get<const char *>(data_);
+                case string:
+                    return std::get<std::string>(data_).c_str();
+                default:
+                    if (std::is_constant_evaluated())
+                        throw "implicit type conversion is not supported";
+                    else
+                        throw vidre::exception() << throw_message("implicit type conversion is not supported");
+            }
+        }
+
+        template <>
+        inline variant::operator std::string() const {
+            switch (type_) {
+                case cstring:
+                    return std::get<const char *>(data_);
+                case string:
+                    return std::get<std::string>(data_);
+                default:
+                    throw vidre::exception() << throw_message("implicit type conversion is not supported");
+            }
+        }
+
+        template <typename T>
+        inline constexpr variant &variant::operator=(const T &v) {
+            if (deduce<T>::id != type_) {
+                if (std::is_constant_evaluated())
+                    throw "implicit type conversion is not supported";
+                else
+                    throw vidre::exception() << throw_message("implicit type conversion is not supported");
+            }
+
+            data_ = static_cast<typename deduce<T>::type>(v);
+
+            return *this;
+        }
+
+        template <>
+        inline constexpr variant &variant::operator=(const char *v) {
+            switch (type_) {
+                case cstring:
+                    data_ = v;
+                    break;
+                case string:
+                    data_ = std::string(v);
+                    break;
+                default:
+                    if (std::is_constant_evaluated())
+                        throw "implicit type conversion is not supported";
+                    else
+                        throw vidre::exception() << throw_message("implicit type conversion is not supported");
+            }
+
+            return *this;
+        }
+
+        template <>
+        inline constexpr variant &variant::operator=(const std::string &v) {
+            switch (type_) {
+                case cstring:
+                    type_ = string;
+                    [[fallthrough]];
+                case string:
+                    data_ = v;
+                    break;
+                default:
+                    if (std::is_constant_evaluated())
+                        throw "implicit type conversion is not supported";
+                    else
+                        throw vidre::exception() << throw_message("implicit type conversion is not supported");
+            }
+
+            return *this;
+        }
+
+#endif
+
+        /** Simple, small key-variant pair map.
+         * */
+        class VIDRE_CORE_VISIBILITY map : public std::vector<std::pair<std::string, variant>> {
+        public:
+            map() = default;
+
+        public:
+            /** Set key-variant pair.
+             * */
+            map &set(const std::string &key, variant value);
+
+            /** Get key.
+             * */
+            variant get(const std::string &key);
+
+            /** Check if key exists.
+             * */
+            bool has(const std::string &key);
+        };
 
         /** Program argument description.
          * @code
@@ -49,10 +311,14 @@ namespace vidre {
          * @endcode
          *
          * @code
+         * { "long-option", flags, brief}
+         * { "long-option", flags, default, brief}
+         *
          * { "long-option", brief}
          * { "long-option", '<short>', brief}
          * { "long-option", '<short>', callback, brief}
          *
+         * TODO:
          * { "long-option", '<short>', flags, brief}
          * { "long-option", '<short>', flags, callback, brief}
          * { "long-option", '<short>', default, brief}
@@ -63,7 +329,7 @@ namespace vidre {
         public:
             /** Option flags.
              * */
-            enum flags {
+            enum flag_type : unsigned {
                 no_argument,
                 optional_argument,
                 requires_argument,
@@ -75,18 +341,22 @@ namespace vidre {
             using callback_type = int (*)(parser &);
 
         public:
-            constexpr option() = default;
+            consteval option() = default;
 
-            constexpr option(const char *olong, const char *desc) : long_option(olong), brief(desc) {}
-            constexpr option(const char *olong, char oshort, const char *desc)
+            consteval option(const char *olong, flag_type fl, const char *desc) : long_option(olong), flags_(fl), brief(desc) {}
+            consteval option(const char *olong, flag_type fl, const variant &defval, const char *desc)
+                : long_option(olong), flags_(fl), value(defval), brief(desc) {}
+
+            consteval option(const char *olong, const char *desc) : long_option(olong), brief(desc) {}
+            consteval option(const char *olong, char oshort, const char *desc)
                 : long_option(olong), short_option(oshort), brief(desc) {}
-            constexpr option(const char *olong, char oshort, callback_type cb, const char *desc)
+            consteval option(const char *olong, char oshort, callback_type cb, const char *desc)
                 : long_option(olong), short_option(oshort), callback(cb), brief(desc) {}
 
         protected:
             const char *long_option{};
             char short_option{};
-            flags flags_ = no_argument;
+            flag_type flags_ = no_argument;
             callback_type callback{};
 
             variant value{};
@@ -102,24 +372,64 @@ namespace vidre {
 
         /** Argument parser.
          * FIXME
+         * @see @ref examples/core/app.cc
          * */
-        class VIDRE_CORE_VISIBILITY parser {
+        class parser {
         public:
-            constexpr parser(std::initializer_list<option> init) : opts_(init) {}
+            /** Maximum number of option descriptions, this parser can hold. */
+            static constexpr size_t max_options = VIDRE_MAX_OPTIONS;
+
+        public:
+            parser() = delete;
+
+            parser(parser &&) = default;
+            parser(const parser &) = delete;
+
+            /** Constructor.
+             * @param brief         Short, brief program description.
+             * @param description   Long program description.
+             * @param options       Program options.
+             */
+            consteval parser(const char *brief, const char *description, std::initializer_list<option> options)
+                : brief_(brief), description_(description), opts_() {
+                if (options.size() > max_options)
+                    throw "too many options - consider raising the maximum (VIDRE_MAX_OPTIONS)";
+                std::copy(options.begin(), options.end(), opts_);
+            }
 
         protected:
-            std::initializer_list<option> opts_{};
-            std::filesystem::path invocation_{};
-            std::vector<std::string> unparsed_{};
+            const char *brief_{};
+            const char *description_{};
+            option opts_[max_options]{};
+
+            static std::filesystem::path invocation_;   ///< Program invocation path/file.
+            static map parsed_;                         ///< Parsed options.
+            static std::vector<std::string> unparsed_;  ///< Unparsed options.
 
         protected:
-            std::string make_option_help(const arg::option &opt);
-            const option &find_short(char c);
             void handle(const option &);
 
+            const arg::option *find_short(char c);
+            const arg::option *find_long(const std::string &name);
+
         public:
+            /** Parse program invocation arguments.
+             * */
             void parse(int argc, const char **argv);
 
+            /** Get list of unparsed elements.
+             * */
+            auto const &unparsed() const noexcept {
+                return unparsed_;
+            }
+
+            /** Show contents after parsing.
+             * @note This method is intended for debugging purposes only.
+             * */
+            void show() const noexcept;
+
+            /** Help text generator.
+             * */
             int help();
         };
 
