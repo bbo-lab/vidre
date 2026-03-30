@@ -346,7 +346,7 @@ namespace vidre {
              * Callbacks are immediately called during the parsing run, after possible
              * required (or optional) parameters are parsed.
              * */
-            using callback = void (*)(parser &);
+            using callback = void (*)(parser &, const std::string &, variant);
         };
 
         /** Program argument description.
