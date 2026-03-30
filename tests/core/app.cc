@@ -36,7 +36,9 @@ TEST_CASE("map", "[application.hh]") {
     // FIXME etc.
 }
 
-void log_level(parser &, const std::string &key, variant value) {}
+void argcb_log_debug(arg::parser &, const std::string &key, arg::variant value) {
+    // nothing's done here, just an stub
+}
 
 TEST_CASE("option", "[application.hh]") {
     // This test here only test "compilability".
@@ -49,17 +51,17 @@ TEST_CASE("option", "[application.hh]") {
     }
     {
         std::initializer_list<arg::option> args{
-            {"help", 'h', "Display help."},  //
-            {"log-debug", log_level},
+            {"help", 'h', "Display help."},                              //
+            {"log-debug", "Set debug logging level.", argcb_log_debug},  //
         };
-
-        //  *
-        //  *      {"<long-option>","<brief>",argument::required,[<value-type>=variant::cstring]}
-        //  *      {"<long-option>",<short-option>,"<brief>",argument::required,[<value-type>=variant::cstring]}
-        //  *
-        //  *      {"<long-option>","<brief>",argument::optional,<default>}
-        //  *      {"<long-option>",<short-option>,"<brief>",argument::optional,<default>}
-        //  *
-        //  *      {"<long-option>","<brief>",argument::positional,[<value-type>=variant::cstring]}
+        REQUIRE(args.size() == 2);
+    }
+    {
+        arg::option::set decl(" - brief",      //
+                              "Description.",  //
+                              {
+                                  {"help", "Display help."},       //
+                                  {"help", 'h', "Display help."},  //
+                              });
     }
 }

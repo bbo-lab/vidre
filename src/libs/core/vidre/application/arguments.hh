@@ -302,7 +302,7 @@ namespace vidre {
 #endif
 
         /** Simple, small key-variant pair map.
-         * 
+         *
          * @todo this could, as variant above, also go into a "util" header?
          * */
         class VIDRE_CORE_VISIBILITY map : public std::vector<std::pair<std::string, variant>> {
@@ -391,7 +391,9 @@ namespace vidre {
          * The following constructors are supported:
          *
          *      {"<long-option>","<brief>"}
+         *      {"<long-option>","<brief>",<callback>}
          *      {"<long-option>",<short-option>,"<brief>"}
+         *      {"<long-option>","<brief>",<short-option>,<callback>}
          *
          *      {"<long-option>","<brief>",argument::required,[<value-type>=variant::cstring]}
          *      {"<long-option>",<short-option>,"<brief>",argument::required,[<value-type>=variant::cstring]}
@@ -411,7 +413,13 @@ namespace vidre {
          *
          * */
         struct VIDRE_CORE_VISIBILITY option {
-            struct positional;  // FIXME
+            struct positional;
+
+            template <size_t>
+            class set;
+
+            template <size_t N>
+            set(const char *, const char *, const option (&)[N]) -> set<N>;
 
             consteval option() = default;
             consteval option(const char *long_, char short_, const char *brief_, argument::type type_, variant::value_type vtype_,
@@ -428,6 +436,12 @@ namespace vidre {
             consteval option(const char *long_, const char *brief_) noexcept : long_option(long_), brief(brief_) {}
             consteval option(const char *long_, char short_, const char *brief_) noexcept
                 : long_option(long_), short_option(short_), brief(brief_) {}
+
+            // callback
+            consteval option(const char *long_, const char *brief_, argument::callback callback_) noexcept
+                : long_option(long_), brief(brief_), callback(callback_) {}
+            consteval option(const char *long_, char short_, const char *brief_, argument::callback callback_) noexcept
+                : long_option(long_), short_option(short_), brief(brief_), callback(callback_) {}
 
             // other
             consteval option(const char *long_, const char *brief_, argument::type type_,
@@ -467,10 +481,51 @@ namespace vidre {
             consteval positional(const char *long_, const char *brief_, variant::value_type vtype_ = variant::cstring) noexcept
                 : option(long_, brief_, argument::positional, vtype_) {}
         };
+
+        class parser;
+
+        /** FIXME
+         * */
+        template <size_t N>
+        class option::set {
+        public:
+            /** Number of options.
+             * */
+            static constexpr size_t size = N;
+
+        public:
+            set() = delete;
+
+            set(set &&) = default;
+            set(const set &) = delete;
+
+            /** Constructor.
+             * @param brief         Short, brief program description.
+             * @param description   Long program description.
+             * @param options       Program options.
+             */
+            consteval set(const char *brief_, const char *description_, std::initializer_list<option> options_)
+                : brief(brief_), description(description_), options() {
+                if (options_.size() != N)
+                    throw "size deduction failure";
+                std::copy(options_.begin(), options_.end(), options);
+            }
+
+        protected:
+            const char *brief{};        ///< Brief program description (see @ref examples/core/app.cc).
+            const char *description{};  ///< Program usage text.
+            option options[N]{};        ///< Options buffer (allowing constant evaluation).
+
+        private:
+            friend class parser;
+        };
+
 #if 0
         /** Argument parser.
-         * FIXME
          * @see @ref examples/core/app.cc
+         * @todo It might be better to split the options definition into a part,
+         *       that can be constant evaluated - and have the actual parser in
+         *       a separate class (so that max_options becomes superfluous).
          * */
         class parser {
         public:
@@ -496,9 +551,9 @@ namespace vidre {
             }
 
         protected:
-            const char *brief_{};
-            const char *description_{};
-            option opts_[max_options]{};
+            const char *brief_{};         ///< Brief program description (see @ref examples/core/app.cc).
+            const char *description_{};   ///< Program usage text.
+            option opts_[max_options]{};  ///< Options buffer (allowing constant evaluation).
 
             static std::filesystem::path invocation_;   ///< Program invocation path/file.
             static map parsed_;                         ///< Parsed options.
@@ -536,7 +591,6 @@ namespace vidre {
              * */
             int help();
         };
-
 #endif
 
         ///@}
