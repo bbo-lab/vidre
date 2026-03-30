@@ -52,6 +52,8 @@ namespace vidre {
              * */
             ///@{
 
+            // FIXME see deduce below, should be here...
+
             ///@}
 
         }  // namespace detail
@@ -67,6 +69,7 @@ namespace vidre {
          * This variant is, except for std::string, constant evaluated, allowing
          * the parser options also to be constant evaluated.
          *
+         * @todo this could also go into a "util" header?
          * */
         class VIDRE_CORE_VISIBILITY variant {
         public:
@@ -299,6 +302,8 @@ namespace vidre {
 #endif
 
         /** Simple, small key-variant pair map.
+         * 
+         * @todo this could, as variant above, also go into a "util" header?
          * */
         class VIDRE_CORE_VISIBILITY map : public std::vector<std::pair<std::string, variant>> {
         public:
