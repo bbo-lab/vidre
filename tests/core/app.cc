@@ -36,14 +36,30 @@ TEST_CASE("map", "[application.hh]") {
     // FIXME etc.
 }
 
+void log_level(parser &, const std::string &key, variant value) {}
+
 TEST_CASE("option", "[application.hh]") {
     // This test here only test "compilability".
     {
         std::initializer_list<arg::option> args{{"help", "Display help."}, {"help", 'h', "Display help."}};
     }
     {
-        std::initializer_list<arg::option> args{{"infile", "Input file.",arg::argument::positional}};
+        std::initializer_list<arg::option> args{{"infile", "Input file.", arg::argument::positional}};
         std::initializer_list<arg::option> args_alt{arg::option::positional{"infile", "Input file."}};
     }
-    // FIXME etc.
+    {
+        std::initializer_list<arg::option> args{
+            {"help", 'h', "Display help."},  //
+            {"log-debug", log_level},
+        };
+
+        //  *
+        //  *      {"<long-option>","<brief>",argument::required,[<value-type>=variant::cstring]}
+        //  *      {"<long-option>",<short-option>,"<brief>",argument::required,[<value-type>=variant::cstring]}
+        //  *
+        //  *      {"<long-option>","<brief>",argument::optional,<default>}
+        //  *      {"<long-option>",<short-option>,"<brief>",argument::optional,<default>}
+        //  *
+        //  *      {"<long-option>","<brief>",argument::positional,[<value-type>=variant::cstring]}
+    }
 }
