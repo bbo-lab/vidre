@@ -54,6 +54,8 @@ bool arg::map::has(const std::string &key) {
     return false;
 }
 
+#if 0
+
 std::filesystem::path arg::parser::invocation_{};
 arg::map arg::parser::parsed_{};
 std::vector<std::string> arg::parser::unparsed_{};
@@ -357,3 +359,5 @@ int arg::parser::help() {
 
     return 0;
 }
+
+#endif

@@ -95,6 +95,15 @@
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "test.core.app",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test.core.app",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

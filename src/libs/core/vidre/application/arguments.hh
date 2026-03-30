@@ -43,6 +43,19 @@ namespace vidre {
      * @ingroup api-core-app */
     namespace arg {
 
+        /** Implementation details.
+         * @ingroup api-core-details
+         */
+        namespace detail {
+
+            /**@addtogroup api-core-details
+             * */
+            ///@{
+
+            ///@}
+
+        }  // namespace detail
+
         /**@addtogroup api-core-app
          * */
         ///@{
@@ -305,71 +318,151 @@ namespace vidre {
             bool has(const std::string &key);
         };
 
-        /** Program argument description.
-         * @code
-         * { "long-option", '<short>', flags, callback, default, brief}
-         * @endcode
+        /** Argument type definitions.
          *
-         * @code
-         * { "long-option", flags, brief}
-         * { "long-option", flags, default, brief}
+         * The parser understands the following program arguments:
          *
-         * { "long-option", brief}
-         * { "long-option", '<short>', brief}
-         * { "long-option", '<short>', callback, brief}
+         *      -h                  A single "short" option.
+         *      -abc                Multiple short options.
+         *      --help              A "long" option.
+         *      -x <value>          A short option with an argument.
+         *      --extra <string>    A "long" option with an argument.
+         *      --extra=<string>
+         *      --                  End of options (positional arguments follow).
          *
-         * TODO:
-         * { "long-option", '<short>', flags, brief}
-         * { "long-option", '<short>', flags, callback, brief}
-         * { "long-option", '<short>', default, brief}
-         * { "long-option", '<short>', flags, default, brief}
-         * @endcode
+         * Note that values after options may not start with a dash ('-').
+         *
+         * @see vidre::arg::parser
          * */
-        class VIDRE_CORE_VISIBILITY option {
-        public:
-            /** Option flags.
-             * */
-            enum flag_type : unsigned {
-                no_argument,
-                optional_argument,
-                requires_argument,
-                positional_argument
+        struct argument {
+            enum type : int {
+                none,       ///< Option has no argument.
+                optional,   ///< Option may have an argument (must not start with '-').
+                required,   ///< An argument is required for the option.
+                positional  ///< Argument is a positional parameter.
             };
 
-            /** Argument parser callback type.
+            /** Type for callbacks.
+             * Callbacks are immediately called during the parsing run, after possible
+             * required (or optional) parameters are parsed.
              * */
-            using callback_type = int (*)(parser &);
-
-        public:
-            consteval option() = default;
-
-            consteval option(const char *olong, flag_type fl, const char *desc) : long_option(olong), flags_(fl), brief(desc) {}
-            consteval option(const char *olong, flag_type fl, const variant &defval, const char *desc)
-                : long_option(olong), flags_(fl), value(defval), brief(desc) {}
-
-            consteval option(const char *olong, const char *desc) : long_option(olong), brief(desc) {}
-            consteval option(const char *olong, char oshort, const char *desc)
-                : long_option(olong), short_option(oshort), brief(desc) {}
-            consteval option(const char *olong, char oshort, callback_type cb, const char *desc)
-                : long_option(olong), short_option(oshort), callback(cb), brief(desc) {}
-
-        protected:
-            const char *long_option{};
-            char short_option{};
-            flag_type flags_ = no_argument;
-            callback_type callback{};
-
-            variant value{};
-
-            const char *brief{};
-
-        public:
-            // FIXME
-
-        private:
-            friend class parser;
+            using callback = void (*)(parser &);
         };
 
+        /** Program argument description.
+         *
+         * A full argument description is declared by ([] denotes, that the setting
+         * is optional):
+         *
+         *      {
+         *          <long-option>, [<short-option>],
+         *          <brief>,
+         *          [<argument-type>=argument::none],
+         *          [<value-type>=variant::none],
+         *          [<default>],
+         *          [<callback>]
+         *      }
+         *
+         * The fields in detail:
+         *
+         * The __long-option__ is always required, and, is also used as key in the parsed arguments
+         * (see @ref vidre::arg::parser::parsed() ). Program arguments use "--<long-option>".
+         *
+         * The __short-option__ is a single, optional character. Program arguments use '-<short-option>',
+         * for example "-h" for displaying help.
+         *
+         * The __brief__ description, generally required, appears in the help text.
+         *
+         * For the __argument-type__, see @ref vidre::arg::argument::type, the default is @c none.
+         *
+         * If applicable, either the __value-type__ or the __default__ value can be set (see @ref vidre::arg::variant).
+         *
+         * In addition, a __callback__ function can be assigned, which gets called immediately after processing the option.
+         *
+         * The full constructor is:
+         *
+         *      {"<long-option>",<short-option>,"<brief>",<argument-type>,<value-type>,<default>,<callback>}
+         *
+         * The following constructors are supported:
+         *
+         *      {"<long-option>","<brief>"}
+         *      {"<long-option>",<short-option>,"<brief>"}
+         *
+         *      {"<long-option>","<brief>",argument::required,[<value-type>=variant::cstring]}
+         *      {"<long-option>",<short-option>,"<brief>",argument::required,[<value-type>=variant::cstring]}
+         *
+         *      {"<long-option>","<brief>",argument::optional,<default>}
+         *      {"<long-option>",<short-option>,"<brief>",argument::optional,<default>}
+         *
+         *      {"<long-option>","<brief>",argument::positional,[<value-type>=variant::cstring]}
+         *
+         * Alternatives for positional arguments:
+         *
+         *      {"<long-option>","<brief>",argument::postional,[<value-type>=variant::cstring]}
+         *
+         * is the same as
+         *
+         *      option::positional{"<long-option>","<brief>",[<value-type>=variant::cstring]}
+         *
+         * */
+        struct VIDRE_CORE_VISIBILITY option {
+            struct positional;  // FIXME
+
+            consteval option() = default;
+            consteval option(const char *long_, char short_, const char *brief_, argument::type type_, variant::value_type vtype_,
+                             variant &&defval, argument::callback callback_) noexcept
+                : long_option(long_)
+                , short_option(short_)
+                , brief(brief_)
+                , type(type_)
+                , value_type(vtype_)
+                , default_value(defval)
+                , callback(callback_) {}
+
+            // argument::none
+            consteval option(const char *long_, const char *brief_) noexcept : long_option(long_), brief(brief_) {}
+            consteval option(const char *long_, char short_, const char *brief_) noexcept
+                : long_option(long_), short_option(short_), brief(brief_) {}
+
+            // other
+            consteval option(const char *long_, const char *brief_, argument::type type_,
+                             variant::value_type vtype_ = variant::cstring) noexcept
+                : long_option(long_), brief(brief_), type(type_), value_type(vtype_) {}
+            consteval option(const char *long_, char short_, const char *brief_, argument::type type_,
+                             variant::value_type vtype_ = variant::cstring) noexcept
+                : long_option(long_), short_option(short_), brief(brief_), type(type_), value_type(vtype_) {}
+
+            consteval option(const char *long_, const char *brief_, argument::type type_, variant defval_) noexcept
+                : long_option(long_), brief(brief_), type(type_), value_type(defval_.type()), default_value(defval_) {}
+            consteval option(const char *long_, char short_, const char *brief_, argument::type type_, variant defval_) noexcept
+                : long_option(long_)
+                , short_option(short_)
+                , brief(brief_)
+                , type(type_)
+                , value_type(defval_.type())
+                , default_value(defval_) {}
+
+            const char *long_option{};             ///< The "long" option, also used as key (required).
+            char short_option{};                   ///< The "short" option (optional).
+            const char *brief{};                   ///< Brief description of the option (required).
+            argument::type type = argument::none;  ///< Option type.
+
+            variant::value_type value_type = variant::cstring;  ///< Expected value type (if applicable).
+            variant default_value{};                            ///< Default value (if applicable).
+            argument::callback callback{};                      ///< Callback function.
+        };
+
+        /** Alternative construction of positional arguments.
+         * @see vidre::arg::option
+         * */
+        struct VIDRE_CORE_VISIBILITY option::positional : public option {
+        public:
+            positional() = delete;
+
+            consteval positional(const char *long_, const char *brief_, variant::value_type vtype_ = variant::cstring) noexcept
+                : option(long_, brief_, argument::positional, vtype_) {}
+        };
+#if 0
         /** Argument parser.
          * FIXME
          * @see @ref examples/core/app.cc
@@ -423,6 +516,12 @@ namespace vidre {
                 return unparsed_;
             }
 
+            /** Get list of parsed elements.
+             * */
+            auto const &parsed() const noexcept {
+                return parsed_;
+            }
+
             /** Show contents after parsing.
              * @note This method is intended for debugging purposes only.
              * */
@@ -432,6 +531,8 @@ namespace vidre {
              * */
             int help();
         };
+
+#endif
 
         ///@}
 
