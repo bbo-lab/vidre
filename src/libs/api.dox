@@ -14,9 +14,6 @@
 /**@defgroup api-device Device library
  * @ingroup api
  */
-/**@defgroup api-fileformat File formats library
- * @ingroup api
- */
 /**@defgroup api-network Network library
  * @ingroup api
  */

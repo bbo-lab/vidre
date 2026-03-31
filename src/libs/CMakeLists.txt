@@ -1,5 +1,4 @@
 add_subdirectory(core)
-add_subdirectory(fileformat)
 if(FFmpeg_FOUND)
     add_subdirectory(ffmpeg)
 endif()

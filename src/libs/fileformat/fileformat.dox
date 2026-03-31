@@ -1,9 +1,0 @@
-/**@addtogroup api-fileformat
- * @details
- *
- * FIXME
- * @{
- * @defgroup api-fileformat-generic Simple, generic header/packet layout
- * @defgroup api-fileformat-bigtiff BigTIFF implementation
- * @}
- * */
