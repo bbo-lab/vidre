@@ -30,7 +30,6 @@ public:
 
     QString getCameraName() const { return cameraName_; }
     void updateStatus();
-    void setRunning() {onStartClicked();}
 
 signals:
     void windowClosed(const QString& cameraName);

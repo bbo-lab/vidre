@@ -205,9 +205,33 @@ void CameraWidget::updateStatus()
 void CameraWidget::updateInfoDisplay()
 {
     QString info = QString("Camera: %1\n").arg(cameraName_);
-    info += QString("Status: %1\n").arg(runtimeInstance_->isRunning() ? "Running" : "Stopped");
     
-    if (runtimeInstance_->isRunning()) {
+    vidre::RecordingStatus status = runtimeInstance_->getRecordingStatus();
+    QString statusStr;
+    switch (status) {
+        case vidre::RecordingStatus::Stopped:
+            statusStr = "Stopped";
+            break;
+        case vidre::RecordingStatus::Streaming:
+            statusStr = "Streaming";
+            break;
+        case vidre::RecordingStatus::RecordingFine:
+            statusStr = "Recording";
+            break;
+        case vidre::RecordingStatus::RecordingDroppedFrames:
+            statusStr = "Recording (Dropped Frames)";
+            break;
+        case vidre::RecordingStatus::RecordingError:
+            statusStr = "Recording (Error)";
+            break;
+        default:
+            statusStr = "Unknown";
+    }
+    
+    info += QString("Status: %1\n").arg(statusStr);
+    
+    bool isActive = (status != vidre::RecordingStatus::Stopped);
+    if (isActive) {
         info += QString("Frames Displayed: %1\n").arg(frameCount_);
         info += QString("Last Frame ID: %1\n").arg(lastFrameID_);
         
@@ -262,7 +286,18 @@ void CameraWidget::onSingleGrabClicked()
 
 void CameraWidget::updateFrame()
 {
-    if (!runtimeInstance_ || !runtimeInstance_->isRunning()) {
+    if (!runtimeInstance_) {
+        return;
+    }
+    
+    // Check if camera is running or streaming
+    vidre::RecordingStatus status = runtimeInstance_->getRecordingStatus();
+    bool isActive = (status == vidre::RecordingStatus::RecordingFine || 
+                     status == vidre::RecordingStatus::RecordingDroppedFrames ||
+                     status == vidre::RecordingStatus::RecordingError ||
+                     status == vidre::RecordingStatus::Streaming);
+    
+    if (!isActive) {
         return;
     }
     
