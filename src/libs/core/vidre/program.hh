@@ -162,6 +162,7 @@ namespace vidre {
         struct VIDRE_CORE_VISIBILITY argument {
             struct parameter;
             class parser;
+            struct options;
 
             /** Kind of argument.
              * */
@@ -179,6 +180,7 @@ namespace vidre {
             using callback_type = void (*)(parser &, const std::string &, variant);
 
             consteval argument() = default;
+            consteval argument(const parameter &) noexcept;
             consteval argument(const char *long_, char short_, const char *brief_, kind type_, variant::value vtype_,
                                variant &&defval, callback_type callback_) noexcept
                 : long_option(long_)
@@ -227,17 +229,35 @@ namespace vidre {
             callback_type callback{};                 ///< Callback function.
         };
 
+        /** Internal helper for accessing options<N>. */
+        struct argument::options {
+            const char *brief;
+            const char *description;
+            size_t size;
+            argument args[];
+        };
+
         /** Alternative construction of positional arguments.
          * @see vidre::arg::option
          * */
         struct VIDRE_CORE_VISIBILITY argument::parameter : public argument {
             parameter() = delete;
 
-            consteval parameter(const char *long_, const char *brief_, variant::value vtype_ = variant::cstring) noexcept
+            consteval parameter(const char *long_, const char *brief_) noexcept : argument(long_, brief_, argument::positional) {}
+            consteval parameter(const char *long_, const char *brief_, variant::value vtype_) noexcept
                 : argument(long_, brief_, argument::positional, vtype_) {}
             consteval parameter(const char *long_, const char *brief_, variant defval_) noexcept
                 : argument(long_, brief_, argument::positional, defval_) {}
         };
+
+        inline consteval argument::argument(const parameter &p) noexcept
+            : long_option(p.long_option)
+            , short_option(p.short_option)
+            , brief(p.brief)
+            , type(p.type)
+            , value(p.value)
+            , default_value(p.default_value)
+            , callback(p.callback) {}
 
         /** Program options.
          * @see @ref example/core/program.cc
@@ -267,19 +287,11 @@ namespace vidre {
             const char *description{};  ///< Program usage text.
             size_t size{};              ///< Number of options.
             argument args[N]{};         ///< Options buffer (allowing constant evaluation).
-
-        private:
-            friend class argument::parser;
         };
 
         // dedcution guide
         template <size_t N>
         options(const char *, const char *, const argument (&)[N]) -> options<N>;
-
-        template <size_t N>
-        void parse(options<N> &opts, int argc, const char **argv) {
-            // FIXME
-        }
 
         /** FIXME
          * @see @ref example/core/program.cc
@@ -290,6 +302,12 @@ namespace vidre {
 
         public:
             parser() = default;
+
+            // template <size_t N>
+            // parser(const program::options<N> &opt) noexcept : opt_(reinterpret_cast<const argument::options *>(&opt)) {}
+
+        protected:
+            const argument::options *opt_{};
         };
 
 #if 0

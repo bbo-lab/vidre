@@ -26,14 +26,15 @@ int main(int argc, const char **argv) {
             {"help", 'h', "Show this usage information.", help},
             {"version", 'V', "Display program version", version},
             {"verbose", 'v', "Increase verbosity"},
+            // {"input", "Input file", program::argument::positional},
+            // {"output", "Output file (default: stdout)", program::argument::positional, "/dev/stdout"},
             program::argument::parameter{"input", "Input file"},
             program::argument::parameter{"output", "Output file (default: stdout)", "/dev/stdout"},
         });
 
+    // program::argument::parameter parser(args);
     // args.parse(argc, argv);
     // args.show();
-
-    program::parse(args, argc, argv);
 
     return 0;
 }
