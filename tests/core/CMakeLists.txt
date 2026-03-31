@@ -8,9 +8,9 @@ vidre_test(GROUP
 )
 
 vidre_test(exceptions SOURCES exceptions.cc)
-vidre_test(uuid SOURCES uuid.cc)
+vidre_test(util SOURCES util.cc)
 vidre_test(plugin SOURCES plugin.cc)
-vidre_test(app SOURCES app.cc)
+vidre_test(program SOURCES program.cc)
 
 vidre_module(null 
     SOURCES plugin/null.cc

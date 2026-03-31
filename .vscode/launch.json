@@ -61,10 +61,10 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.app",
+            "name": "example.core.program",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.app",
+            "program": "${workspaceFolder}/build/bin/example.core.program",
             "args": [ "-vvvv", "/path/to/an/input" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
@@ -88,6 +88,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "test.core.util",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test.core.util",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "test.core.exceptions",
             "type": "cppdbg",
             "request": "launch",
@@ -97,10 +106,10 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "test.core.app",
+            "name": "test.core.program",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/test.core.app",
+            "program": "${workspaceFolder}/build/bin/test.core.program",
             "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"

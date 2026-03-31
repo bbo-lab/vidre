@@ -19,13 +19,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "arguments.hh"
-#include "../log.hh"
-#include "../exception.hh"
+#include "program.hh"
 
 using namespace vidre;
 
-arg::map &arg::map::set(const std::string &key, variant value) {
+program::detail::tinymap &program::detail::tinymap::set(const std::string &key, variant value) {
     for (auto &item : *this) {
         if (item.first == key) {
             item.second = value;
@@ -38,7 +36,7 @@ arg::map &arg::map::set(const std::string &key, variant value) {
     return *this;
 }
 
-arg::variant arg::map::get(const std::string &key) {
+variant program::detail::tinymap::get(const std::string &key) {
     for (auto &item : *this) {
         if (item.first == key)
             return item.second;
@@ -46,12 +44,20 @@ arg::variant arg::map::get(const std::string &key) {
     throw vidre::exception() << throw_message("internal error: key lookup failed");
 }
 
-bool arg::map::has(const std::string &key) {
+bool program::detail::tinymap::has(const std::string &key) {
     for (auto &item : *this) {
         if (item.first == key)
             return true;
     }
     return false;
+}
+
+fs::path program_invocation_path{};
+
+const fs::path &program::invocation() {
+    if (program_invocation_path.empty())
+        throw "internal error: function called before program arguments were parsed";
+    return program_invocation_path;
 }
 
 #if 0

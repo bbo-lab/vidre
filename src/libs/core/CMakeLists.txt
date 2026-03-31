@@ -53,10 +53,11 @@ vidre_library(vidrecore SHARED
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
             vidre/plugin/hub.hh vidre/plugin/hub.cc
+        vidre/program.hh vidre/program.cc
+        
         vidre/util/version.hh
         vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/util/filesystem.hh vidre/util/filesystem.cc
-        vidre/application.hh vidre/application.cc
-            vidre/application/arguments.hh vidre/application/arguments.cc
+        vidre/util/variant.hh
 )

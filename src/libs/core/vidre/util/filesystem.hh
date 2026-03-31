@@ -43,6 +43,8 @@ namespace vidre {
      * */
     ///@{
 
+    /** Pull in std::filesystem namespace.
+     * */
     namespace fs = std::filesystem;
 
     /** Find files recursively using regex-pattern.
