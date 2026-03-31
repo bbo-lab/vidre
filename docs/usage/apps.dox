@@ -1,4 +1,4 @@
--** @page usage-apps Applications
+/** @page usage-apps Applications
  
 @subpage usage-apps-daemon "Service daemon (vidre-daemon)"
 
@@ -8,4 +8,4 @@
 
 @subpage usage-apps-tools "Tools"
 
-*-
+*/
