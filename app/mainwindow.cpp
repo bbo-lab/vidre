@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "devicelistdock.hpp"
 #include "camerawidget.hpp"
+#include "camerainfosdock.hpp"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -125,6 +126,11 @@ void MainWindow::createDockWidgets()
             this, &MainWindow::onDeviceDoubleClicked);
     connect(ui->actionDeviceList, &QAction::toggled, deviceDock, &QDockWidget::setVisible);
     connect(deviceDock, &QDockWidget::visibilityChanged, ui->actionDeviceList, &QAction::setChecked);
+    
+    // Camera info dock (right side)
+    cameraInfosDock_ = new CameraInfosDock(this);
+    cameraInfosDock_->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, cameraInfosDock_);
     
     // Log dock
     logDock_ = new QDockWidget("Log", this);
@@ -295,6 +301,8 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
         
         connect(cameraWidget, &CameraWidget::windowClosed, 
                 this, &MainWindow::onCameraWindowClosed);
+        connect(cameraWidget, &CameraWidget::windowActivated,
+                this, &MainWindow::onCameraWindowActivated);
         connect(subWindow, &QMdiSubWindow::destroyed, [this, deviceName]() {
             onCameraWindowClosed(deviceName);
         });
@@ -308,7 +316,16 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
 void MainWindow::onCameraWindowClosed(const QString& cameraName)
 {
     cameraWidgets_.erase(cameraName);
+    cameraInfosDock_->removeCamera(cameraName);
     logMessage(QString("Closed window for: %1").arg(cameraName));
+}
+
+void MainWindow::onCameraWindowActivated(const QString& cameraName)
+{
+    auto it = cameras_.find(cameraName.toStdString());
+    if (it != cameras_.end()) {
+        cameraInfosDock_->addCamera(cameraName, it->second.get());
+    }
 }
 
 void MainWindow::updateCameraStatus()

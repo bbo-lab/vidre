@@ -10,6 +10,8 @@
 #include <QTimer>
 #include <QImage>
 #include <QPixmap>
+#include <QShowEvent>
+#include <QFocusEvent>
 #include <memory>
 
 #include "../src/core/runtime/runtime.hpp"
@@ -33,9 +35,12 @@ public:
 
 signals:
     void windowClosed(const QString& cameraName);
+    void windowActivated(const QString& cameraName);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void focusInEvent(QFocusEvent *event) override;
 
 private slots:
     void onStartClicked();

@@ -35,8 +35,8 @@ void CameraWidget::setupUI()
     setWindowTitle(cameraName_);
     
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setSpacing(5);
-    mainLayout->setContentsMargins(5, 5, 5, 5);
+    mainLayout->setSpacing(2);
+    mainLayout->setContentsMargins(3, 3, 3, 3);
     
     // Control buttons group
     QGroupBox *controlGroup = new QGroupBox("Camera Control", this);
@@ -46,17 +46,20 @@ void CameraWidget::setupUI()
         "    color: #bbbbbb;"
         "    border: 1px solid #555555;"
         "    border-radius: 3px;"
-        "    margin-top: 10px;"
+        "    margin-top: 5px;"
         "    font-weight: bold;"
+        "    font-size: 9pt;"
         "}"
         "QGroupBox::title {"
         "    subcontrol-origin: margin;"
         "    left: 10px;"
-        "    padding: 0 3px 0 3px;"
+        "    padding: 0 2px 0 2px;"
         "}"
     );
     
     QGridLayout *controlLayout = new QGridLayout(controlGroup);
+    controlLayout->setSpacing(2);
+    controlLayout->setContentsMargins(3, 3, 3, 3);
     
     startButton_ = new QPushButton("Record", this);
     stopButton_ = new QPushButton("Stop", this);
@@ -68,9 +71,9 @@ void CameraWidget::setupUI()
         "    background-color: #3c3f41;"
         "    color: #bbbbbb;"
         "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    padding: 8px;"
-        "    font-size: 11pt;"
+        "    border-radius: 2px;"
+        "    padding: 3px 5px;"
+        "    font-size: 9pt;"
         "}"
         "QPushButton:hover {"
         "    background-color: #4b4b4b;"
@@ -87,6 +90,9 @@ void CameraWidget::setupUI()
     startButton_->setStyleSheet(buttonStyle);
     stopButton_->setStyleSheet(buttonStyle);
     showButton_->setStyleSheet(buttonStyle);
+    startButton_->setMaximumHeight(24);
+    stopButton_->setMaximumHeight(24);
+    showButton_->setMaximumHeight(24);
     // singleGrabButton_->setStyleSheet(buttonStyle);
     
     controlLayout->addWidget(startButton_, 0, 0);
@@ -96,14 +102,15 @@ void CameraWidget::setupUI()
     
     // Status label
     statusLabel_ = new QLabel("Status: Stopped", this);
+    statusLabel_->setMaximumHeight(20);
     statusLabel_->setStyleSheet(
         "QLabel {"
         "    background-color: #1e1e1e;"
         "    color: #ff8800;"
         "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    padding: 8px;"
-        "    font-size: 11pt;"
+        "    border-radius: 2px;"
+        "    padding: 2px 5px;"
+        "    font-size: 9pt;"
         "    font-weight: bold;"
         "}"
     );
@@ -113,8 +120,10 @@ void CameraWidget::setupUI()
     imageGroup->setStyleSheet(controlGroup->styleSheet());
     
     QVBoxLayout *imageLayout = new QVBoxLayout(imageGroup);
+    imageLayout->setSpacing(1);
+    imageLayout->setContentsMargins(2, 4, 2, 2);
     imageLabel_ = new QLabel("No image", this);
-    imageLabel_->setMinimumSize(640, 480);
+    imageLabel_->setMinimumSize(320, 240);
     imageLabel_->setAlignment(Qt::AlignCenter);
     imageLabel_->setStyleSheet(
         "QLabel {"
@@ -127,21 +136,23 @@ void CameraWidget::setupUI()
     
     // Info label
     infoLabel_ = new QLabel("Camera Information", this);
+    infoLabel_->setMaximumHeight(70);
     infoLabel_->setStyleSheet(
         "QLabel {"
         "    background-color: #1e1e1e;"
-        "    color: #bbbbbb;"
+        "    color: #888888;"
         "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    padding: 5px;"
+        "    border-radius: 2px;"
+        "    padding: 3px 4px;"
         "    font-family: 'Consolas', 'Monaco', monospace;"
+        "    font-size: 8pt;"
         "}"
     );
     
-    mainLayout->addWidget(controlGroup);
-    mainLayout->addWidget(statusLabel_);
+    mainLayout->addWidget(controlGroup, 0);
+    mainLayout->addWidget(statusLabel_, 0);
     mainLayout->addWidget(imageGroup, 1);
-    mainLayout->addWidget(infoLabel_);
+    mainLayout->addWidget(infoLabel_, 0);
     
     setLayout(mainLayout);
     
@@ -170,9 +181,9 @@ void CameraWidget::updateStatus()
             "    background-color: #1e1e1e;"
             "    color: #00cc00;"
             "    border: 1px solid #555555;"
-            "    border-radius: 3px;"
-            "    padding: 8px;"
-            "    font-size: 11pt;"
+            "    border-radius: 2px;"
+            "    padding: 2px 5px;"
+            "    font-size: 9pt;"
             "    font-weight: bold;"
             "}"
         );
@@ -187,9 +198,9 @@ void CameraWidget::updateStatus()
             "    background-color: #1e1e1e;"
             "    color: #ff8800;"
             "    border: 1px solid #555555;"
-            "    border-radius: 3px;"
-            "    padding: 8px;"
-            "    font-size: 11pt;"
+            "    border-radius: 2px;"
+            "    padding: 2px 5px;"
+            "    font-size: 9pt;"
             "    font-weight: bold;"
             "}"
         );
@@ -413,4 +424,16 @@ void CameraWidget::closeEvent(QCloseEvent *event)
 {
     emit windowClosed(cameraName_);
     event->accept();
+}
+
+void CameraWidget::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    emit windowActivated(cameraName_);
+}
+
+void CameraWidget::focusInEvent(QFocusEvent *event)
+{
+    QWidget::focusInEvent(event);
+    emit windowActivated(cameraName_);
 }

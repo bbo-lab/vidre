@@ -30,6 +30,8 @@ set(SOURCES
     mainwindow.hpp
     camerawidget.cpp
     camerawidget.hpp
+    camerainfosdock.cpp
+    camerainfosdock.hpp
     devicelistdock.cpp
     devicelistdock.hpp
     camerawidget.ui
