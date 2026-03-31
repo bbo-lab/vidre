@@ -60,7 +60,19 @@ target_include_directories(vidre_app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
 
-install(TARGETS vidre_app RUNTIME DESTINATION bin)
+install(TARGETS vidre_app 
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION bin
+)
+
+# Generate a deployment script to automatically pull in Qt libraries and plugins
+qt_generate_deploy_app_script(
+    TARGET vidre_app
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+
+install(SCRIPT ${deploy_script})
 
 if(MSVC)
     target_compile_options(vidre_app PRIVATE /W4 /WX- /bigobj)
