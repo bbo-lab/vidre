@@ -126,6 +126,7 @@ namespace vidre {
         exception(const std::source_location location = std::source_location::current());
     };
 
+    ///@cond
     inline exception::exception(const std::source_location location) : boost::exception(), std::exception() {
 #if VIDRE_DEVELOP
         (*this)                                                 //
@@ -134,6 +135,7 @@ namespace vidre {
             << boost::throw_line(location.line());
 #endif
     }
+    ///@endcond
 
     /** Exception originating from a std::error_code.
      * */

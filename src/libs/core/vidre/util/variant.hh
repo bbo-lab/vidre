@@ -27,6 +27,8 @@
 #include <vidre/core/config.hh>
 #include <vidre/exception.hh>
 
+#include <variant>
+
 namespace vidre {
 
     /**@addtogroup api-core-util
@@ -269,6 +271,8 @@ namespace vidre {
     }
 
 #endif
+
+    ///@}
 
 }  // namespace vidre
 

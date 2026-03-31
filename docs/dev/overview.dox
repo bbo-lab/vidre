@@ -1,4 +1,4 @@
-/** @page dev/overview Overview
+/** @page dev-overview Overview
 
 With VidRe, acquisition and control are separated as backend and frontend, 
 respectively. They backend is implemented as a service 

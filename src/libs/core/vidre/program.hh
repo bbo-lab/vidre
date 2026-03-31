@@ -39,47 +39,44 @@
 
 namespace vidre {
 
+    namespace detail {
+
+        /**@addtogroup api-core-details
+         * */
+        ///@{
+
+        /** Simple, small key-variant pair map.
+         *
+         * @todo this could, as previously the variant, also go into a "util" header?
+         * */
+        class VIDRE_CORE_VISIBILITY tinymap : public std::vector<std::pair<std::string, variant>> {
+        public:
+            tinymap() = default;
+
+        public:
+            /** Set key-variant pair.
+             * */
+            tinymap &set(const std::string &key, variant value);
+
+            /** Get key.
+             * */
+            variant get(const std::string &key);
+
+            /** Check if key exists.
+             * */
+            bool has(const std::string &key);
+        };
+
+        ///@}
+
+    }  // namespace detail
+
     /** Program related.
      * @ingroup api-core-program
      * */
     namespace program {
 
-        /** Implementation details.
-         * @ingroup api-core-details
-         */
-        namespace detail {
-
-            /**@addtogroup api-core-details
-             * */
-            ///@{
-
-            /** Simple, small key-variant pair map.
-             *
-             * @todo this could, as previously the variant, also go into a "util" header?
-             * */
-            class VIDRE_CORE_VISIBILITY tinymap : public std::vector<std::pair<std::string, variant>> {
-            public:
-                tinymap() = default;
-
-            public:
-                /** Set key-variant pair.
-                 * */
-                tinymap &set(const std::string &key, variant value);
-
-                /** Get key.
-                 * */
-                variant get(const std::string &key);
-
-                /** Check if key exists.
-                 * */
-                bool has(const std::string &key);
-            };
-
-            ///@}
-
-        }  // namespace detail
-
-        /**@addtogroup api-core-details
+        /**@addtogroup api-core-program
          * */
         ///@{
 
@@ -95,9 +92,9 @@ namespace vidre {
          *      -h                  A single "short" option.
          *      -abc                Multiple short options.
          *      --help              A "long" option.
-         *      -x <value>          A short option with an argument.
-         *      --extra <string>    A "long" option with an argument.
-         *      --extra=<string>
+         *      -x <value>          A short option with a required argument.
+         *      --extra <string>    A "long" option with a required argument.
+         *      --extra=<string>    A "long" option with an optional argument.
          *      --                  End of options (positional arguments follow).
          *
          * Note that values after options may not start with a dash ('-').
@@ -126,7 +123,7 @@ namespace vidre {
          *
          * For the __argument-type__, see @ref vidre::arg::id, the default is @c none.
          *
-         * If applicable, either the __value-type__ or the __default__ value can be set (see @ref vidre::arg::variant).
+         * If applicable, either the __value-type__ or the __default__ value can be set (see @ref vidre::variant).
          *
          * In addition, a __callback__ function can be assigned, which gets called immediately after processing the option.
          *
@@ -145,7 +142,7 @@ namespace vidre {
          *      {"<long-option>",<short-option>,"<brief>",argument::required,[<value-type>=variant::cstring]}
          *
          *      {"<long-option>","<brief>",argument::optional,<default>}
-         *      {"<long-option>",<short-option>,"<brief>",argument::optional,<default>}
+         *      {"<long-option>","<brief>",argument::optional,<default>,<callback>}
          *
          *      {"<long-option>","<brief>",argument::positional,[<value-type>=variant::cstring]}
          *
@@ -157,7 +154,7 @@ namespace vidre {
          *
          *      argument::parameter{"<long-option>","<brief>",[<value-type>=variant::cstring]}
          *
-         * @see FIXME
+         * @see argument::options
          * */
         struct VIDRE_CORE_VISIBILITY argument {
             struct parameter;
@@ -174,10 +171,13 @@ namespace vidre {
             };
 
             /** Type for callbacks.
+             * @param p The parser.
+             * @param value Argument value (if applicable).
+             *
              * Callbacks are immediately called during the parsing run, after possible
              * required (or optional) parameters are parsed.
              * */
-            using callback_type = void (*)(parser &, const std::string &, variant);
+            using callback_type = void (*)(parser &p, variant value);
 
             consteval argument() = default;
             consteval argument(const parameter &) noexcept;
@@ -201,23 +201,40 @@ namespace vidre {
                 : long_option(long_), brief(brief_), callback(callback_) {}
             consteval argument(const char *long_, char short_, const char *brief_, callback_type callback_) noexcept
                 : long_option(long_), short_option(short_), brief(brief_), callback(callback_) {}
+            consteval argument(const char *long_, const char *brief_, kind type_, variant defval_, callback_type cb_) noexcept
+                : long_option(long_), brief(brief_), type(type_), value(defval_.type()), default_value(defval_), callback(cb_) {
+                check();
+            }
 
             // other
             consteval argument(const char *long_, const char *brief_, kind type_, variant::value vtype_ = variant::cstring) noexcept
-                : long_option(long_), brief(brief_), type(type_), value(vtype_) {}
+                : long_option(long_), brief(brief_), type(type_), value(vtype_) {
+                check();
+            }
             consteval argument(const char *long_, char short_, const char *brief_, kind type_,
                                variant::value vtype_ = variant::cstring) noexcept
-                : long_option(long_), short_option(short_), brief(brief_), type(type_), value(vtype_) {}
+                : long_option(long_), short_option(short_), brief(brief_), type(type_), value(vtype_) {
+                check();
+            }
 
             consteval argument(const char *long_, const char *brief_, kind type_, variant defval_) noexcept
-                : long_option(long_), brief(brief_), type(type_), value(defval_.type()), default_value(defval_) {}
+                : long_option(long_), brief(brief_), type(type_), value(defval_.type()), default_value(defval_) {
+                check();
+            }
             consteval argument(const char *long_, char short_, const char *brief_, kind type_, variant defval_) noexcept
                 : long_option(long_)
                 , short_option(short_)
                 , brief(brief_)
                 , type(type_)
                 , value(defval_.type())
-                , default_value(defval_) {}
+                , default_value(defval_) {
+                check();
+            }
+
+            consteval void check() {
+                if ((type == kind::optional) and (default_value.empty()))
+                    throw "optional arguments must set default value";
+            }
 
             const char *long_option{};             ///< The "long" option, also used as key (required).
             char short_option{};                   ///< The "short" option (optional).
@@ -231,6 +248,8 @@ namespace vidre {
 
         /** Internal helper for accessing options<N>. */
         struct argument::options {
+            ~options() = default;
+
             const char *brief;
             const char *description;
             size_t size;
@@ -260,7 +279,9 @@ namespace vidre {
             , callback(p.callback) {}
 
         /** Program options.
-         * @see @ref example/core/program.cc
+         *
+         * Usage:
+         * @snippet examples/core/program.cc program-options
          * */
         template <size_t N>
         class options {
@@ -283,7 +304,7 @@ namespace vidre {
             }
 
         protected:
-            const char *brief{};        ///< Brief program description (see @ref examples/core/app.cc).
+            const char *brief{};        ///< Brief program description (see @ref examples/core/program.cc).
             const char *description{};  ///< Program usage text.
             size_t size{};              ///< Number of options.
             argument args[N]{};         ///< Options buffer (allowing constant evaluation).
@@ -293,26 +314,63 @@ namespace vidre {
         template <size_t N>
         options(const char *, const char *, const argument (&)[N]) -> options<N>;
 
-        /** FIXME
-         * @see @ref example/core/program.cc
+        /** Argument parser.
          * */
         class argument::parser {
         public:
             using map = detail::tinymap;
 
         public:
-            parser() = default;
+            parser() = delete;
 
-            // template <size_t N>
-            // parser(const program::options<N> &opt) noexcept : opt_(reinterpret_cast<const argument::options *>(&opt)) {}
+            template <size_t N>
+            parser(program::options<N> &opt) noexcept : opt_(reinterpret_cast<const argument::options *>(&opt)) {}
 
         protected:
-            const argument::options *opt_{};
+            const argument::options *opt_{};  ///< Pointer to program::options<>.
+
+            detail::tinymap parsed_{};             ///< Parsed options.
+            std::vector<std::string> unparsed_{};  ///< Unparsed options.
+
+        protected:
+            const argument *find_short(char c);
+            const argument *find_long(const std::string &name);
+            void handle(const argument &opt);
+            void argerror [[noreturn]] (const std::string &msg);
+
+        public:
+            /** Parse program invocation arguments.
+             * */
+            void parse(int argc, const char **argv);
+
+            /** Get list of unparsed elements.
+             * */
+            auto const &unparsed() const noexcept {
+                return unparsed_;
+            }
+
+            /** Check if unparsed arguments were encountered.
+             * */
+            bool has_unparsed() const noexcept {
+                return not unparsed_.empty();
+            }
+
+            /** Get list of parsed elements.
+             * */
+            auto const &parsed() const noexcept {
+                return parsed_;
+            }
+
+            /** Create a help string.
+             * */
+            std::string help();
+
+            void show() const noexcept;
         };
 
 #if 0
         /** Argument parser.
-         * @see @ref examples/core/app.cc
+         * @see @ref examples/core/program.cc
          * @todo It might be better to split the options definition into a part,
          *       that can be constant evaluated - and have the actual parser in
          *       a separate class (so that max_options becomes superfluous).
@@ -341,7 +399,7 @@ namespace vidre {
             }
 
         protected:
-            const char *brief_{};         ///< Brief program description (see @ref examples/core/app.cc).
+            const char *brief_{};         ///< Brief program description (see @ref examples/core/program.cc).
             const char *description_{};   ///< Program usage text.
             option opts_[max_options]{};  ///< Options buffer (allowing constant evaluation).
 

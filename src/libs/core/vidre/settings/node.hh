@@ -152,6 +152,7 @@ namespace vidre {
             std::vector<std::string> keys() const;
         };
 
+        #if not defined(DOXYGEN)
         template <>
         inline node::operator bool() const {
             auto t = push();
@@ -229,6 +230,7 @@ namespace vidre {
 
             return *this;
         }
+#endif
 
         ///@}
 

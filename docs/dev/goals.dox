@@ -1,4 +1,4 @@
-/**@page dev/goals Design goals
+/**@page dev-goals Design goals
 
 To facilitate remote data acquisition, which may happen on a headless system,
 recording and displaying data are separated into a backend (the recording 
@@ -7,7 +7,7 @@ following diagram gives an idea of the components and the acquisition data flow:
 
 @image html overview.svg
 
-
+@section dev-goals-overview Overview
 
 @subsection dev-backend Backend
 

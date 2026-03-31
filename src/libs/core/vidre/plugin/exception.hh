@@ -31,6 +31,10 @@ namespace vidre {
 
     namespace plugin {
 
+        /**@addtogroup api-core-plugin
+         * */
+        ///@{
+
         /** General plugin exception.
          * */
         class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {

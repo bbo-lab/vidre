@@ -41,7 +41,7 @@ int main(int, const char **) {
     return 0;
 }
 
-/**@example examples/core/sysinfo.cc
+/**@example examples/core/os.cc
  * @brief System information.
  *
  */

@@ -44,7 +44,7 @@ namespace vidre {
         /** Physical system memory overview.
          *
          * <b>Example</b>:
-         * @include examples/core/sysinfo.cc
+         * @include examples/core/os.cc
          *
          * */
         struct VIDRE_CORE_VISIBILITY memory {

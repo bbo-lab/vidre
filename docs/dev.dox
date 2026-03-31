@@ -1,13 +1,13 @@
 /** @page dev Developer info
 
-@section Topics
+@section dev-topics Topics
 
-@subpage dev/overview
+@subpage dev-overview
 
-@subpage dev/style
+@subpage dev-style
 
-@subpage dev/structure
+@subpage dev-structure
 
-@subpage dev/goals
+@subpage dev-goals
 
 */

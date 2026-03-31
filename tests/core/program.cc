@@ -9,7 +9,7 @@ using namespace vidre;
     __VA_ARGS__
 
 TEST_CASE("detail::tinymap", "[program.hh]") {
-    PREPARE(program::detail::tinymap map;);
+    PREPARE(detail::tinymap map;);
     REQUIRE(map.empty());
 
     PREPARE(map.set("home", "WLAN"));
@@ -18,7 +18,7 @@ TEST_CASE("detail::tinymap", "[program.hh]") {
     // FIXME etc.
 }
 
-void argcb_log_debug(program::argument::parser &, const std::string &key, variant value) {
+void argcb_log_debug(program::argument::parser &, variant value) {
     // nothing's done here, just an stub
 }
 
@@ -37,6 +37,9 @@ TEST_CASE("option", "[application.hh]") {
             {"log-debug", "Set debug logging level.", argcb_log_debug},  //
         };
         REQUIRE(args.size() == 2);
+    }
+    {
+        program::argument arg{"log", "Log level (use 'help' for further info).", program::argument::optional, "default-value", argcb_log_debug};
     }
     {
         program::options decl(" - brief",      //
