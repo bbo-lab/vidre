@@ -26,6 +26,21 @@
 
 #include <vidre/core/config.hh>
 
+/**@addtogroup api-core-details
+ * */
+///@{
+
+/** Default alignment.
+ * @todo check, which architectures
+ * */
+#ifdef __aarch64__
+#define VIDRE_DEFAULT_ALIGNMENT alignof(double)
+#else
+#define VIDRE_DEFAULT_ALIGNMENT alignof(int)
+#endif
+
+///@}
+
 namespace vidre {
 
     namespace storage {
@@ -39,20 +54,33 @@ namespace vidre {
          * */
         static constexpr std::size_t dynamic = std::size_t(-1);
 
+
+        /** Default alignment.
+         * */
+        static constexpr std::size_t alignment = VIDRE_DEFAULT_ALIGNMENT;
+
         /** Generic data storage file.
          *
-         * The "generic" data storage format consists of a common file header
-         * following by a series of data chunks. Each data chunk is composed
-         * of a chunk header followed by actual data.
+         * The "generic" data storage format consists of a <tt>common</tt> file header
+         * followed by a series of chunks. Each chunk is composed of frame <tt>data</tt>
+         * combined with header or tail <tt>info</tt>.
+         * 
+         * The class(es) provide the infrastructure to create a specific implementation.
          *
          * */
         class VIDRE_CORE_VISIBILITY generic {
         public:
             class common;
-            class header;
+            class info;
             class data;
 
         public:
+            generic() = default;
+
+        protected:
+
+        public:
+            
         };
 
         ///@}
