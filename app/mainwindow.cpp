@@ -277,12 +277,22 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     if (cameraWidgets_.find(deviceName) != cameraWidgets_.end()) {
         // Activate existing window
         CameraWidget *widget = cameraWidgets_[deviceName];
-        QDockWidget *dock = qobject_cast<QDockWidget*>(widget->parentWidget());
-        if (dock) {
-            dock->show();
-            dock->raise();
-            dock->activateWindow();
-            dock->setFocus();
+        
+        QMdiSubWindow *subWindow = qobject_cast<QMdiSubWindow*>(widget->parentWidget());
+        if (subWindow) {
+            subWindow->show();
+            subWindow->raise();
+            subWindow->setFocus();
+            mdiArea_->setActiveSubWindow(subWindow);
+            return;
+        }
+        
+        QWidget *window = widget->window();
+        if (window) {
+            window->show();
+            window->raise();
+            window->activateWindow();
+            window->setFocus();
             return;
         }
     }
@@ -293,31 +303,25 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
         CameraWidget *cameraWidget = new CameraWidget(deviceName, it->second.get(), this);
         cameraWidgets_[deviceName] = cameraWidget;
         
-        QDockWidget *dockWidget = new QDockWidget(deviceName, this);
-        dockWidget->setWidget(cameraWidget);
+        QMdiSubWindow *subWindow = mdiArea_->addSubWindow(cameraWidget);
+        subWindow->setWindowTitle(deviceName);
+        subWindow->setAttribute(Qt::WA_DeleteOnClose);
+        subWindow->setWindowFlags(subWindow->windowFlags() | Qt::WindowMinimizeButtonHint);
         
-        dockWidget->setAllowedAreas(Qt::AllDockWidgetAreas);
-        
-        dockWidget->setFeatures(
-            QDockWidget::DockWidgetClosable | 
-            QDockWidget::DockWidgetMovable | 
-            QDockWidget::DockWidgetFloatable
+        subWindow->setFeatures(
+            QMdiSubWindow::AllWindowFeatures
         );
-        
-        dockWidget->setAttribute(Qt::WA_DeleteOnClose);
-        
-        addDockWidget(Qt::RightDockWidgetArea, dockWidget);
         
         connect(cameraWidget, &CameraWidget::windowClosed, 
                 this, &MainWindow::onCameraWindowClosed);
         connect(cameraWidget, &CameraWidget::windowActivated,
                 this, &MainWindow::onCameraWindowActivated);
-        connect(dockWidget, &QDockWidget::destroyed, [this, deviceName]() {
+        connect(subWindow, &QMdiSubWindow::destroyed, [this, deviceName]() {
             onCameraWindowClosed(deviceName);
         });
         
-        dockWidget->show();
-        dockWidget->raise();
+        subWindow->show();
+        mdiArea_->setActiveSubWindow(subWindow);
         logMessage(QString("Opened window for: %1").arg(deviceName));
     }
 }
