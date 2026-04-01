@@ -2,6 +2,12 @@
 #include "ui_camerawidget.h"
 #include <QCloseEvent>
 #include <QDateTime>
+#include <QMdiArea>
+#include <QMdiSubWindow>
+#include <QMainWindow>
+#include <QApplication>
+#include <QScreen>
+#include <QGuiApplication>
 
 #include "../src/core/runtime/shared_frame_header.hpp"
 
@@ -65,6 +71,7 @@ void CameraWidget::setupUI()
     stopButton_ = new QPushButton("Stop", this);
     showButton_ = new QPushButton("Show", this);
     singleGrabButton_ = new QPushButton("Single Frame", this);
+    undockButton_ = new QPushButton("Undock", this);
     
     QString buttonStyle = 
         "QPushButton {"
@@ -90,14 +97,17 @@ void CameraWidget::setupUI()
     startButton_->setStyleSheet(buttonStyle);
     stopButton_->setStyleSheet(buttonStyle);
     showButton_->setStyleSheet(buttonStyle);
+    undockButton_->setStyleSheet(buttonStyle);
     startButton_->setMaximumHeight(24);
     stopButton_->setMaximumHeight(24);
     showButton_->setMaximumHeight(24);
+    undockButton_->setMaximumHeight(24);
     // singleGrabButton_->setStyleSheet(buttonStyle);
     
     controlLayout->addWidget(startButton_, 0, 0);
     controlLayout->addWidget(showButton_, 0, 1);
     controlLayout->addWidget(stopButton_, 0, 2);
+    controlLayout->addWidget(undockButton_, 0, 3);
     // controlLayout->addWidget(singleGrabButton_, 1, 0, 1, 2);
     
     // Status label
@@ -160,6 +170,7 @@ void CameraWidget::setupUI()
     connect(startButton_, &QPushButton::clicked, this, &CameraWidget::onStartClicked);
     connect(stopButton_, &QPushButton::clicked, this, &CameraWidget::onStopClicked);
     connect(showButton_, &QPushButton::clicked, this, &CameraWidget::onShowClicked);
+    connect(undockButton_, &QPushButton::clicked, this, &CameraWidget::onToggleDockClicked);
     // connect(singleGrabButton_, &QPushButton::clicked, this, &CameraWidget::onSingleGrabClicked);
     
     // Set dark background
@@ -418,6 +429,77 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
     }
     
     frameCount_++;
+}
+
+void CameraWidget::onToggleDockClicked()
+{
+    QMdiSubWindow *subWindow = qobject_cast<QMdiSubWindow*>(parentWidget());
+    
+    if (subWindow) {
+        subWindow->setWidget(nullptr);
+        subWindow->hide();
+        
+        setParent(nullptr);
+        setWindowTitle(cameraName_);
+        setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+        
+        QScreen *screen = QGuiApplication::primaryScreen();
+        if (screen) {
+            QRect screenGeometry = screen->geometry();
+            int x = screenGeometry.x() + (screenGeometry.width() - width()) / 2;
+            int y = screenGeometry.y() + (screenGeometry.height() - height()) / 2;
+            move(x, y);
+        }
+        
+        show();
+        raise();
+        activateWindow();
+        setFocus();
+        
+        undockButton_->setText("Dock");
+    } else {
+        QMdiArea *mdiArea = nullptr;
+        
+        QWidget *widget = qobject_cast<QWidget*>(sender());
+        while (widget) {
+            QMainWindow *mainWin = qobject_cast<QMainWindow*>(widget);
+            if (mainWin) {
+                mdiArea = qobject_cast<QMdiArea*>(mainWin->centralWidget());
+                break;
+            }
+            widget = widget->parentWidget();
+        }
+        
+        if (!mdiArea) {
+            for (QWidget *w : QApplication::topLevelWidgets()) {
+                QMainWindow *mainWin = qobject_cast<QMainWindow*>(w);
+                if (mainWin) {
+                    mdiArea = qobject_cast<QMdiArea*>(mainWin->centralWidget());
+                    if (mdiArea) break;
+                }
+            }
+        }
+        
+        if (mdiArea) {
+            subWindow = new QMdiSubWindow();
+            subWindow->setWidget(this);
+            subWindow->setWindowTitle(cameraName_);
+            subWindow->setAttribute(Qt::WA_DeleteOnClose);
+            subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+            
+            mdiArea->addSubWindow(subWindow);
+            
+            hide();
+            setParent(subWindow);
+            setWindowFlags(Qt::Widget);
+            
+            subWindow->show();
+            mdiArea->setActiveSubWindow(subWindow);
+            show();
+            
+            undockButton_->setText("Undock");
+        }
+    }
 }
 
 void CameraWidget::closeEvent(QCloseEvent *event)

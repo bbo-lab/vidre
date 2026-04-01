@@ -47,6 +47,7 @@ private slots:
     void onStopClicked();
     void onShowClicked();
     void onSingleGrabClicked();
+    void onToggleDockClicked();
     void updateFrame();
 
 private:
@@ -58,6 +59,7 @@ private:
     QPushButton *stopButton_;
     QPushButton *showButton_;
     QPushButton *singleGrabButton_;
+    QPushButton *undockButton_;
     QLabel *statusLabel_;
     QLabel *imageLabel_;
     QLabel *infoLabel_;

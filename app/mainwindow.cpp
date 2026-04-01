@@ -287,8 +287,9 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
             return;
         }
         
+        // Check if floating (standalone window)
         QWidget *window = widget->window();
-        if (window) {
+        if (window && window != this) {
             window->show();
             window->raise();
             window->activateWindow();
@@ -303,14 +304,15 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
         CameraWidget *cameraWidget = new CameraWidget(deviceName, it->second.get(), this);
         cameraWidgets_[deviceName] = cameraWidget;
         
-        QMdiSubWindow *subWindow = mdiArea_->addSubWindow(cameraWidget);
+        QMdiSubWindow *subWindow = new QMdiSubWindow();
+        subWindow->setWidget(cameraWidget);
         subWindow->setWindowTitle(deviceName);
         subWindow->setAttribute(Qt::WA_DeleteOnClose);
-        subWindow->setWindowFlags(subWindow->windowFlags() | Qt::WindowMinimizeButtonHint);
+        subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
         
-        subWindow->setFeatures(
-            QMdiSubWindow::AllWindowFeatures
-        );
+        mdiArea_->addSubWindow(subWindow);
+        
+        cameraWidget->setProperty("mdiSubWindow", QVariant::fromValue((void*)subWindow));
         
         connect(cameraWidget, &CameraWidget::windowClosed, 
                 this, &MainWindow::onCameraWindowClosed);
