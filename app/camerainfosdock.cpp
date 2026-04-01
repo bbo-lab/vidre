@@ -12,6 +12,7 @@ CameraInfosDock::CameraInfosDock(QWidget *parent)
     infoTextEdit_ = new QTextEdit(this);
     infoTextEdit_->setReadOnly(true);
     infoTextEdit_->setFont(QFont("Consolas", 9));
+    infoTextEdit_->setWordWrapMode(QTextOption::WordWrap);
     infoTextEdit_->setStyleSheet(
         "QTextEdit {"
         "    background-color: #1e1e1e;"
@@ -104,7 +105,7 @@ void CameraInfosDock::refreshDisplay()
         displayText += "\n" + QString(60, '=') + "\n\n";
     }
     
-    infoTextEdit_->setText(displayText);
+    infoTextEdit_->setPlainText(displayText);
 }
 
 QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance)
@@ -116,7 +117,7 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
     QString info;
     
     
-    info += QString("<b>Camera: %1</b>\n").arg(cameraName);
+    info += QString("Camera: %1\n").arg(cameraName);
     
     
     vidre::ICamera* camera = runtimeInstance->getCamera();
@@ -132,7 +133,7 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
         
         info += "\n";
         
-        info += "<u>Frame Configuration:</u>\n";
+        info += "Frame Configuration:\n";
         info += QString("  Resolution: %1 x %2\n")
             .arg(camera->GetFrameWidth())
             .arg(camera->GetFrameHeight());
@@ -150,13 +151,13 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
         
         info += "\n";
         
-        info += "<u>Acquisition Settings:</u>\n";
+        info += "Acquisition Settings:\n";
         info += QString("  Frame Rate: %1 fps\n")
             .arg(camera->GetFrameRate(), 0, 'f', 2);
         
         info += "\n";
         
-        info += "<u>Recording Status:</u>\n";
+        info += "Recording Status:\n";
         vidre::RecordingStatus status = runtimeInstance->getRecordingStatus();
         QString statusStr;
         switch (status) {
