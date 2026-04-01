@@ -550,6 +550,14 @@ namespace vidre {
         };
 #endif
 
+        /** Setup log streams.
+         * 
+         * This command intended for use with command line options.
+         * FIXME
+         * 
+         * */
+        void setup(const std::string &def);
+
         ///@}
 
     }  // namespace log

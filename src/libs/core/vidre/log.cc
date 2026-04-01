@@ -22,6 +22,7 @@
 #include "log.hh"
 #include "os/tty.hh"
 
+#include <iostream>
 #include <array>
 #include <algorithm>
 #include <chrono>
@@ -234,3 +235,32 @@ log::trace::~trace() {
 }
 
 #endif
+
+static struct {
+    const char *name;
+    log::level level;
+} setup_levels[] = {                     //
+    {"fatal", log::level::fatal},        //
+    {"alert", log::level::alert},        //
+    {"critical", log::level::critical},  //
+    {"error", log::level::error},        //
+    {"warning", log::level::warning},    //
+    {"notice", log::level::notice},      //
+    {"status", log::level::status},      //
+    {"info", log::level::info},          //
+    {"debug", log::level::debug},        //
+    {"trace", log::level::trace},        //
+    {{}, {}}};
+
+void log::setup(const std::string &def) {
+    if (def == "help") {
+        std::cout <<                       //
+            "Setting the log level(s):\n"  //
+            "\n"                           //
+            "FIXME"                        //
+            "\n";
+    }
+    else {
+        // FIXME
+    }
+}

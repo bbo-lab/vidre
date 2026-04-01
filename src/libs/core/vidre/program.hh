@@ -251,6 +251,7 @@ namespace vidre {
             ~options() = default;
 
             const char *brief;
+            const char *copyright;
             const char *description;
             size_t size;
             argument args[];
@@ -293,11 +294,13 @@ namespace vidre {
 
             /** Constructor.
              * @param brief         Short, brief program description.
+             * @param copyright     Copyright information (may be nullptr).
              * @param description   Long program description.
              * @param options       Program options.
              */
-            consteval options(const char *brief_, const char *description_, std::initializer_list<argument> args_)
-                : brief(brief_), description(description_), size(N) {
+            consteval options(const char *brief_, const char *copyright_, const char *description_,
+                              std::initializer_list<argument> args_)
+                : brief(brief_), copyright(copyright_), description(description_), size(N) {
                 if (args_.size() != N)
                     throw "size deduction failure";
                 std::copy(args_.begin(), args_.end(), args);
@@ -305,6 +308,7 @@ namespace vidre {
 
         protected:
             const char *brief{};        ///< Brief program description (see @ref examples/core/program.cc).
+            const char *copyright{};    ///< Copyright notice if applicable.
             const char *description{};  ///< Program usage text.
             size_t size{};              ///< Number of options.
             argument args[N]{};         ///< Options buffer (allowing constant evaluation).
@@ -312,7 +316,7 @@ namespace vidre {
 
         // dedcution guide
         template <size_t N>
-        options(const char *, const char *, const argument (&)[N]) -> options<N>;
+        options(const char *, const char *, const char *, const argument (&)[N]) -> options<N>;
 
         /** Argument parser.
          * */

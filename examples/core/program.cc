@@ -18,14 +18,7 @@ void help(program::argument::parser &p, variant) {
 //! [argument-callbacks]
 
 void log_level(program::argument::parser &, variant value) {
-    std::string level = value;
-
-    if (level == "help") {
-        std::cout << "Know log levels are: fatal, error, warn, notice, info, debug, trace" << std::endl;
-        std::exit(0);
-    }
-
-    // handle level...
+    log::setup(value);
 }
 
 int main(int argc, const char **argv) {
@@ -35,7 +28,8 @@ int main(int argc, const char **argv) {
     {
         //! [program-options]
         program::options args(  //
-            "Example program\nCopyright (C) 2024-2026 MPI f. Neurobiol. of Behavior—ceasar, Bonn, Germany",
+            "Example program",  //
+            "Copyright (C) 2024-2026 MPI f. Neurobiol. of Behavior—ceasar, Bonn, Germany",
             "Example program showing use of the argument parser.",
             {
                 {"help", 'h', "Show this usage information.", help},

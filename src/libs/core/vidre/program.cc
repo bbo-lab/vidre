@@ -282,6 +282,10 @@ std::string program::argument::parser::help() {
 
     retval += " - ";
     retval += opt_->brief;
+    if (opt_->copyright) {
+        retval += "\n";
+        retval += opt_->copyright;
+    }
     retval += "\n\n";
 
     retval += opt_->description;

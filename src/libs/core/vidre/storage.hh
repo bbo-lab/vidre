@@ -28,23 +28,20 @@
  * @details
  * @fileinfo
  *
- * 
- * @internal
- * 
- * @endinternal
- * 
+ * The core library provides a number of fundamental mechanisms for storing data
+ * generically. File formats are, however, only supported through plugins.
+ *
  * */
 
 #include <vidre/core/config.hh>
 
 namespace vidre {
-    /**@addtogroup api-core-storage
+
+    /** Storage-related namespace.
+     * @ingroup api-core-storage
      * */
-    ///@{
+    namespace storage {}  // namespace store
 
-    //
-
-    ///@}
 }  // namespace vidre
 
 #endif  // VIDRE_CORE_STORAGE_HH

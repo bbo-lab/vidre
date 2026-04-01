@@ -23,6 +23,7 @@ FetchContent_Declare(
         COMPONENTS 
             exception
             system
+            interprocess
             ${BOOST_COMPONENT_UUID}
 )
 FetchContent_MakeAvailable(Boost)

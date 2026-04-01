@@ -39,10 +39,12 @@ TEST_CASE("option", "[application.hh]") {
         REQUIRE(args.size() == 2);
     }
     {
-        program::argument arg{"log", "Log level (use 'help' for further info).", program::argument::optional, "default-value", argcb_log_debug};
+        program::argument arg{"log", "Log level (use 'help' for further info).", program::argument::optional, "default-value",
+                              argcb_log_debug};
     }
     {
-        program::options decl(" - brief",      //
+        program::options decl("brief",         //
+                              "copyright",     //
                               "Description.",  //
                               {
                                   {"help", "Display help."},       //
