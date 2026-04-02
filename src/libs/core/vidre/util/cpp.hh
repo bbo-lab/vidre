@@ -32,6 +32,9 @@
 
 #include <vidre/core/config.hh>
 
+#include <type_traits>
+#include <climits>
+
 namespace vidre {
 
     /**@addtogroup api-core-util-cpp
@@ -39,16 +42,30 @@ namespace vidre {
     ///@{
 
     /** Get size of an array at compile time.
-     * 
+     *
      * This is the equivalent of
      * @code
-     * sizeof(arr) / sizeof(arr[0]); 
+     * sizeof(arr) / sizeof(arr[0]);
      * @endcode
-     * 
+     *
      */
     template <typename T, std::size_t N>
     constexpr std::size_t size_of(T (&)[N]) noexcept {
         return N;
+    }
+
+    /** Get number of bits in a type.
+     * */
+    template<typename T>
+    struct bits_of {
+        static constexpr std::size_t value = CHAR_BIT * sizeof(T);
+    };
+
+    /** Get value (such as enum class) as underlying value.
+     * */
+    template <typename E>
+    constexpr auto to_underlying(E e) noexcept {
+        return static_cast<std::underlying_type_t<E>>(e);
     }
 
     ///@}
@@ -56,8 +73,3 @@ namespace vidre {
 }  // namespace vidre
 
 #endif  // VIDRE_CORE_UTIL_DEVELOP_HH
-
-template <typename T, size_t N>
-constexpr size_t array_size(T (&)[N]) noexcept {
-    return N;
-}

@@ -42,3 +42,11 @@ if(VIDRE_HAVE_MIDLIB2)
         SOURCES aptina.cc
     )
 endif()
+
+vidre_test(hdspeed EXCLUDE
+    BUILD
+        LINK_LIBRARIES 
+            PUBLIC
+                Vidre::Core
+    SOURCES hdspeed.cc
+)
