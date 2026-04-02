@@ -49,6 +49,7 @@
 #include <io.h>
 #else
 #include <unistd.h>
+#include <fcntl.h>
 #endif
 
 namespace vidre {
@@ -97,6 +98,8 @@ namespace vidre {
             inline std::ssize_t write(descriptor fd, const uint8_t *buf, std::size_t count) {
                 return ::_write(fd, buf, count);
             }
+
+            static constexpr std::size_t path_max = MAX_PATH;
 #else
             enum flag_type : int {
                 readonly = O_RDONLY,
@@ -131,6 +134,10 @@ namespace vidre {
             inline std::ptrdiff_t write(descriptor fd, const uint8_t *buf, std::size_t count) {
                 return ::write(fd, buf, count);
             }
+
+            static constexpr std::size_t path_max = PATH_MAX;
+
+            
 #endif
 
             ///@}
@@ -174,6 +181,13 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY fileio {
         public:
+            /** Maximum length of a path.
+             * */
+            static constexpr std::size_t path_max = detail::file::path_max;
+
+            /** File flags.
+             * @see open()
+             * */
             enum flag_type : int {
                 readonly = detail::file::flag_type::readonly,
                 writeonly = detail::file::flag_type::writeonly,
@@ -219,10 +233,14 @@ namespace vidre {
 
             /** Create a temporary file.
              * */
-            bool temporary() {
-                char filename[] = "XXXXXXXX-vidre.tmp";
-                fd_ = mkstemp(filename);
+            bool temporary(std::string &filename) {
+                fd_ = mkstemp(filename.data());  // per standard, data is zero-terminated
                 return isvalid();
+            }
+            bool temporary() {
+                std::string filename = "vidre-tmp-XXXXXX";
+                // FIXME unlink!!!
+                return temporary(filename);
             }
 
             /** Close the file.
@@ -237,6 +255,12 @@ namespace vidre {
             std::ptrdiff_t write(const uint8_t *buf, std::size_t count) noexcept {
                 return detail::file::write(fd_, buf, count);
             }
+
+            /** Read data from file.
+             * */
+            std::ptrdiff_t read(uint8_t *buf, std::size_t count) noexcept {
+                return detail::file::read(fd_, buf, count);
+            }
         };
 
         ///@cond
@@ -244,6 +268,11 @@ namespace vidre {
             return static_cast<fileio::flag_type>(to_underlying(lhs) | to_underlying(rhs));
         }
         ///@endcond
+
+        // ================================================================================================================
+        // ================================================================================================================
+        // ================================================================================================================
+        // ================================================================================================================
 
         /** Data "volume".
          * */
@@ -302,7 +331,14 @@ namespace vidre {
 
         public:
             view() = default;
-            view(pointer ptr, std::size_t len);
+            view(view &&other) = default;
+            view(const view &other) = default;
+
+            view(std::size_t n, pointer ptr) noexcept : size_(n), data_(ptr) {}
+            view(std::size_t n, const_pointer ptr) noexcept : size_(n), data_(const_cast<pointer>(ptr)) {}
+
+            template <typename T>
+            view(std::size_t n, const T *ptr) noexcept : size_(n), data_(const_cast<pointer>(ptr)) {}
 
         protected:
             volume<> size_{};
@@ -360,12 +396,12 @@ namespace vidre {
 
             template <typename T>
             size_type put(const T &data) {
-                return put(view{static_cast<const void *>(&data), sizeof(T)});
+                return put(view{sizeof(T), &data});
             }
 
             template <typename T>
             size_type put(const T *data, size_type nmemb) {
-                return put(view{static_cast<const void *>(data), nmemb * sizeof(T)});
+                return put(view{nmemb * sizeof(T), data});
             }
         };
 
