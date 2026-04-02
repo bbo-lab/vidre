@@ -25,10 +25,10 @@ void argcb_log_debug(program::argument::parser &, variant value) {
 TEST_CASE("option", "[application.hh]") {
     // This test here only test "compilability".
     {
-        std::initializer_list<program::argument> args{{"help", "Display help."}, {"help", 'h', "Display help."}};
+        std::initializer_list<program::argument> args [[maybe_unused]]{{"help", "Display help."}, {"help", 'h', "Display help."}};
     }
     {
-        std::initializer_list<program::argument> args{{"infile", "Input file.", program::argument::positional}};
+        std::initializer_list<program::argument> args [[maybe_unused]]{{"infile", "Input file.", program::argument::positional}};
         // std::initializer_list<program::argument> args_alt{program::argument::positional{"infile", "Input file."}};
     }
     {
