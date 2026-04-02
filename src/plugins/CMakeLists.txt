@@ -4,3 +4,4 @@ install(FILES ${PLUGIN_OUTPUT_PATH}/devices.cfg
     COMPONENT "runtime")
 
 add_subdirectory(camera)
+add_subdirectory(storage)

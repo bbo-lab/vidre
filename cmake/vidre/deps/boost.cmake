@@ -24,6 +24,7 @@ FetchContent_Declare(
             exception
             system
             interprocess
+            iostreams
             ${BOOST_COMPONENT_UUID}
 )
 FetchContent_MakeAvailable(Boost)

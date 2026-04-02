@@ -50,10 +50,8 @@ namespace vidre {
         ///@{
 
         /** Dynamic storage constraint.
-         * FIXME
          * */
         static constexpr std::size_t dynamic = std::size_t(-1);
-
 
         /** Default alignment.
          * */
