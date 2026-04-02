@@ -254,7 +254,7 @@ namespace vidre {
             const char *copyright;
             const char *description;
             size_t size;
-            argument args[];
+            argument args[1];
         };
 
         /** Alternative construction of positional arguments.

@@ -21,13 +21,19 @@
  */
 #include "log.hh"
 #include "os/tty.hh"
+#include "util/cpp.hh"
+#include "exception.hh"
 
 #include <iostream>
 #include <array>
 #include <algorithm>
 #include <chrono>
+#include <ranges>
+#include <string_view>
 
 using namespace vidre;
+
+using namespace std::literals::string_view_literals;
 
 static log::io::style::type vidre_use_fret() {
     if (vidre::os::isatty())
@@ -175,7 +181,7 @@ void log::handler::emit(const message_type &txt, unsigned indent [[maybe_unused]
 }
 
 log::io::file::file(const std::string_view filename, level th, style::type sty) noexcept : stream(th, sty) {
-    outs_ = ::fopen(filename.data(), "a");
+    outs_ = ::fopen(std::string(filename).c_str(), "a");
     if (outs_ == nullptr)
         log::warning() << "Opening log file '" << filename << "' failed.\n";
     else {
@@ -239,28 +245,127 @@ log::trace::~trace() {
 static struct {
     const char *name;
     log::level level;
-} setup_levels[] = {                     //
-    {"fatal", log::level::fatal},        //
-    {"alert", log::level::alert},        //
-    {"critical", log::level::critical},  //
-    {"error", log::level::error},        //
-    {"warning", log::level::warning},    //
-    {"notice", log::level::notice},      //
-    {"status", log::level::status},      //
-    {"info", log::level::info},          //
-    {"debug", log::level::debug},        //
-    {"trace", log::level::trace},        //
-    {{}, {}}};
+    const char *brief;
+} setup_levels[] = {
+    {"fatal", log::level::fatal, "System is in an unusable state and the program will terminate."},                //
+    {"alert", log::level::alert, "Immediate user interaction is required, usually when data corruption occurs."},  //
+    {"critical", log::level::critical, "A critical error, such as hardware failure."},                             //
+    {"error", log::level::error, "An application error occurred."},                                                //
+    {"warning", log::level::warning, "Warning level, which may hint to future failure."},                          //
+    {"notice", log::level::notice, "A noteworthy condition occurred."},                                            //
+    {"status", log::level::status, "A status message."},                                                           //
+    {"info", log::level::info, "A purely informational message."},                                                 //
+    {"debug", log::level::debug, "Debugging information."},                                                        //
+    {"trace", log::level::trace, "Tracing."},                                                                      //
+};
+
+static constexpr int level_invalid = std::numeric_limits<int>::min();
+static std::optional<std::array<std::string_view, 3>> split_option(const std::string_view option) {
+    std::array<std::string_view, 3> result;
+
+    size_t i = 0;
+    for (const auto part : std::views::split(option, ":"sv)) {
+        if (i == 3)
+            return std::nullopt;
+
+        result[i++] = std::string_view(part);
+    }
+
+    return result;
+}
+
+static int tolevel(const std::string_view &str) {
+    for (size_t i = 0; i < size_of(setup_levels); ++i) {
+        if (str == setup_levels[i].name)
+            return static_cast<int>(setup_levels[i].level);
+    }
+    return level_invalid;
+}
+
+static std::vector<log::io::file> vidre_log_files;
 
 void log::setup(const std::string &def) {
     if (def == "help") {
-        std::cout <<                       //
-            "Setting the log level(s):\n"  //
-            "\n"                           //
-            "FIXME"                        //
-            "\n";
+        std::cout <<                                                                          //
+            "Log-levels can be set for console output, but also file logging is possible.\n"  //
+            "The general format is:\n"                                                        //
+            "\n"                                                                              //
+            "    <option>[,<option>]...\n"                                                    //
+            "\n"                                                                              //
+            "where option is\n"                                                               //
+            "\n"                                                                              //
+            "   <log-level>\n"                                                                //
+            "   trace:<pattern>\n"                                                            //
+            "\n"                                                                              //
+            "to set the log level for console output or\n"                                    //
+            "\n"                                                                              //
+            "   <file-name>:<log-level>\n"                                                    //
+            "   <file-name>:trace:<pattern>\n"                                                //
+            "\n"                                                                              //
+            "to log message of the given level to a file.\n"                                  //
+            "\n"                                                                              //
+            "For tracing, the wildcard <pattern>, referring to the source code path(s),\n"    //
+            "has to be provided.\n"                                                           //
+            "\n"                                                                              //
+            "Available log levels are:\n";
+
+        for (size_t i = 0; i < size_of(setup_levels); ++i) {
+            std::cout << std::format("    {:<20} {}\n", setup_levels[i].name, setup_levels[i].brief);
+        }
     }
     else {
-        // FIXME
+        for (const auto option : std::views::split(def, ","sv)) {
+            auto def = split_option(std::string_view(option));
+
+            if (def) {
+                auto const &part = *def;
+
+                if (not part[2].empty()) {
+                    int threshold = tolevel(part[1]);
+                    if (threshold == static_cast<int>(level::trace)) {
+                        // <file-name>:trace:<pattern>
+                        vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
+                        log::trace::pattern(part[2]);
+                        continue;
+                    }
+                    else if (threshold != level_invalid) {
+                        // <file-name>:<log-level>:<pattern>
+                        // (pattern is ignored)
+                        vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
+                        continue;
+                    }
+                }
+                else if (not part[1].empty()) {
+                    int threshold = tolevel(part[0]);
+                    if (threshold == static_cast<int>(level::trace)) {
+                        // trace:<pattern>
+                        log::io::stream::threshold(0, level::trace);
+                        log::trace::pattern(part[1]);
+                        continue;
+                    }
+                    else if (threshold == level_invalid) {
+                        threshold = tolevel(part[1]);
+                        if (threshold != level_invalid) {
+                            // <file-name>:<log-level>
+                            vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
+                            continue;
+                        }
+                    }
+                }
+                else {
+                    int threshold = tolevel(part[0]);
+                    if ((threshold != level_invalid) and (threshold != static_cast<int>(level::trace))) {
+                        // <log-level>
+                        // (trace not allowed, missing pattern)
+                        log::io::stream::threshold(0, static_cast<log::level>(threshold));
+                        continue;
+                    }
+                }
+            }
+
+            std::cerr << "invalid tracing option: " << std::string_view(option) << std::endl;
+            std::cerr << "use 'help' for further information." << std::endl;
+            abort();
+        }
     }
 }

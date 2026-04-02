@@ -19,6 +19,8 @@ void help(program::argument::parser &p, variant) {
 
 void log_level(program::argument::parser &, variant value) {
     log::setup(value);
+    if (std::string(value) == "help")
+        std::exit(0);
 }
 
 int main(int argc, const char **argv) {

@@ -65,7 +65,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/example.core.program",
-            "args": [ "--log=help", "-vvvvv", "/path/to/an/input" ],
+            "args": [ "--log=log.txt:trace:*", "-vvvvv", "/path/to/an/input" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
