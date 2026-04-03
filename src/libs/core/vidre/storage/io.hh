@@ -39,7 +39,7 @@
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/util/cpp.hh>
+#include <vidre/cpp/util.hh>
 
 #include <bit>
 #include <filesystem>
@@ -131,7 +131,15 @@ namespace vidre {
                 return ::read(fd, buf, count);
             }
 
+            inline std::ptrdiff_t read(descriptor fd, char *buf, std::size_t count) {
+                return ::read(fd, buf, count);
+            }
+
             inline std::ptrdiff_t write(descriptor fd, const uint8_t *buf, std::size_t count) {
+                return ::write(fd, buf, count);
+            }
+
+            inline std::ptrdiff_t write(descriptor fd, const char *buf, std::size_t count) {
                 return ::write(fd, buf, count);
             }
 

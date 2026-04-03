@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vidre/config.hh>
+#include <climits>
 
 /**@defgroup api-core-cpp-util Utilities
  * @ingroup api-core-cpp
@@ -40,7 +41,7 @@ namespace vidre {
 
         // FIXME
 
-    } //
+    }  // namespace detail
 
     /**@addtogroup api-core-cpp-util
      * */
@@ -53,8 +54,22 @@ namespace vidre {
         return N;
     }
 
-    /** Get demangled name of FIXME.
+    // /** Get demangled name of FIXME.
+    //  * */
+
+    /** Get number of bits in a type.
      * */
+    template <typename T>
+    struct bits_of {
+        static constexpr std::size_t value = CHAR_BIT * sizeof(T);
+    };
+
+    /** Get value (such as enum class) as underlying value.
+     * */
+    template <typename E>
+    constexpr auto to_underlying(E e) noexcept {
+        return static_cast<std::underlying_type_t<E>>(e);
+    }
 
     ///@}
 

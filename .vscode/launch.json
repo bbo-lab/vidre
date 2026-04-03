@@ -83,7 +83,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test.core.plugin",
-            "args": [],
+            "args": [ "-s" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
@@ -92,7 +92,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test.core.util",
-            "args": [],
+            "args": [ "-s" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
@@ -101,7 +101,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test.core.exceptions",
-            "args": [],
+            "args": [ "-s" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
@@ -110,7 +110,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test.core.program",
-            "args": [],
+            "args": [ "-s" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         }

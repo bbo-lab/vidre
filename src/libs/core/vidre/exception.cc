@@ -20,13 +20,110 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "exception.hh"
+#include "storage/io.hh"
+
+#include <iostream>
+
+#include <cstdlib>
+#include <cstring>
 
 using namespace vidre;
 
-const char *system_error::what() const noexcept {
-    static thread_local static_error_message msg {};
+thread_local size_t vidre::detail::exception::store::used_ = 0;
+thread_local char vidre::detail::exception::store::mem_[VIDRE_EXCEPTION_STORE] = {};
 
-    msg = ec_.message();
+detail::exception::store::pointer detail::exception::store::allocate(size_t n) noexcept {
+    if ((VIDRE_EXCEPTION_STORE - used_) < (n + 2 * granularity))
+        abort_with_message("implementation error: exception store depleted");
 
-    return msg;
+    auto ptr = &mem_[used_];
+    used_ += n + sizeof(entry);
+
+    // ensure alignment
+    used_ = (used_ + granularity - 1) & ~(granularity - 1);
+
+    // set "entry"
+    auto *e = reinterpret_cast<entry *>(ptr);
+    *e = {&mem_[used_], n};
+    if ((e->next->data() - mem_) <= VIDRE_EXCEPTION_STORE)
+        *(e->next) = {};
+
+    return ptr + sizeof(entry);
+}
+
+void detail::exception::store::deallocate(pointer ptr) noexcept {
+    const char *cptr = reinterpret_cast<const char *>(ptr);
+    if ((cptr < mem_) || ((cptr - mem_) >= used_) || (not used_))
+        goto dealloc_failed;
+
+    {
+        // find entry
+        auto *e = reinterpret_cast<entry *>(mem_);
+        auto *beg = e;  // track first zero entry
+        while (e->data() != ptr) {
+            if (not e->next)
+                break;
+            e = e->next;
+            if (beg->size != 0)
+                beg = e;
+        }
+
+        if (e->data() == ptr) {
+            // find end of zero entries
+            auto end = e->next;
+            while ((end->next) && (end->size == 0))
+                end = end->next;
+
+            if (end->addr() >= &mem_[used_]) {
+                // free from first zero
+                *beg = {};
+                used_ = static_cast<size_type>(reinterpret_cast<const char *>(beg) - mem_);
+            }
+            else
+                // free at entry (fragmented)
+                e->size = 0;
+
+            return;
+        }
+    }
+
+dealloc_failed:
+    abort_with_message("implementation error: deallocating invalid pointer");
+}
+
+void vidre::abort_with_message(const char *msg) {
+    detail::file::write(2, msg, strlen(msg));
+    abort();
+}
+
+const char *exception::what() {
+    return "general exception";
+}
+
+const char *exception::runtime::what() {
+    return "runtime error";
+}
+
+const char *exception::logic::what() {
+    return "logic error";
+}
+
+const char *error::location::message() noexcept {
+    return "FIXME";
+}
+
+void error::diagnostic::show() noexcept {
+    auto ptr = &(e_->next_);
+    while (ptr->get() != nullptr) {
+        auto skel = ptr->get();
+        auto infop = static_cast<error::info *>(skel);
+        if (infop == nullptr) {
+            break;
+        }
+
+        std::cerr << "   [" << infop->tag() << "]" << std::endl;
+
+        // next
+        ptr = &(infop->next_);
+    }
 }

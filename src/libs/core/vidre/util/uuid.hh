@@ -24,6 +24,18 @@
 #define VIDRE_CORE_UTIL_UUID_HH
 #pragma once
 
+/**@defgroup api-core-util-uuid UUID
+ * @ingroup api-core-util
+ * @details
+ * @fileinfo
+ *
+ * <b>Example</b>:
+ * @include examples/core/uuid.cc
+ *
+ * @see
+ * https://en.wikipedia.org/wiki/Universally_unique_identifier
+ * */
+
 #include <vidre/core/config.hh>
 
 #if VIDRE_HAVE_LIBUUID
@@ -38,17 +50,6 @@
 #include <stdexcept>
 
 namespace vidre {
-    /**@defgroup api-core-util-uuid UUID
-     * @ingroup api-core-util
-     * @details
-     * @fileinfo
-     *
-     * <b>Example</b>:
-     * @include examples/core/uuid.cc
-     *
-     * @see
-     * https://en.wikipedia.org/wiki/Universally_unique_identifier
-     * */
 
     namespace detail {
 
