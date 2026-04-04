@@ -139,9 +139,9 @@ install(FILES
 # TEST ########################################################################
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(VIDRE_BUILD_TESTS ON CACHE BOOLEAN "Enable tests.")
+    set(VIDRE_BUILD_TESTS ON CACHE BOOL "Enable tests.")
 else()
-    set(VIDRE_BUILD_TESTS OFF CACHE BOOLEAN "Enable tests.")
+    set(VIDRE_BUILD_TESTS OFF CACHE BOOL "Enable tests.")
 endif()
 
 if(NOT Vidre_IS_SUBPROJECT AND VIDRE_BUILD_TESTS)

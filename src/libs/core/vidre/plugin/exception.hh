@@ -42,7 +42,7 @@ namespace vidre {
             exception(const std::source_location location = std::source_location::current()) : vidre::exception(location) {}
 
             const char *what() const noexcept override {
-                return "plugin::exception";
+                return "plugin";
             }
         };
 
