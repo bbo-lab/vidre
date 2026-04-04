@@ -138,7 +138,13 @@ install(FILES
 
 # TEST ########################################################################
 
-if(NOT Vidre_IS_SUBPROJECT AND (CMAKE_BUILD_TYPE STREQUAL Debug))
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    set(VIDRE_BUILD_TESTS ON CACHE BOOLEAN "Enable tests.")
+else()
+    set(VIDRE_BUILD_TESTS OFF CACHE BOOLEAN "Enable tests.")
+endif()
+
+if(NOT Vidre_IS_SUBPROJECT AND VIDRE_BUILD_TESTS)
     enable_testing()
     find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
 

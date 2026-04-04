@@ -69,8 +69,7 @@ void tracing() {
 
 int main(int argc, const char **argv) {
 #if not defined(DEBUG)
-    // log::fatal() does not return but instead terminates the program
-    log::fatal() << "This example should be executed with full debugging enabled.\nExiting...\n\n";
+    log::notice() << "Tracing is disabled (non-DEBUG build).\n";
 #endif
 
     simple_logging();
