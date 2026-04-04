@@ -23,6 +23,7 @@
 #include "storage/io.hh"
 
 #include <iostream>
+#include <format>
 
 #include <cstdlib>
 #include <cstring>
@@ -53,8 +54,23 @@ detail::exception::store::pointer detail::exception::store::allocate(size_t n) n
 
 void detail::exception::store::deallocate(pointer ptr) noexcept {
     const char *cptr = reinterpret_cast<const char *>(ptr);
-    if ((cptr < mem_) || ((cptr - mem_) >= used_) || (not used_))
+    // if ((cptr < mem_) || ((cptr - mem_) >= used_) || (not used_))
+    //     goto dealloc_failed;
+    if (cptr < mem_)
         goto dealloc_failed;
+    if ((cptr - mem_) >= used_)
+        goto dealloc_failed;
+    if (not used_)
+        goto dealloc_failed;
+
+    // {
+    //     auto *p = reinterpret_cast<entry *>(mem_);
+    //     for (int i = 0; p && (p->addr() < &mem_[used_]); ++i) {
+    //         std::cout << std::format("{:3} {} {}\n", i, (const void *)p, p->size);
+
+    //         p = p->next;
+    //     }
+    // }
 
     {
         // find entry
@@ -63,9 +79,9 @@ void detail::exception::store::deallocate(pointer ptr) noexcept {
         while (e->data() != ptr) {
             if (not e->next)
                 break;
+            if (e->size != 0)
+                beg = e->next;
             e = e->next;
-            if (beg->size != 0)
-                beg = e;
         }
 
         if (e->data() == ptr) {
@@ -108,22 +124,43 @@ const char *exception::logic::what() {
     return "logic error";
 }
 
-const char *error::location::message() noexcept {
-    return "FIXME";
+void error::location::make(error::string &msg) noexcept {
+    msg += std::format(
+        "    source: in {}\n"
+        "               {} ({},{})\n",
+        src_.function_name(),  //
+        src_.file_name(), src_.line(), src_.column());
 }
 
-void error::diagnostic::show() noexcept {
+error::string error::diagnostic::dump() noexcept {
+    string msg(1023, ' ');
+    msg.clear();
+
+    msg = "An exception occured: ";
+    msg += e_->what();
+    msg += '\n';
+
+    bool firstinfo = true;
     auto ptr = &(e_->next_);
     while (ptr->get() != nullptr) {
         auto skel = ptr->get();
         auto infop = static_cast<error::info *>(skel);
         if (infop == nullptr) {
+            // FIXME must not happend
             break;
         }
 
-        std::cerr << "   [" << infop->tag() << "]" << std::endl;
+        if (firstinfo) {
+            msg += "\nDiagnostic information:\n\n";
+            firstinfo = false;
+        }
+
+        infop->make(msg);
+        msg += "\n";
 
         // next
         ptr = &(infop->next_);
     }
+
+    return msg;
 }

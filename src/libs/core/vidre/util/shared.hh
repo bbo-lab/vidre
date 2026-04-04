@@ -148,8 +148,6 @@ namespace vidre {
         using allocator_type = Allocator;
 
     private:
-        /** Internal object representation.
-         * */
         struct counted_object {
             std::atomic<size_t> strong_count;
             std::atomic<size_t> weak_count;  // currently unused, would allow a weak implementation
@@ -165,6 +163,7 @@ namespace vidre {
         Allocator allocator{};
         std::function<void(T *)> deleter;
 
+    private:
         // Helper to destroy the counted object
         void destroy_counted_object() noexcept {
             if (object_) {
@@ -175,6 +174,19 @@ namespace vidre {
                 // Deallocate memory using the allocator
                 CountedObjectAllocator counted_object_allocator(allocator);
                 counted_object_allocator.deallocate(object_, 1);
+            }
+        }
+
+        void release() noexcept {
+            if (!object_)
+                return;
+
+            // Decrement strong count
+            size_t old_count = object_->strong_count.fetch_sub(1, std::memory_order_acq_rel);
+
+            if (old_count == 1) {
+                // No more strong references, destroy the object
+                destroy_counted_object();
             }
         }
 
@@ -240,7 +252,7 @@ namespace vidre {
                 object_ = other.object_;
                 allocator = std::move(other.allocator);
                 deleter = other.deleter;
-                
+
                 other.object_ = nullptr;
             }
             return *this;
@@ -248,6 +260,12 @@ namespace vidre {
 
         ~shared() {
             release();
+        }
+
+        void swap(shared &other) noexcept {
+            std::swap(object_, other.object_);
+            std::swap(allocator, other.allocator);
+            std::swap(deleter, other.deleter);
         }
 
     public:
@@ -287,26 +305,6 @@ namespace vidre {
             release();
             object_ = nullptr;
         }
-
-        void swap(shared &other) noexcept {
-            std::swap(object_, other.object_);
-            std::swap(allocator, other.allocator);
-            std::swap(deleter, other.deleter);
-        }
-
-    private:
-        void release() noexcept {
-            if (!object_)
-                return;
-
-            // Decrement strong count
-            size_t old_count = object_->strong_count.fetch_sub(1, std::memory_order_acq_rel);
-
-            if (old_count == 1) {
-                // No more strong references, destroy the object
-                destroy_counted_object();
-            }
-        }
     };
 
     /** Factory function for creating shared objects.
@@ -341,11 +339,15 @@ namespace vidre {
      *       shared<T, MyAllocator> p(allocator_arg, alloc, args...);
      *       ```
      */
-    // FIXME
-    // template <typename T, typename Allocator = std::allocator<T>, typename... Args>
-    // shared<T, Allocator> make_shared(Args &&...args) {
-    //     return shared<T, Allocator>(std::forward<Args>(args)...);
-    // }
+    template <typename T, typename Allocator = std::allocator<T>, typename... Args>
+    shared<T, Allocator> make_shared(Args &&...args) {
+        Allocator allocator;
+
+        T *obj = allocator.allocate(1);
+        new (obj) T(std::forward<Args>(args)...);
+
+        return obj;
+    }
 
     ///@}
 

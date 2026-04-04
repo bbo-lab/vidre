@@ -182,7 +182,6 @@ namespace vidre {
             }
 
             /** Deleter.
-             * FIXME
              * */
             template <class T>
             struct deleter {
@@ -191,6 +190,47 @@ namespace vidre {
                     store::deallocate(p);
                 }
             };
+
+            ///@}
+
+        }  // namespace exception
+
+    }  // namespace detail
+
+    /** Exception and error namespace.
+     * @ingroup api-core-exception
+     * */
+    namespace error {
+
+        /**@addtogroup api-core-exception
+         * */
+        ///@{
+
+        /** Allocator for exception handling.
+         * */
+        template <typename T>
+        using allocator = detail::exception::allocator<T>;
+
+        /** Standard type for error messages.
+         * */
+        using string = std::basic_string<char, std::char_traits<char>, detail::exception::allocator<char>>;
+
+        class diagnostic;
+
+        ///@}
+
+    }  // namespace error
+
+    namespace detail {
+
+        /** Exception details.
+         * @ingroup api-core-details
+         * */
+        namespace exception {
+
+            /**@addtogroup api-core-details
+             * */
+            ///@{
 
             /** Supplemental information for exceptions.
              * */
@@ -206,11 +246,9 @@ namespace vidre {
                     return nullptr;
                 }
 
-                /** The message.
+                /** Make the message.
                  * */
-                virtual const char *message() noexcept {
-                    return nullptr;
-                }
+                virtual void make(error::string &) noexcept {}
             };
 
             ///@}
@@ -243,27 +281,14 @@ namespace vidre {
     template <class E>
     using unexpected = std::unexpected<E>;
 
-    /** Exception and error namespace.
-     * @ingroup api-core-exception
-     * */
     namespace error {
 
         /**@addtogroup api-core-exception
          * */
         ///@{
 
-        /** Allocator for exception handling.
+        /** Base class for supplemental exception info.
          * */
-        template <typename T>
-        using allocator = detail::exception::allocator<T>;
-
-        /** Standard type for error messages.
-         * */
-        using message = std::basic_string<char, std::char_traits<char>, detail::exception::allocator<char>>;
-
-        class diagnostic;
-
-        /** FIXME */
         class VIDRE_CORE_VISIBILITY info : public detail::exception::supplement {
         public:
             using shared_type = shared<detail::exception::supplement,  //
@@ -305,9 +330,7 @@ namespace vidre {
 
             /** The message.
              * */
-            const char *message() noexcept override {
-                abort_with_message("internal error: must not be used directly");
-            };
+            void make(error::string &) noexcept override {};
 
         private:
             friend class diagnostic;
@@ -326,12 +349,6 @@ namespace vidre {
     class VIDRE_CORE_VISIBILITY exception : public virtual error::info {
     public:
         exception() noexcept = default;
-
-        // exception(const exception &) noexcept = default;
-        // exception &operator=(const exception &) noexcept = default;
-        // exception(exception &&) noexcept = default;
-        // exception &operator=(exception &&) noexcept = default;
-
         virtual ~exception() {}
 
     public:
@@ -345,6 +362,13 @@ namespace vidre {
 
     /** Add supplemental information to exception.
      * */
+    template <class E, class Info>
+    requires (std::derived_from<E, exception> and std::derived_from<Info, error::info>)
+    E operator<<(E &&e, Info &&info) noexcept {
+        e.attach(std::move(info));
+        return std::move(e);
+    }
+
     template <class E, class Info>
     requires (std::derived_from<E, exception> and std::derived_from<Info, error::info>)
     E &operator<<(E &e, Info &&info) noexcept {
@@ -382,7 +406,8 @@ namespace vidre {
          * */
         ///@{
 
-        /** FIXME */
+        /** Exception diagnostic.
+         * */
         class VIDRE_CORE_VISIBILITY diagnostic {
         public:
             diagnostic() = delete;
@@ -395,9 +420,11 @@ namespace vidre {
             exception *e_;
 
         public:
-            void show() noexcept;
+            string dump() noexcept;
         };
 
+        /** Source code location info.
+         * */
         class VIDRE_CORE_VISIBILITY location : public virtual info {
         public:
             location(const std::source_location &src = std::source_location::current()) noexcept : src_(src) {}
@@ -413,7 +440,31 @@ namespace vidre {
 
             /** The message.
              * */
-            const char *message() noexcept override;
+            void make(error::string &) noexcept override;
+        };
+
+        /** Error message.
+         * */
+        class VIDRE_CORE_VISIBILITY message : public virtual info {
+        public:
+            message(const char *msg) noexcept : msg_(msg) {}
+            message(const string &msg) noexcept : msg_(msg) {}
+            virtual ~message() {}
+
+        protected:
+            string msg_{};
+
+        public:
+            const char *tag() noexcept override {
+                return "message";
+            }
+
+            /** The message.
+             * */
+            void make(error::string &emsg) noexcept override {
+                emsg += "    message: ";
+                emsg += msg_ + "\n";
+            }
         };
 
         ///@}

@@ -84,13 +84,7 @@ TEST_CASE("detail::exception", "[exceptions.hh]") {
 TEST_CASE("error::info", "[exceptions.hh]") {
     using store = detail::exception::store;
 
-    {
-        detail::exception::supplement *info = new error::info();
-        REQUIRE(dynamic_cast<error::info*>(info) != nullptr);
-
-    }
-
-    {
+    {               
         {
             error::info info [[maybe_unused]]{};
 
@@ -106,13 +100,40 @@ TEST_CASE("error::info", "[exceptions.hh]") {
 
     {
         {
+            error::message info [[maybe_unused]] = "some explanation for an error...";
+
+            REQUIRE(std::string(info.tag()) == "message");
+
+            REQUIRE(store::free() != store::max_available);
+        }
+
+        REQUIRE(store::free() == store::max_available);
+    }
+
+    {
+        {
             exception e [[maybe_unused]]{};
 
             e << error::info() << error::location();
             REQUIRE(store::free() != store::max_available);
 
             error::diagnostic diag(e);
-            diag.show();
+            error::string emsg = diag.dump();
+            REQUIRE(store::free() != store::max_available);
+
+            std::cerr << emsg << std::endl;
+        }
+
+        REQUIRE(store::free() == store::max_available);
+    }
+
+    {
+        try {
+            throw exception::runtime()  //
+                << error::location()    //
+                << error::message("this is an error");
+        } catch (exception &e) {
+            std::cerr << error::diagnostic(e).dump() << std::endl;
         }
 
         REQUIRE(store::free() == store::max_available);
