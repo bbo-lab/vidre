@@ -20,21 +20,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_SETTINGS_NODE_HH
-#define VIDRE_CORE_SETTINGS_NODE_HH
+#ifndef VIDRE_CORE_SETTINGS_LUA_HH
+#define VIDRE_CORE_SETTINGS_LUA_HH
 #pragma once
+
+/**@addtogroup api-core-settings-lua
+ * @details
+ * @fileinfo
+ *
+ * The use of Lua is intended for complex configuration scripts, such as 
+ * cameras. Cameras, for example, to set the exposure time, need to
+ * adjust several camera registers. The USB3Vision standard has solved
+ * the issue using an XML description the incorporates "computation" nodes,
+ * allowing a generic interface for basically any camera without a specific
+ * compiled implementation. 
+ *
+ * */
 
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
 #include <vidre/exception.hh>
 
+#include <string>
 #include <vector>
 
 namespace vidre {
 
     namespace settings {
 
-        /**@addtogroup api-core-settings
+        /**@addtogroup api-core-settings-lua
          * */
         ///@{
 
@@ -232,10 +246,28 @@ namespace vidre {
         }
 #endif
 
+        /** Configuration file.
+         * @todo needs a dump() function
+         * */
+        class VIDRE_CORE_VISIBILITY file : public node {
+        public:
+            file() = default;
+
+        public:
+            /** Load configuration file.
+             * */
+            void load(const std::filesystem::path &file, bool force = false);
+
+            /** Save configuration.
+             * */
+            void save();
+            void save(const std::filesystem::path &file);
+        };
+
         ///@}
 
     }  // namespace settings
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_SETTINGS_NODE_HH
+#endif  // VIDRE_CORE_SETTINGS_LUA_HH

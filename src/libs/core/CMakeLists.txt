@@ -27,6 +27,7 @@ vidre_library(vidrecore SHARED
                 ${UNITSLIB}
                 # ${TERMINALLIB}
                 ${FMTLIB}
+                ${YAMLLIB}
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development
@@ -54,7 +55,6 @@ vidre_library(vidrecore SHARED
             vidre/plugin/exception.hh
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
-            vidre/plugin/hub.hh vidre/plugin/hub.cc
         vidre/program.hh vidre/program.cc
         
         vidre/util/version.hh

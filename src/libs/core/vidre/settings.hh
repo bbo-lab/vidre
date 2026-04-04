@@ -28,27 +28,37 @@
  * @details
  * @fileinfo
  *
- * Configuration files are, as also stated elsewhere, implemented using Lua
- * (see @ref api-core-script). For passing settings, 
+ * The core library provides interfaces for YAML, JSON and Lua. Each
+ * format has it's advantages and disadvantages:
  * 
- * The advantage of using Lua as a configuration language is, that it also
- * allows to implement complex functions, such as is required for abstracting
- * camera interfaces, where, for example setting the frame rate or exposure time,
- * would require, first to do calculations and, second, update multiple registers
- * at once.
+ * **JSON** is lean and fast, especially useful for setting up devices
+ * and transporting serialized data.
+ * 
+ * **YAML** is (as long as one stays away from its <a href="https://noyaml.com/">short-comings</a>).
+ * However, in contrast to JSON, it can be commented.
+ * 
+ * **Lua**, finally, provides the potential for complex configuration scripts
+ * (for example camera definitions), that allows interaction with the vidre
+ * libraries, plugins, etc. 
  *
  * @internal
  *
  * @endinternal
+ * 
+ * @{
+ * @defgroup api-core-settings-json JSON
+ * @defgroup api-core-settings-yaml YAML
+ * @defgroup api-core-settings-lua Lua
+ * @}
  * 
  * @see @ref examples/core/settings.cc
  * */
 
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
-#include <vidre/settings/node.hh>
-#include <vidre/settings/file.hh>
+#include <vidre/settings/lua.hh>
 #include <vidre/settings/json.hh>
+#include <vidre/settings/yaml.hh>
 
 namespace vidre {
 

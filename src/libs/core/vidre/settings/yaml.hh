@@ -1,5 +1,5 @@
 /* VidRe
- * Copyright (C) 2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Copyright (C) 2024-2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
  *
@@ -20,44 +20,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_SETTINGS_FILE_HH
-#define VIDRE_CORE_SETTINGS_FILE_HH
+#ifndef VIDRE_CORE_SETTINGS_YAML_HH
+#define VIDRE_CORE_SETTINGS_YAML_HH
 #pragma once
 
+/**@addtogroup api-core-settings-yaml
+ * @details
+ * @fileinfo
+ * 
+ * FIXME
+ * 
+ * */
+
 #include <vidre/core/config.hh>
-#include <vidre/script.hh>
-#include <vidre/settings/node.hh>
+
+#include <yaml-cpp/yaml.h>
 
 namespace vidre {
 
     namespace settings {
 
-        /**@addtogroup api-core-settings
+        /** YAML namespace.
+         * @ingroup api-core-settings-yaml
          * */
-        ///@{
+        namespace yaml {
 
-        /** Configuration file.
-         * @todo needs a dump() function
-         * */
-        class VIDRE_CORE_VISIBILITY file : public node {
-        public:
-            file() = default;
-
-        public:
-            /** Load configuration file.
+            /**@addtogroup api-core-settings-yaml
              * */
-            void load(const std::filesystem::path &file, bool force = false);
+            ///@{
 
-            /** Save configuration.
+            /** A YAML node.
+             * @see https://codedocs.xyz/jbeder/yaml-cpp/index.html
              * */
-            void save();
-            void save(const std::filesystem::path &file);
-        };
+            using node = YAML::Node;
 
-        ///@}
+            // FIXME
+
+            ///@}
+
+        }  // namespace yaml
 
     }  // namespace settings
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_SETTINGS_FILE_HH
+#endif  // VIDRE_CORE_SETTINGS_YAML_HH

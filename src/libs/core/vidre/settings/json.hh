@@ -24,6 +24,14 @@
 #define VIDRE_CORE_SETTINGS_JSON_HH
 #pragma once
 
+/**@addtogroup api-core-settings-json
+ * @details
+ * @fileinfo
+ * 
+ * FIXME
+ * 
+ * */
+
 #include <vidre/core/config.hh>
 
 #include <nlohmann/json.hpp>
@@ -32,7 +40,7 @@ namespace vidre {
 
     namespace settings {
 
-        /**@addtogroup api-core-settings
+        /**@addtogroup api-core-settings-json
          * */
         ///@{
 
