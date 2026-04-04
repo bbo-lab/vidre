@@ -56,6 +56,7 @@ void detail::exception::store::deallocate(pointer ptr) noexcept {
     const char *cptr = reinterpret_cast<const char *>(ptr);
     // if ((cptr < mem_) || ((cptr - mem_) >= used_) || (not used_))
     //     goto dealloc_failed;
+
     if (cptr < mem_)
         goto dealloc_failed;
     if ((cptr - mem_) >= used_)
@@ -112,24 +113,20 @@ void vidre::abort_with_message(const char *msg) {
     abort();
 }
 
-const char *exception::what() {
+const char *exception::what() const noexcept {
     return "general exception";
 }
 
-const char *exception::runtime::what() {
-    return "runtime error";
-}
-
-const char *exception::logic::what() {
+const char *exception::logic::what() const noexcept {
     return "logic error";
 }
 
-void error::location::make(error::string &msg) noexcept {
-    msg += std::format(
-        "    source: in {}\n"
-        "               {} ({},{})\n",
-        src_.function_name(),  //
-        src_.file_name(), src_.line(), src_.column());
+const char *exception::runtime::what() const noexcept {
+    return "runtime error";
+}
+
+const char *exception::argument::what() const noexcept {
+    return "argument error";
 }
 
 error::string error::diagnostic::dump() noexcept {
@@ -163,4 +160,47 @@ error::string error::diagnostic::dump() noexcept {
     }
 
     return msg;
+}
+
+void error::location::make(error::string &msg) noexcept {
+    if (not function_.empty() and not filename_.empty())
+        msg += std::format(
+            "    source: in {}\n"
+            "               {}",
+            function_,  //
+            filename_);
+    else
+        msg += std::format("    source: in {}", filename_);
+
+    if (line_ and column_)
+        msg += std::format(" ({},{})", line_, column_);
+    else if (line_)
+        msg += std::format(" ({})", line_);
+
+    msg += '\n';
+}
+
+void error::message::make(error::string &emsg) noexcept {
+    emsg += "    message: ";
+    emsg += msg_ + "\n";
+}
+
+void error::errc::make(error::string &emsg) noexcept {
+    auto &cat = std::generic_category();
+
+    emsg += "    ";
+    emsg += cat.name();
+    emsg += ": ";
+    emsg += cat.message(static_cast<int>(ec_));
+    emsg += "\n";
+}
+
+void error::system::make(error::string &emsg) noexcept {
+    auto &cat = std::system_category();
+
+    emsg += "    ";
+    emsg += cat.name();
+    emsg += ": ";
+    emsg += cat.message(ec_);
+    emsg += "\n";
 }

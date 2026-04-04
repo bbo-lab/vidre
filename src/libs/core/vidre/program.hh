@@ -340,7 +340,6 @@ namespace vidre {
             const argument *find_short(char c);
             const argument *find_long(const std::string &name);
             void handle(const argument &opt);
-            void argerror [[noreturn]] (const std::string &msg);
 
         public:
             /** Parse program invocation arguments.

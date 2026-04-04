@@ -27,7 +27,7 @@ int main(int argc, const char **argv) {
     log::io::stream::threshold(0, log::level::trace);
     log::trace::pattern("*");
 
-    {
+    try {
         //! [program-options]
         program::options args(  //
             "Example program",  //
@@ -47,6 +47,8 @@ int main(int argc, const char **argv) {
         parser.parse(argc, argv);
 
         parser.show();
+    } catch (exception &e) {
+        std::cerr << error::diagnostic(e).dump() << std::endl;
     }
 
     return 0;

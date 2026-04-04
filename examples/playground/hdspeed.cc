@@ -1,5 +1,5 @@
 #include <vidre/storage/io.hh>
-#include <vidre/util/cpp.hh>
+#include <vidre/cpp/util.hh>
 
 #include <cstring>
 #include <chrono>

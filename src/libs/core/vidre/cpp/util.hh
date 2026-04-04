@@ -24,15 +24,17 @@
 #define VIDRE_CORE_CPP_UTIL_HH
 #pragma once
 
-#include <vidre/config.hh>
-#include <climits>
-
 /**@defgroup api-core-cpp-util Utilities
  * @ingroup api-core-cpp
  * @details
  * @fileinfo
  * */
 
+#include <vidre/config.hh>
+
+#include <type_traits>
+
+#include <climits>
 #include <cstddef>
 
 namespace vidre {

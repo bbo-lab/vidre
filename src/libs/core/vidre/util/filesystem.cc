@@ -48,7 +48,9 @@ std::string vidre::loadfile(const fs::path &filename) {
 
     FILE *f = fopen(filename.c_str(), "r");
     if (not f)
-        throw vidre::system_error({errno, std::generic_category()});  // FIXME add filename
+        throw exception::runtime()  //
+            << error::system()      //
+            << error::location(filename.c_str());
 
     char buf[1024];
     while (not feof(f)) {

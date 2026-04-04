@@ -185,7 +185,7 @@ namespace vidre {
             if (std::is_constant_evaluated())
                 throw "implicit type conversion is not supported";
             else
-                throw vidre::exception() << throw_message("implicit type conversion is not supported");
+                throw exception::logic() << error::message("implicit type conversion is not supported");
         }
 
         return static_cast<T>(std::get<typename deduce<T>::type>(data_));
@@ -202,7 +202,7 @@ namespace vidre {
                 if (std::is_constant_evaluated())
                     throw "implicit type conversion is not supported";
                 else
-                    throw vidre::exception() << throw_message("implicit type conversion is not supported");
+                    throw exception::logic() << error::message("implicit type conversion is not supported");
         }
     }
 
@@ -214,7 +214,7 @@ namespace vidre {
             case string:
                 return std::get<std::string>(data_);
             default:
-                throw vidre::exception() << throw_message("implicit type conversion is not supported");
+                throw exception::logic() << error::message("implicit type conversion is not supported");
         }
     }
 
@@ -224,7 +224,7 @@ namespace vidre {
             if (std::is_constant_evaluated())
                 throw "implicit type conversion is not supported";
             else
-                throw vidre::exception() << throw_message("implicit type conversion is not supported");
+                throw exception::logic() << error::message("implicit type conversion is not supported");
         }
 
         data_ = static_cast<typename deduce<T>::type>(v);
@@ -245,7 +245,7 @@ namespace vidre {
                 if (std::is_constant_evaluated())
                     throw "implicit type conversion is not supported";
                 else
-                    throw vidre::exception() << throw_message("implicit type conversion is not supported");
+                    throw exception::logic() << error::message("implicit type conversion is not supported");
         }
 
         return *this;
@@ -264,7 +264,7 @@ namespace vidre {
                 if (std::is_constant_evaluated())
                     throw "implicit type conversion is not supported";
                 else
-                    throw vidre::exception() << throw_message("implicit type conversion is not supported");
+                    throw exception::logic() << error::message("implicit type conversion is not supported");
         }
 
         return *this;

@@ -348,16 +348,16 @@ namespace vidre {
      * */
     class VIDRE_CORE_VISIBILITY exception : public virtual error::info {
     public:
-        exception() noexcept = default;
+        exception(const std::source_location &src = std::source_location::current()) noexcept;
         virtual ~exception() {}
 
     public:
-        virtual const char *what();
+        virtual const char *what() const noexcept;
 
     public:
-        class runtime;
         class logic;
-        // FIXME
+        class runtime;
+        class argument;
     };
 
     /** Add supplemental information to exception.
@@ -376,26 +376,37 @@ namespace vidre {
         return e;
     }
 
-    /** Runtime exception.
-     * */
-    class exception::runtime : public virtual exception {
-    public:
-        runtime() noexcept = default;
-        virtual ~runtime() {}
-
-    public:
-        const char *what() override;
-    };
-
     /** Logic error.
      * */
-    class exception::logic : public virtual exception {
+    class VIDRE_CORE_VISIBILITY exception::logic : public virtual exception {
     public:
-        logic() noexcept = default;
+        logic(const std::source_location &src = std::source_location::current()) noexcept : exception(src) {}
         virtual ~logic() {}
 
     public:
-        const char *what() override;
+        const char *what() const noexcept override;
+    };
+
+    /** Runtime exception.
+     * */
+    class VIDRE_CORE_VISIBILITY exception::runtime : public virtual exception {
+    public:
+        runtime(const std::source_location &src = std::source_location::current()) noexcept : exception(src) {}
+        virtual ~runtime() {}
+
+    public:
+        const char *what() const noexcept override;
+    };
+
+    /** Argument error.
+     * */
+    class VIDRE_CORE_VISIBILITY exception::argument : public virtual exception::runtime {
+    public:
+        argument(const std::source_location &src = std::source_location::current()) noexcept : runtime(src) {}
+        virtual ~argument() {}
+
+    public:
+        const char *what() const noexcept override;
     };
 
     ///@}
@@ -427,11 +438,22 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY location : public virtual info {
         public:
-            location(const std::source_location &src = std::source_location::current()) noexcept : src_(src) {}
+            location(const std::source_location &src = std::source_location::current()) noexcept
+                : function_(src.function_name()), filename_(src.file_name()), line_(src.line()), column_(src.column()) {}
+
+            location(const char *filename, uint_least32_t line = 0, uint_least32_t column = 0) noexcept
+                : filename_(filename), line_(line), column_(column) {}
+
+            location(const char *function, const char *filename, uint_least32_t line = 0, uint_least32_t column = 0) noexcept
+                : function_(function), filename_(filename), line_(line), column_(column) {}
+
             virtual ~location() {}
 
         protected:
-            std::source_location src_{};
+            string function_{};
+            string filename_{};
+            uint_least32_t line_{};
+            uint_least32_t column_{};
 
         public:
             const char *tag() noexcept override {
@@ -448,6 +470,7 @@ namespace vidre {
         class VIDRE_CORE_VISIBILITY message : public virtual info {
         public:
             message(const char *msg) noexcept : msg_(msg) {}
+            message(const std::string &msg) noexcept : msg_(msg) {}
             message(const string &msg) noexcept : msg_(msg) {}
             virtual ~message() {}
 
@@ -461,15 +484,63 @@ namespace vidre {
 
             /** The message.
              * */
-            void make(error::string &emsg) noexcept override {
-                emsg += "    message: ";
-                emsg += msg_ + "\n";
+            void make(error::string &emsg) noexcept override;
+        };
+
+        /** Generic error.
+         * */
+        class VIDRE_CORE_VISIBILITY errc : public virtual info {
+        public:
+            errc(std::errc ec) noexcept : ec_(ec) {}
+            virtual ~errc() {}
+
+        protected:
+            std::errc ec_{};
+
+        public:
+            const char *tag() noexcept override {
+                return "errc";
             }
+
+            /** The message.
+             * */
+            void make(error::string &emsg) noexcept override;
+        };
+
+        /** System error.
+         * */
+        class VIDRE_CORE_VISIBILITY system : public virtual info {
+        public:
+#if defined(WIN32_)
+            system() noexcept : ec_(GetLastError()) {}
+#else
+            system() noexcept : ec_(errno) {}
+#endif
+            system(int ec) noexcept : ec_(ec) {}
+            virtual ~system() {}
+
+        protected:
+            int ec_{};
+
+        public:
+            const char *tag() noexcept override {
+                return "system";
+            }
+
+            /** The message.
+             * */
+            void make(error::string &emsg) noexcept override;
         };
 
         ///@}
 
     }  // namespace error
+
+    inline exception::exception(const std::source_location &src) noexcept {
+#if defined(VIDRE_DEVELOP)
+        *this << error::location(src);
+#endif
+    }
 
 }  // namespace vidre
 

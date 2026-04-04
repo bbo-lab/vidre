@@ -21,7 +21,7 @@
  */
 #include "log.hh"
 #include "os/tty.hh"
-#include "util/cpp.hh"
+#include "cpp/util.hh"
 #include "exception.hh"
 
 #include <iostream>

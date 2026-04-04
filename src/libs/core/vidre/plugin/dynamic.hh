@@ -165,7 +165,7 @@ namespace vidre {
                     auto lib = detail::library::open(path, flags);
                     handle_ = lib.first;
                     if (not handle_)
-                        throw exception(lib.second);
+                        throw exception::runtime() << error::message(lib.second);
                     return handle_;
                 }
 
@@ -190,7 +190,7 @@ namespace vidre {
                 symbol_type get(const std::string &symname) {
                     auto sym = detail::library::symbol(handle_, symname.c_str());
                     if (not sym.first)
-                        throw exception(sym.second);
+                        throw exception::runtime() << error::message(sym.second);
                     return sym.first;
                 }
 

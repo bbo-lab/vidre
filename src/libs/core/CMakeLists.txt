@@ -34,31 +34,31 @@ vidre_library(vidrecore SHARED
     SOURCES
         ${vidre_config_hh}
         vidre/core/config.hh vidre/core/config.cc
-        # vidre/os.hh
-        #     vidre/os/tty.hh
-        #     vidre/os/memory.hh vidre/os/memory.cc
-        #     vidre/os/paths.hh vidre/os/paths.cc
-        # vidre/cpp/format.hh
-        # vidre/cpp/util.hh
+        vidre/os.hh
+            vidre/os/tty.hh
+            vidre/os/memory.hh vidre/os/memory.cc
+            vidre/os/paths.hh vidre/os/paths.cc
+        vidre/cpp/format.hh
+        vidre/cpp/util.hh
         vidre/exception.hh vidre/exception.cc
-        # vidre/log.hh vidre/log.cc
-        # vidre/script.hh vidre/script.cc
-        # vidre/settings.hh vidre/settings.cc
-        #     vidre/settings/node.hh 
-        #     vidre/settings/file.hh 
-        #     vidre/settings/json.hh
-        # vidre/storage.hh vidre/storage.cc
-        #     vidre/storage/io.hh vidre/storage/io.cc
-        # vidre/plugin.hh 
-        #     vidre/plugin/exception.hh
-        #     vidre/plugin/information.hh
-        #     vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
-        #     vidre/plugin/hub.hh vidre/plugin/hub.cc
-        # vidre/program.hh vidre/program.cc
+        vidre/log.hh vidre/log.cc
+        vidre/script.hh vidre/script.cc
+        vidre/settings.hh vidre/settings.cc
+            vidre/settings/node.hh 
+            vidre/settings/file.hh 
+            vidre/settings/json.hh
+        vidre/storage.hh vidre/storage.cc
+            vidre/storage/io.hh vidre/storage/io.cc
+        vidre/plugin.hh 
+            vidre/plugin/exception.hh
+            vidre/plugin/information.hh
+            vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
+            vidre/plugin/hub.hh vidre/plugin/hub.cc
+        vidre/program.hh vidre/program.cc
         
-        # vidre/util/version.hh
-        # vidre/util/develop.hh vidre/util/develop.cc
-        # vidre/util/uuid.hh vidre/util/uuid.cc
-        # vidre/util/filesystem.hh vidre/util/filesystem.cc
-        # vidre/util/variant.hh
+        vidre/util/version.hh
+        vidre/util/develop.hh vidre/util/develop.cc
+        vidre/util/uuid.hh vidre/util/uuid.cc
+        vidre/util/filesystem.hh vidre/util/filesystem.cc
+        vidre/util/variant.hh
 )

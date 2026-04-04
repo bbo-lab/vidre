@@ -84,7 +84,7 @@ TEST_CASE("detail::exception", "[exceptions.hh]") {
 TEST_CASE("error::info", "[exceptions.hh]") {
     using store = detail::exception::store;
 
-    {               
+    {
         {
             error::info info [[maybe_unused]]{};
 
@@ -129,9 +129,10 @@ TEST_CASE("error::info", "[exceptions.hh]") {
 
     {
         try {
-            throw exception::runtime()  //
-                << error::location()    //
-                << error::message("this is an error");
+            throw exception::runtime()                //
+                << error::location()                   //
+                << error::message("this is an error")  //
+                << error::errc(std::errc::bad_message);
         } catch (exception &e) {
             std::cerr << error::diagnostic(e).dump() << std::endl;
         }

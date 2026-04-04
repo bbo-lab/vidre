@@ -21,8 +21,11 @@
  */
 #include "program.hh"
 #include "log.hh"
+#include "exception.hh"
 
 #include <iostream>
+
+#include <cstring>
 
 using namespace vidre;
 
@@ -44,7 +47,7 @@ variant detail::tinymap::get(const std::string &key) {
         if (item.first == key)
             return item.second;
     }
-    throw vidre::exception() << throw_message("internal error: key lookup failed");
+    throw vidre::exception::argument() << error::message("internal error: key lookup failed");
 }
 
 bool detail::tinymap::has(const std::string &key) {
@@ -105,7 +108,7 @@ void program::argument::parser::handle(const argument &opt) {
             if (opt.type == argument::kind::required) {
                 if (not found) {
                     if ((unparsed_.size() < 2) or (unparsed_[1][0] == '-'))
-                        argerror(std::format("Option '{}' requires an argument.", opt.long_option));
+                        throw exception::argument() << error::message(std::format("Option '{}' requires an argument.", opt.long_option));
 
                     value = unparsed_[1];
                     unparsed_.erase(unparsed_.begin() + 1);
@@ -143,15 +146,8 @@ void program::argument::parser::handle(const argument &opt) {
         opt.callback(*this, parsed_.get(key));
 }
 
-void program::argument::parser::argerror [[noreturn]] (const std::string &msg) {
-    std::cerr << "ERROR: " << msg << std::endl << std::endl;
-    std::cerr << help();
-
-    abort();
-}
-
 void program::argument::parser::parse(int argc, const char **argv) {
-    bool haspositional = false;
+    bool haspositional [[maybe_unused]] = false;
 
     // === prepare "parsed"
     for (size_t i = 0; i < opt_->size; ++i) {
@@ -198,7 +194,7 @@ void program::argument::parser::parse(int argc, const char **argv) {
                     const argument *found = find_long(long_option);
 
                     if (not found)
-                        argerror(std::format("Argument '{}' is not recognized.", cur));
+                        throw exception::argument() << error::message(std::format("Argument '{}' is not recognized.", cur));
 
                     handle(*found);
 
@@ -212,9 +208,9 @@ void program::argument::parser::parse(int argc, const char **argv) {
 
                     if (not found) {
                         if (cur.size() > 2)
-                            argerror(std::format("In argument '{}', '-{}' is not recognized.", cur, cur[i]));
+                            throw exception::argument() << error::message(std::format("In argument '{}', '-{}' is not recognized.", cur, cur[i]));
                         else
-                            argerror(std::format("Argument '{}' is not recognized.", cur));
+                            throw exception::argument() << error::message(std::format("Argument '{}' is not recognized.", cur));
                     }
 
                     handle(*found);
@@ -246,7 +242,7 @@ void program::argument::parser::parse(int argc, const char **argv) {
         if (opt.type == argument::kind::positional) {
             auto value = parsed_.get(opt.long_option);
             if (value.empty())
-                argerror(std::format("Parameter '{}' is not set", opt.long_option));
+                throw exception::argument() << error::message(std::format("Parameter '{}' is not set", opt.long_option));
         }
     }
 }
@@ -257,7 +253,7 @@ std::string program::argument::parser::help() {
     for (size_t i = 0; i < opt_->size; ++i) {
         auto &opt = opt_->args[i];
 
-        auto len = strlen(opt.long_option);
+        auto len = ::strlen(opt.long_option);
         switch (opt.type) {
             case argument::kind::optional:
                 len += 2;  // []

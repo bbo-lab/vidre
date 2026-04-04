@@ -32,6 +32,8 @@ extern "C" {
 #include <libavutil/frame.h>
 }
 
+#include <cassert>
+
 namespace vidre {
 
     namespace ffmpeg {

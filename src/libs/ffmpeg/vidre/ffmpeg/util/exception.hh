@@ -42,9 +42,6 @@ namespace vidre {
          * */
         class VIDRE_FFMPEG_VISIBILITY exception : public virtual vidre::exception {
         public:
-            class message;
-
-        public:
             exception(const std::source_location location = std::source_location::current()) : vidre::exception(location) {}
 
         public:
@@ -62,7 +59,8 @@ namespace vidre {
 
         /** FFmpeg error category.
          * */
-        struct VIDRE_FFMPEG_VISIBILITY error_category : std::error_category {
+        class VIDRE_FFMPEG_VISIBILITY error_category : public virtual std::error_category {
+        public:
             const char *name() const noexcept override;
             std::string message(int ev) const override;
         };
@@ -77,7 +75,23 @@ namespace vidre {
 
         /** Error-code exception info.
          * */
-        using errc_info = vidre::error_info<struct errc_info_, errc>;
+        class VIDRE_CORE_VISIBILITY errc_info : public virtual error::info {
+        public:
+            errc_info(ffmpeg::errc ec) noexcept : ec_(ec) {}
+            virtual ~errc_info() {}
+
+        protected:
+            ffmpeg::errc ec_{};
+
+        public:
+            const char *tag() noexcept override {
+                return "ffmpeg::errc";
+            }
+
+            /** The message.
+             * */
+            void make(error::string &emsg) noexcept override;
+        };
 
         ///@}
     }  // namespace ffmpeg
@@ -88,12 +102,5 @@ namespace std {
     template <>
     struct is_error_code_enum<vidre::ffmpeg::errc> : true_type {};
 }  // namespace std
-
-namespace boost {
-    inline std::string to_string(vidre::ffmpeg::errc_info const &e) {
-        auto ecode = vidre::ffmpeg::make_error_code(e.value());
-        return ecode.message();
-    }
-}  // namespace boost
 
 #endif  // VIDRE_FFMPEG_EXCEPTION_HH

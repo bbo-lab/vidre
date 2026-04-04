@@ -38,15 +38,11 @@ namespace vidre {
         /** General plugin exception.
          * */
         class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
-        protected:
-            std::string msg_{};
-
         public:
-            exception(const std::string &msg, const std::source_location location = std::source_location::current())
-                : vidre::exception(location), msg_(msg) {}
+            exception(const std::source_location location = std::source_location::current()) : vidre::exception(location) {}
 
             const char *what() const noexcept override {
-                return msg_.c_str();
+                return "plugin::exception";
             }
         };
 

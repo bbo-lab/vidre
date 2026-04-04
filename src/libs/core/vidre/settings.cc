@@ -34,7 +34,7 @@ lua::type settings::node::get(const std::string &field) const {
 
     if (push() != lua::type::table) {
         g.pop();
-        throw vidre::exception() << throw_message("requested field is not a table");
+        throw exception::logic() << error::message("requested field is not a table");
     }
 
     g.getfield(-1, field.c_str());
@@ -77,7 +77,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
 
     // check if file exists
     if (not std::filesystem::exists(file)) {
-        throw vidre::exception() << throw_message("file does not exist");
+        throw exception::logic() << error::message("file does not exist");
     }
 
     // check if already loaded
@@ -111,7 +111,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
                 break;
             case lua::status::yield:
                 // should not happen
-                throw vidre::exception() << throw_message("execution yielded");
+                throw exception::runtime() << error::message("execution yielded");
             default:
                 break;
         }
@@ -129,17 +129,17 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
                 break;
             case lua::status::yield:
                 // should not happen
-                throw vidre::exception() << throw_message("execution yielded");
+                throw exception::runtime() << error::message("execution yielded");
             default:
                 // FIXME we need inspection here...
-                throw vidre::exception() << throw_message("failed");
+                throw vidre::exception() << error::message("failed");
         }
 
         tr << "- loaded plain, status: " << int(s) << "\n";
     }
 
     if (top == scope.size()) {
-        throw vidre::exception() << throw_message("file is neither a plain nor a complex configuration file");
+        throw exception::runtime() << error::message("file is neither a plain nor a complex configuration file");
     }
 
     if (g.type(-1) != lua::type::table) {
@@ -152,7 +152,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     if (not isnil()) {
         // FIXME requires metamethods to trigger reload of sub-nodes
         //       that also got a reference
-        throw vidre::exception() << throw_message("FIXME: not implemented");
+        throw exception::logic() << error::message("FIXME: not implemented");
     }
     node::ref();
     g.pushinteger(ref_);
@@ -170,7 +170,7 @@ std::string longquote(const std::string &s) {
         }
     }
 
-    throw vidre::exception() << throw_message("escaping configuration string failed");
+    throw exception::logic() << error::message("escaping configuration string failed");
 }
 
 std::string quote(const settings::node &t) {
@@ -251,11 +251,11 @@ void dump(FILE *f, const settings::node &t, int indent) {
 void settings::file::save(const std::filesystem::path &file) {
     FILE *out = fopen(file.c_str(), "r");
     if (not out)
-        throw system_error({errno,std::generic_category()}); // FIXME add filename
+        throw exception::runtime() << error::system() << error::location(file.c_str());
 
     dump(out, *this, 0);
-    
-    fprintf(out,"\n");
+
+    fprintf(out, "\n");
     fclose(out);
 }
 

@@ -37,3 +37,14 @@ static const ffmpeg::error_category ffmpeg_error_category{};
 std::error_code ffmpeg::make_error_code(ffmpeg::errc e) {
     return {static_cast<int>(e), ffmpeg_error_category};
 }
+
+void ffmpeg::errc_info::make(error::string &emsg) noexcept {
+    // FIXME auto &cat = ffmpeg::error_category();
+    ffmpeg::error_category cat{};
+
+    emsg += "    ";
+    emsg += cat.name();
+    emsg += ": ";
+    emsg += cat.message(static_cast<int>(ec_));
+    emsg += "\n";
+}
