@@ -151,6 +151,26 @@ namespace vidre {
 
         }  // namespace file
 
+        /**@addtogroup api-core-details
+         * */
+        ///@{
+
+        /** Check if type has a "data()" method.
+         * */
+        template <typename T>
+        concept has_data_member = requires (T t) {
+            { t.data() } -> std::convertible_to<const void *>;
+        };
+
+        /** Check if type has a "data()" method.
+         * */
+        template <typename T>
+        concept has_size_method = requires (T t) {
+            { t.size() } -> std::convertible_to<std::size_t>;
+        };
+
+        ///@}
+
     }  // namespace detail
 
     namespace storage {
@@ -329,11 +349,11 @@ namespace vidre {
             constexpr view(view &&other) = default;
             constexpr view(const view &other) = default;
 
-            template<typename T>
+            template <typename T>
             requires std::is_integral_v<T>
             view(std::size_t n, T *ptr) noexcept : size_(n, true), data_(reinterpret_cast<pointer>(ptr)) {}
 
-            template<typename T, std::size_t N>
+            template <typename T, std::size_t N>
             requires std::is_integral_v<T>
             constexpr view(T (&ptr)[N]) noexcept : size_(N, true), data_(reinterpret_cast<pointer>(ptr)) {}
 
@@ -341,7 +361,7 @@ namespace vidre {
             requires (std::is_integral_v<T> && std::is_unsigned_v<T>)
             constexpr view(std::size_t n, const T *ptr) noexcept : size_(n), data_(const_cast<pointer>(ptr)) {}
 
-            template<typename T, std::size_t N>
+            template <typename T, std::size_t N>
             requires std::is_integral_v<T>
             constexpr view(T const (&ptr)[N]) noexcept : size_(N), data_(const_cast<pointer>(ptr)) {}
 
@@ -381,25 +401,6 @@ namespace vidre {
                     throw "invalid cast";
                 return static_cast<void *>(data_);
             }
-        };
-
-        // ================================================================================================================
-        // ================================================================================================================
-        // ================================================================================================================
-        // ================================================================================================================
-
-        /** Check if type has a "data()" method.
-         * */
-        template <typename T>
-        concept has_data_member = requires (T t) {
-            { t.data() } -> std::convertible_to<const void *>;
-        };
-
-        /** Check if type has a "data()" method.
-         * */
-        template <typename T>
-        concept has_size_method = requires (T t) {
-            { t.size() } -> std::convertible_to<std::size_t>;
         };
 
         /** Data sink.
