@@ -4,6 +4,7 @@
  * FIXME
  * 
  * @{
- * @defgroup api-device-details       Implementation details
+ * @defgroup api-device-basics     Fundamentals
+ * @defgroup api-device-details    Implementation details
  * @}
  * */

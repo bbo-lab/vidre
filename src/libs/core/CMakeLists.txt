@@ -45,9 +45,9 @@ vidre_library(vidrecore SHARED
         vidre/log.hh vidre/log.cc
         vidre/script.hh vidre/script.cc
         vidre/settings.hh vidre/settings.cc
-            vidre/settings/node.hh 
-            vidre/settings/file.hh 
+            vidre/settings/lua.hh 
             vidre/settings/json.hh
+            vidre/settings/yaml.hh 
         vidre/storage.hh vidre/storage.cc
             vidre/storage/io.hh vidre/storage/io.cc
             vidre/storage/bit.hh vidre/storage/bit.cc

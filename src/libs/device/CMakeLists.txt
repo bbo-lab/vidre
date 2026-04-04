@@ -26,5 +26,7 @@ vidre_library(vidredevice SHARED
         PUBLIC_HEADER COMPONENT development        
     SOURCES
         vidre/device/config.hh vidre/device/config.cc
+        vidre/device.hh vidre/device.cc
+            vidre/device/base.hh vidre/device/base.cc
         # vidre/plugin/hub.hh vidre/plugin/hub.cc
 )
