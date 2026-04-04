@@ -11,6 +11,7 @@ vidre_test(exceptions SOURCES exceptions.cc)
 vidre_test(util SOURCES util.cc)
 vidre_test(plugin SOURCES plugin.cc)
 vidre_test(program SOURCES program.cc)
+vidre_test(storage SOURCES storage.cc)
 
 vidre_module(null 
     SOURCES plugin/null.cc

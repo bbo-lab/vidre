@@ -145,7 +145,6 @@ namespace vidre {
 
             static constexpr std::size_t path_max = PATH_MAX;
 
-            
 #endif
 
             ///@}
@@ -277,12 +276,11 @@ namespace vidre {
         }
         ///@endcond
 
-        // ================================================================================================================
-        // ================================================================================================================
-        // ================================================================================================================
-        // ================================================================================================================
-
         /** Data "volume".
+         * The "volume" of data describes the byte-size, and as well,
+         * carries flags for dynamic (re-)allocation and writability
+         * ("non-constness").
+         * @see view
          * */
         template <std::endian E = std::endian::native>
         struct volume;
@@ -290,11 +288,12 @@ namespace vidre {
         template <>
         struct volume<std::endian::little> {
             std::size_t size : bits_of<std::size_t>::value - 2 {};
-            std::size_t managed : 1 {};
+            std::size_t writable : 1 {};
             std::size_t dynamic : 1 {};
 
-            volume() = default;
-            volume(std::size_t n) : size(n) {}
+            constexpr volume() = default;
+            constexpr volume(std::size_t n, bool writable_ = false, bool dynamic_ = false)
+                : size(n), writable(writable_), dynamic(dynamic_) {}
 
             operator std::size_t() const noexcept {
                 return size;
@@ -304,16 +303,90 @@ namespace vidre {
         template <>
         struct volume<std::endian::big> {
             std::size_t dynamic : 1 {};
-            std::size_t managed : 1 {};
+            std::size_t writable : 1 {};
             std::size_t size : bits_of<std::size_t>::value - 1 {};
 
-            volume() = default;
-            volume(std::size_t n) : size(n) {}
+            constexpr volume() = default;
+            constexpr volume(std::size_t n) : size(n) {}
+            constexpr volume(std::size_t n, bool writable_ = false, bool dynamic_ = false)
+                : dynamic(dynamic_), writable(writable_), size(n) {}
 
             operator std::size_t() const noexcept {
                 return size;
             }
         };
+
+        /** Data view.
+         * */
+        class VIDRE_CORE_VISIBILITY view {
+        public:
+            using size_type = std::size_t;
+            using pointer = uint8_t *;
+            using const_pointer = const uint8_t *;
+
+        public:
+            constexpr view() = default;
+            constexpr view(view &&other) = default;
+            constexpr view(const view &other) = default;
+
+            template<typename T>
+            requires std::is_integral_v<T>
+            view(std::size_t n, T *ptr) noexcept : size_(n, true), data_(reinterpret_cast<pointer>(ptr)) {}
+
+            template<typename T, std::size_t N>
+            requires std::is_integral_v<T>
+            constexpr view(T (&ptr)[N]) noexcept : size_(N, true), data_(reinterpret_cast<pointer>(ptr)) {}
+
+            template <typename T>
+            requires (std::is_integral_v<T> && std::is_unsigned_v<T>)
+            constexpr view(std::size_t n, const T *ptr) noexcept : size_(n), data_(const_cast<pointer>(ptr)) {}
+
+            template<typename T, std::size_t N>
+            requires std::is_integral_v<T>
+            constexpr view(T const (&ptr)[N]) noexcept : size_(N), data_(const_cast<pointer>(ptr)) {}
+
+        protected:
+            volume<> size_{};
+            pointer data_{};
+
+        public:
+            /** Get size of stored data.
+             * */
+            constexpr size_type size() const noexcept {
+                return size_;
+            }
+
+            /** Get pointer to data.
+             * */
+            constexpr const_pointer data() const noexcept {
+                return data_;
+            }
+
+            constexpr operator const_pointer() const noexcept {
+                return data_;
+            }
+
+            constexpr operator const void *() const noexcept {
+                return static_cast<const void *>(data_);
+            }
+
+            constexpr operator pointer() {
+                if (not size_.writable)
+                    throw "invalid cast";
+                return data_;
+            }
+
+            constexpr operator void *() {
+                if (not size_.writable)
+                    throw "invalid cast";
+                return static_cast<void *>(data_);
+            }
+        };
+
+        // ================================================================================================================
+        // ================================================================================================================
+        // ================================================================================================================
+        // ================================================================================================================
 
         /** Check if type has a "data()" method.
          * */
@@ -327,63 +400,6 @@ namespace vidre {
         template <typename T>
         concept has_size_method = requires (T t) {
             { t.size() } -> std::convertible_to<std::size_t>;
-        };
-
-        /** Data view.
-         * */
-        class VIDRE_CORE_VISIBILITY view {
-        public:
-            using size_type = std::size_t;
-            using pointer = uint8_t *;
-            using const_pointer = const uint8_t *;
-
-        public:
-            view() = default;
-            view(view &&other) = default;
-            view(const view &other) = default;
-
-            view(std::size_t n, pointer ptr) noexcept : size_(n), data_(ptr) {}
-            view(std::size_t n, const_pointer ptr) noexcept : size_(n), data_(const_cast<pointer>(ptr)) {}
-
-            template <typename T>
-            view(std::size_t n, const T *ptr) noexcept : size_(n), data_(const_cast<pointer>(ptr)) {}
-
-        protected:
-            volume<> size_{};
-            pointer data_{};
-
-        public:
-            /** Get size of stored data.
-             * */
-            size_type size() const noexcept {
-                return size_;
-            }
-
-            /** Get pointer to data.
-             * */
-            const_pointer data() const noexcept {
-                return data_;
-            }
-
-            operator void *() {
-                if (not size_.managed)
-                    throw "FIXME access violation";
-                return static_cast<void *>(data_);
-            }
-
-            constexpr operator const void *() const noexcept {
-                return static_cast<const void *>(data_);
-            }
-
-            operator uint8_t *() {
-                if (not size_.managed)
-                    throw "FIXME access violation";
-                return data_;
-            }
-
-            constexpr operator const uint8_t *() const noexcept {
-                return data_;
-            }
         };
 
         /** Data sink.

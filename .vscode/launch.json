@@ -113,6 +113,15 @@
             "args": [ "-s" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "test.core.storage",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test.core.storage",
+            "args": [ "-s" ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
