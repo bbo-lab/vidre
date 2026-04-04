@@ -1,7 +1,0 @@
-[[[=== 2026-04-02T06:31:40.745215459Z ===]]]
-[INFO] help = 0
-       version = 0
-       verbose = 5
-       log = "log.txt:trace:*"
-       input = "/path/to/an/input"
-       output = "/dev/stdout"
