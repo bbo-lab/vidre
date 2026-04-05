@@ -257,7 +257,7 @@ namespace vidre {
                 : fileio(filename.c_str(), flags, permissions) {}
 
             ~fileio() {
-                if (isvalid())
+                if (valid())
                     close();
             }
 
@@ -267,7 +267,7 @@ namespace vidre {
         public:
             /** Check if valid.
              * */
-            bool isvalid() const noexcept {
+            bool valid() const noexcept {
                 return fd_ >= 0;
             }
 
@@ -287,14 +287,14 @@ namespace vidre {
             bool open(const std::filesystem::path &filename, flag_type flags = readonly,
                       perms permissions = default_perms) noexcept {
                 fd_ = detail::file::open(filename.c_str(), flags, static_cast<mode_t>(permissions));
-                return isvalid();
+                return valid();
             }
 
             /** Create a temporary file.
              * */
             bool temporary(std::string &filename) {
                 fd_ = mkstemp(filename.data());  // per standard, data is zero-terminated
-                return isvalid();
+                return valid();
             }
             bool temporary() {
                 std::string filename = "vidre-tmp-XXXXXX";

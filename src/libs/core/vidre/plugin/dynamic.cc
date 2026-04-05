@@ -96,7 +96,7 @@ void plugin::dynamic::load(const std::string &name) {
 
     // open module
     module_.open(name + extension, library::mode::lazy);
-    if (not module_.isvalid()) {
+    if (not module_.valid()) {
         // FIXME error handling, user information, etc.
         return;
     }

@@ -182,7 +182,7 @@ namespace vidre {
 
                 /** Check if valid.
                  * */
-                bool isvalid() const noexcept {
+                bool valid() const noexcept {
                     return handle_ != nullptr;
                 }
 
@@ -216,7 +216,7 @@ namespace vidre {
 
             /** Check if valid.
              * */
-            bool isvalid() const noexcept {
+            bool valid() const noexcept {
                 return info_ != nullptr;
             }
 

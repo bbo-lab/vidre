@@ -114,9 +114,6 @@ namespace vidre {
 
             settings::json info() const noexcept override = 0;
             void setup(settings::json) override = 0;
-            std::string id() const noexcept override = 0;
-            std::string name() const noexcept override = 0;
-            bool name(const std::string &username) override = 0;
         };
 
         ///@}

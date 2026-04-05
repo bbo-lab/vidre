@@ -22,3 +22,7 @@
 #include "base.hh"
 
 using namespace vidre;
+
+const char *device::exception::what() const noexcept {
+    return tag_.c_str();
+}

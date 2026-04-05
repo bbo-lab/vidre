@@ -18,7 +18,7 @@ using unaryfn = double (*)(double);
 TEST_CASE("Plugins", "[dynamic:library]") {
 #if defined(VIDRE_USING_DLFCN)
     plugin::dynamic::library dl(LIBM_SO);
-    REQUIRE(dl.isvalid());
+    REQUIRE(dl.valid());
     REQUIRE(dl.get("sin"));
     auto libmsin = dl.get<unaryfn>("sin");
     REQUIRE(libmsin(0.0) == 0.0);
@@ -30,6 +30,6 @@ TEST_CASE("Plugins", "[dynamic:library]") {
 TEST_CASE("Plugins", "[dynamic]") {
     plugin::dynamic null;
     null.load(Vidre_BINARY_DIR "/lib/test/null");
-    REQUIRE(null.isvalid());
+    REQUIRE(null.valid());
     REQUIRE(std::string(null.info().name) == "TestNull");
 }

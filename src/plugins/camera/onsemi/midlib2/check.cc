@@ -25,6 +25,6 @@ using namespace vidre;
 
 VIDRE_API_MODULE void vidre_preload() {
     plugin::dynamic::library midlib2(LIBMIDLIB2_NAME, plugin::dynamic::library::now);
-    if (not midlib2.isvalid())
+    if (not midlib2.valid())
         throw false;
 }
