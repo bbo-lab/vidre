@@ -79,6 +79,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.playground.uvc",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.playground.uvc",
+            "args": [ "--list" ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "test.core.plugin",
             "type": "cppdbg",
             "request": "launch",

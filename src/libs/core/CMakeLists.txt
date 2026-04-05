@@ -57,7 +57,7 @@ vidre_library(vidrecore SHARED
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
         vidre/program.hh vidre/program.cc
         
-        vidre/util/version.hh
+        vidre/util/version.hh vidre/util/version.cc
         vidre/util/develop.hh vidre/util/develop.cc
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/util/filesystem.hh vidre/util/filesystem.cc

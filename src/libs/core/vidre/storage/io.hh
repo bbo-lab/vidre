@@ -42,15 +42,20 @@
 #include <vidre/cpp/util.hh>
 
 #include <bit>
+#include <utility>
 #include <filesystem>
 
 #include <fcntl.h>
-#if defined(_WIN32)
+#if VIDRE_HOST_WINDOWS
 #include <io.h>
 #else
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #endif
+
+#include <cerrno>
+#include <cstring> 
 
 namespace vidre {
 
@@ -64,7 +69,7 @@ namespace vidre {
 
             using descriptor = int;
 
-#if defined(_WIN32)
+#if VIDRE_HOST_WINDOWS
             enum flag_type : int {
                 readonly = _O_RDONLY,
                 writeonly = _O_WRONLY,
@@ -208,6 +213,9 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY fileio {
         public:
+            using descriptor = detail::file::descriptor;
+
+        public:
             /** Maximum length of a path.
              * */
             static constexpr std::size_t path_max = detail::file::path_max;
@@ -235,14 +243,38 @@ namespace vidre {
         public:
             fileio() = default;
 
+            fileio(const fileio &) = delete;
+            fileio(fileio &&other) noexcept : fd_(std::exchange(other.fd_, -1)) {}
+
+            fileio(const char *filename, flag_type flags = readonly, perms permissions = default_perms) noexcept {
+                open(filename, flags, permissions);
+            }
+
+            fileio(const std::string &filename, flag_type flags = readonly, perms permissions = default_perms) noexcept
+                : fileio(filename.c_str(), flags, permissions) {}
+
+            fileio(const std::filesystem::path &filename, flag_type flags = readonly, perms permissions = default_perms) noexcept
+                : fileio(filename.c_str(), flags, permissions) {}
+
+            ~fileio() {
+                if (isvalid())
+                    close();
+            }
+
         protected:
-            detail::file::descriptor fd_{};
+            descriptor fd_{};
 
         public:
             /** Check if valid.
              * */
             bool isvalid() const noexcept {
                 return fd_ >= 0;
+            }
+
+            /** Convert to descriptor.
+             * */
+            operator descriptor() const noexcept {
+                return fd_;
             }
 
             /** Open file.

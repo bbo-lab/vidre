@@ -29,6 +29,9 @@
 #include <vidre/cpp/util.hh>
 
 #include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace vidre {
 
@@ -41,11 +44,12 @@ namespace vidre {
         /** Device state.
          * */
         enum class state : uint32_t {
-            undefined = 0,       ///< Device is in an undefined state.
-            available = 1 << 0,  ///< Device is available.
-            connected = 1 << 1,  ///< Device is connected to VidRe.
-            armed = 1 << 2,      ///< Device is prepared for recording.
-            running = 1 << 3,    ///< Device is active.
+            undefined = 0,        ///< Device is in an undefined state.
+            available = 1 << 0,   ///< Device is available.
+            disabled = 1 << 1,    ///< Device is disabled (possibly due to unrecoverable issues).
+            connected = 1 << 2,   ///< Device is connected to VidRe.
+            configured = 1 << 3,  ///< Device is configured and ready to be started.
+            running = 1 << 4,     ///< Device is active.
 
             failed = 1 << 8,  ///< Device experienced issues.
         };
@@ -62,46 +66,105 @@ namespace vidre {
         }
         ///@endcond
 
-        /** General representation of a "device".
+        /** Abstract device.
          *
          * Devices may be hard- or software devices. The latter applies, for example,
-         * to filters, and the like.
-         * 
-         * To avoid complexity of the C++-API due to a possibly large feature set devices
-         * may have, the device classes provide a "slow" and "fast" interaction. On the
-         * "slow" side are functions retrieving general info, configuration and more 
-         * (which will use JSON). On the "fast" side are a limited number of controls
-         * (e.g. a cameras shutter time) and IO.
-         * 
+         * to filters, and the like. Each device provides streams, ie. sinks
+         * and sources, as well as generic configuration options. Specific implementations
+         * will add more direct functionality.
+         *
          * */
         class VIDRE_DEVICE_VISIBILITY base {
         public:
-            base() = default;
+            struct enumerator;
 
         public:
+            base() = default;
+            base(state initial_state) : state_{initial_state} {}
+            virtual ~base() = default;
+
+        protected:
+            state state_{state::undefined};
+
+        public:
+            /** Device class tag.
+             * */
+            virtual const char *tag() const noexcept {
+                return "base";
+            }
+
             /** General device info.
              *
              * FIXME describe syntax!!!
              *
              * */
-            virtual settings::json info() const noexcept;
+            virtual settings::json info() const noexcept = 0;
 
             /** Get device status.
              * */
-            virtual state status() const noexcept {
-                return state::undefined;
+            state status() const noexcept {
+                return state_;
             }
 
             // FIXME status logger
 
             /** Setup device.
              * */
-            virtual void setup(json) = 0;
+            virtual void setup(settings::json) = 0;
 
+            /** Get device ID.
+             * The device ID is a unique identifier for the device, which can be
+             * used to reference it in settings and other contexts. It should be,
+             * if possible, rather a unique, serial number than a user-settable name.
+             */
+            virtual std::string id() const noexcept = 0;
 
+            /** Get device name.
+             * The device name is a human-readable name for the device, which should
+             * be unique. It can be used for display purposes and may be user-settable.
+             */
+            virtual std::string name() const noexcept = 0;
+
+            /** Set device name.
+             * @param username The new name for the device. It should be unique, but this is not enforced.
+             * @return `true` if the name was successfully set, `false` otherwise (e.g., if the does not support it).
+             *
+             * */
+            virtual bool name(const std::string &username) = 0;
+        };
+
+        /** "Shared device".
+         * Despite some overhead for reference counting, we will use shared pointers
+         * to manage device instances. This alias is provided for convenience and
+         * clarity in the codebase.
+         * */
+        template <typename Device>
+        using shared = std::shared_ptr<Device>;
+
+        /** Device list.
+         * */
+        template <typename Device>
+        using list = std::vector<shared<Device>>;
+
+        /** Hardware enumerator.
+         * The enumerator, which must be implemented for each device type,
+         * provides a method to discover available devices of that type. It
+         * is provided here only for documentation purposes, and should be
+         * implemented in the respective device implementation files.
+         * */
+        struct base::enumerator {
+            list<base> find() noexcept {
+                return {};
+            }
         };
 
         ///@}
+
+        namespace failure {
+
+            //
+
+        }  // namespace failure
 
     }  // namespace device
 

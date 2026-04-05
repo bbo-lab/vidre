@@ -22,11 +22,3 @@
 #include "base.hh"
 
 using namespace vidre;
-
-settings::json device::base::info() const noexcept {
-    return {
-        {"tag","base"},
-        {"type", "none"},
-        {"channels", {}}
-    };
-}

@@ -50,3 +50,13 @@ vidre_test(hdspeed EXCLUDE
                 Vidre::Core
     SOURCES hdspeed.cc
 )
+
+
+vidre_test(uvc EXCLUDE
+    BUILD
+        LINK_LIBRARIES 
+            PUBLIC
+                Vidre::Core
+                Vidre::Device
+    SOURCES uvc.cc
+)

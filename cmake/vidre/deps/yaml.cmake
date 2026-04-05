@@ -14,4 +14,4 @@ set(YAML_CPP_INSTALL ON)
 
 FetchContent_MakeAvailable(yaml-cpp)
 
-set(YAMLLIB yaml-cpp)
+set(YAMLLIB yaml-cpp::yaml-cpp)

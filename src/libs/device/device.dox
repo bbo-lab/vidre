@@ -5,6 +5,7 @@
  * 
  * @{
  * @defgroup api-device-basics     Fundamentals
+ * @defgroup api-device-impl       Device implementations
  * @defgroup api-device-details    Implementation details
  * @}
  * */

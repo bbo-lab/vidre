@@ -34,3 +34,31 @@ TEST_CASE("uuid.hh", "[vidre/util]") {
     REQUIRE(uuid::makeRandom() == uuid::type::Random);
     // ...
 }
+
+#include <vidre/util/version.hh>
+
+namespace Catch {
+    template <>
+    struct StringMaker<vidre::version> {
+        static std::string convert(const vidre::version &v) {
+            return std::format("{}.{}.{}", v.major() != vidre::version::undefined ? std::to_string(v.major()) : "?",
+                               v.minor() != vidre::version::undefined ? std::to_string(v.minor()) : "?",
+                               v.patch() != vidre::version::undefined ? std::to_string(v.patch()) : "?");
+        }
+    };
+}  // namespace Catch
+
+TEST_CASE("version.hh", "[vidre/util]") {
+    REQUIRE(version::vidre == version{VIDRE_VERSION_MAJOR, VIDRE_VERSION_MINOR, VIDRE_VERSION_PATCH});
+    REQUIRE(version::vidre == version{std::to_string(VIDRE_VERSION_MAJOR) + "." + std::to_string(VIDRE_VERSION_MINOR) + "." +
+                                      std::to_string(VIDRE_VERSION_PATCH)});
+
+    REQUIRE(version{1} == version{1, 0});
+    REQUIRE(version{1, 0} <= version{1, 0, 0});
+    REQUIRE(version{1, 0} >= version{1, 0, 0});
+    REQUIRE(version{1, 0} < version{1, 1});
+    REQUIRE(version{1, 0} < version{2});
+
+    REQUIRE(not (version{} != version{}));
+    REQUIRE(not (version{} == version{}));
+}

@@ -55,6 +55,39 @@ namespace vidre {
 #define VIDRE_CORE_VISIBILITY VIDRE_API_IMPORT
 #endif
 
+#if defined(DOXYGEN)
+
+/** Host is a Linux system */
+#define VIDRE_HOST_LINUX <0|1>
+
+/** Host is a Windows system */
+#define VIDRE_HOST_WINDOWS <0|1>
+
+/** Host is an Apple system */
+#define VIDRE_HOST_APPLE <0|1>
+
+#endif  // DOXYGEN
+
+///@cond
+#if defined(linux) || defined(__linux__) || defined(__linux)
+#define VIDRE_HOST_LINUX 1
+#elif defined(_WIN32) || defined(_WIN64)
+#define VIDRE_HOST_WINDOWS 1
+#elif defined(__APPLE__) || defined(__MACH__)
+#define VIDRE_HOST_APPLE 1
+#else
+#error "Unsupported host platform"
+#endif
+
+#if not defined(VIDRE_HOST_WINDOWS)
+#define VIDRE_HOST_WINDOWS 0
+#endif
+
+#if not defined(VIDRE_HOST_APPLE)
+#define VIDRE_HOST_APPLE 0
+#endif
+///@endcond
+
 ///@}
 
 #endif  // VIDRE_CORE_CONFIG_HH
