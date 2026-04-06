@@ -283,92 +283,118 @@ struct {
     // clang-format on
 };
 
+bool uvc::query_stream(int fd) {
+    log::trace tr;
+
+#if VIDRE_DEVELOP
+    tr << "querying camera " << dev_stream_.c_str() << "...\n";
+#endif
+    log::debug() << "Querying camera " << dev_stream_.c_str() << "...\n";
+
+    v4l2_fmtdesc pixfmt{.index = static_cast<uint32_t>(-1),  //
+                        .type = V4L2_BUF_TYPE_VIDEO_CAPTURE};
+    while (true) {
+        pixfmt.index++;
+        int retval = ioctl(fd, VIDIOC_ENUM_FMT, &pixfmt);
+        if (retval < 0) {
+            switch (errno) {
+                case EINVAL:
+                    break;
+                default:
+                    log::error() << "Querying pixel formats failed: " << std::strerror(errno) << log::endl;
+                    return false;
+            }
+
+            break;
+        }
+
+        // supported by VidRe?
+        for (auto &p : pixfmt_mapping) {
+            if (p.uvc == pixfmt.pixelformat) {
+                if (p.we != video::pixel_format::undefined) {
+#if VIDRE_DEVELOP
+                    tr << "-> pixel format supported: " << p.v4l2name << log::endl;
+#else
+                    tr << "-> pixel format supported: " << (const char *)pixfmt.description << log::endl;
+#endif
+                    // create configuration
+                    settings::json entry;
+
+                    // FIXME
+
+                    auto cfg = info_["capabilities"];
+                    cfg.push_back(entry);
+                }
+                else {
+#if VIDRE_DEVELOP
+                    tr << "- unsupported pixel format: " << p.v4l2name << log::endl;
+#endif
+                    log::debug() << "-> Pixel format unsupported: " << (const char *)pixfmt.description << log::endl;
+                }
+            }
+        }
+
+        //                     // frame-sizes for pixel format
+        //                     v4l2_frmsizeenum frm{.index = static_cast<uint32_t>(-1),  //
+        //                                          .pixel_format = pixfmt.pixelformat};
+        //                     while (true) {
+        //                         frm.index++;
+        //                         int retval = ioctl(stream, VIDIOC_ENUM_FRAMESIZES, &frm);
+        //                         if (retval < 0) {
+        //                             switch (errno) {
+        //                                 case EINVAL:
+        //                                     break;
+        //                                 default:
+        //                                     log::error() << "Querying frame formats failed: " << std::strerror(errno) <<
+        //                                     log::endl; state_ &= ~device::state::available; return;
+        //                             }
+
+        //                             break;
+        //                         }
+
+        //                         // FIXME
+        //                     }
+        //                 }
+    }
+
+    return false;
+}
+
 void uvc::query() {
     log::trace tr;
 
-    // open video stream device and query capabilities
+    // open video stream device and check capabilities
     storage::fileio stream(dev_stream_, storage::fileio::readwrite | storage::fileio::non_block | storage::fileio::close_on_exec);
     if (!stream.valid()) {
         state_ &= ~device::state::available;
         return;
     }
-    if ((ioctl(stream, VIDIOC_QUERYCAP, &cap_[0]) < 0) or not(cap_[0].device_caps & V4L2_CAP_STREAMING)) {
+
+    v4l2_capability cap;
+    if ((ioctl(stream, VIDIOC_QUERYCAP, &cap) < 0) or not(cap.device_caps & V4L2_CAP_STREAMING)) {
         state_ &= ~device::state::available;
         return;
     }
 
-    // check capabilities and features of the camera and set state accordingly
-    if (cap_[0].device_caps & V4L2_CAP_STREAMING)
-        state_ |= device::state::connected;
-    else {
+    // query streaming camera
+    info_["name"] = std::string((const char *)cap.card);
+    // FIXME ...
+    info_["capabilities"] = settings::json::array();
+
+    if (not query_stream(stream)) {
         state_ &= ~device::state::available;
         return;
     }
 
-    tr << "querying camera " << dev_stream_.c_str() << "...\n";
+    //     // open metadata stream device and query capabilities
+    //     storage::fileio meta(dev_meta_, storage::fileio::readonly | storage::fileio::non_block | storage::fileio::close_on_exec);
+    //     if (meta.valid()) {
+    //         if ((ioctl(meta, VIDIOC_QUERYCAP, &cap_[1]) < 0) or not(cap_[1].device_caps & V4L2_CAP_META_CAPTURE)) {
+    //             meta.close();
+    //         }
 
-//     v4l2_fmtdesc pixfmt{.index = static_cast<uint32_t>(-1),  //
-//                         .type = V4L2_BUF_TYPE_VIDEO_CAPTURE};
-//     while (true) {
-//         pixfmt.index++;
-//         int retval = ioctl(stream, VIDIOC_ENUM_FMT, &pixfmt);
-//         if (retval < 0) {
-//             switch (errno) {
-//                 case EINVAL:
-//                     break;
-//                 default:
-//                     log::error() << "Querying pixel formats failed: " << std::strerror(errno) << log::endl;
-//                     state_ &= ~device::state::available;
-//                     return;
-//             }
-
-//             break;
-//         }
-
-//         // supported by VidRe?
-//         for (auto &p : pixfmt_mapping) {
-//             if (p.uvc == pixfmt.pixelformat) {
-//                 if (p.we != video::pixel_format::undefined) {
-//                     // frame-sizes for pixel format
-//                     v4l2_frmsizeenum frm{.index = static_cast<uint32_t>(-1),  //
-//                                          .pixel_format = pixfmt.pixelformat};
-//                     while (true) {
-//                         frm.index++;
-//                         int retval = ioctl(stream, VIDIOC_ENUM_FRAMESIZES, &frm);
-//                         if (retval < 0) {
-//                             switch (errno) {
-//                                 case EINVAL:
-//                                     break;
-//                                 default:
-//                                     log::error() << "Querying frame formats failed: " << std::strerror(errno) << log::endl;
-//                                     state_ &= ~device::state::available;
-//                                     return;
-//                             }
-
-//                             break;
-//                         }
-
-//                         // FIXME
-//                     }
-//                 }
-//                 else {
-// #if VIDRE_DEVELOP
-//                     log::debug() << "- unsupported pixel format: " << p.v4l2name << log::endl;
-// #endif
-//                 }
-//             }
-//         }
-//     }
-
-//     // open metadata stream device and query capabilities
-//     storage::fileio meta(dev_meta_, storage::fileio::readonly | storage::fileio::non_block | storage::fileio::close_on_exec);
-//     if (meta.valid()) {
-//         if ((ioctl(meta, VIDIOC_QUERYCAP, &cap_[1]) < 0) or not(cap_[1].device_caps & V4L2_CAP_META_CAPTURE)) {
-//             meta.close();
-//         }
-
-//         // FIXME
-//     }
+    //         // FIXME
+    //     }
 }
 
 // ============================================================================
@@ -490,16 +516,7 @@ device::list<device::camera> uvc::enumerator::find() noexcept {
 // ============================================================================
 
 settings::json uvc::info() const noexcept {
-    if (!(state_ & device::state::connected)) {
-        // if the camera is not connected, we can't get any information about it
-        return {};
-    }
-
-    settings::json info;
-
-    // FIXME
-
-    return info;
+    return info_;
 }
 
 void uvc::setup(settings::json) {

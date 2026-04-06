@@ -61,13 +61,14 @@ namespace vidre {
         std::filesystem::path dev_stream_{};  ///< /dev/video? device for video stream
         std::filesystem::path dev_meta_{};    ///< /dev/video? device for UVC metadata stream
 
-        // FIXME camera info as JSON???
+        settings::json info_{};  ///< Camera information.
 
     private:
-        storage::fileio fd_[2]{};   // [0] for video stream, [1] for metadata stream
-        v4l2_capability cap_[2]{};  // FIXME remove 
+        storage::fileio fd_[2]{};  // [0] for video stream, [1] for metadata stream
 
     protected:
+        bool query_stream(int fd);
+
         // Query device parameters.
         void query();
 

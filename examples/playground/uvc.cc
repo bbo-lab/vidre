@@ -45,7 +45,7 @@ void list(program::argument::parser &, variant) {
         std::cout << std::format(("[{:>2}] Name: {}\n       ID: {}\n"), ++i, camera->name(), camera->id());
 
         if (log::io::stream::threshold(0) >= log::level::info) {
-            std::cout << std::format("       Info:\n{}\n", camera->info().dump(12));
+            std::cout << std::format("       Info:\n{}\n", camera->info().dump(4));
         }
     }
     std::exit(0);
