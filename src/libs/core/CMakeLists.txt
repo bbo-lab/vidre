@@ -41,6 +41,11 @@ vidre_library(vidrecore SHARED
             vidre/os/paths.hh vidre/os/paths.cc
         vidre/cpp/format.hh
         vidre/cpp/util.hh
+        vidre/util/version.hh vidre/util/version.cc
+        vidre/util/develop.hh vidre/util/develop.cc
+        vidre/util/uuid.hh vidre/util/uuid.cc
+        vidre/util/filesystem.hh vidre/util/filesystem.cc
+        vidre/util/variant.hh
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
         vidre/script.hh vidre/script.cc
@@ -51,15 +56,14 @@ vidre_library(vidrecore SHARED
         vidre/storage.hh vidre/storage.cc
             vidre/storage/io.hh vidre/storage/io.cc
             vidre/storage/bit.hh vidre/storage/bit.cc
-        vidre/plugin.hh 
+        vidre/video.hh vidre/video.cc
+            vidre/video/pixel_format.hh vidre/video/pixel_format.cc
+            vidre/video/common.hh
+            vidre/video/pixel_format.hh vidre/video/pixel_format.cc
+            vidre/video/frame.hh vidre/video/frame.cc
+        vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/exception.hh
             vidre/plugin/information.hh
             vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
-        vidre/program.hh vidre/program.cc
-        
-        vidre/util/version.hh vidre/util/version.cc
-        vidre/util/develop.hh vidre/util/develop.cc
-        vidre/util/uuid.hh vidre/util/uuid.cc
-        vidre/util/filesystem.hh vidre/util/filesystem.cc
-        vidre/util/variant.hh
+        vidre/program.hh vidre/program.cc        
 )

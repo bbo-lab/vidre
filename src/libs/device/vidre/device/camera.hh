@@ -38,54 +38,6 @@
 
 namespace vidre {
 
-    /** Video formats.
-     * @ingroup api-device-impl-camera
-     * */
-    namespace video {
-
-        /**@addtogroup api-device-impl-camera
-         * */
-        ///@{
-
-        class VIDRE_DEVICE_VISIBILITY pixel {
-        public:
-            enum format : int32_t {
-                undefined = -1,
-                mono8,
-                mono10,
-                // FIXME add more formats, and make sure to support the ones that are actually used by the cameras we support
-            };
-
-        public:
-            pixel() = default;
-            pixel(std::string_view name) noexcept : pix_fmt_{parse(name)} {}
-
-        protected:
-            format pix_fmt_{format::undefined};
-
-        protected:
-            static format parse(std::string_view name) noexcept;
-
-        public:
-            operator format() const noexcept {
-                return pix_fmt_;
-            }
-
-            pixel &operator=(format fmt) noexcept {
-                pix_fmt_ = fmt;
-                return *this;
-            }
-
-            pixel &operator=(std::string_view name) noexcept {
-                pix_fmt_ = parse(name);
-                return *this;
-            }
-        };
-
-        ///@}
-
-    }  // namespace video
-
     namespace device {
 
         /**@addtogroup api-device-impl-camera
@@ -108,12 +60,9 @@ namespace vidre {
 
         protected:
         public:
-            const char *tag() const noexcept override{
+            const char *tag() const noexcept override {
                 return "camera";
             }
-
-            settings::json info() const noexcept override = 0;
-            void setup(settings::json) override = 0;
         };
 
         ///@}

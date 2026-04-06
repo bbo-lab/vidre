@@ -117,6 +117,7 @@ namespace vidre {
                 truncate = O_TRUNC,
                 non_block = O_NONBLOCK,
                 synchronous = O_SYNC,
+                close_on_exec = O_CLOEXEC,
                 // FIXME...
             };
 
@@ -233,6 +234,7 @@ namespace vidre {
                 truncate = detail::file::flag_type::truncate,
                 non_block = detail::file::flag_type::non_block,
                 synchronous = detail::file::flag_type::synchronous,
+                close_on_exec = detail::file::flag_type::close_on_exec,
                 // FIXME...
             };
 
@@ -259,6 +261,10 @@ namespace vidre {
             ~fileio() {
                 if (valid())
                     close();
+            }
+
+            void swap(fileio &other) noexcept {
+                std::swap(fd_, other.fd_);
             }
 
         protected:
@@ -379,7 +385,9 @@ namespace vidre {
         public:
             constexpr view() = default;
             constexpr view(view &&other) = default;
+            constexpr view &operator=(view &&other) = default;
             constexpr view(const view &other) = default;
+            constexpr view &operator=(const view &other) = default;
 
             template <typename T>
             requires std::is_integral_v<T>

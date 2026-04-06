@@ -59,11 +59,20 @@ namespace vidre {
         inline state operator|(state lhs, state rhs) noexcept {
             return static_cast<state>(to_underlying(lhs) | to_underlying(rhs));
         }
+        inline state operator|=(state lhs, state rhs) noexcept {
+            return static_cast<state>(to_underlying(lhs) | to_underlying(rhs));
+        }
         inline state operator&(state lhs, state rhs) noexcept {
+            return static_cast<state>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline state operator&=(state lhs, state rhs) noexcept {
             return static_cast<state>(to_underlying(lhs) & to_underlying(rhs));
         }
         inline state operator~(state val) noexcept {
             return static_cast<state>(~to_underlying(val));
+        }
+        inline bool operator!(state val) noexcept {
+            return !to_underlying(val);
         }
         ///@endcond
 
@@ -141,6 +150,15 @@ namespace vidre {
             virtual bool name(const std::string &username) {
                 return false;
             }
+
+            /** Connect device.
+             * @return `true` if the device was successfully connected, `false` otherwise.
+             * */
+            virtual bool connect() = 0;
+
+            /** Disconnect device.
+             * */
+            virtual void disconnect() = 0;
         };
 
         /** "Shared device".

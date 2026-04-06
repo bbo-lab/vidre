@@ -364,6 +364,12 @@ namespace vidre {
                 return parsed_;
             }
 
+            /** Get parsed value for a key.
+             * */
+            variant get(const std::string &key) noexcept {
+                return parsed_.get(key);
+            }
+
             /** Create a help string.
              * */
             std::string help();

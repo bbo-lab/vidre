@@ -11,16 +11,17 @@
  * on Qt.
  * 
  * @{
+ * @defgroup api-core-os            OS utilities
+ * @defgroup api-core-cpp           C++ compatibility
+ * @defgroup api-core-util          Utilities
  * @defgroup api-core-exception     Errors and exceptions
  * @defgroup api-core-log           Logging
  * @defgroup api-core-memory        Memory
  * @defgroup api-core-script        Scripting
  * @defgroup api-core-settings      Settings
  * @defgroup api-core-storage       Storage
+ * @defgroup api-core-video         Video related
  * @defgroup api-core-plugin        Plugins
- * @defgroup api-core-util          Utilities
- * @defgroup api-core-cpp           C++ compatibility
- * @defgroup api-core-os            OS utilities
  * @defgroup api-core-program       Program invocation and tools
  * @defgroup api-core-details       Implementation details
  * @}

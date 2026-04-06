@@ -22,8 +22,3 @@
 #include "camera.hh"
 
 using namespace vidre;
-
-video::pixel::format video::pixel::parse(std::string_view name) noexcept {
-    // FIXME
-    return format::undefined;
-}
