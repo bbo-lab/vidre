@@ -56,6 +56,7 @@ vidre_library(vidrecore SHARED
         vidre/storage.hh vidre/storage.cc
             vidre/storage/io.hh vidre/storage/io.cc
             vidre/storage/bit.hh vidre/storage/bit.cc
+            vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/video.hh vidre/video.cc
             vidre/video/pixel_format.hh vidre/video/pixel_format.cc
             vidre/video/common.hh

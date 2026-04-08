@@ -70,6 +70,7 @@ namespace vidre {
                 yuyv422     = VIDRE_PIXEL_FORMAT(0x0A, 1, 1, 12),
                 yuv422p     = VIDRE_PIXEL_FORMAT(0x0B, 1, 0, 16),
                 yuv444p     = VIDRE_PIXEL_FORMAT(0x0C, 1, 0, 24),
+                // FIXME see ffmpeg/util/pixelformat.hh
 
                 // FIXME add more formats, and make sure to support the ones that are actually used by the cameras we support
             };

@@ -68,6 +68,7 @@ namespace vidre {
 
     public:
         constexpr version() noexcept = default;
+        constexpr version(uint32_t def[2]) noexcept : major_{def[0]}, minor_{def[1]} {}
         constexpr version(unsigned major, unsigned minor = undefined, unsigned patch = undefined) noexcept
             : major_{major}, minor_{minor}, patch_{patch} {}
 

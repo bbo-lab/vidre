@@ -40,6 +40,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
+#include <vidre/exception.hh>
 
 #include <bit>
 #include <utility>
@@ -55,7 +56,7 @@
 #endif
 
 #include <cerrno>
-#include <cstring> 
+#include <cstring>
 
 namespace vidre {
 
@@ -68,6 +69,8 @@ namespace vidre {
             ///@{
 
             using descriptor = int;
+            using size_type = std::size_t;
+            using offset_type = std::make_signed_t<size_type>;
 
 #if VIDRE_HOST_WINDOWS
             enum flag_type : int {
@@ -96,11 +99,11 @@ namespace vidre {
                 ::_close(fd);
             }
 
-            inline std::ssize_t read(descriptor fd, uint8_t *buf, std::size_t count) {
+            inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
                 return ::_read(fd, buf, count);
             }
 
-            inline std::ssize_t write(descriptor fd, const uint8_t *buf, std::size_t count) {
+            inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
                 return ::_write(fd, buf, count);
             }
 
@@ -133,19 +136,19 @@ namespace vidre {
                 ::close(fd);
             }
 
-            inline std::ptrdiff_t read(descriptor fd, uint8_t *buf, std::size_t count) {
+            inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
                 return ::read(fd, buf, count);
             }
 
-            inline std::ptrdiff_t read(descriptor fd, char *buf, std::size_t count) {
+            inline offset_type read(descriptor fd, char *buf, std::size_t count) {
                 return ::read(fd, buf, count);
             }
 
-            inline std::ptrdiff_t write(descriptor fd, const uint8_t *buf, std::size_t count) {
+            inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
                 return ::write(fd, buf, count);
             }
 
-            inline std::ptrdiff_t write(descriptor fd, const char *buf, std::size_t count) {
+            inline offset_type write(descriptor fd, const char *buf, std::size_t count) {
                 return ::write(fd, buf, count);
             }
 
@@ -214,12 +217,15 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY fileio {
         public:
+            using size_type = std::size_t;
+            using offset_type = std::make_signed_t<size_type>;
+
             using descriptor = detail::file::descriptor;
 
         public:
             /** Maximum length of a path.
              * */
-            static constexpr std::size_t path_max = detail::file::path_max;
+            static constexpr size_type path_max = detail::file::path_max;
 
             /** File flags.
              * @see open()
@@ -315,15 +321,20 @@ namespace vidre {
                 fd_ = -1;
             }
 
+            /** Reserve space on disk.
+             * @todo needs implementation
+             * */
+            bool allocate(std::size_t len, ::off_t offset = ::off_t(-1));
+
             /** Write data to file.
              * */
-            std::ptrdiff_t write(const uint8_t *buf, std::size_t count) noexcept {
+            offset_type write(const uint8_t *buf, std::size_t count) noexcept {
                 return detail::file::write(fd_, buf, count);
             }
 
             /** Read data from file.
              * */
-            std::ptrdiff_t read(uint8_t *buf, std::size_t count) noexcept {
+            offset_type read(uint8_t *buf, std::size_t count) noexcept {
                 return detail::file::read(fd_, buf, count);
             }
         };
@@ -331,6 +342,18 @@ namespace vidre {
         ///@cond
         inline fileio::flag_type operator|(fileio::flag_type lhs, fileio::flag_type rhs) {
             return static_cast<fileio::flag_type>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline fileio::flag_type operator|=(fileio::flag_type lhs, fileio::flag_type rhs) {
+            return static_cast<fileio::flag_type>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline fileio::flag_type operator&(fileio::flag_type lhs, fileio::flag_type rhs) {
+            return static_cast<fileio::flag_type>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline fileio::flag_type operator&=(fileio::flag_type lhs, fileio::flag_type rhs) {
+            return static_cast<fileio::flag_type>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline fileio::flag_type operator~(fileio::flag_type rhs) {
+            return static_cast<fileio::flag_type>(~to_underlying(rhs));
         }
         ///@endcond
 
@@ -391,7 +414,7 @@ namespace vidre {
 
             template <typename T>
             requires std::is_integral_v<T>
-            view(std::size_t n, T *ptr) noexcept : size_(n, true), data_(reinterpret_cast<pointer>(ptr)) {}
+            view(std::size_t n, T *ptr) noexcept : size_(n, true), data_(reinterpret_cast<pointer>(const_cast<T *>(ptr))) {}
 
             template <typename T, std::size_t N>
             requires std::is_integral_v<T>
@@ -448,25 +471,156 @@ namespace vidre {
         class VIDRE_CORE_VISIBILITY sink {
         public:
             using size_type = std::size_t;
+            using offset_type = std::make_signed_t<size_type>;
+
+            /** Flags for opening a "sink" if applicable.
+             * */
+            struct VIDRE_CORE_VISIBILITY flag {
+                bool truncate = true;       ///< Truncate file if it exists (otherwise append).
+                bool synchronous = true;    ///< Use synchronous IO with underlying file.
+                size_type buffer_size = 0;  ///< Buffer-size.
+            };
 
         public:
             sink() = default;
+            virtual ~sink() noexcept {
+                if (buf_) {
+                    delete buf_;
+                }
+            }
+
+        protected:
+            flag flag_{};
+            uint8_t *buf_{};
+            size_type buflen_{};
+
+        protected:
+            offset_type flush() noexcept {
+                offset_type n = buflen_;
+                if (buflen_) {
+                    auto retval = write(buf_, buflen_);
+                    if (retval != n) {
+                        abort_with_message("internal error: unhandled wirte return value...");
+                    }
+
+                    buflen_ = 0;
+                    return retval;
+                }
+                return n;
+            }
+
+            virtual offset_type write(const uint8_t *buf, size_type count) noexcept = 0;
 
         public:
             virtual mode dir() const noexcept {
                 return mode::input;
             }
 
-            virtual size_type put(const view &) = 0;
+            virtual bool valid() const noexcept {
+                return false;
+            }
+
+            offset_type put(const uint8_t *buf, size_type count) noexcept {
+                if (buf_) {
+                    offset_type retval = count;
+
+                    while (count > 0) {
+                        // copy to buffer
+                        auto space = flag_.buffer_size - buflen_;
+                        space = std::min(space, count);
+                        std::memcpy(buf_ + buflen_, buf, space);
+                        buflen_ += space;
+
+                        // write to disk
+                        if (buflen_ == flag_.buffer_size) {
+                            if (flush() != flag_.buffer_size) {
+                                abort_with_message("internal error: unhandled wirte return value...");
+                            }
+                        }
+
+                        count -= space;
+                    }
+
+                    return retval;
+                }
+                else
+                    return write(buf, count);
+            }
+
+            offset_type put(const view &v) {
+                return put(v.data(), v.size());
+            }
 
             template <typename T>
-            size_type put(const T &data) {
+            offset_type put(const T &data) {
                 return put(view{sizeof(T), &data});
             }
 
             template <typename T>
-            size_type put(const T *data, size_type nmemb) {
-                return put(view{nmemb * sizeof(T), data});
+            offset_type put(const T *data, size_type nmemb) {
+                return put(view{nmemb * sizeof(T), reinterpret_cast<const uint8_t *>(data)});
+            }
+        };
+
+        /** FIXME
+         * */
+        class VIDRE_CORE_VISIBILITY filesink : public virtual sink {
+        public:
+            using size_type = std::size_t;
+
+        public:
+            filesink() = default;
+            virtual ~filesink() {
+                flush();
+            }
+
+        protected:
+            fileio fd_{};
+
+        protected:
+            offset_type write(const uint8_t *buf, size_type count) noexcept override {
+                return fd_.write(buf, count);
+            }
+
+        public:
+            mode dir() const noexcept override {
+                return mode::output;
+            }
+
+            bool valid() const noexcept override {
+                return fd_.valid();
+            }
+
+            /** Open file.
+             * @param filename The file name to open.
+             * @param flag     File flags.
+             * @param permission File read/write permissions (POSIX style).
+             * @return @c true on success
+             * @return @c false otherwise
+             */
+            bool open(const std::filesystem::path &filename, sink::flag flags = {},
+                      fileio::perms permissions = fileio::default_perms) noexcept {
+                flag_ = flags;
+
+                fileio::flag_type f = fileio::writeonly | fileio::create | fileio::close_on_exec;
+                if (flag_.synchronous)
+                    f |= fileio::synchronous;
+                if (flag_.truncate)
+                    f |= fileio::truncate;
+
+                if (flag_.buffer_size)
+                    buf_ = new uint8_t[flag_.buffer_size];
+
+                return fd_.open(filename, f, permissions);
+            }
+
+            /** Close file.
+             * */
+            void close() noexcept {
+                if (buf_)
+                    flush();
+                fd_.close();
+                return;
             }
         };
 

@@ -48,14 +48,14 @@ namespace vidre {
 
         /** Position.
          * */
-        struct __attribute__((packed)) VIDRE_CORE_VISIBILITY position {
+        struct __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY position {
             uint32_t x;  ///< X coordinate of the top-left corner of the video frame.
             uint32_t y;  ///< Y coordinate of the top-left corner of the video frame.
         };
 
         /** Size.
          * */
-        struct __attribute__((packed)) VIDRE_CORE_VISIBILITY size {
+        struct __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY size {
             uint32_t w;  ///< Width of the video frame in pixels.
             uint32_t h;  ///< Height of the video frame in pixels.
         };
@@ -64,7 +64,7 @@ namespace vidre {
          * @see video::position
          * @see video::size
          * */
-        struct __attribute__((packed)) VIDRE_CORE_VISIBILITY geometry
+        struct __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY geometry
             : public position
             , public size {};
 
@@ -78,7 +78,7 @@ namespace vidre {
          *
          * @see std::chrono::duration for a more flexible representation of time intervals, if needed.
          * */
-        struct __attribute__((packed)) VIDRE_CORE_VISIBILITY timestamp {
+        struct __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY timestamp {
             uint64_t value;                      ///< Timestamp value.
             uint64_t resolution = {1000000000};  ///< Timestamp resolution (Hz). Default is 1 ns (1 GHz).
 
