@@ -98,7 +98,7 @@ namespace vidre {
 
             /** Attribute for packing raw data.
              * */
-#define VIDRE_RAW_PACKED __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY
+#define VIDRE_CORE_PACKED_VISIBILITY __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY
 
             /** File magic number.
              * The magic number is expected to be written as byte sequence, therefore,
@@ -121,7 +121,7 @@ namespace vidre {
 
             /** Version layout.
              * */
-            struct VIDRE_RAW_PACKED version_type {
+            struct VIDRE_CORE_PACKED_VISIBILITY version_type {
                 uint32_t major{};
                 uint32_t minor{};
             };
@@ -153,7 +153,7 @@ namespace vidre {
 
             /** The "T" type.
              * */
-            struct VIDRE_RAW_PACKED id {
+            struct VIDRE_CORE_PACKED_VISIBILITY id {
                 uint32_t major{};  ///< Major "T"ype.
                 uint32_t minor{};  ///< Sub-"T"ype.
 
@@ -175,7 +175,7 @@ namespace vidre {
 
             /** The "TL" structure.
              * */
-            struct VIDRE_RAW_PACKED tag : id {
+            struct VIDRE_CORE_PACKED_VISIBILITY tag : id {
                 length_type length;  ///< Message length (offset to next field).
             };
 
@@ -241,7 +241,7 @@ namespace vidre {
                 // FIXME virtual std::size_t get(source) const noexcept = 0;
             };
 
-            struct VIDRE_RAW_PACKED integer : public virtual entry {
+            struct VIDRE_CORE_PACKED_VISIBILITY integer : public virtual entry {
                 static constexpr const raw::id id = {major::value, value::integer};
 
                 // FIXME
@@ -309,7 +309,7 @@ namespace vidre {
              * */
             struct VIDRE_CORE_VISIBILITY header : public virtual group {
             private:
-                struct VIDRE_RAW_PACKED top {
+                struct VIDRE_CORE_PACKED_VISIBILITY top {
                     uint64_t magic;
                     version_type version;
                 };

@@ -20,7 +20,7 @@ struct __attribute__((packed, aligned(8))) index_type {
     uint64_t dummy;
 };
 
-struct VIDRE_RAW_PACKED static_header {
+struct VIDRE_CORE_PACKED_VISIBILITY static_header {
 #define MAKE_STATIC_TLV(NAME, TYPE) \
     raw::tag NAME##_tag{};          \
     TYPE NAME {}
