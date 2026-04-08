@@ -709,6 +709,7 @@ namespace vidre {
             /** Open mode.
              * */
             enum mode_type : uint32_t {
+                none = 0,
                 truncate = (1 << 0),    ///< Truncate file if it exists, otherwise create or append to the file.
                 synchronous = (1 << 1), /**< Transfer data synchronously to the underlying hardware.
                                          * Using this option includes block-wise buffering to reduce workload on

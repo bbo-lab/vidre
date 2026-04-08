@@ -7,7 +7,7 @@
 using namespace vidre;
 
 #define REPEAT 10000000
-#define SET_BUFFERING static_cast<storage::filesink::mode_type>(0)
+#define SET_BUFFERING storage::filesink::mode_type::none
 
 // #define REPEAT 1000000 // considerably slower...
 // #define SET_BUFFERING storage::filesink::mode_type::unbuffered
