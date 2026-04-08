@@ -53,10 +53,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #endif
 
 #include <cerrno>
 #include <cstring>
+#include <cassert>
 
 namespace vidre {
 
@@ -71,6 +73,10 @@ namespace vidre {
             using descriptor = int;
             using size_type = std::size_t;
             using offset_type = std::make_signed_t<size_type>;
+
+            /** Default block size (if otherwise it cannot be retrieved from the OS).
+             * */
+#define VIDRE_STORAGE_BLOCKSIZE 4096
 
 #if VIDRE_HOST_WINDOWS
             enum flag_type : int {
@@ -124,32 +130,64 @@ namespace vidre {
                 // FIXME...
             };
 
-            inline descriptor open(const char *filename, int flags) {
+            enum whence_type : int {
+                begin = SEEK_SET,
+                current = SEEK_CUR,
+                end = SEEK_END
+            };
+
+            inline descriptor open(const char *filename, int flags) noexcept {
                 return ::open(filename, flags);
             }
 
-            inline descriptor open(const char *filename, int flags, mode_t mode) {
+            inline descriptor open(const char *filename, int flags, mode_t mode) noexcept {
                 return ::open(filename, flags, mode);
             }
 
-            inline void close(descriptor fd) {
+            inline void close(descriptor fd) noexcept {
                 ::close(fd);
             }
 
-            inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
+            inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) noexcept {
                 return ::read(fd, buf, count);
             }
 
-            inline offset_type read(descriptor fd, char *buf, std::size_t count) {
+            inline offset_type read(descriptor fd, char *buf, std::size_t count) noexcept {
                 return ::read(fd, buf, count);
             }
 
-            inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
+            inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) noexcept {
                 return ::write(fd, buf, count);
             }
 
-            inline offset_type write(descriptor fd, const char *buf, std::size_t count) {
+            inline offset_type write(descriptor fd, const char *buf, std::size_t count) noexcept {
                 return ::write(fd, buf, count);
+            }
+
+            inline offset_type seek(descriptor fd, offset_type off, whence_type whence) noexcept {
+                return ::lseek(fd, off, to_underlying(whence));
+            }
+
+            enum allocation_type : int {
+                allocate_range = FALLOC_FL_ALLOCATE_RANGE,
+                keep_size = FALLOC_FL_KEEP_SIZE,
+                punch_hole = FALLOC_FL_PUNCH_HOLE,
+                no_hide_stale = FALLOC_FL_NO_HIDE_STALE,
+                collapse_range = FALLOC_FL_COLLAPSE_RANGE,
+                zero_range = FALLOC_FL_ZERO_RANGE,
+                insert_range = FALLOC_FL_INSERT_RANGE,
+                unshare_range = FALLOC_FL_UNSHARE_RANGE
+            };
+
+            inline bool allocate(descriptor fd, allocation_type mode, offset_type length, offset_type offset) noexcept {
+                return 0 == fallocate(fd, static_cast<int>(mode), offset, length);
+            }
+
+            inline size_type blocksize(descriptor fd) {
+                struct stat st;
+                if (fstat(fd, &st) < 0)
+                    return VIDRE_STORAGE_BLOCKSIZE;
+                return st.st_blksize;
             }
 
             static constexpr std::size_t path_max = PATH_MAX;
@@ -188,31 +226,6 @@ namespace vidre {
          * */
         ///@{
 
-        /** In-/output "direction".
-         * */
-        enum class mode : uint8_t {
-            none = 0,    ///< Undefined state.
-            input = 1,   ///< Input direction (is a sink).
-            output = 2,  ///< Output direction (is a source).
-            bidi = 3     ///< Bi-directional.
-        };
-
-        inline mode operator|(mode lhs, mode rhs) {
-            return static_cast<mode>(to_underlying(lhs) | to_underlying(rhs));
-        }
-
-        inline mode operator&(mode lhs, mode rhs) {
-            return static_cast<mode>(to_underlying(lhs) & to_underlying(rhs));
-        }
-
-        inline mode operator~(mode flags) {
-            return static_cast<mode>(~to_underlying(flags));
-        }
-
-        inline bool operator!(mode flags) {
-            return !to_underlying(flags);
-        }
-
         /** Trivial file IO.
          * */
         class VIDRE_CORE_VISIBILITY fileio {
@@ -242,6 +255,29 @@ namespace vidre {
                 synchronous = detail::file::flag_type::synchronous,
                 close_on_exec = detail::file::flag_type::close_on_exec,
                 // FIXME...
+            };
+
+            /** Relative position flag.
+             * */
+            enum whence_type : int {
+                begin = detail::file::whence_type::begin,
+                current = detail::file::whence_type::current,
+                end = detail::file::whence_type::end,
+            };
+
+            /** Allocation type.
+             *
+             * @see FIXME
+             * */
+            enum allocation_type : int {
+                allocate_range = detail::file::allocation_type::allocate_range,
+                keep_size = detail::file::allocation_type::keep_size,
+                punch_hole = detail::file::allocation_type::punch_hole,
+                no_hide_stale = detail::file::allocation_type::no_hide_stale,
+                collapse_range = detail::file::allocation_type::collapse_range,
+                zero_range = detail::file::allocation_type::zero_range,
+                insert_range = detail::file::allocation_type::insert_range,
+                unshare_range = detail::file::allocation_type::unshare_range
             };
 
             using perms = std::filesystem::perms;
@@ -321,10 +357,34 @@ namespace vidre {
                 fd_ = -1;
             }
 
+            /** Seek position in file.
+             * @param off       Offset (bytes).
+             * @param whence    From where (default: begin).
+             * @return Offset from beginning, @c -1 on error.
+             * */
+            offset_type seek(offset_type off, whence_type whence = begin) noexcept {
+                return detail::file::seek(fd_, off, static_cast<detail::file::whence_type>(whence));
+            }
+
+            /** Get current position in file.
+             * */
+            offset_type position() noexcept {
+                return seek(0, current);
+            }
+
+            /** File size.
+             * */
+            offset_type size() noexcept {
+                auto curpos = position();
+                auto retval = seek(0, end);
+                seek(curpos, begin);
+                return retval;
+            }
+
             /** Reserve space on disk.
              * @todo needs implementation
              * */
-            bool allocate(std::size_t len, ::off_t offset = ::off_t(-1));
+            bool allocate(std::size_t len, offset_type offset = -1);
 
             /** Write data to file.
              * */
@@ -336,6 +396,23 @@ namespace vidre {
              * */
             offset_type read(uint8_t *buf, std::size_t count) noexcept {
                 return detail::file::read(fd_, buf, count);
+            }
+
+            /** Allocate file space.
+             * @param mode The allocation mode.
+             * @param length Number of bytes to allocate.
+             * @param offset Position from where to allocate.
+             * @returns `true` on success, `false` otherwise
+             * */
+            bool allocate(allocation_type mode, offset_type length, offset_type offset) noexcept {
+                return detail::file::allocate(fd_, static_cast<detail::file::allocation_type>(mode), length, offset);
+            }
+
+            /** Reserve space on disk (at end of file).
+             * This method on reserves space, optimizing append workloads.
+             * */
+            bool reserve(offset_type amount) noexcept {
+                return allocate(keep_size, amount, size());
             }
         };
 
@@ -466,7 +543,84 @@ namespace vidre {
             }
         };
 
+        /** Write buffer.
+         * This simple buffer is mainly intended for use with sinks only,
+         * especially when using synchronous file writes. There, writing
+         * data not a multiple of the underlying hardware's block size, can
+         * be orders of magnitude slower.
+         * */
+        struct VIDRE_CORE_VISIBILITY buffer {
+            using size_type = std::size_t;
+            using value_type = uint8_t;
+            using pointer = value_type *;
+            using const_pointer = const value_type *;
+
+            buffer() = default;
+            ~buffer() {
+                if (data)
+                    delete[] data;
+            }
+
+            size_type size{};
+            size_type used{};
+            pointer data;
+
+            /** Setup buffer.
+             * @param n Number of bytes (should be a power of 2).
+             * @note This function does nothing if it was previously setup or
+             *       no memory can be allocated.
+             * */
+            void setup(size_type n) noexcept {
+                if (data)
+                    return;
+
+                data = new value_type[n];
+                if (data)
+                    size = n;
+            }
+
+            /** Check if buffer is "usable".
+             * */
+            operator bool() const noexcept {
+                return nullptr != data;
+            }
+
+            /** Check if buffer is full.
+             * */
+            bool full() const noexcept {
+                return used == size;
+            }
+
+            /** "Flush" data.
+             * @returns Number of bytes "flushed".
+             * This routine merely sets the field @c used to zero.
+             * */
+            size_type flush() noexcept {
+                size_type retval = used;
+                used = 0;
+                return retval;
+            }
+
+            /** Put data into buffer.
+             * @param src Pointer to source data.
+             * @param n Number of bytes to buffer.
+             * @returns Number of bytes actually buffered.
+             * */
+            size_type append(const_pointer src, size_type n) noexcept {
+                assert(data != nullptr);
+
+                size_type space = size - used;
+                size_type done = std::min(space, n);
+                std::memcpy(data + used, src, done);
+                used += done;
+                return done;
+            }
+        };
+
         /** Data sink.
+         *
+         * FIXME
+         *
          * */
         class VIDRE_CORE_VISIBILITY sink {
         public:
@@ -483,67 +637,50 @@ namespace vidre {
 
         public:
             sink() = default;
-            virtual ~sink() noexcept {
-                if (buf_) {
-                    delete buf_;
-                }
-            }
+            virtual ~sink() noexcept {}
 
         protected:
-            flag flag_{};
-            uint8_t *buf_{};
-            size_type buflen_{};
+            buffer buf_{};
 
         protected:
-            offset_type flush() noexcept {
-                offset_type n = buflen_;
-                if (buflen_) {
-                    auto retval = write(buf_, buflen_);
-                    if (retval != n) {
-                        abort_with_message("internal error: unhandled wirte return value...");
-                    }
+            /** Write buffer to disk.
+             * @throw vidre::exception::memory
+             * @returns number of bytes written to underlying hardware
+             * */
+            offset_type flush() {
+                if (buf_.used) {
+                    auto retval = write(buf_.data, buf_.used);
 
-                    buflen_ = 0;
-                    return retval;
+                    if (retval != buf_.used)
+                        // if the underlying hardware can't take it, we assume,
+                        // it's out of memory...
+                        throw exception::memory();
                 }
-                return n;
+                return buf_.flush();
             }
 
-            virtual offset_type write(const uint8_t *buf, size_type count) noexcept = 0;
+            virtual offset_type write(const uint8_t *buf, size_type count) = 0;
 
         public:
-            virtual mode dir() const noexcept {
-                return mode::input;
-            }
-
             virtual bool valid() const noexcept {
                 return false;
             }
 
-            offset_type put(const uint8_t *buf, size_type count) noexcept {
+            offset_type put(const uint8_t *buf, size_type count) {
                 if (buf_) {
+                    // using buffer
                     offset_type retval = count;
-
                     while (count > 0) {
-                        // copy to buffer
-                        auto space = flag_.buffer_size - buflen_;
-                        space = std::min(space, count);
-                        std::memcpy(buf_ + buflen_, buf, space);
-                        buflen_ += space;
-
-                        // write to disk
-                        if (buflen_ == flag_.buffer_size) {
-                            if (flush() != flag_.buffer_size) {
-                                abort_with_message("internal error: unhandled wirte return value...");
-                            }
-                        }
-
-                        count -= space;
+                        size_type buffered = buf_.append(buf, count);
+                        if (buf_.full())
+                            flush();
+                        count -= buffered;
                     }
 
                     return retval;
                 }
                 else
+                    // direct write
                     return write(buf, count);
             }
 
@@ -562,11 +699,23 @@ namespace vidre {
             }
         };
 
-        /** FIXME
+        /** A file sink.
+         *
+         * FIXME
+         *
          * */
         class VIDRE_CORE_VISIBILITY filesink : public virtual sink {
         public:
-            using size_type = std::size_t;
+            /** Open mode.
+             * */
+            enum mode_type : uint32_t {
+                truncate = (1 << 0),    ///< Truncate file if it exists, otherwise create or append to the file.
+                synchronous = (1 << 1), /**< Transfer data synchronously to the underlying hardware.
+                                         * Using this option includes block-wise buffering to reduce workload on
+                                         * the underlying hardware.
+                                         * */
+                unbuffered = (1 << 2)   /**< Disable automatic buffering. */
+            };
 
         public:
             filesink() = default;
@@ -578,41 +727,46 @@ namespace vidre {
             fileio fd_{};
 
         protected:
+            // Low-level write method.
             offset_type write(const uint8_t *buf, size_type count) noexcept override {
                 return fd_.write(buf, count);
             }
 
         public:
-            mode dir() const noexcept override {
-                return mode::output;
-            }
-
             bool valid() const noexcept override {
                 return fd_.valid();
             }
 
             /** Open file.
              * @param filename The file name to open.
-             * @param flag     File flags.
+             * @param mode     File flags (default: synchronous with block-wise buffering).
              * @param permission File read/write permissions (POSIX style).
              * @return @c true on success
              * @return @c false otherwise
              */
-            bool open(const std::filesystem::path &filename, sink::flag flags = {},
+            bool open(const std::filesystem::path &filename, mode_type mode = synchronous,
                       fileio::perms permissions = fileio::default_perms) noexcept {
-                flag_ = flags;
-
                 fileio::flag_type f = fileio::writeonly | fileio::create | fileio::close_on_exec;
-                if (flag_.synchronous)
-                    f |= fileio::synchronous;
-                if (flag_.truncate)
+
+                if (mode & mode_type::truncate)
                     f |= fileio::truncate;
+                else
+                    f |= fileio::append;
 
-                if (flag_.buffer_size)
-                    buf_ = new uint8_t[flag_.buffer_size];
+                if (mode & mode_type::synchronous)
+                    f |= fileio::synchronous;
 
-                return fd_.open(filename, f, permissions);
+                bool retval = fd_.open(filename, f, permissions);
+                if (not retval)
+                    return false;
+
+                if ((mode & mode_type::synchronous) and not(mode & mode_type::unbuffered))
+                    buf_.setup(detail::file::blocksize(fd_));
+
+                return true;
             }
+
+            // FIXME setbuf(size_type n)
 
             /** Close file.
              * */
@@ -624,6 +778,24 @@ namespace vidre {
             }
         };
 
+        ///@cond
+        inline filesink::mode_type operator|(filesink::mode_type lhs, filesink::mode_type rhs) {
+            return static_cast<filesink::mode_type>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline filesink::mode_type operator|=(filesink::mode_type lhs, filesink::mode_type rhs) {
+            return static_cast<filesink::mode_type>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline filesink::mode_type operator&(filesink::mode_type lhs, filesink::mode_type rhs) {
+            return static_cast<filesink::mode_type>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline filesink::mode_type operator&=(filesink::mode_type lhs, filesink::mode_type rhs) {
+            return static_cast<filesink::mode_type>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline filesink::mode_type operator~(filesink::mode_type rhs) {
+            return static_cast<filesink::mode_type>(~to_underlying(rhs));
+        }
+        ///@endcond
+
         /** Data source.
          */
         class VIDRE_CORE_VISIBILITY source {
@@ -631,9 +803,6 @@ namespace vidre {
             source() = default;
 
         public:
-            virtual mode dir() const noexcept {
-                return mode::input;
-            }
         };
 
         ///@}

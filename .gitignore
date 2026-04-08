@@ -39,3 +39,6 @@ patches/
 .vscode/*
 !.vscode/tasks.json
 !.vscode/launch.json
+
+# benchmarks
+*.tmp

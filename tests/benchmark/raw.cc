@@ -7,6 +7,10 @@
 using namespace vidre;
 
 #define REPEAT 10000000
+#define SET_BUFFERING static_cast<storage::filesink::mode_type>(0)
+
+// #define REPEAT 1000000 // considerably slower...
+// #define SET_BUFFERING storage::filesink::mode_type::unbuffered
 
 namespace raw = vidre::storage::raw;
 namespace raw = vidre::storage::raw;
@@ -32,13 +36,14 @@ struct VIDRE_RAW_PACKED static_header {
     }
 };
 
+
 void test_static() {
     benchmark::timer t;
 
     volatile static_header hdr{};
 
     storage::filesink f;
-    f.open("static.hdr", storage::filesink::flag{.truncate = true, .synchronous = true, .buffer_size = 4096});
+    f.open("static.tmp", storage::filesink::synchronous | SET_BUFFERING);
     if (not f.valid())
         log::fatal() << "Could not open file: " << std::strerror(errno) << log::endl;
 
@@ -95,7 +100,7 @@ void test_dynamic() {
     auto computertime = hdr.append(new mytimestamp());
 
     storage::filesink f;
-    f.open("dynamic.hdr", storage::filesink::flag{.truncate = true, .synchronous = true, .buffer_size = 4096});
+    f.open("dynamic.tmp", storage::filesink::synchronous | SET_BUFFERING);
     if (not f.valid())
         log::fatal() << "Could not open file: " << std::strerror(errno) << log::endl;
 

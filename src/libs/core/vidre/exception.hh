@@ -358,6 +358,7 @@ namespace vidre {
         class logic;
         class runtime;
         class argument;
+        class memory;
     };
 
     /** Add supplemental information to exception.
@@ -404,6 +405,17 @@ namespace vidre {
     public:
         argument(const std::source_location &src = std::source_location::current()) noexcept : runtime(src) {}
         virtual ~argument() {}
+
+    public:
+        const char *what() const noexcept override;
+    };
+
+    /** Out-of-memory error.
+     * */
+    class VIDRE_CORE_VISIBILITY exception::memory : public virtual exception::runtime {
+    public:
+        memory(const std::source_location &src = std::source_location::current()) noexcept : runtime(src) {}
+        virtual ~memory() {}
 
     public:
         const char *what() const noexcept override;

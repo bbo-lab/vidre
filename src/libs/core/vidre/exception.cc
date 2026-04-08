@@ -129,6 +129,10 @@ const char *exception::argument::what() const noexcept {
     return "argument error";
 }
 
+const char *exception::memory::what() const noexcept {
+    return "memory error";
+}
+
 error::string error::diagnostic::dump() noexcept {
     string msg(1023, ' ');
     msg.clear();
