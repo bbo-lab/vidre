@@ -434,23 +434,23 @@ namespace vidre {
         }
         ///@endcond
 
-        /** Data "volume".
-         * The "volume" of data describes the byte-size, and as well,
+        /** Data extent.
+         * The extent of data describes the byte-size, and as well,
          * carries flags for dynamic (re-)allocation and writability
          * ("non-constness").
          * @see view
          * */
         template <std::endian E = std::endian::native>
-        struct volume;
+        struct extent;
 
         template <>
-        struct volume<std::endian::little> {
+        struct extent<std::endian::little> {
             std::size_t size : bits_of<std::size_t>::value - 2 {};
             std::size_t writable : 1 {};
             std::size_t dynamic : 1 {};
 
-            constexpr volume() = default;
-            constexpr volume(std::size_t n, bool writable_ = false, bool dynamic_ = false)
+            constexpr extent() = default;
+            constexpr extent(std::size_t n, bool writable_ = false, bool dynamic_ = false)
                 : size(n), writable(writable_), dynamic(dynamic_) {}
 
             operator std::size_t() const noexcept {
@@ -459,14 +459,14 @@ namespace vidre {
         };
 
         template <>
-        struct volume<std::endian::big> {
+        struct extent<std::endian::big> {
             std::size_t dynamic : 1 {};
             std::size_t writable : 1 {};
             std::size_t size : bits_of<std::size_t>::value - 1 {};
 
-            constexpr volume() = default;
-            constexpr volume(std::size_t n) : size(n) {}
-            constexpr volume(std::size_t n, bool writable_ = false, bool dynamic_ = false)
+            constexpr extent() = default;
+            constexpr extent(std::size_t n) : size(n) {}
+            constexpr extent(std::size_t n, bool writable_ = false, bool dynamic_ = false)
                 : dynamic(dynamic_), writable(writable_), size(n) {}
 
             operator std::size_t() const noexcept {
@@ -506,7 +506,7 @@ namespace vidre {
             constexpr view(T const (&ptr)[N]) noexcept : size_(N), data_(const_cast<pointer>(ptr)) {}
 
         protected:
-            volume<> size_{};
+            extent<> size_{};
             pointer data_{};
 
         public:
@@ -546,8 +546,8 @@ namespace vidre {
         /** Write buffer.
          * This simple buffer is mainly intended for use with sinks only,
          * especially when using synchronous file writes. There, writing
-         * data not a multiple of the underlying hardware's block size, can
-         * be orders of magnitude slower.
+         * data not begin a multiple of the underlying hardware's block size,
+         * can be orders of magnitude slower.
          * */
         struct VIDRE_CORE_VISIBILITY buffer {
             using size_type = std::size_t;
@@ -558,25 +558,33 @@ namespace vidre {
             buffer() = default;
             ~buffer() {
                 if (data)
-                    delete[] data;
+                    std::free(data);
             }
 
-            size_type size{};
-            size_type used{};
-            pointer data;
+            size_type size{};  ///< The overall buffer size.
+            size_type used{};  ///< Number of used bytes.
+            pointer data;      ///< Memory pointer.
 
             /** Setup buffer.
-             * @param n Number of bytes (should be a power of 2).
-             * @note This function does nothing if it was previously setup or
-             *       no memory can be allocated.
+             * @param len Number of bytes (should be a power of 2).
+             * @return Number of bytes allocated, or 0 if it was already allocated
+             *         previously or no memory could be allocated.
+             *
+             * Allocate internal buffer with a size rounded to the next power
+             * of two.
+             *
+             * @note This method may only be called once.
              * */
-            void setup(size_type n) noexcept {
+            size_type setup(size_type len) noexcept {
                 if (data)
-                    return;
+                    return 0;
 
-                data = new value_type[n];
+                len = std::bit_ceil(len);
+                data = reinterpret_cast<pointer>(std::aligned_alloc(8, len));
                 if (data)
-                    size = n;
+                    size = len;
+
+                return size;
             }
 
             /** Check if buffer is "usable".
@@ -617,30 +625,29 @@ namespace vidre {
             }
         };
 
-        /** Data sink.
+        /** Data sink skeleton.
+         * Derived classes need to implement at least:
+         * @code
+         * class VISIBILITY derived_sink {
+         * public:
+         *      virtual ~derived_sink();
          *
-         * FIXME
-         *
+         * protected:
+         *      offset_type write(const uint8_t *buf, size_type count) override;
+         * };
+         * @endcode
          * */
         class VIDRE_CORE_VISIBILITY sink {
         public:
             using size_type = std::size_t;
             using offset_type = std::make_signed_t<size_type>;
 
-            /** Flags for opening a "sink" if applicable.
-             * */
-            struct VIDRE_CORE_VISIBILITY flag {
-                bool truncate = true;       ///< Truncate file if it exists (otherwise append).
-                bool synchronous = true;    ///< Use synchronous IO with underlying file.
-                size_type buffer_size = 0;  ///< Buffer-size.
-            };
-
         public:
             sink() = default;
-            virtual ~sink() noexcept {}
+            virtual ~sink() {}
 
         protected:
-            buffer buf_{};
+            buffer buf_{};  ///< Internal block buffer.
 
         protected:
             /** Write buffer to disk.
@@ -659,13 +666,21 @@ namespace vidre {
                 return buf_.flush();
             }
 
+            /** The actual write method.
+             * This method needs overrides in derived classes.
+             * */
             virtual offset_type write(const uint8_t *buf, size_type count) = 0;
 
         public:
+            /** Check if the stream is valid (ie. usable).
+             * */
             virtual bool valid() const noexcept {
                 return false;
             }
 
+            /** Transfer data.
+             * */
+            ///@{
             offset_type put(const uint8_t *buf, size_type count) {
                 if (buf_) {
                     // using buffer
@@ -696,6 +711,14 @@ namespace vidre {
             template <typename T>
             offset_type put(const T *data, size_type nmemb) {
                 return put(view{nmemb * sizeof(T), reinterpret_cast<const uint8_t *>(data)});
+            }
+            ///@}
+
+            /** Set buffer.
+             * @param size Buffer size (must be 2^n).
+             * */
+            size_type setbuf(size_type size) noexcept {
+                return buf_.setup(size);
             }
         };
 
