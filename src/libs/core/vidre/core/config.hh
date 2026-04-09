@@ -55,6 +55,13 @@ namespace vidre {
 #define VIDRE_CORE_VISIBILITY VIDRE_API_IMPORT
 #endif
 
+/** Standard packing attribute.
+ * @note At the moment of writing, the VidRe software is expected to be 
+ *       compiled with GNU C/Clang compatible compilers, that understand
+ *       this attribute syntax.
+ * */
+#define __vidre_packed__ __attribute__((packed, aligned(8)))
+
 #if defined(DOXYGEN)
 
 /** Host is a Linux system */

@@ -6,7 +6,7 @@
 
 using namespace vidre;
 
-#define REPEAT 10000000
+#define REPEAT        10000000
 #define SET_BUFFERING storage::filesink::mode_type::none
 
 // #define REPEAT 1000000 // considerably slower...
@@ -20,12 +20,12 @@ struct __attribute__((packed, aligned(8))) index_type {
     uint64_t dummy;
 };
 
-struct VIDRE_CORE_PACKED_VISIBILITY static_header {
+struct __vidre_packed__ VIDRE_CORE_VISIBILITY static_header {
 #define MAKE_STATIC_TLV(NAME, TYPE) \
-    raw::tag NAME##_tag{};          \
+    raw::prefix NAME##_tag{};       \
     TYPE NAME {}
 
-    raw::tag grp{{raw::major::meta, raw::meta::group}, 128 - 16};
+    raw::prefix grp{{raw::major::meta, raw::meta::group}, 128 - 16};
     MAKE_STATIC_TLV(index, index_type);
     MAKE_STATIC_TLV(geometry, video::geometry);
     MAKE_STATIC_TLV(timestamp, video::timestamp);
@@ -35,7 +35,6 @@ struct VIDRE_CORE_PACKED_VISIBILITY static_header {
         return f.put(const_cast<static_header *>(this), 1);
     }
 };
-
 
 void test_static() {
     benchmark::timer t;
@@ -59,34 +58,34 @@ void test_static() {
         std::format(" ({:.1} ns/call)", (1e9 / speed)) << log::endl;
 }
 
-struct VIDRE_CORE_VISIBILITY myindex : public virtual raw::entry {
+struct VIDRE_CORE_VISIBILITY myindex : public virtual raw::atom {
     uint64_t index{};
     uint64_t dummy{};
 
-    myindex() noexcept : raw::entry(raw::major::undefined, raw::value::undefined, sizeof(uint64_t)) {}
+    myindex() noexcept : raw::atom(raw::major::undefined, raw::value::undefined, sizeof(uint64_t)) {}
 
     virtual std::size_t put(storage::sink &f) const noexcept {
-        return raw::entry::put(f) + f.put(&index, 1);
+        return raw::atom::put(f) + f.put(&index, 1);
     }
 };
 
-struct VIDRE_CORE_VISIBILITY mygeometry : public virtual raw::entry {
+struct VIDRE_CORE_VISIBILITY mygeometry : public virtual raw::atom {
     video::geometry geometry{};
 
-    mygeometry() noexcept : raw::entry(raw::major::undefined, raw::value::undefined, sizeof(video::geometry)) {}
+    mygeometry() noexcept : raw::atom(raw::major::undefined, raw::value::undefined, sizeof(video::geometry)) {}
 
     virtual std::size_t put(storage::sink &f) const noexcept {
-        return raw::entry::put(f) + f.put(&geometry, 1);
+        return raw::atom::put(f) + f.put(&geometry, 1);
     }
 };
 
-struct VIDRE_CORE_VISIBILITY mytimestamp : public virtual raw::entry {
+struct VIDRE_CORE_VISIBILITY mytimestamp : public virtual raw::atom {
     video::timestamp timestamp{};
 
-    mytimestamp() noexcept : raw::entry(raw::major::undefined, raw::value::undefined, sizeof(video::timestamp)) {}
+    mytimestamp() noexcept : raw::atom(raw::major::undefined, raw::value::undefined, sizeof(video::timestamp)) {}
 
     virtual std::size_t put(storage::sink &f) const noexcept {
-        return raw::entry::put(f) + f.put(&timestamp, 1);
+        return raw::atom::put(f) + f.put(&timestamp, 1);
     }
 };
 
@@ -98,6 +97,9 @@ void test_dynamic() {
     hdr.append(new mygeometry());
     hdr.append(new mytimestamp());
     auto computertime = hdr.append(new mytimestamp());
+
+    video::timestamp tx;
+    tx.now();
 
     storage::filesink f;
     f.open("dynamic.tmp", storage::filesink::synchronous | SET_BUFFERING);
