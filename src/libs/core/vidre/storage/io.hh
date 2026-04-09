@@ -685,11 +685,13 @@ namespace vidre {
                 if (buf_) {
                     // using buffer
                     offset_type retval = count;
+                    offset_type pos = 0;
                     while (count > 0) {
-                        size_type buffered = buf_.append(buf, count);
+                        size_type buffered = buf_.append(buf + pos, count);
                         if (buf_.full())
                             flush();
                         count -= buffered;
+                        pos += buffered;
                     }
 
                     return retval;

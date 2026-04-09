@@ -20,12 +20,12 @@ using namespace vidre;
 
 // ============================================================================
 
-void version(program::argument::parser &, variant) {
+void program_version(program::argument::parser &, variant) {
     std::cout << VIDRE_VERSION_S << std::endl;
     std::exit(0);
 }
 
-void help(program::argument::parser &p, variant) {
+void program_help(program::argument::parser &p, variant) {
     std::cout << p.help();
     std::exit(0);
 }
@@ -58,8 +58,8 @@ int main(int argc, const char **argv) {
             "UVC playground",   //
             "Copyright (C) 2024-2026 MPI f. Neurobiol. of Behavior—ceasar, Bonn, Germany", "UVC driver development playground.",
             {
-                {"help", 'h', "Show this usage information.", help},
-                {"version", 'V', "Display program version", version},
+                {"help", 'h', "Show this usage information.", program_help},
+                {"version", 'V', "Display program version", program_version},
                 {"verbose", 'v', "Increase verbosity"},
                 {"list", "List available cameras"},
                 {"log", "Log level (use 'help' for further info).", program::argument::optional, "info", log_level},

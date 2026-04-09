@@ -35,9 +35,11 @@ namespace vidre {
 
     namespace video {
 
+        // FIXME need to use __vidre_packed__
+
         /**@addtogroup api-core-video
          * */
-        ///@{
+        ///@}
 
         /** Video frame.
          * */
@@ -57,10 +59,10 @@ namespace vidre {
              *
              * */
             struct __attribute__((packed)) VIDRE_CORE_VISIBILITY metadata {
-                uint32_t frame_number{};                               ///< Frame number (if available).
-                timestamp camera{};                                    ///< Timestamp from the camera (if available).
-                timestamp system{};                                    ///< Timestamp from the system clock (steady_clock).)
-                geometry geometry{};                                   ///< Geometry of the video frame (position and size).
+                uint32_t frame_number{};                             ///< Frame number (if available).
+                timestamp camera{};                                  ///< Timestamp from the camera (if available).
+                timestamp system{};                                  ///< Timestamp from the system clock (steady_clock).)
+                geometry layout{};                                   ///< Layout of the video frame (position and size).
                 pixel_format::type format{pixel_format::undefined};  ///< Pixel format of the video frame.
             };
 

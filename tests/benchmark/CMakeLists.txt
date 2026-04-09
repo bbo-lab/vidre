@@ -9,10 +9,3 @@ vidre_test(exceptions EXCLUDE
                 Vidre::Core
 )
 
-vidre_test(raw EXCLUDE
-    SOURCES raw.cc
-    BUILD
-        LINK_LIBRARIES 
-            PRIVATE 
-                Vidre::Core
-)

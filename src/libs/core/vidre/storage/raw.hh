@@ -44,7 +44,7 @@
  *
  * Each data stream (called a "chunk") consists of:
  *
- *   1. File header   - begins with a magic number
+ *   1. File header   - begins with a magic number and version
  *   2. Data chunks   - the recorded payload
  *   3. Tail          - finalization metadata
  *
@@ -70,9 +70,20 @@
  * recording. For a camera stream, this includes a sparse mapping of
  * indices to file offsets (for efficient seeking), possibly also
  * error information, in case a recording was unintentionally stopped.
- * 
+ *
  * @todo a detailed description of the file format (see "major"/"minor" below) is required
  *
+ * @verbatim
+ * <magic>
+ * <version>
+ * <header>
+ * <chunk>
+ * ...
+ * <magic>
+ * <version>
+ * <tail>
+ * <tail-length>
+ * @endverbatim
  * */
 
 #include <vidre/core/config.hh>
@@ -96,9 +107,10 @@ namespace vidre {
             /**@addtogroup api-core-storage-raw */
             ///@{
 
-            /** Attribute for packing raw data.
+            /** Data alignment.
+             * @note At the moment of writing only 64-bit systems are targeted.
              * */
-#define VIDRE_CORE_PACKED_VISIBILITY __attribute__((packed, aligned(8))) VIDRE_CORE_VISIBILITY
+            static constexpr std::size_t alignment = 8U;
 
             /** File magic number.
              * The magic number is expected to be written as byte sequence, therefore,
@@ -106,66 +118,94 @@ namespace vidre {
              * */
             static constexpr uint64_t magic = 0x56696452'6542424F;  ///< File magic ("VidReBBO").
 
-            /** Detect endianness.
-             * */
-            const std::optional<std::endian> check_magic(uint64_t m) {
-                if (m == magic) {
-                    return std::endian::native;
-                }
-                if (m == std::byteswap(magic)) {
-                    return std::endian::native == std::endian::little ? std::endian::big : std::endian::little;
-                }
-
-                return {};
-            }
-
             /** Version layout.
              * */
-            struct VIDRE_CORE_PACKED_VISIBILITY version_type {
+            struct __vidre_packed__ VIDRE_CORE_VISIBILITY version_type {
                 uint32_t major{};
                 uint32_t minor{};
             };
 
             /** Current version.
              *
+             * Versioning scheme:
+             * The **major** number will only change if an incompatible change
+             * occurs in the general format (also including type IDs). The
+             * **minor** number increases when additional functionality is
+             * added (e.g. new type IDs).
+             *
              * */
             static constexpr version_type version = {1, 0};
 
-            /** The data alignment.
+            /** Major type.
+             * Coarse classification of the "T" (in TLV).
+             *
+             * @note As VidRe is geared towards video recording, related categories
+             *       are defined. The raw file format is flexible enough so, to
+             *       implement self-describing alternative data streams.
+             *
+             * @see raw::id
              * */
-            static constexpr std::size_t alignment = 8U;
+            enum class major : uint32_t {
+                undefined = 0x0000'0000,
+                meta = 0x0000'0010,   ///< Meta-data (see @ref raw::meta).
+                data = 0x0000'0020,   ///< Plain data (see @ref raw::data).
+                video = 0x0000'0030,  ///< Video meta-data (see FIXME).
+                audio = 0x0000'0040,  ///< Audio meta-data
+            };
 
-            /** Helper to calculate required padding.
-             * */
-            template <typename T>
-            requires std::is_unsigned_v<T>
-            static uint64_t pad(T sz) noexcept {
-                return static_cast<uint64_t>(sz) & (alignment - 1);
-            }
+            template <typename Major>
+            concept compatible_major = std::is_same_v<Major, raw::major>;
 
-            /** Helper to calculate size after padding.
-             * */
-            template <typename T>
-            requires std::is_unsigned_v<T>
-            static uint64_t align(T sz) noexcept {
-                return static_cast<uint64_t>(sz) + pad(sz);
-            }
+            template <typename Minor>
+            concept compatible_minor = std::is_enum_v<Minor> and std::is_same_v<std::underlying_type_t<Minor>, uint32_t>;
 
             /** The "T" type.
+             * @see raw::major
              * */
-            struct VIDRE_CORE_PACKED_VISIBILITY id {
-                uint32_t major{};  ///< Major "T"ype.
-                uint32_t minor{};  ///< Sub-"T"ype.
+            struct __vidre_packed__ VIDRE_CORE_VISIBILITY id {
+                uint32_t major_{};  ///< Major "T"ype.
+                uint32_t minor_{};  ///< Sub-"T"ype.
 
                 constexpr id() = default;
 
                 template <typename Major, typename Minor>
-                requires (std::is_enum_v<Major> and std::is_same_v<std::underlying_type_t<Major>, uint32_t> and
-                          std::is_enum_v<Minor> and std::is_same_v<std::underlying_type_t<Minor>, uint32_t>)
-                constexpr id(Major major_, Minor minor_) noexcept : major{to_underlying(major_)}, minor{to_underlying(minor_)} {}
+                requires (compatible_major<Major> and compatible_minor<Minor>)
+                constexpr id(Major major_, Minor minor_) noexcept : major_{to_underlying(major_)}, minor_{to_underlying(minor_)} {}
+
+                /** Get "major" type.
+                 * Used for reading data.
+                 * @see minor()
+                 * */
+                constexpr raw::major major() const noexcept {
+                    return static_cast<raw::major>(major_);
+                }
+
+                /** Get "minor" type.
+                 * Used for reading data.
+                 *
+                 * Example:
+                 * @code
+                 * switch(item.major()) {
+                 * case raw::major::meta:
+                 *     switch (item.minor<raw::meta>()) {
+                 *     case raw::meta::group:
+                 *     // ...
+                 *     }
+                 *     break;
+                 * // ...
+                 * }
+                 * @endcode
+                 *
+                 * @see major()
+                 * */
+                template <typename Minor>
+                requires compatible_minor<Minor>
+                constexpr Minor minor() const noexcept {
+                    return static_cast<Minor>(minor_);
+                }
 
                 constexpr bool operator==(const id &other) const noexcept {
-                    return (major == other.major) && (minor == other.minor);
+                    return (major_ == other.major_) && (minor_ == other.minor_);
                 }
             };
 
@@ -173,30 +213,160 @@ namespace vidre {
              * */
             using length_type = uint64_t;
 
-            /** The "TL" structure.
+            /** The "TL" prefix.
              * */
-            struct VIDRE_CORE_PACKED_VISIBILITY tag : id {
+            struct __vidre_packed__ VIDRE_CORE_VISIBILITY prefix : id {
                 length_type length;  ///< Message length (offset to next field).
             };
 
-            /** Helper to calculate string length.
-             * Due to the @c alignment, strings may be zero-padded. This function
-             * calculates the actual string length.
+            /** TLV elements.
              * */
-            uint64_t strlen(uint64_t len, const uint8_t *value) noexcept {
-                const uint8_t *end = value + len - alignment;
-                return len - alignment                              //
-                       + !!end[0] + !!end[1] + !!end[2] + !!end[3]  //
-                       + !!end[4] + !!end[5] + !!end[6] + !!end[7];
-            }
+            namespace element {
 
-            /** Major type.
+                struct dynamic;
+
+                /** Instantiation of "fixed" elements.
+                 * Chunk headers are usually of fixed size, and, possibly do
+                 * not require grouping. These headers can be declared as
+                 * fixed structures.
+                 *
+                 * Example:
+                 * @snippet examples/core/raw.cc fixed-elements
+                 * */
+                template <class Value, raw::major major, auto minor>
+                requires (not std::derived_from<Value, dynamic>)
+                struct __vidre_packed__ VIDRE_CORE_VISIBILITY fixed {
+                    static_assert(compatible_minor<decltype(minor)>);
+
+                    using value_type = Value;
+
+                    raw::prefix prefix{{major, minor}, sizeof(raw::prefix) + sizeof(value_type)};
+                    value_type value{};
+
+                    fixed() = default;
+                };
+
+                /** Base class for dynamic elements.
+                 * Dynamic elements, such as groups of elements or strings,
+                 * require field updates after all value were set. This is
+                 * best suited for the file header.
+                 *
+                 * Example:
+                 * @snippet examples/core/raw.cc dynamic-elements
+                 * */
+                struct VIDRE_CORE_VISIBILITY dynamic {
+                    using size_type = std::size_t;
+                    using offset_type = std::make_signed_t<size_type>;
+
+                    raw::prefix prefix{};
+
+                    dynamic() = default;
+                    virtual ~dynamic() {};
+
+                    template <class Minor>
+                    requires compatible_minor<Minor>
+                    dynamic(major major_, Minor minor_, uint64_t length_ = 0) noexcept : prefix{{major_, minor_}, length_} {}
+
+                    /** Update entry length and return it.
+                     * */
+                    virtual length_type update() noexcept {
+                        return prefix.length;
+                    }
+
+                    /** Write entry to sink.
+                     * */
+                    virtual offset_type put(sink &f) const noexcept {
+                        return f.put(&prefix, 1);
+                    }
+
+                    /** Read data from source.
+                     * */
+                    virtual offset_type get(source &) noexcept {
+                        // FIXME should be abstract!
+                        return -1;
+                    };
+                };
+
+                /** Shared entries.
+                 * */
+                using shared = std::shared_ptr<dynamic>;
+
+            }  // namespace element
+
+            /** General meta-data sub-types.
              * */
-            enum class major : uint32_t {
+            enum class meta : uint32_t {
                 undefined = 0,
-                value = 1,  ///< POD-style types.
-                meta = 2,   ///< General meta information.
+                group = 1,
             };
+
+            namespace element {
+
+                /** Sequence of TLV entries.
+                 * */
+                struct VIDRE_CORE_VISIBILITY sequence : public virtual dynamic {
+                    std::vector<element::shared> nodes{};  ///< Sequence nodes.
+
+                    sequence() noexcept : dynamic(major::meta, meta::group) {}
+                    virtual ~sequence() {}
+                    // FIXME
+                    template <typename T>
+                    T *find(length_type len);
+
+                    /** Append elements.
+                     * */
+                    template <typename Shared>
+                    auto append(Shared &&shr) noexcept {
+                        return nodes.emplace_back(std::forward<Shared>(shr));
+                    }
+
+                    length_type update() noexcept override {
+                        length_type retval = 0;
+                        for (auto &obj : nodes)
+                            retval += obj->update();
+                        // no TL update !!!
+                        return retval;
+                    }
+
+                    offset_type put(sink &f) const noexcept override {
+                        offset_type retval = 0;  /// no header, just a (fixed) sequence
+                        for (auto &obj : nodes)
+                            retval += obj->put(f);
+                        return retval;
+                    }
+                };
+
+                /** Group of TLV entries.
+                 * */
+                struct VIDRE_CORE_VISIBILITY group : public virtual sequence {
+                    static constexpr raw::id id = {major::meta, meta::group};
+
+                    group() noexcept = default;
+                    virtual ~group() {}
+
+                    // FIXME
+                    template <typename T>
+                    T *find(length_type len);
+
+                    virtual length_type update() noexcept {
+                        length_type retval = sequence::update();
+                        prefix.length = retval;
+                        return retval;
+                    }
+
+                    virtual offset_type put(sink &f) const noexcept {
+                        return dynamic::put(f) + sequence::put(f);
+                    }
+                };
+
+            }  // namespace element
+
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
 
             /** POD-style value types. */
             enum class value : uint32_t {
@@ -207,119 +377,50 @@ namespace vidre {
                 string = 4    ///< Character sequence (not zero-terminated). FIXME really ???
             };
 
-            /** General meta-data sub-types.
-             * */
-            enum class meta : uint32_t {
+            enum class video : uint32_t {
                 undefined = 0,
-                group = 1,
+                index = 1,
+                geometry = 2,
+                timestamp = 3,
             };
 
-            /** TLV entry base.
+            /** Helper to calculate required padding.
              * */
-            struct VIDRE_CORE_VISIBILITY entry {
-                tag tl{};
+            template <typename T>
+            requires std::is_unsigned_v<T>
+            inline static uint64_t pad(T sz) noexcept {
+                return static_cast<uint64_t>(sz) & (alignment - 1);
+            }
 
-                entry() = default;
-                virtual ~entry() {};
-
-                template <class Minor>
-                requires (std::is_enum_v<Minor> and std::is_same_v<std::underlying_type_t<Minor>, uint32_t>)
-                entry(major major_, Minor minor_, uint64_t length_ = 0) noexcept : tl{{major_, minor_}, length_} {}
-
-                /** Update entry length and return it.
-                 * */
-                virtual length_type update() noexcept {
-                    return tl.length;
-                }
-
-                /** Write entry to sink.
-                 * */
-                virtual std::size_t put(sink &f) const noexcept {
-                    return f.put(&tl, 1);
-                }
-
-                // FIXME virtual std::size_t get(source) const noexcept = 0;
-            };
-
-            struct VIDRE_CORE_PACKED_VISIBILITY integer : public virtual entry {
-                static constexpr const raw::id id = {major::value, value::integer};
-
-                // FIXME
-            };
-
-            /** Shared entries.
+            /** Helper to calculate size after padding.
              * */
-            using shared = std::shared_ptr<entry>;
+            template <typename T>
+            requires std::is_unsigned_v<T>
+            inline static uint64_t align(T sz) noexcept {
+                return static_cast<uint64_t>(sz) + pad(sz);
+            }
 
-            /** Sequence of TLV entries.
-             * */
-            struct VIDRE_CORE_VISIBILITY sequence : public virtual entry {
-                std::vector<shared> nodes{};  ///< Group nodes.
+            // struct __vidre_packed__ VIDRE_CORE_VISIBILITY integer : public virtual atom {
+            //     static constexpr const raw::id id = {major::data, value::integer};
 
-                sequence() noexcept : entry(major::meta, meta::undefined) {}
+            //     // FIXME
+            // };
 
-                // FIXME
-                template <typename T>
-                T *find(length_type len);
+            // /** The file header.
+            //  * */
+            // struct VIDRE_CORE_VISIBILITY header : public virtual group {
+            // private:
+            //     struct __vidre_packed__ VIDRE_CORE_VISIBILITY top {
+            //         uint64_t magic;
+            //         version_type version;
+            //     };
+            //     static constexpr const top top_ = {raw::magic, raw::version};
 
-                template <typename... Args>
-                auto append(Args &&...args) noexcept {
-                    return nodes.emplace_back(std::forward<Args>(args)...);
-                }
-
-                virtual length_type update() noexcept {
-                    length_type retval = 0;
-                    for (auto &obj : nodes)
-                        retval += obj->update();
-                    // no TL update !!!
-                    return retval;
-                }
-
-                virtual std::size_t put(sink &f) const noexcept {
-                    std::size_t retval = 0;  /// no header, just a (fixed) sequence
-                    for (auto &obj : nodes)
-                        retval += obj->put(f);
-                    return retval;
-                }
-            };
-
-            /** Group of TLV entries.
-             * */
-            struct VIDRE_CORE_VISIBILITY group : public virtual sequence {
-                static constexpr raw::id id = {major::meta, meta::group};
-
-                group() noexcept : entry(major::meta, meta::group) {}
-
-                // FIXME
-                template <typename T>
-                T *find(length_type len);
-
-                virtual length_type update() noexcept {
-                    length_type retval = sequence::update();
-                    tl.length = retval;
-                    return retval;
-                }
-
-                virtual std::size_t put(sink &f) const noexcept {
-                    return entry::put(f) + sequence::put(f);
-                }
-            };
-
-            /** The file header.
-             * */
-            struct VIDRE_CORE_VISIBILITY header : public virtual group {
-            private:
-                struct VIDRE_CORE_PACKED_VISIBILITY top {
-                    uint64_t magic;
-                    version_type version;
-                };
-                static constexpr const top top_ = {raw::magic, raw::version};
-
-            public:
-                virtual std::size_t put(sink &f) const noexcept {
-                    return f.put(&top_, 1) + group::put(f);
-                }
-            };
+            // public:
+            //     virtual std::size_t put(sink &f) const noexcept {
+            //         return f.put(&top_, 1) + group::put(f);
+            //     }
+            // };
 
             /** VidRe's raw file writer.
              * */
@@ -333,6 +434,38 @@ namespace vidre {
 
             public:
             };
+
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // READER
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+
+            /** Detect endianness.
+             * */
+            inline const std::optional<std::endian> check_magic(uint64_t m) {
+                if (m == magic) {
+                    return std::endian::native;
+                }
+                else if (m == std::byteswap(magic)) {
+                    return std::endian::native == std::endian::little ? std::endian::big : std::endian::little;
+                }
+                else
+                    return {};
+            }
+
+            /** Helper to calculate string length.
+             * Due to the @c alignment, strings may be zero-padded. This function
+             * calculates the actual string length.
+             * */
+            inline uint64_t strlen(uint64_t len, const uint8_t *value) noexcept {
+                const uint8_t *end = value + len - alignment;
+                return len - alignment                              //
+                       + !!end[0] + !!end[1] + !!end[2] + !!end[3]  //
+                       + !!end[4] + !!end[5] + !!end[6] + !!end[7];
+            }
 
             ///@}
 

@@ -5,6 +5,9 @@ vidre_test(GROUP
             PRIVATE
                 Vidre_CURRENT_BINARY_DIR=\"${CMAKE_CURRENT_BINARY_DIR}\"
                 Vidre_CURRENT_SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"
+        INCLUDE_DIRECTORIES
+            PRIVATE
+                ${CMAKE_SOURCE_DIR}/tests
         LINK_LIBRARIES 
             PRIVATE 
                 Vidre::Core
@@ -17,4 +20,5 @@ vidre_test(os SOURCES os.cc)
 vidre_test(script SOURCES script.cc)
 vidre_test(settings SOURCES settings.cc)
 vidre_test(program EXCLUDE SOURCES program.cc)
+vidre_test(raw EXCLUDE SOURCES raw.cc)
 

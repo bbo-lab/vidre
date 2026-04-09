@@ -35,7 +35,9 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/storage/io.hh>
+#include <vidre/storage/file.hh>
 #include <vidre/storage/bit.hh>
+#include <vidre/storage/raw.hh>
 
 namespace vidre {
 

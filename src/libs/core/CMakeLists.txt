@@ -55,6 +55,7 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/storage.hh vidre/storage.cc
             vidre/storage/io.hh vidre/storage/io.cc
+            vidre/storage/file.hh vidre/storage/file.cc
             vidre/storage/bit.hh vidre/storage/bit.cc
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/video.hh vidre/video.cc
