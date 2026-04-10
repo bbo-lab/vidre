@@ -122,10 +122,10 @@ int main(int argc, const char **argv) {
 
         t.start();
         for (int i = 0; i < REPEAT; ++i) {
-            hdr.index.value = i;
-            hdr.geometry.value = {{uint32_t(i), uint32_t(i)}, {uint32_t(i), uint32_t(i)}};
-            hdr.timestamp.value.value = uint64_t(i);
-            // hdr.computertime.value.now();
+            hdr.index.content = i;
+            hdr.geometry.content = {{uint32_t(i), uint32_t(i)}, {uint32_t(i), uint32_t(i)}};
+            hdr.timestamp.content.value = uint64_t(i);
+            // hdr.computertime.content.now();
             hdr.put(f);
         }
         t.stop();
