@@ -365,7 +365,7 @@ void log::setup(const std::string &def) {
 
             std::cerr << "invalid tracing option: " << std::string_view(option) << std::endl;
             std::cerr << "use 'help' for further information." << std::endl;
-            abort();
+            std::exit(-1);
         }
     }
 }

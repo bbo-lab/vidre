@@ -286,9 +286,9 @@ struct {
 bool uvc::query_stream(int fd) {
     log::trace tr;
 
-#if VIDRE_DEVELOP
-    tr << "querying camera " << dev_stream_.c_str() << "...\n";
-#endif
+    if (VIDRE_DEVELOP)
+        tr << "querying camera " << dev_stream_.c_str() << "...\n";
+
     log::debug() << "Querying camera " << dev_stream_.c_str() << "...\n";
 
     v4l2_fmtdesc pixfmt{.index = static_cast<uint32_t>(-1),  //
@@ -311,50 +311,80 @@ bool uvc::query_stream(int fd) {
         // supported by VidRe?
         for (auto &p : pixfmt_mapping) {
             if (p.uvc == pixfmt.pixelformat) {
-                if (p.we != video::pixel_format::undefined) {
-#if VIDRE_DEVELOP
-                    tr << "-> pixel format supported: " << p.v4l2name << log::endl;
-#else
-                    tr << "-> pixel format supported: " << (const char *)pixfmt.description << log::endl;
-#endif
-                    // create configuration
-                    settings::json entry;
+                tr << "-> pixel format found: " << (VIDRE_DEVELOP ? p.v4l2name : (const char *)pixfmt.description) << log::endl;
 
-                    // FIXME
+                // create configuration
+                settings::json pixfmt_config = {
+                    {"supported", p.we},
+                    {"pixel_format", std::string((VIDRE_DEVELOP ? p.v4l2name : (const char *)pixfmt.description))},
+                    {"compressed", (pixfmt.flags & V4L2_FMT_FLAG_COMPRESSED) != 0},
+                    {"emulated", (pixfmt.flags & V4L2_FMT_FLAG_EMULATED) != 0},
+                    {"continuous_bytestream", (pixfmt.flags & V4L2_FMT_FLAG_CONTINUOUS_BYTESTREAM) != 0},
+                    {"dynamic_resolution", (pixfmt.flags & V4L2_FMT_FLAG_DYN_RESOLUTION) != 0},
+                    {"enc_cap_frame_interval", (pixfmt.flags & V4L2_FMT_FLAG_ENC_CAP_FRAME_INTERVAL) != 0},
+                    {"csc_colorspace", (pixfmt.flags & V4L2_FMT_FLAG_CSC_COLORSPACE) != 0},
+                    {"csc_xfer_func", (pixfmt.flags & V4L2_FMT_FLAG_CSC_XFER_FUNC) != 0},
+                    {"csc_hsv_enc", (pixfmt.flags & V4L2_FMT_FLAG_CSC_HSV_ENC) != 0},
+                    {"csc_quantization", (pixfmt.flags & V4L2_FMT_FLAG_CSC_QUANTIZATION) != 0},
+                };
 
-                    auto cfg = info_["capabilities"];
-                    cfg.push_back(entry);
+                // query frame sizes for this pixel format
+                settings::json frm_config;
+
+                v4l2_frmsizeenum frm{.index = static_cast<uint32_t>(-1),  //
+                                     .pixel_format = pixfmt.pixelformat};
+                while (true) {
+                    frm.index++;
+                    int retval = ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frm);
+                    if (retval < 0) {
+                        if (errno == EINVAL) {
+                        }
+                        else {
+                            log::error() << "Querying frame sizes failed: " << std::strerror(errno) << log::endl;
+                            state_ &= ~device::state::available;
+                        }
+
+                        break;
+                    }
+
+                    switch (frm.type) {
+                        case V4L2_FRMSIZE_TYPE_DISCRETE: {
+                            tr << "  -> frame size found: " << frm.discrete.width << "x" << frm.discrete.height << log::endl;
+                            frm_config.push_back({
+                                {"type", "discrete"},
+                                {"width", frm.discrete.width},
+                                {"height", frm.discrete.height},
+                            });
+                            break;
+                        }
+                        case V4L2_FRMSIZE_TYPE_CONTINUOUS:
+                        case V4L2_FRMSIZE_TYPE_STEPWISE: {
+                            tr << "  -> frame size range found: " << frm.stepwise.min_width << "x" << frm.stepwise.min_height
+                               << " - " << frm.stepwise.max_width << "x" << frm.stepwise.max_height
+                               << " (step: " << frm.stepwise.step_width << "x" << frm.stepwise.step_height << ")" << log::endl;
+                            frm_config.push_back({
+                                {"type", frm.type == V4L2_FRMSIZE_TYPE_CONTINUOUS ? "continuous" : "stepwise"},
+                                {"min_width", frm.stepwise.min_width},
+                                {"min_height", frm.stepwise.min_height},
+                                {"max_width", frm.stepwise.max_width},
+                                {"max_height", frm.stepwise.max_height},
+                                {"step_width", frm.stepwise.step_width},
+                                {"step_height", frm.stepwise.step_height},
+                            });
+                            break;
+                        }
+                        default:
+                            log::error() << "Unknown frame size type: " << frm.type << log::endl;
+                            break;
+                    }
                 }
-                else {
-#if VIDRE_DEVELOP
-                    tr << "- unsupported pixel format: " << p.v4l2name << log::endl;
-#endif
-                    log::debug() << "-> Pixel format unsupported: " << (const char *)pixfmt.description << log::endl;
-                }
+
+                pixfmt_config["framesizes"] = frm_config;
+
+                auto &cfg = info_["capabilities"];
+                cfg.push_back(pixfmt_config);
             }
         }
-
-        //                     // frame-sizes for pixel format
-        //                     v4l2_frmsizeenum frm{.index = static_cast<uint32_t>(-1),  //
-        //                                          .pixel_format = pixfmt.pixelformat};
-        //                     while (true) {
-        //                         frm.index++;
-        //                         int retval = ioctl(stream, VIDIOC_ENUM_FRAMESIZES, &frm);
-        //                         if (retval < 0) {
-        //                             switch (errno) {
-        //                                 case EINVAL:
-        //                                     break;
-        //                                 default:
-        //                                     log::error() << "Querying frame formats failed: " << std::strerror(errno) <<
-        //                                     log::endl; state_ &= ~device::state::available; return;
-        //                             }
-
-        //                             break;
-        //                         }
-
-        //                         // FIXME
-        //                     }
-        //                 }
     }
 
     return false;
@@ -364,7 +394,8 @@ void uvc::query() {
     log::trace tr;
 
     // open video stream device and check capabilities
-    storage::file::io stream(dev_stream_, storage::file::io::readwrite | storage::file::io::non_block | storage::file::io::close_on_exec);
+    storage::file::io stream(dev_stream_,
+                             storage::file::io::readwrite | storage::file::io::non_block | storage::file::io::close_on_exec);
     if (!stream.valid()) {
         state_ &= ~device::state::available;
         return;
@@ -387,8 +418,8 @@ void uvc::query() {
     }
 
     //     // open metadata stream device and query capabilities
-    //     storage::file::io meta(dev_meta_, storage::file::io::readonly | storage::file::io::non_block | storage::file::io::close_on_exec);
-    //     if (meta.valid()) {
+    //     storage::file::io meta(dev_meta_, storage::file::io::readonly | storage::file::io::non_block |
+    //     storage::file::io::close_on_exec); if (meta.valid()) {
     //         if ((ioctl(meta, VIDIOC_QUERYCAP, &cap_[1]) < 0) or not(cap_[1].device_caps & V4L2_CAP_META_CAPTURE)) {
     //             meta.close();
     //         }

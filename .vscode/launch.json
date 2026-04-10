@@ -101,7 +101,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/example.playground.uvc",
-            "args": [ "--list" ],
+            "args": [ "--log=trace:*", "--list" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
