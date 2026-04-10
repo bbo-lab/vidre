@@ -33,7 +33,7 @@ namespace fixed {
     //! [fixed-elements]
 }  // namespace fixed
 
-namespace dynamic {
+namespace variable {
     //! [dynamic-elements]
     struct __vidre_packed__ index : public virtual raw::element::dynamic {
         uint64_t counter{};
@@ -47,61 +47,46 @@ namespace dynamic {
     };
 
     struct __vidre_packed__ geometry : public virtual raw::element::dynamic {
-        video::geometry value{};
+        video::geometry content{};
 
-        geometry() noexcept : raw::element::dynamic(raw::major::video, raw::video::geometry, sizeof(raw::prefix) + sizeof(value)) {}
+        geometry() noexcept
+            : raw::element::dynamic(raw::major::video, raw::video::geometry, sizeof(raw::prefix) + sizeof(content)) {}
         virtual ~geometry() {}
 
         offset_type put(storage::sink &f) const noexcept override {
-            return dynamic::put(f) + f.put(&value, 1);
+            return dynamic::put(f) + f.put(&content, 1);
         }
     };
 
     struct __vidre_packed__ timestamp : public virtual raw::element::dynamic {
-        video::timestamp value{};
+        video::timestamp content{};
 
         timestamp() noexcept
-            : raw::element::dynamic(raw::major::video, raw::video::timestamp, sizeof(raw::prefix) + sizeof(value)) {}
+            : raw::element::dynamic(raw::major::video, raw::video::timestamp, sizeof(raw::prefix) + sizeof(content)) {}
         virtual ~timestamp() {}
 
         offset_type put(storage::sink &f) const noexcept override {
-            return dynamic::put(f) + f.put(&value, 1);
+            return dynamic::put(f) + f.put(&content, 1);
         }
     };
 
     struct header : public virtual raw::element::sequence {
-        raw::element::shared counter_;
-        raw::element::shared geometry_;
-        raw::element::shared camera_;
-        raw::element::shared computer_;
+        variable::index *index{};
+        variable::geometry *geometry{};
+        variable::timestamp *camera{};
+        variable::timestamp *computer{};
 
         header() noexcept : raw::element::sequence() {
-            counter_ = append(new ::dynamic::index());
-            geometry_ = append(new ::dynamic::geometry());
-            camera_ = append(new ::dynamic::timestamp());
-            computer_ = append(new ::dynamic::timestamp());
+            index = add<variable::index>();
+            geometry = add<variable::geometry>();
+            camera = add<variable::timestamp>();
+            computer = add<variable::timestamp>();
         }
 
         virtual ~header() {}
-
-        ::dynamic::index *index() const noexcept {
-            return dynamic_cast<::dynamic::index *>(counter_.get());
-        }
-
-        ::dynamic::geometry *geometry() const noexcept {
-            return dynamic_cast<::dynamic::geometry *>(geometry_.get());
-        }
-
-        ::dynamic::timestamp *camera() const noexcept {
-            return dynamic_cast<::dynamic::timestamp *>(camera_.get());
-        }
-
-        ::dynamic::timestamp *computertime() const noexcept {
-            return dynamic_cast<::dynamic::timestamp *>(computer_.get());
-        }
     };
     //! [dynamic-elements]
-}  // namespace dynamic
+}  // namespace variable
 
 int main(int argc, const char **argv) {
     log::io::stream::threshold(0, log::level::trace);
@@ -137,13 +122,11 @@ int main(int argc, const char **argv) {
                     << " MiB/s" << log::endl;
         log::info() << "    call overhead: " << std::format("{:.3f} ns", t.duration<benchmark::nanoseconds>() / REPEAT)
                     << log::endl;
-
-        storage::file::remove(PROJECT_BINARY_DIR "/fixed.tmp");
     }
 
     // write dynamic elements
     {
-        dynamic::header hdr;
+        variable::header hdr;
         storage::filesink f;
         f.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::filesink::synchronous);
         if (not f.valid())
@@ -151,14 +134,15 @@ int main(int argc, const char **argv) {
 
         t.start();
         for (int i = 0; i < REPEAT; ++i) {
-            hdr.index()->counter = i;
-            hdr.geometry()->value = {{uint32_t(i), uint32_t(i)}, {uint32_t(i), uint32_t(i)}};
-            hdr.camera()->value.value = uint64_t(i);
-            // hdr.computertime()->value.now();
+            hdr.index->counter = i;
+            hdr.geometry->content = {{uint32_t(i), uint32_t(i)}, {uint32_t(i), uint32_t(i)}};
+            hdr.camera->content.value = uint64_t(i);
+            // hdr.computertime->content.now();
             hdr.put(f);
         }
         t.stop();
 
+        log::info() << log::endl;
         log::info() << "Dynamic elements" << log::endl;
         log::info() << "         duration: " << std::format("{:.3f} ms", t.duration<benchmark::milliseconds>()) << log::endl;
         log::info() << "       throughput: "
@@ -166,9 +150,47 @@ int main(int argc, const char **argv) {
                     << " MiB/s" << log::endl;
         log::info() << "    call overhead: " << std::format("{:.3f} ns", t.duration<benchmark::nanoseconds>() / REPEAT)
                     << log::endl;
-
-        storage::file::remove(PROJECT_BINARY_DIR "/dynamic.tmp");
     }
+
+    // check consistency
+    {
+        storage::fileio fix, var;
+
+        fix.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::fileio::readonly);
+        var.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::fileio::readonly);
+
+        // different size?
+        if (fix.size() != var.size())
+            log::fatal() << "File size mismatch: " << fix.size() << " vs. " << var.size() << log::endl;
+
+        // different content?
+        t.start();
+        uint8_t fbuf[4096], vbuf[4096];
+        storage::fileio::offset_type pos = 0;
+        while (true) {
+            auto fn = fix.read(fbuf, sizeof(fbuf));
+            auto vn = var.read(vbuf, sizeof(vbuf));
+
+            if (fn != vn)
+                log::fatal() << "Read size mismatch: " << fn << " vs. " << vn << log::endl;
+            if (std::memcmp(fbuf, vbuf, fn) != 0)
+                log::fatal() << "File content mismatch at offset " << pos << log::endl;
+            if (fn == 0)
+                break;
+            pos += fn;
+        }
+        t.stop();
+
+        log::info() << log::endl;
+        log::info() << "Checked " << pos << " bytes ("
+                    << std::format("{:.3f} MiB/s", double(pos) / t.duration<benchmark::seconds>() / (1024.0 * 1024.0))
+                    << ")." << log::endl;
+        log::info() << "Files are consistent." << log::endl;
+    }
+
+    // remove temporary files
+    storage::file::remove(PROJECT_BINARY_DIR "/fixed.tmp");
+    storage::file::remove(PROJECT_BINARY_DIR "/dynamic.tmp");
 
     return 0;
 }

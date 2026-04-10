@@ -305,10 +305,7 @@ namespace vidre {
 
                 struct dynamic;
 
-                /** Instantiation of "fixed" elements.
-                 * Chunk headers are usually of fixed size, and, possibly do
-                 * not require grouping. These headers can be declared as
-                 * fixed structures.
+                /** Instantiation of "fixed-size" elements.
                  *
                  * Example:
                  * @snippet examples/core/raw.cc fixed-elements
@@ -367,30 +364,28 @@ namespace vidre {
                     };
                 };
 
-                /** Shared entries.
-                 * */
-                using shared = std::shared_ptr<dynamic>;
-
-            }  // namespace element
-
-            namespace element {
-
                 /** Sequence of TLV entries.
                  * */
                 struct VIDRE_CORE_VISIBILITY sequence : public virtual dynamic {
-                    std::vector<element::shared> nodes{};  ///< Sequence nodes.
+                    std::vector<dynamic *> nodes{};  ///< Sequence of entries.
 
                     sequence() noexcept : dynamic(major::group, raw::group::sequence) {}
-                    virtual ~sequence() {}
+                    virtual ~sequence() {
+                        for (auto &obj : nodes)
+                            delete obj;
+                    }
+
                     // FIXME
                     template <typename T>
                     T *find(length_type len);
 
-                    /** Append elements.
+                    /** Add an element.
                      * */
-                    template <typename Shared>
-                    auto append(Shared &&shr) noexcept {
-                        return nodes.emplace_back(std::forward<Shared>(shr));
+                    template <typename T, typename... Args>
+                    T *add(Args&&... args) noexcept {
+                        T *obj = new T(std::forward<Args>(args)...);
+                        nodes.emplace_back(obj);
+                        return obj;
                     }
 
                     length_type update() noexcept override {
@@ -415,10 +410,6 @@ namespace vidre {
                     group() noexcept = default;
                     virtual ~group() {}
 
-                    // FIXME
-                    template <typename T>
-                    T *find(length_type len);
-
                     virtual length_type update() noexcept {
                         length_type retval = sequence::update();
                         prefix.length = retval;
@@ -432,21 +423,14 @@ namespace vidre {
 
             }  // namespace element
 
-            // ============================================================================================
-            // ============================================================================================
-            // ============================================================================================
-            // ============================================================================================
-            // ============================================================================================
-            // ============================================================================================
+            
 
-            /** POD-style value types. */
-            enum class value : uint16_t {
-                undefined = 0,
-                integer = 1,  ///< 64-bit signed integer.
-                natural = 2,  ///< 64-bit unsigned integer.
-                number = 3,   ///< 64-bit floating-point value (double).
-                string = 4    ///< Character sequence (not zero-terminated). FIXME really ???
-            };
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
+            // ============================================================================================
 
             enum class video : uint16_t {
                 undefined = 0,
