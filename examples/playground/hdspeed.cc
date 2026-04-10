@@ -1,4 +1,4 @@
-#include <vidre/storage/io.hh>
+#include <vidre/storage/file.hh>
 #include <vidre/cpp/util.hh>
 
 #include <cstring>
@@ -16,9 +16,9 @@ int main(int argc, char **argv) {
     uint8_t buf[MiB] = {};
     memset(buf, 255, size_of(buf));
 
-    auto f = fileio();
-    // f.open("hdspeed.dat", fileio::writeonly | fileio::create | fileio::truncate | fileio::synchronous);
-    f.open("hdspeed.dat", fileio::writeonly | fileio::create | fileio::truncate);
+    auto f = file::io();
+    f.open("hdspeed.dat", file::io::writeonly | file::io::create | file::io::truncate | file::io::synchronous);
+    // f.open("hdspeed.dat", file::io::writeonly | file::io::create | file::io::truncate);
 
     auto tstart = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < (FILESIZE / size_of(buf)); ++i) {
@@ -39,6 +39,8 @@ int main(int argc, char **argv) {
     std::cout << std::format("\r{:9.3f}MiB/s                     ",  //
                              double(FILESIZE) / double(MiB) / tdur.count())
               << std::endl;
+
+    storage::file::remove("hdspeed.dat");
 
     return 0;
 }

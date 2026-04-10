@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "exception.hh"
-#include "storage/io.hh"
+#include "storage/file.hh"
 
 #include <iostream>
 #include <format>

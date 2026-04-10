@@ -100,8 +100,8 @@ int main(int argc, const char **argv) {
     // write fixed elements
     {
         fixed::header hdr;
-        storage::filesink f;
-        f.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::filesink::synchronous);
+        storage::file::sink f;
+        f.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::file::sink::synchronous);
         if (not f.valid())
             log::fatal() << "Could not open file: " << std::strerror(errno) << log::endl;
 
@@ -127,8 +127,8 @@ int main(int argc, const char **argv) {
     // write dynamic elements
     {
         variable::header hdr;
-        storage::filesink f;
-        f.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::filesink::synchronous);
+        storage::file::sink f;
+        f.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::file::sink::synchronous);
         if (not f.valid())
             log::fatal() << "Could not open file: " << std::strerror(errno) << log::endl;
 
@@ -154,10 +154,10 @@ int main(int argc, const char **argv) {
 
     // check consistency
     {
-        storage::fileio fix, var;
+        storage::file::io fix, var;
 
-        fix.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::fileio::readonly);
-        var.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::fileio::readonly);
+        fix.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::file::io::readonly);
+        var.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::file::io::readonly);
 
         // different size?
         if (fix.size() != var.size())
@@ -166,7 +166,7 @@ int main(int argc, const char **argv) {
         // different content?
         t.start();
         uint8_t fbuf[4096], vbuf[4096];
-        storage::fileio::offset_type pos = 0;
+        storage::file::io::offset_type pos = 0;
         while (true) {
             auto fn = fix.read(fbuf, sizeof(fbuf));
             auto vn = var.read(vbuf, sizeof(vbuf));

@@ -364,7 +364,7 @@ void uvc::query() {
     log::trace tr;
 
     // open video stream device and check capabilities
-    storage::fileio stream(dev_stream_, storage::fileio::readwrite | storage::fileio::non_block | storage::fileio::close_on_exec);
+    storage::file::io stream(dev_stream_, storage::file::io::readwrite | storage::file::io::non_block | storage::file::io::close_on_exec);
     if (!stream.valid()) {
         state_ &= ~device::state::available;
         return;
@@ -387,7 +387,7 @@ void uvc::query() {
     }
 
     //     // open metadata stream device and query capabilities
-    //     storage::fileio meta(dev_meta_, storage::fileio::readonly | storage::fileio::non_block | storage::fileio::close_on_exec);
+    //     storage::file::io meta(dev_meta_, storage::file::io::readonly | storage::file::io::non_block | storage::file::io::close_on_exec);
     //     if (meta.valid()) {
     //         if ((ioctl(meta, VIDIOC_QUERYCAP, &cap_[1]) < 0) or not(cap_[1].device_caps & V4L2_CAP_META_CAPTURE)) {
     //             meta.close();
@@ -423,7 +423,7 @@ device::list<device::camera> uvc::enumerator::find() noexcept {
         tr << std::format("  {} ({})\n", devpath.string(), rdev);
 
         // get capabilities and check if this is a UVC camera
-        storage::fileio fd = storage::fileio(devpath, storage::fileio::readwrite);
+        storage::file::io fd = storage::file::io(devpath, storage::file::io::readwrite);
         if (!fd) {
             tr << std::format("  !!! failed to open device: {}\n", std::strerror(errno));
             continue;
@@ -481,7 +481,7 @@ device::list<device::camera> uvc::enumerator::find() noexcept {
             if (filename.find("media") == 0) {
                 tr << std::format("         {}:\n", filename);
 
-                storage::fileio fd = storage::fileio(std::format("/dev/{}", filename), storage::fileio::readonly);
+                storage::file::io fd = storage::file::io(std::format("/dev/{}", filename), storage::file::io::readonly);
                 if (fd.valid()) {
                     struct media_device_info mdi;
                     if (ioctl(fd, MEDIA_IOC_DEVICE_INFO, &mdi) == 0) {

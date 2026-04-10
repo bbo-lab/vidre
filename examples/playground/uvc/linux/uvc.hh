@@ -25,7 +25,7 @@
 
 #include <vidre/device/config.hh>
 #include <vidre/device/camera.hh>
-#include <vidre/storage/io.hh>
+#include <vidre/storage/file.hh>
 #include <vidre/video.hh>
 #include <vidre/log.hh>
 
@@ -64,7 +64,7 @@ namespace vidre {
         settings::json info_{};  ///< Camera information.
 
     private:
-        storage::fileio fd_[2]{};  // [0] for video stream, [1] for metadata stream
+        storage::file::io fd_[2]{};  // [0] for video stream, [1] for metadata stream
 
     protected:
         bool query_stream(int fd);
