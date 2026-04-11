@@ -26,7 +26,7 @@ namespace fixed {
         fixed::timestamp timestamp;
         fixed::timestamp computertime;
 
-        storage::sink::offset_type put(storage::sink &f) const noexcept {
+        storage::offset_type put(storage::sink &f) const noexcept {
             return f.put(this, 1);
         }
     };
@@ -101,7 +101,7 @@ int main(int argc, const char **argv) {
     {
         fixed::header hdr;
         storage::file::sink f;
-        f.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::file::sink::synchronous);
+        f.open(PROJECT_BINARY_DIR "/fixed.tmp", storage::file::sink::direct);
         if (not f.valid())
             log::fatal() << "Could not open file: " << std::strerror(errno) << log::endl;
 
@@ -128,7 +128,7 @@ int main(int argc, const char **argv) {
     {
         variable::header hdr;
         storage::file::sink f;
-        f.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::file::sink::synchronous);
+        f.open(PROJECT_BINARY_DIR "/dynamic.tmp", storage::file::sink::direct);
         if (not f.valid())
             log::fatal() << "Could not open file: " << std::strerror(errno) << log::endl;
 

@@ -33,9 +33,6 @@ set(Vidre_RELEASE ${Vidre_VERSION_MAJOR}.${Vidre_VERSION_MINOR})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-include(CheckIncludeFile)
-include(CheckIncludeFileCXX)
-
 if(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
     set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 endif(NOT DEFINED EXECUTABLE_OUTPUT_PATH)
@@ -53,14 +50,14 @@ if(NOT DEFINED DATA_OUTPUT_PATH)
 endif(NOT DEFINED DATA_OUTPUT_PATH)
 
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
+include(CheckTypeSize)
 
 include(VidreMacros)
 
 # COMPILER ####################################################################
-include(CheckCXXCompilerFlag)
-include(CheckIncludeFile)
-include(CheckIncludeFileCXX)
-
 # sanitize undefined behavior (UB)
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     # compile and link with sanitizer
@@ -82,11 +79,36 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     endif()
 endif()
 
-# "native" Windows build
+# OS ##########################################################################
+# "Native" Windows build
 if (WIN32 AND NOT CYGWIN AND NOT MINGW AND NOT MSYS)
     set(NATIVE_MSVC ON)
 else()
     set(NATIVE_MSVC OFF)
+endif()
+
+# Enable large-file support only when the platform still uses 32-bit off_t.
+set(CMAKE_EXTRA_INCLUDE_FILES sys/types.h)
+check_type_size("off_t" SIZEOF_OFF_T LANGUAGE CXX)
+unset(CMAKE_EXTRA_INCLUDE_FILES)
+
+if(NOT SIZEOF_OFF_T)
+    message(WARNING "Could not determine sizeof(off_t). Skipping _FILE_OFFSET_BITS check.")
+elseif(SIZEOF_OFF_T LESS 8)
+    set(CMAKE_EXTRA_INCLUDE_FILES sys/types.h)
+    set(CMAKE_REQUIRED_DEFINITIONS -D_FILE_OFFSET_BITS=64)
+    check_type_size("off_t" SIZEOF_OFF_T_WITH_FILE_OFFSET_BITS_64 LANGUAGE CXX)
+    unset(CMAKE_REQUIRED_DEFINITIONS)
+    unset(CMAKE_EXTRA_INCLUDE_FILES)
+
+    if(SIZEOF_OFF_T_WITH_FILE_OFFSET_BITS_64 EQUAL 8)
+        message(STATUS "Enabling _FILE_OFFSET_BITS=64 for 64-bit file offsets.")
+        add_compile_definitions(_FILE_OFFSET_BITS=64)
+    else()
+        message(WARNING "off_t remains 32-bit even with _FILE_OFFSET_BITS=64.")
+    endif()
+else()
+    message(STATUS "off_t is already ${SIZEOF_OFF_T} bytes; _FILE_OFFSET_BITS=64 is not required.")
 endif()
 
 # DEVELOPERS ##################################################################
@@ -123,47 +145,41 @@ add_definitions(
     -DCMAKE_INSTALL_LUA_LDIR=\"${CMAKE_INSTALL_LUA_LDIR}\"
 )
 
-# # BUILD #######################################################################
+# BUILD #######################################################################
 
-# add_subdirectory(cmake)
-# add_subdirectory(icons)
-# add_subdirectory(share)
-# add_subdirectory(src)
+add_subdirectory(cmake)
+add_subdirectory(icons)
+add_subdirectory(share)
+add_subdirectory(src)
 
-# install(EXPORT VidreTargets-${Vidre_RELEASE}
-#     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-#     COMPONENT "development"
-# )
+install(EXPORT VidreTargets-${Vidre_RELEASE}
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+    COMPONENT "development"
+)
 
-# add_subdirectory(docs)
+add_subdirectory(docs)
 
-# install(FILES 
-#         LICENSE README.md
-#     DESTINATION ${CMAKE_INSTALL_DOCDIR}
-#     COMPONENT "runtime")
+install(FILES 
+        LICENSE README.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    COMPONENT "runtime")
 
+# TEST ########################################################################
 
-# # TEST ########################################################################
+if(NOT Vidre_IS_SUBPROJECT)
+    if (VIDRE_BUILD_TESTS)
+        enable_testing()
+        find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
 
-# if(NOT Vidre_IS_SUBPROJECT AND VIDRE_BUILD_TESTS)
-#     enable_testing()
-#     find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
+        if (DEFINED $ENV{VIDRE_TESTS_DART})
+            # TODO 
+            # - setup dart
+        endif()
 
-#     if (DEFINED $ENV{VIDRE_TESTS_DART})
-#         # TODO 
-#         # - setup dart
-#     endif()
+        add_subdirectory(tests)
+    endif()
 
-#     # Catch2
-#     # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
-#     FetchContent_Declare(Catch2
-#         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-#         GIT_TAG        v3.7.1
-#         GIT_PROGRESS   ON
-#         FIND_PACKAGE_ARGS 3.7
-#     )
-#     FetchContent_MakeAvailable(Catch2)
-
-#     add_subdirectory(examples) FIXME VIDRE_BUILD_EXAMPLES
-#     add_subdirectory(tests)
-# endif()
+    if (VIDRE_BUILD_EXAMPLES)
+        add_subdirectory(examples)
+    endif()
+endif()

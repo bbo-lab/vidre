@@ -46,16 +46,6 @@
 #include <utility>
 #include <filesystem>
 
-#include <fcntl.h>
-#if VIDRE_HOST_WINDOWS
-#include <io.h>
-#else
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#endif
-
 #include <cerrno>
 #include <cstring>
 #include <cassert>
@@ -92,6 +82,14 @@ namespace vidre {
          * */
         ///@{
 
+        /** Unsigned default size type.
+         * */
+        using size_type = std::size_t;
+
+        /** Signed default offset type.
+         * */
+        using offset_type = std::make_signed_t<size_type>;
+
         /** Data extent.
          * The extent of data describes the byte-size, and as well,
          * carries flags for dynamic (re-)allocation and writability
@@ -103,31 +101,31 @@ namespace vidre {
 
         template <>
         struct extent<std::endian::little> {
-            std::size_t size : bits_of<std::size_t>::value - 2 {};
-            std::size_t writable : 1 {};
-            std::size_t dynamic : 1 {};
+            size_type size : bits_of<size_type>::value - 2 {};
+            size_type writable : 1 {};
+            size_type dynamic : 1 {};  // FIXME is this needed?
 
             constexpr extent() = default;
-            constexpr extent(std::size_t n, bool writable_ = false, bool dynamic_ = false)
+            constexpr extent(size_type n, bool writable_ = false, bool dynamic_ = false)
                 : size(n), writable(writable_), dynamic(dynamic_) {}
 
-            operator std::size_t() const noexcept {
+            operator size_type() const noexcept {
                 return size;
             }
         };
 
         template <>
         struct extent<std::endian::big> {
-            std::size_t dynamic : 1 {};
-            std::size_t writable : 1 {};
-            std::size_t size : bits_of<std::size_t>::value - 1 {};
+            size_type dynamic : 1 {};
+            size_type writable : 1 {};
+            size_type size : bits_of<size_type>::value - 1 {};
 
             constexpr extent() = default;
-            constexpr extent(std::size_t n) : size(n) {}
-            constexpr extent(std::size_t n, bool writable_ = false, bool dynamic_ = false)
+            constexpr extent(size_type n) : size(n) {}
+            constexpr extent(size_type n, bool writable_ = false, bool dynamic_ = false)
                 : dynamic(dynamic_), writable(writable_), size(n) {}
 
-            operator std::size_t() const noexcept {
+            operator size_type() const noexcept {
                 return size;
             }
         };
@@ -136,7 +134,8 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY view {
         public:
-            using size_type = std::size_t;
+            using size_type = storage::size_type;
+
             using pointer = uint8_t *;
             using const_pointer = const uint8_t *;
 
@@ -176,16 +175,19 @@ namespace vidre {
 
             /** Get pointer to data.
              * */
+            ///@{
             constexpr const_pointer data() const noexcept {
+                return data_;
+            }
+
+            constexpr pointer data() {
+                if (not size_.writable)
+                    throw "invalid cast";
                 return data_;
             }
 
             constexpr operator const_pointer() const noexcept {
                 return data_;
-            }
-
-            constexpr operator const void *() const noexcept {
-                return static_cast<const void *>(data_);
             }
 
             constexpr operator pointer() {
@@ -194,11 +196,16 @@ namespace vidre {
                 return data_;
             }
 
+            constexpr operator const void *() const noexcept {
+                return static_cast<const void *>(data_);
+            }
+
             constexpr operator void *() {
                 if (not size_.writable)
                     throw "invalid cast";
                 return static_cast<void *>(data_);
             }
+            ///@}
         };
 
         /** Write buffer.
@@ -208,7 +215,7 @@ namespace vidre {
          * can be orders of magnitude slower.
          * */
         struct VIDRE_CORE_VISIBILITY buffer {
-            using size_type = std::size_t;
+            using size_type = storage::size_type;
             using value_type = uint8_t;
             using pointer = value_type *;
             using const_pointer = const value_type *;
@@ -221,7 +228,7 @@ namespace vidre {
 
             size_type size{};  ///< The overall buffer size.
             size_type used{};  ///< Number of used bytes.
-            pointer data;      ///< Memory pointer.
+            pointer data{};    ///< Memory pointer.
 
             /** Setup buffer.
              * @param len Number of bytes (should be a power of 2).
@@ -284,6 +291,10 @@ namespace vidre {
         };
 
         /** Data sink skeleton.
+         *
+         * The sink class provides a skeleton for data sinks, such as files or filter inputs.
+         * It may work as a data stream or a memory region (see @c sink::mode).
+         *
          * Derived classes need to implement at least:
          * @code
          * class VISIBILITY derived_sink {
@@ -294,40 +305,34 @@ namespace vidre {
          *      offset_type write(const uint8_t *buf, size_type count) override;
          * };
          * @endcode
+         *
+         * Here, the method @c write() is the low-level write method. Classes
+         * implementing buffering also need to implement the @c put() method:
+         *
+         * @code
+         * offset_type put(const uint8_t *buf, size_type count) override;
+         * @endcond
+         *
+         * Classes implementing the "region" mode need to implement the @c mode() method
+         * and FIXME.
          * */
         class VIDRE_CORE_VISIBILITY sink {
         public:
-            using size_type = std::size_t;
-            using offset_type = std::make_signed_t<size_type>;
+            /** Sink mode.
+             * */
+            enum mode_type {
+                stream,  ///< Data is written as a stream of bytes.
+                region   ///< Sink provides a memory region to write to (e.g., via memory mapping).
+            };
 
         public:
             sink() = default;
             virtual ~sink() {}
 
         protected:
-            buffer buf_{};  ///< Internal block buffer.
-
-        protected:
-            /** Write buffer to disk.
-             * @throw vidre::exception::memory
-             * @returns number of bytes written to underlying hardware
+            /** The low-level write method.
              * */
-            offset_type flush() {
-                if (buf_.used) {
-                    auto retval = write(buf_.data, buf_.used);
-
-                    if (retval != buf_.used)
-                        // if the underlying hardware can't take it, we assume,
-                        // it's out of memory...
-                        throw exception::memory();
-                }
-                return buf_.flush();
-            }
-
-            /** The actual write method.
-             * This method needs overrides in derived classes.
-             * */
-            virtual offset_type write(const uint8_t *buf, size_type count) = 0;
+            virtual offset_type write(const uint8_t *src, size_type count) = 0;
 
         public:
             /** Check if the stream is valid (ie. usable).
@@ -336,60 +341,96 @@ namespace vidre {
                 return false;
             }
 
+            /** Get sink mode.
+             * */
+            virtual mode_type mode() const noexcept {
+                return mode_type::stream;
+            }
+
             /** Transfer data.
              * */
             ///@{
-            offset_type put(const uint8_t *buf, size_type count) {
-                if (buf_) {
-                    // using buffer
-                    offset_type retval = count;
-                    offset_type pos = 0;
-                    while (count > 0) {
-                        size_type buffered = buf_.append(buf + pos, count);
-                        if (buf_.full())
-                            flush();
-                        count -= buffered;
-                        pos += buffered;
-                    }
-
-                    return retval;
-                }
-                else
-                    // direct write
-                    return write(buf, count);
+            virtual offset_type put(size_type count, const uint8_t *src) {
+                return write(src, count);
             }
 
             offset_type put(const view &v) {
-                return put(v.data(), v.size());
+                return put(v.size(), v.data());
             }
 
             template <typename T>
             offset_type put(const T &data) {
-                return put(view{sizeof(T), &data});
+                return put(sizeof(T), &data);
             }
 
             template <typename T>
             offset_type put(const T *data, size_type nmemb) {
-                return put(view{nmemb * sizeof(T), reinterpret_cast<const uint8_t *>(data)});
+                return put(nmemb * sizeof(T), reinterpret_cast<const uint8_t *>(data));
             }
             ///@}
 
-            /** Set buffer.
-             * @param size Buffer size (must be 2^n).
-             * */
-            size_type setbuf(size_type size) noexcept {
-                return buf_.setup(size);
-            }
+            // FIXME "mode::region" interface ... ???
         };
 
         /** Data source.
+         * FIXME
          */
         class VIDRE_CORE_VISIBILITY source {
         public:
-            source() = default;
+            /** Source mode.
+             * */
+            enum mode_type {
+                stream,  ///< Data is read as a stream of bytes.
+                region   ///< Source provides a memory region to read from (e.g., via memory mapping).
+            };
 
         public:
+            source() = default;
+
+        protected:
+            /** The low-level read method.
+             * */
+            virtual offset_type read(uint8_t *buf, size_type count) = 0;
+
+        public:
+            /** Check if the stream is valid (ie. usable).
+             * */
+            virtual bool valid() const noexcept {
+                return false;
+            }
+
+            /** Get source mode.
+             * */
+            virtual mode_type mode() const noexcept {
+                return mode_type::stream;
+            }
+
+            /** Transfer data.
+             * */
+            ///@{
+            virtual offset_type get(size_type count, uint8_t *buf) {
+                return read(buf, count);
+            }
+
+            offset_type get(view &v) {
+                return get(v.size(), v.data());
+            }
+
+            template <typename T>
+            offset_type get(T &data) {
+                return get(sizeof(T), &data);
+            }
+
+            template <typename T>
+            offset_type get(T *data, size_type nmemb) {
+                return get(reinterpret_cast<uint8_t *>(data), nmemb * sizeof(T));
+            }
+            ///@}
+
+            // FIXME "mode::region" interface ... ???
         };
+
+        // FIXME filter? transformer? ... ?
 
         ///@}
 

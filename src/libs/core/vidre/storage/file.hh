@@ -40,6 +40,19 @@
 
 #include <filesystem>
 
+#include <cerrno>
+#include <cstring>
+#include <cassert>
+
+#if VIDRE_HOST_WINDOWS
+#include <io.h>
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#endif
+
 namespace vidre {
 
     namespace detail {
@@ -93,13 +106,16 @@ namespace vidre {
                 return ::_write(fd, buf, count);
             }
 
+            // FIXME seek, allocate, blocksize, filename, mmap, munmap...
+
             static constexpr std::size_t path_max = MAX_PATH;
 #else
             enum flag_type : int {
+                invalid = -1,
+
                 readonly = O_RDONLY,
                 writeonly = O_WRONLY,
                 readwrite = O_RDWR,
-
                 append = O_APPEND,
                 create = O_CREAT,
                 exclusive = O_EXCL,
@@ -107,7 +123,9 @@ namespace vidre {
                 non_block = O_NONBLOCK,
                 synchronous = O_SYNC,
                 close_on_exec = O_CLOEXEC,
-                // FIXME...
+                asynchrounous = O_ASYNC,
+                direct = O_DIRECT,
+                datasync = O_DSYNC,
             };
 
             enum whence_type : int {
@@ -170,8 +188,31 @@ namespace vidre {
                 return st.st_blksize;
             }
 
-            static constexpr std::size_t path_max = PATH_MAX;
+            inline offset_type filesize(descriptor fd) {
+                struct stat st;
+                if (fstat(fd, &st) < 0)
+                    return -1;
+                return st.st_size;
+            }
 
+            inline std::string filename(descriptor fd) {
+#if defined(__linux__)
+                char path[PATH_MAX];
+                ssize_t len = readlink((std::string("/proc/self/fd/") + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
+                if (len != -1) {
+                    path[len] = 0;
+                    return std::string(path);
+                }
+                return {};
+#elif defined(F_GETPATH)
+                char path[PATH_MAX];
+                if (fcntl(fd, F_GETPATH, path) != -1)
+                    return std::string(path);
+                return {};
+#endif
+            }
+
+            static constexpr std::size_t path_max = PATH_MAX;
 #endif
 
             ///@}
@@ -191,6 +232,8 @@ namespace vidre {
              * */
             ///@{
 
+            /** File path.
+             * */
             using path = std::filesystem::path;
 
             /** Remove file.
@@ -214,19 +257,29 @@ namespace vidre {
                 static constexpr size_type path_max = detail::file::path_max;
 
                 /** File flags.
-                 * @see open()
                  * */
                 enum flag_type : int {
-                    readonly = detail::file::flag_type::readonly,
-                    writeonly = detail::file::flag_type::writeonly,
-                    readwrite = detail::file::flag_type::readwrite,
-                    append = detail::file::flag_type::append,
-                    create = detail::file::flag_type::create,
-                    exclusive = detail::file::flag_type::exclusive,
-                    truncate = detail::file::flag_type::truncate,
-                    non_block = detail::file::flag_type::non_block,
-                    synchronous = detail::file::flag_type::synchronous,
-                    close_on_exec = detail::file::flag_type::close_on_exec,
+                    invalid = detail::file::flag_type::invalid,  ///< Invalid flag (for error handling).
+
+                    readonly = detail::file::flag_type::readonly,    ///< Open for reading only.
+                    writeonly = detail::file::flag_type::writeonly,  ///< Open for writing only.
+                    readwrite = detail::file::flag_type::readwrite,  ///< Open for reading and writing.
+
+                    append = detail::file::flag_type::append,        ///< Append to the end of the file.
+                    create = detail::file::flag_type::create,        ///< Create the file if it does not exist.
+                    exclusive = detail::file::flag_type::exclusive,  ///< Ensure that this call creates the file.
+                    truncate = detail::file::flag_type::truncate,    ///< Truncate the file to zero length.
+
+                    non_block = detail::file::flag_type::non_block,          ///< Open in non-blocking mode.
+                    synchronous = detail::file::flag_type::synchronous,      ///< Open in synchronous mode (like @c direct, but in
+                                                                             ///< addition writes file metadata).
+                    close_on_exec = detail::file::flag_type::close_on_exec,  ///< Close the file on exec.
+                    asynchrounous = detail::file::flag_type::asynchrounous,  ///< Open in asynchronous mode.
+                    direct = detail::file::flag_type::direct,                ///< Open in direct mode (no caching).
+                    datasync = detail::file::flag_type::
+                        datasync,  ///< Open in datasync mode (like synchronous, but ensure flushed caches as well (see
+                                   ///< [fdatasync](https://www.man7.org/linux/man-pages/man3/fdatasync.3p.html))).
+
                     // FIXME...
                 };
 
@@ -238,23 +291,12 @@ namespace vidre {
                     end = detail::file::whence_type::end,
                 };
 
-                /** Allocation type.
-                 *
-                 * @see FIXME
+                /** File permissions (POSIX style).
                  * */
-                enum allocation_type : int {
-                    allocate_range = detail::file::allocation_type::allocate_range,
-                    keep_size = detail::file::allocation_type::keep_size,
-                    punch_hole = detail::file::allocation_type::punch_hole,
-                    no_hide_stale = detail::file::allocation_type::no_hide_stale,
-                    collapse_range = detail::file::allocation_type::collapse_range,
-                    zero_range = detail::file::allocation_type::zero_range,
-                    insert_range = detail::file::allocation_type::insert_range,
-                    unshare_range = detail::file::allocation_type::unshare_range
-                };
-
                 using perms = std::filesystem::perms;
 
+                /** Default permissions (o+rw,g+r,u+r).
+                 * */
                 static constexpr perms default_perms =
                     perms::owner_read | perms::owner_write | perms::group_read | perms::others_read;
 
@@ -349,16 +391,20 @@ namespace vidre {
                 /** File size.
                  * */
                 offset_type size() noexcept {
-                    auto curpos = position();
-                    auto retval = seek(0, end);
-                    seek(curpos, begin);
-                    return retval;
+                    return detail::file::filesize(fd_);
                 }
 
                 /** Reserve space on disk.
-                 * @todo needs implementation
+                 * @param len Number of bytes to reserve.
+                 * @param offset Position from where to reserve (default: end of file).
+                 * @returns `true` on success, `false` otherwise
+                 * This method reserves space, optimizing append workloads.
                  * */
-                bool allocate(std::size_t len, offset_type offset = -1);
+                bool reserve(std::size_t len, offset_type offset = -1) {
+                    if (offset < 0)
+                        offset = size();
+                    return detail::file::allocate(fd_, detail::file::allocation_type::keep_size, len, offset);
+                }
 
                 /** Write data to file.
                  * */
@@ -370,23 +416,6 @@ namespace vidre {
                  * */
                 offset_type read(uint8_t *buf, std::size_t count) noexcept {
                     return detail::file::read(fd_, buf, count);
-                }
-
-                /** Allocate file space.
-                 * @param mode The allocation mode.
-                 * @param length Number of bytes to allocate.
-                 * @param offset Position from where to allocate.
-                 * @returns `true` on success, `false` otherwise
-                 * */
-                bool allocate(allocation_type mode, offset_type length, offset_type offset) noexcept {
-                    return detail::file::allocate(fd_, static_cast<detail::file::allocation_type>(mode), length, offset);
-                }
-
-                /** Reserve space on disk (at end of file).
-                 * This method on reserves space, optimizing append workloads.
-                 * */
-                bool reserve(offset_type amount) noexcept {
-                    return allocate(keep_size, amount, size());
                 }
             };
 
@@ -417,14 +446,16 @@ namespace vidre {
             public:
                 /** Open mode.
                  * */
-                enum mode_type : uint32_t {
-                    none = 0,
-                    truncate = (1 << 0),    ///< Truncate file if it exists, otherwise create or append to the file.
-                    synchronous = (1 << 1), /**< Transfer data synchronously to the underlying hardware.
-                                             * Using this option includes block-wise buffering to reduce workload on
-                                             * the underlying hardware.
-                                             * */
-                    unbuffered = (1 << 2)   /**< Disable automatic buffering. */
+                enum openmode_type : uint32_t {
+                    // FIXME
+                    truncate = (1 << 1),  ///< Truncate file if it exists, otherwise append to the file.
+
+                    direct = (1 << 5), /**< Transfer data directly to the underlying hardware (avoid caching).
+                                        * */
+
+                    unbuffered = (1 << 4), /**< Disable automatic buffering. */
+
+                    // FIXME ...
                 };
 
             public:
@@ -434,75 +465,69 @@ namespace vidre {
                 }
 
             protected:
-                io fd_{};
+                io fd_{};       ///< Underlying file I/O.
+                buffer buf_{};  ///< Internal block buffer.
 
             protected:
+                // Write buffer to disk and flush it.
+                offset_type flush();
+
                 // Low-level write method.
-                offset_type write(const uint8_t *buf, size_type count) noexcept override {
-                    return fd_.write(buf, count);
+                offset_type write(const uint8_t *src, size_type count) noexcept override {
+                    return fd_.write(src, count);
                 }
 
             public:
+                /** Check if valid (i.e., usable).
+                 * */
                 bool valid() const noexcept override {
                     return fd_.valid();
                 }
 
+                /** Set buffer size.
+                 * @param len Buffer size in bytes (should be a power of 2).
+                 * @return Number of bytes allocated, or 0 if it was already allocated
+                 *         previously or no memory could be allocated.
+                 * This method may only be called once.
+                 * */
+                size_type setbuf(size_type len) noexcept {
+                    return buf_.setup(len);
+                }
+
                 /** Open file.
                  * @param filename The file name to open.
-                 * @param mode     File flags (default: synchronous with block-wise buffering).
-                 * @param permission File read/write permissions (POSIX style).
+                 * @param mode     File flags (default: direct with block-wise buffering).
+                 * @param permission File read/write permissions (POSIX style, default: 0644).
                  * @return @c true on success
                  * @return @c false otherwise
                  */
-                bool open(const std::filesystem::path &filename, mode_type mode = synchronous,
-                          io::perms permissions = io::default_perms) noexcept {
-                    io::flag_type f = io::writeonly | io::create | io::close_on_exec;
-
-                    if (mode & mode_type::truncate)
-                        f |= io::truncate;
-                    else
-                        f |= io::append;
-
-                    if (mode & mode_type::synchronous)
-                        f |= io::synchronous;
-
-                    bool retval = fd_.open(filename, f, permissions);
-                    if (not retval)
-                        return false;
-
-                    if ((mode & mode_type::synchronous) and not(mode & mode_type::unbuffered))
-                        buf_.setup(detail::file::blocksize(fd_));
-
-                    return true;
-                }
-
-                // FIXME setbuf(size_type n)
+                bool open(const std::filesystem::path &filename, openmode_type mode = direct,
+                          io::perms permissions = io::default_perms) noexcept;
 
                 /** Close file.
                  * */
-                void close() noexcept {
-                    if (buf_)
-                        flush();
-                    fd_.close();
-                    return;
-                }
+                void close() noexcept;
+
+                /** Put data into the sink.
+                 * */
+                offset_type put(size_type count, const uint8_t *src) override;
             };
 
             ///@cond
-            inline sink::mode_type operator|(sink::mode_type lhs, sink::mode_type rhs) {
-                return static_cast<sink::mode_type>(to_underlying(lhs) | to_underlying(rhs));
+            inline sink::openmode_type operator|(sink::openmode_type lhs, sink::openmode_type rhs) {
+                return static_cast<sink::openmode_type>(to_underlying(lhs) | to_underlying(rhs));
             }
-            inline sink::mode_type operator|=(sink::mode_type lhs, sink::mode_type rhs) {
-                return static_cast<sink::mode_type>(to_underlying(lhs) | to_underlying(rhs));
+            inline sink::openmode_type operator|=(sink::openmode_type lhs, sink::openmode_type rhs) {
+                return static_cast<sink::openmode_type>(to_underlying(lhs) | to_underlying(rhs));
             }
-            inline sink::mode_type operator&(sink::mode_type lhs, sink::mode_type rhs) {
-                return static_cast<sink::mode_type>(to_underlying(lhs) & to_underlying(rhs));
+            inline sink::openmode_type operator&(sink::openmode_type lhs, sink::openmode_type rhs) {
+                return static_cast<sink::openmode_type>(to_underlying(lhs) & to_underlying(rhs));
             }
-            inline sink::mode_type operator&=(sink::mode_type lhs, sink::mode_type rhs) {
-                return static_cast<sink::mode_type>(to_underlying(lhs) & to_underlying(rhs));
+            inline sink::openmode_type operator&=(sink::openmode_type lhs, sink::openmode_type rhs) {
+                return static_cast<sink::openmode_type>(to_underlying(lhs) & to_underlying(rhs));
             }
-            inline sink::mode_type operator~(sink::mode_type rhs) {
-                return static_cast<sink::mode_type>(~to_underlying(rhs));
+            inline sink::openmode_type operator~(sink::openmode_type rhs) {
+                return static_cast<sink::openmode_type>(~to_underlying(rhs));
             }
             ///@endcond
 

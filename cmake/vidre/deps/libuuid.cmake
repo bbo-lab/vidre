@@ -8,7 +8,7 @@
 if(PkgConfig_FOUND)
     pkg_check_modules(LIBUUID IMPORTED_TARGET uuid)
     if(TARGET PkgConfig::LIBUUID)
-        set(UUIDLIB PkgConfig::libuuid)
+        set(UUIDLIB PkgConfig::LIBUUID)
         set(VIDRE_HAVE_LIBUUID ON CACHE INTERNAL "")
     endif()
 endif()

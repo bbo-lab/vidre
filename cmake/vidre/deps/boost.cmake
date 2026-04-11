@@ -8,8 +8,8 @@
 
 include(vidre/deps/libuuid)
 if(NOT VIDRE_HAVE_LIBUUID)
-    set(UUIDLIB Boost::uuid)
     set(BOOST_COMPONENT_UUID uuid)
+    set(UUIDLIB Boost::uuid)
 endif()
 
 set(BOOST_VERSION 1.83.0)
