@@ -1,0 +1,11 @@
+# Developer info
+
+FIXME
+
+cmake:
+- VIDRE_DEVELOP
+- VIDRE_BUILD_TESTS
+- VIDRE_BUILD_EXAMPLES
+- VIDRE_BUILD_GUI
+
+

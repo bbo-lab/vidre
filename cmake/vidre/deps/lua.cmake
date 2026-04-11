@@ -1,6 +1,9 @@
-include(FetchContent)
+# Package: delua
+# Version: 5.4 
+#
+# Info: This package is always fetched.
 
-FetchContent_Declare(lua
+FetchContent_Declare(delua
   GIT_REPOSITORY https://github.com/jsawbbo/delua.git
   GIT_TAG 5.4
   GIT_SHALLOW TRUE
@@ -16,7 +19,6 @@ set(LUA_BUILD_PAM OFF CACHE INTERNAL "")
 
 set(LUA_IDSIZE 256 CACHE INTERNAL "")
 
-#FIXME LUA_PATH_DEFAULT
-#FIXME LUA_CPATH_DEFAULT
+FetchContent_MakeAvailable(delua)
 
-FetchContent_MakeAvailable(lua)
+vidre_deps_set(delua ON) # always fetched

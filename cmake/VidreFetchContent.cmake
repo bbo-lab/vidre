@@ -46,3 +46,5 @@ else()
     set(FETCHCONTENT_OFFLINE_MODE TRUE)
     message(WARNING "FetchContent module is now in offline mode. Dependencies won't be downloaded or updated until the internet connection is regained.")
 endif()
+
+include(FetchContent)

@@ -82,19 +82,25 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     endif()
 endif()
 
-# DEPENDENCIES ################################################################
-include(VidreFetchContent)
+# "native" Windows build
+if (WIN32 AND NOT CYGWIN AND NOT MINGW AND NOT MSYS)
+    set(NATIVE_MSVC ON)
+else()
+    set(NATIVE_MSVC OFF)
+endif()
 
-include(vidre/deps/boost)
-include(vidre/deps/libfmt)
-include(vidre/deps/json)
-include(vidre/deps/yaml)
-include(vidre/deps/lua)
-include(vidre/deps/libuuid)
-include(vidre/deps/units)
-include(vidre/deps/terminal)
-include(vidre/deps/ffmpeg)
-include(vidre/deps/qt)
+# DEVELOPERS ##################################################################
+set(VIDRE_DEVELOP OFF CACHE BOOL "Developer mode")
+
+set(VIDRE_BUILD_EXAMPLES ${VIDRE_DEVELOP} CACHE BOOL "Build examples.")
+set(VIDRE_BUILD_TESTS ${VIDRE_DEVELOP} CACHE BOOL "Build tests.")
+set(VIDRE_BUILD_GUI ON CACHE BOOL "Build GUIs.")
+
+set(VIDRE_FETCH_DEPS OFF CACHE BOOL "Fetch dependencies")
+mark_as_advanced(VIDRE_FETCH_DEPS)
+
+# DEPENDENCIES ################################################################
+include(vidre/deps)
 
 # PATHS #######################################################################
 
@@ -117,51 +123,47 @@ add_definitions(
     -DCMAKE_INSTALL_LUA_LDIR=\"${CMAKE_INSTALL_LUA_LDIR}\"
 )
 
-# BUILD #######################################################################
+# # BUILD #######################################################################
 
-add_subdirectory(cmake)
-add_subdirectory(icons)
-add_subdirectory(share)
-add_subdirectory(src)
+# add_subdirectory(cmake)
+# add_subdirectory(icons)
+# add_subdirectory(share)
+# add_subdirectory(src)
 
-install(EXPORT VidreTargets-${Vidre_RELEASE}
-    DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-    COMPONENT "development"
-)
+# install(EXPORT VidreTargets-${Vidre_RELEASE}
+#     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+#     COMPONENT "development"
+# )
 
-add_subdirectory(docs)
+# add_subdirectory(docs)
 
-install(FILES 
-        LICENSE README.md
-    DESTINATION ${CMAKE_INSTALL_DOCDIR}
-    COMPONENT "runtime")
+# install(FILES 
+#         LICENSE README.md
+#     DESTINATION ${CMAKE_INSTALL_DOCDIR}
+#     COMPONENT "runtime")
 
 
-# TEST ########################################################################
+# # TEST ########################################################################
 
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(VIDRE_BUILD_TESTS ON CACHE BOOL "Enable tests.")
-else()
-    set(VIDRE_BUILD_TESTS OFF CACHE BOOL "Enable tests.")
-endif()
+# if(NOT Vidre_IS_SUBPROJECT AND VIDRE_BUILD_TESTS)
+#     enable_testing()
+#     find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
 
-if(NOT Vidre_IS_SUBPROJECT AND VIDRE_BUILD_TESTS)
-    enable_testing()
-    find_program(CMAKE_MEMORYCHECK_COMMAND valgrind)
+#     if (DEFINED $ENV{VIDRE_TESTS_DART})
+#         # TODO 
+#         # - setup dart
+#     endif()
 
-    # TODO 
-    # - setup dart
+#     # Catch2
+#     # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
+#     FetchContent_Declare(Catch2
+#         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+#         GIT_TAG        v3.7.1
+#         GIT_PROGRESS   ON
+#         FIND_PACKAGE_ARGS 3.7
+#     )
+#     FetchContent_MakeAvailable(Catch2)
 
-    # Catch2
-    # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
-    FetchContent_Declare(Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.7.1
-        GIT_PROGRESS   ON
-        FIND_PACKAGE_ARGS 3.7
-    )
-    FetchContent_MakeAvailable(Catch2)
-
-    add_subdirectory(examples)
-    add_subdirectory(tests)
-endif()
+#     add_subdirectory(examples) FIXME VIDRE_BUILD_EXAMPLES
+#     add_subdirectory(tests)
+# endif()

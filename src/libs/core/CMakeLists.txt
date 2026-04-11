@@ -28,6 +28,7 @@ vidre_library(vidrecore SHARED
                 # ${TERMINALLIB}
                 ${FMTLIB}
                 ${YAMLLIB}
+                nlohmann_json::nlohmann_json
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development

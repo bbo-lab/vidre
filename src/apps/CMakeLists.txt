@@ -1,4 +1,6 @@
 add_subdirectory(daemon)
 add_subdirectory(cli)
-add_subdirectory(gui)
 add_subdirectory(tools)
+if(VIDRE_BUILD_GUI)
+    add_subdirectory(gui)
+endif()
