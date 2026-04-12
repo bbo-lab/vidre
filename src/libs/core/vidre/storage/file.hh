@@ -37,8 +37,10 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/storage/io.hh>
+#include <vidre/exception.hh>
 
 #include <filesystem>
+#include <utility>
 
 #include <cerrno>
 #include <cstring>
@@ -447,21 +449,28 @@ namespace vidre {
                 /** Open mode.
                  * */
                 enum openmode_type : uint32_t {
-                    // FIXME
-                    truncate = (1 << 1),  ///< Truncate file if it exists, otherwise append to the file.
+                    direct = (1 << 0),  ///< Transfer data directly to the underlying hardware (avoid caching, default).
 
-                    direct = (1 << 5), /**< Transfer data directly to the underlying hardware (avoid caching).
-                                        * */
+                    truncate = (1 << 4),  ///< Truncate file if it exists, otherwise append to the file.
 
-                    unbuffered = (1 << 4), /**< Disable automatic buffering. */
-
-                    // FIXME ...
+                    unbuffered = (1 << 8),  ///< Disable buffering.
                 };
 
             public:
                 sink() = default;
                 virtual ~sink() {
                     flush();
+                }
+
+                sink(const sink &) = delete;
+                sink(sink &&other) noexcept = default;
+
+                sink(const std::filesystem::path &filename, openmode_type mode = direct,
+                     io::perms permissions = io::default_perms) {
+                    if (!open(filename, mode, permissions)) {
+                        throw exception::runtime()
+                            << error::message("Failed to open file: " + filename.string()) << error::system();
+                    }
                 }
 
             protected:
