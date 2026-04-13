@@ -39,9 +39,9 @@
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/video/common.hh>
-#include <vidre/video/pixel.hh>
-#include <vidre/video/frame.hh>
+// #include <vidre/video/common.hh>
+// #include <vidre/video/pixel.hh>
+// #include <vidre/video/frame.hh>
 
 #include <string>
 #include <string_view>

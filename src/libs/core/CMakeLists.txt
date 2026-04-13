@@ -59,9 +59,9 @@ vidre_library(vidrecore SHARED
             vidre/storage/bit.hh vidre/storage/bit.cc
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/video.hh vidre/video.cc
-            vidre/video/common.hh
-            vidre/video/pixel.hh vidre/video/pixel.cc
-            vidre/video/frame.hh vidre/video/frame.cc
+            # vidre/video/common.hh
+            # vidre/video/pixel.hh vidre/video/pixel.cc
+            # vidre/video/frame.hh vidre/video/frame.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/exception.hh
             vidre/plugin/information.hh
