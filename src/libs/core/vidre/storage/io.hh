@@ -315,8 +315,18 @@ namespace vidre {
          *
          * Classes implementing the "region" mode need to implement the @c mode() method
          * and FIXME.
+         * 
+         * @todo document "shared"
+         * @todo document "mode::region" interface
          * */
         class VIDRE_CORE_VISIBILITY sink {
+        public:  
+            using shared = std::shared_ptr<sink>;
+            template <typename T, typename... Args>
+            static shared make(Args &&...args) {
+                return std::make_shared<T>(std::forward<Args>(args)...); 
+            }
+
         public:
             /** Sink mode.
              * */
@@ -376,6 +386,13 @@ namespace vidre {
          * FIXME
          */
         class VIDRE_CORE_VISIBILITY source {
+        public:  
+            using shared = std::shared_ptr<source>;
+            template <typename T, typename... Args>
+            static shared make(Args &&...args) {
+                return std::make_shared<T>(std::forward<Args>(args)...); 
+            }
+
         public:
             /** Source mode.
              * */
@@ -431,6 +448,24 @@ namespace vidre {
         };
 
         // FIXME filter? transformer? ... ?
+        /* 
+            Code suggestions from DeepSeek:
+
+            file_source.read()
+                .through(encryptor)
+                .through(compressor)
+                .into(file_sink);
+        
+            file_source | pipe(encryptor) | pipe(compressor) | file_sink;        
+        
+            Names suggested:
+            - through
+            - pipe
+            - conduit
+            - duplex
+            ...
+        */
+
 
         ///@}
 

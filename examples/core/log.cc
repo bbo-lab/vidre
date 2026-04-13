@@ -1,4 +1,5 @@
 #include <vidre/log.hh>
+#include <vidre/exception.hh>
 
 using namespace vidre;
 

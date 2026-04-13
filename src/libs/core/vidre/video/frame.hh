@@ -24,10 +24,19 @@
 #define VIDRE_CORE_VIDEO_FRAME_HH
 #pragma once
 
+/**@addtogroup api-core-video-frame
+ * @ingroup api-core-video
+ * @details
+ * @fileinfo
+ *
+ * FIXME
+ *
+ * */
+
 #include <vidre/core/config.hh>
 #include <vidre/storage.hh>
 #include <vidre/video/common.hh>
-#include <vidre/video/pixel_format.hh>
+#include <vidre/video/pixel.hh>
 
 #include <cstdint>
 
@@ -35,12 +44,11 @@ namespace vidre {
 
     namespace video {
 
-        // FIXME need to use __vidre_packed__
-
         /**@addtogroup api-core-video
          * */
         ///@}
 
+#if 0
         /** Video frame.
          * */
         class VIDRE_CORE_VISIBILITY frame {
@@ -58,7 +66,7 @@ namespace vidre {
              * file fileformat. Mind endianness, though.
              *
              * */
-            struct __attribute__((packed)) VIDRE_CORE_VISIBILITY metadata {
+            struct __vidre_packed__ VIDRE_CORE_VISIBILITY metadata {
                 uint32_t frame_number{};                             ///< Frame number (if available).
                 timestamp camera{};                                  ///< Timestamp from the camera (if available).
                 timestamp system{};                                  ///< Timestamp from the system clock (steady_clock).)
@@ -89,6 +97,7 @@ namespace vidre {
 
         public:
         };
+#endif
 
         ///@}
 

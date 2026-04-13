@@ -16,4 +16,7 @@ else()
         FIND_PACKAGE_ARGS
     )
     FetchContent_MakeAvailable(nlohmann_json)
+
+    set(JSONLIB nlohmann_json::nlohmann_json)
 endif()
+

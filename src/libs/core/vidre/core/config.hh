@@ -56,7 +56,7 @@ namespace vidre {
 #endif
 
 /** Standard packing attribute.
- * @note At the moment of writing, the VidRe software is expected to be 
+ * @note At the moment of writing, the VidRe software is expected to be
  *       compiled with GNU C/Clang compatible compilers, that understand
  *       this attribute syntax.
  * */
@@ -74,6 +74,20 @@ namespace vidre {
 #define VIDRE_HOST_APPLE <0|1>
 
 #endif  // DOXYGEN
+
+/** Host is big-endian
+ * @internal
+ * The header <bit> needs to be included for this macro to work.
+ * @endinternal
+ * */
+#define VIDRE_HAVE_BIGENDIAN (std::endian::native == std::endian::big)
+
+/** Host is little-endian
+ * @internal
+ * The header <bit> needs to be included for this macro to work.
+ * @endinternal
+ * */
+#define VIDRE_HAVE_LITTLEENDIAN (std::endian::native == std::endian::little)
 
 ///@cond
 #if defined(linux) || defined(__linux__) || defined(__linux)

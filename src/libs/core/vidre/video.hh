@@ -31,11 +31,16 @@
  * The core library provides a number of fundamental mechanisms for storing data
  * generically. File formats are, however, only supported through plugins.
  *
+ * @{
+ * @defgroup api-core-video-pixel Pixel formats
+ * @defgroup api-core-video-frame Video frames
+ * @defgroup api-core-video-io Video I/O
+ * @}
  * */
 
 #include <vidre/core/config.hh>
 #include <vidre/video/common.hh>
-#include <vidre/video/pixel_format.hh>
+#include <vidre/video/pixel.hh>
 #include <vidre/video/frame.hh>
 
 #include <string>

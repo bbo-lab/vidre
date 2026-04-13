@@ -25,10 +25,9 @@ vidre_library(vidrecore SHARED
                 DeLua::Library::CXX
                 ${UUIDLIB}
                 ${UNITSLIB}
-                # ${TERMINALLIB}
                 ${FMTLIB}
                 ${YAMLLIB}
-                nlohmann_json::nlohmann_json
+                ${JSONLIB}
     INSTALL 
         LIBRARY COMPONENT runtime
         ARCHIVE COMPONENT development
@@ -60,9 +59,8 @@ vidre_library(vidrecore SHARED
             vidre/storage/bit.hh vidre/storage/bit.cc
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/video.hh vidre/video.cc
-            vidre/video/pixel_format.hh vidre/video/pixel_format.cc
             vidre/video/common.hh
-            vidre/video/pixel_format.hh vidre/video/pixel_format.cc
+            vidre/video/pixel.hh vidre/video/pixel.cc
             vidre/video/frame.hh vidre/video/frame.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/exception.hh
