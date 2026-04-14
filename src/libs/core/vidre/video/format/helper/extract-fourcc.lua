@@ -32,6 +32,8 @@ local content = false
 local comment_block = false
 local comment
 
+print(csv({"Group description","V4L2 name","reserved","FourCC","Endianness","Bit depth","Description"}))
+
 for line in io.lines(header) do
     if line:match(end_pattern) then 
         break;
@@ -71,10 +73,10 @@ for line in io.lines(header) do
                 end
 
                 local endian
-                if fourcc:match("_le$") then
-                    endian = "LE"
-                else
+                if fourcc:match("_be$") then
                     endian = "BE"
+                else
+                    endian = ""
                 end
 
                 -- output

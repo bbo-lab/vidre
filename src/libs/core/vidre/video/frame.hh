@@ -29,24 +29,64 @@
  * @details
  * @fileinfo
  *
- * FIXME
- *
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/video/format.hh>
 #include <vidre/storage.hh>
-#include <vidre/video/common.hh>
-#include <vidre/video/pixel.hh>
 
 #include <cstdint>
+#include <chrono>
 
 namespace vidre {
 
     namespace video {
 
-        /**@addtogroup api-core-video
+        /**@addtogroup api-core-video-frame
          * */
         ///@}
+
+
+        /** Frame index.
+         * */
+        struct __vidre_packed__ VIDRE_CORE_VISIBILITY index {
+            uint64_t count;  ///< Frame index, usually but not necessarily starting from 0.
+        };
+
+        /** Timestamp.
+         * To avoid calculations (esp. divisions) on the critical path of frame
+         * acquisition, timestamps are represented as a value and a resolution
+         * (in Hz). The actual timestamp in seconds can be calculated as
+         * `value / resolution`. The default resolution is 1 ns (1 GHz), which
+         * allows for high-precision timestamps without needing to use
+         * floating-point values.
+         *
+         * @see std::chrono::duration for a more flexible representation of time intervals, if needed.
+         * */
+        struct __vidre_packed__ VIDRE_CORE_VISIBILITY timestamp {
+            static_assert(std::chrono::steady_clock::duration::period::num == 1);
+
+            /** The systems default resolution for "steady_clock" */
+            static constexpr const intmax_t default_resolution = std::chrono::steady_clock::duration::period::den;
+
+            uint64_t value;                              ///< Timestamp value.
+            uint64_t resolution = {default_resolution};  ///< Timestamp resolution (Hz).
+
+            /** Convert to duration.
+             * */
+            template <class Rep, class Period = std::ratio<1> >
+            operator std::chrono::duration<Rep, Period>() const noexcept {
+                using namespace std::chrono;
+                return duration<Rep, Period>(static_cast<Rep>(value) * Period::den / resolution);
+            }
+
+            /** Set from computer time.
+             * */
+            void now() noexcept {
+                auto now = std::chrono::steady_clock::now();
+                value = now.time_since_epoch().count();
+            }
+        };
 
 #if 0
         /** Video frame.

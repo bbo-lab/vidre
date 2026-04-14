@@ -24,8 +24,8 @@
 #define VIDRE_CORE_VIDEO_FORMAT_COLOR_HH
 #pragma once
 
-/**@addtogroup api-core-video-color
- * @ingroup api-core-video
+/**@addtogroup api-core-video-format-color
+ * @ingroup api-core-video-format
  * @details
  * @fileinfo
  *
@@ -252,11 +252,15 @@ namespace vidre {
 
     namespace video {
 
-        /**@addtogroup api-core-video-color
-         * */
-        ///@{
+        namespace format {
 
-        ///@}
+            /**@addtogroup api-core-video-format-color
+             * */
+            ///@{
+
+            ///@}
+
+        }  // namespace format
 
     }  // namespace video
 

@@ -41,16 +41,14 @@
 #include <vidre/video/format/pixel.hh>
 #include <vidre/video/format/color.hh>
 
-
 namespace vidre {
 
     namespace video {
 
-        /**@addtogroup api-core-video-format
+        /** Format namespace.
+         * @ingroup api-core-video-format
          * */
-        ///@{
-
-        ///@}
+        namespace format {}  // namespace format
 
     }  // namespace video
 

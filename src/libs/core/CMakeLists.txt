@@ -46,6 +46,7 @@ vidre_library(vidrecore SHARED
         vidre/util/uuid.hh vidre/util/uuid.cc
         vidre/util/filesystem.hh vidre/util/filesystem.cc
         vidre/util/variant.hh
+        vidre/util/status.hh
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
         vidre/script.hh vidre/script.cc
@@ -59,12 +60,11 @@ vidre_library(vidrecore SHARED
             vidre/storage/bit.hh vidre/storage/bit.cc
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/video.hh vidre/video.cc
-            # vidre/video/common.hh
-            # vidre/video/format.hh vidre/video/format.cc
-                # vidre/video/format/geometry.hh vidre/video/format/geometry.cc
-                # vidre/video/format/pixel.hh vidre/video/format/pixel.cc
-                # vidre/video/format/color.hh vidre/video/format/color.cc
-            # vidre/video/frame.hh vidre/video/frame.cc
+            vidre/video/format.hh vidre/video/format.cc
+                vidre/video/format/geometry.hh
+                vidre/video/format/pixel.hh vidre/video/format/pixel.cc
+                vidre/video/format/color.hh vidre/video/format/color.cc
+            vidre/video/frame.hh vidre/video/frame.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/exception.hh
             vidre/plugin/information.hh
