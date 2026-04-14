@@ -21,4 +21,29 @@
  */
 #include "pixel.hh"
 
+#include "../../script.hh"
+#include "../../log.hh"
+
 using namespace vidre;
+
+std::string video::format::pixel::name() const noexcept {
+    script::engine::stack top(script::g);
+
+    script::g.require("vidre.video.format.fourcc");
+    if (script::g.type(-1) != lua::type::table) {
+        log::fatal() << "vidre.video.format.fourcc not accessible";
+        return "nil";
+    }
+
+    script::g.pushinteger(static_cast<lua_Integer>(format_));  // @todo there should be lua::state::integer ...???
+    script::g.gettable(-2);
+
+    const char *name = script::g.tostring(-1);
+
+    if (not name) {
+        log::warning() << "unknown pixel format";
+        return "unknown";
+    }
+    else
+        return name;
+}

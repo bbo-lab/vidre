@@ -139,10 +139,10 @@ set(CMAKE_INSTALL_LUA_CDIR ${CMAKE_INSTALL_PREFIX}/${LUA_CDIR})
 set(CMAKE_INSTALL_LUA_LDIR ${CMAKE_INSTALL_PREFIX}/${LUA_LDIR})
 
 add_definitions(
-    -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\"
-    -DPROJECT_BINARY_DIR=\"${PROJECT_BINARY_DIR}\"
-    -DCMAKE_INSTALL_LUA_CDIR=\"${CMAKE_INSTALL_LUA_CDIR}\"
-    -DCMAKE_INSTALL_LUA_LDIR=\"${CMAKE_INSTALL_LUA_LDIR}\"
+    "-DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\""
+    "-DPROJECT_BINARY_DIR=\"${PROJECT_BINARY_DIR}\""
+    "-DCMAKE_INSTALL_LUA_CDIR=\"${CMAKE_INSTALL_LUA_CDIR}\""
+    "-DCMAKE_INSTALL_LUA_LDIR=\"${CMAKE_INSTALL_LUA_LDIR}\""
 )
 
 # BUILD #######################################################################
@@ -157,7 +157,7 @@ install(EXPORT VidreTargets-${Vidre_RELEASE}
     COMPONENT "development"
 )
 
-add_subdirectory(docs)
+add_subdirectory(docs) 
 
 install(FILES 
         LICENSE README.md

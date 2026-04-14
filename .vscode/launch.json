@@ -149,6 +149,15 @@
             "args": [ "-s" ],
             "environment": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "test.core.video",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test.core.video",
+            "args": [ "-s" ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

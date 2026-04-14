@@ -47,6 +47,7 @@ void vidre_lua_init(script::engine &g) {
 
     // FIXME
     g.require("vidre");
+    g.settop(0);    
 }
 
 vidre::script::engine vidre::script::g(vidre_lua_init);
@@ -111,6 +112,14 @@ void script::engine::require(const std::string &lib) {
     getglobal("require");
     pushlstring(lib.data(), lib.size());
     call(1);
+
+    for(lua_Integer i = 1; i <= gettop(); ++i) {
+        std::cerr << type(i) << ":" << std::string(type_name(type(i))) << std::endl;
+    }
+
+    if (type(-2) == lua::type::nil) {
+        throw lua::exception(*this,tostring(-1));
+    }
 }
 
 lua::status script::engine::exec(const std::string &s) {
