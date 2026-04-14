@@ -12,10 +12,12 @@ local tinsert = table.insert
 local tremove = table.remove
 local sformat = string.format
 
+-- Trim string (removing leading and trailing whitespaces).
 function string:trim()
     return (self:gsub("^%s*(.-)%s*$", "%1"))
 end
 
+-- Simple string quoting.
 function string:quote()
     local sq, dq = self:match("'"), self:match('"')
     if sq and dq then
@@ -27,6 +29,7 @@ function string:quote()
     end
 end
 
+-- Split a line of a CSV document into an array.
 local function csvsplit(line, sep)
     sep = sep or ","
 
@@ -48,17 +51,19 @@ local function csvsplit(line, sep)
     return fields
 end
 
+-- Create format of the internal database.
 local function makedb()
     return {
         columns = {
             "GROUP",       -- Group description
-            "V4L2",        -- V4L2 name (after removing "V4L2_*_FMT_" prefix)
             "FOURCC",      -- FourCC code
+            "V4L2",        -- V4L2 name (after removing "V4L2_*_FMT_" prefix)
             "VIDRE",       -- Vidre name (if different from V4L2)
             "USB3VISION",  -- USB3 Vision name (if different from V4L2)
             "GigEVision",  -- GigE Vision name (if different from V4L2)
-            "PACKED",      -- Bit packed.
             "ENDIAN",      -- Endianness (BE or empty)
+            "PACKED",      -- Bit packed.
+            "COMPRESSED",  -- Compressed format.
             "GRAY",        -- Grayscale format (if applicable)
             "DEPTH",       -- Bit depth
             "DESCRIPTION", -- Description of format
@@ -69,6 +74,7 @@ local function makedb()
     }
 end
 
+-- Add a new or update an existing row in the database.
 local function dbinsert(t, elem)
     if elem.GROUP and elem.GROUP ~= "" then
         tinsert(t.rows, { GROUP = elem.GROUP })
@@ -91,6 +97,7 @@ local function dbinsert(t, elem)
     end
 end
 
+-- Write database (CSV) to a file.
 local function dbwrite(t, filename, sep)
     sep = sep or ","
     local f = assert(io.open(filename, "w"))
@@ -264,6 +271,7 @@ do
     local f = assert(io.open(fourcc_hh, "w"))
 
     f:write("enum class fourcc : uint32_t {\n")
+    f:write("    invalid = static_cast<uint32_t>(-1),\n\n")
     for _, row in ipairs(db.rows) do
         if row.FOURCC and #(row.FOURCC) > 0 then
             local name = row.VIDRE

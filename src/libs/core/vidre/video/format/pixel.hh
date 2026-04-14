@@ -68,19 +68,19 @@ namespace vidre {
                 return fourcc_code(code) | (1u << 31);
             }
 
-            template<typename T>
+            template <typename T>
             inline constexpr bool fourcc_is_be(T code) noexcept {
                 return (static_cast<uint32_t>(code) & (1u << 31)) != 0;
             }
 
-            /** Enumeration of pixel formats (FourCC).
-             *
+            /** Enumeration of pixel formats.
              * @internal
-             * This list is was aut-generated with the helper/generate.lua tool. Note also, that
+             * This list is was auto-generated with the helper/generate.lua tool. Note also, that
              * name lookup is done in Lua (vidre.video.format.fourcc) and not in C++.
              * @endinternal
              * */
             enum class fourcc : uint32_t {
+                invalid = static_cast<uint32_t>(-1),
                 /* RGB formats (1 or 2 bytes per pixel) */
                 rgb332 = fourcc_code("RGB1"),
                 rgb444 = fourcc_code("R444"),
@@ -164,7 +164,8 @@ namespace vidre {
                 yuvx32 = fourcc_code("YUVX"),
                 m420 = fourcc_code("M420"),
                 yuv48_12 = fourcc_code("Y312"),
-                /* YCbCr packed format. For each Y2xx format, xx bits of valid data occupy the MSBs of the 16 bit components, and 16-xx bits of zero padding occupy the LSBs. */
+                /* YCbCr packed format. For each Y2xx format, xx bits of valid data occupy the MSBs of the 16 bit components, and
+                 * 16-xx bits of zero padding occupy the LSBs. */
                 y210 = fourcc_code("Y210"),
                 y212 = fourcc_code("Y212"),
                 y216 = fourcc_code("Y216"),
@@ -355,9 +356,33 @@ namespace vidre {
             };
 
             /** Pixel formats.
+             *
+             * There are several different types of pixel formats, and the list
+             * is quite long. While VidRe internally uses the FourCC convention
+             * (see e.g. [fourcc.org](https://fourcc.org/) to identify pixel formats,
+             * the interface provides a mapping between several standards.
+             * 
+             * @note Even though most pixel-formats may be recognized, that does
+             *       not necessarily mean that they can be decoded by VidRe!
+             *
+             * @see FFmpeg's [pixfmt.h](https://ffmpeg.org/doxygen/trunk/pixfmt_8h.html)
              * */
             class VIDRE_CORE_VISIBILITY pixel {
             public:
+                /** Supported pixel format conventions.
+                 * */
+                enum class convention {
+                    fourcc,      ///< FourCC code (default).
+                    usb3vision,  ///< USB3 Vision pixel format code (see [USB3 Vision
+                                 ///< standard](FIXME)).
+                    gigevision,  ///< GigE Vision pixel format code (see [GigE Vision
+                                 ///< standard](FIXME)).
+                };
+
+                template<convention Conv>
+                pixel from(const std::string &name) noexcept;
+
+
                 struct preferred {
                     static constexpr fourcc gray8 = fourcc::grey;
                     static constexpr fourcc gray10 = fourcc::y10;
@@ -377,6 +402,12 @@ namespace vidre {
                 fourcc format_{};
 
             public:
+                /** Check if valid.
+                 * */
+                bool valid() const noexcept {
+                    return format_ != fourcc::invalid;
+                }
+
                 operator fourcc() const noexcept {
                     return format_;
                 }
