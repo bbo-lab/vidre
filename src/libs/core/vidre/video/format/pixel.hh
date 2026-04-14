@@ -71,7 +71,6 @@ namespace vidre {
             /** Enumeration of pixel formats (FourCC).
              * */
             enum class fourcc : uint32_t {
-                /* ﻿Group description */
                 /* RGB formats (1 or 2 bytes per pixel) */
                 rgb332 = fourcc("RGB1"),       ///< RGB-3-3-2
                 rgb444 = fourcc("R444"),       ///< xxxxrrrr ggggbbbb
