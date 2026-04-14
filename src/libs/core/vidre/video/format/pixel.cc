@@ -26,24 +26,31 @@
 
 using namespace vidre;
 
+bool script_get_table(video::format::fourcc code) {
+    // look-up logic is stored in this module:
+    script::g.require("vidre.video.format.fourcc");
+    if (script::g.type(-1) != lua::type::table) 
+        log::fatal() << "vidre.video.format.fourcc not accessible";
+
+    // get entry for code:
+    script::g.pushinteger(static_cast<lua::integer>(code));
+    script::g.gettable(-2);
+
+    // success if we got a table back:
+    return script::g.type(-1) == lua::type::table;
+}
+
 std::string video::format::pixel::name() const noexcept {
     script::engine::stack top(script::g);
 
-    script::g.require("vidre.video.format.fourcc");
-    if (script::g.type(-1) != lua::type::table) {
-        log::fatal() << "vidre.video.format.fourcc not accessible";
-        return "nil";
+    if (not script_get_table(format_)) {
+        log::warning() << "unknown pixel format 0x" << std::format("{:08X}", static_cast<uint32_t>(format_)) << log::endl;
+        return {};
     }
-
-    script::g.pushinteger(static_cast<lua_Integer>(format_));  // @todo there should be lua::state::integer ...???
+    
+    // the info table _always_ contains the "name" field:
+    script::g.pushlstring("name", 4);
     script::g.gettable(-2);
 
-    const char *name = script::g.tostring(-1);
-
-    if (not name) {
-        log::warning() << "unknown pixel format";
-        return "unknown";
-    }
-    else
-        return name;
+    return script::g.tostring(-1);
 }

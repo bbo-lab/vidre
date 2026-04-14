@@ -54,11 +54,12 @@ local function makedb()
             "GROUP",       -- Group description
             "V4L2",        -- V4L2 name (after removing "V4L2_*_FMT_" prefix)
             "FOURCC",      -- FourCC code
-            "GRAY",        -- Grayscale format (if applicable)
             "VIDRE",       -- Vidre name (if different from V4L2)
             "USB3VISION",  -- USB3 Vision name (if different from V4L2)
             "GigEVision",  -- GigE Vision name (if different from V4L2)
+            "PACKED",      -- Bit packed.
             "ENDIAN",      -- Endianness (BE or empty)
+            "GRAY",        -- Grayscale format (if applicable)
             "DEPTH",       -- Bit depth
             "DESCRIPTION", -- Description of format
             "CONVERTER"    -- Suggested converter (if applicable)
@@ -298,37 +299,37 @@ do
 
     f:write("local fourcc = {\n")
 
-    local columns = { "NAME", "USB3VISION", "GigEVision", "DESCRIPTION", "CONVERTER" }
+    local columns = { "NAME", "USB3VISION", "GigEVision", "DESCRIPTION", "GRAY", "CONVERTER" }
     local use = {
         NAME = 'name',
         USB3VISION = 'USB3Vision',
         GigEVision = 'GigEVision',
         DESCRIPTION = 'description',
-        CONVERTER = 'converter'
+        CONVERTER = 'converter',
+        GRAY = 'gray'
     }
-            -- "GRAY",        -- Grayscale format (if applicable)
-            -- "ENDIAN",      -- Endianness (BE or empty)
-            -- "DEPTH",       -- Bit depth
-            -- "DESCRIPTION", -- Description of format
-            -- "CONVERTER"    -- Suggested converter (if applicable)
+
+    -- "ENDIAN",      -- Endianness (BE or empty)
+    -- "DEPTH",       -- Bit depth
+    -- "DESCRIPTION", -- Description of format
+    -- "CONVERTER"    -- Suggested converter (if applicable)
 
     for _, row in ipairs(db.rows) do
         if row.FOURCC and #(row.FOURCC) > 0 then
 
             local value = 0
             for i = 1, 4 do
-                value = value + row.FOURCC:byte(i) * (256 ^ (i - 1))
+                value = value + row.FOURCC:byte(i) * (256 ^ (4-i))
             end
             
             if row.ENDIAN and row.ENDIAN == "BE" then
                 value = value | 0x80000000
             end
 
-            f:write(string.format("    [%d] = {\n", value))
+            f:write(string.format("    [0x%08X] = {\n", value))
             for _, col in ipairs(columns) do
                 f:write(string.format("        %s = %s,\n", use[col], (row[col] and #(row[col]) > 0 and row[col]:quote() or "nil")))
             end
-            f:write(string.format("        GRAY = %s,\n", row.GRAY and "true" or "false"))
             f:write("    },\n")
         end
     end
@@ -337,15 +338,15 @@ do
 
     f:write([[
 
-fourcc.NAME = {}
-fourcc.USB3VISION = {}
+fourcc.name = {}
+fourcc.USB3Vision = {}
 fourcc.GigEVision = {}
 
 for k,v in pairs(fourcc) do
-    if v.NAME then
-        fourcc.NAME[v.NAME] = k
-        if v.USB3VISION then
-            fourcc.USB3VISION[v.USB3VISION] = k
+    if v.name then
+        fourcc.name[v.name] = k
+        if v.USB3Vision then
+            fourcc.USB3Vision[v.USB3Vision] = k
         end
         if v.GigEVision then
             fourcc.GigEVision[v.GigEVision] = k

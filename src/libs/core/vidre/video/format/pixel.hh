@@ -68,6 +68,11 @@ namespace vidre {
                 return fourcc_code(code) | (1u << 31);
             }
 
+            template<typename T>
+            inline constexpr bool fourcc_is_be(T code) noexcept {
+                return (static_cast<uint32_t>(code) & (1u << 31)) != 0;
+            }
+
             /** Enumeration of pixel formats (FourCC).
              *
              * @internal
@@ -159,8 +164,7 @@ namespace vidre {
                 yuvx32 = fourcc_code("YUVX"),
                 m420 = fourcc_code("M420"),
                 yuv48_12 = fourcc_code("Y312"),
-                /* YCbCr packed format. For each Y2xx format, xx bits of valid data occupy the MSBs of the 16 bit components, and
-                 * 16-xx bits of zero padding occupy the LSBs. */
+                /* YCbCr packed format. For each Y2xx format, xx bits of valid data occupy the MSBs of the 16 bit components, and 16-xx bits of zero padding occupy the LSBs. */
                 y210 = fourcc_code("Y210"),
                 y212 = fourcc_code("Y212"),
                 y216 = fourcc_code("Y216"),

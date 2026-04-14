@@ -32,6 +32,7 @@ LUA_API int vidre_lua_panic(lua_State *L) {
 
 void vidre_lua_init(script::engine &g) {
     g.atpanic(vidre_lua_panic);
+    script::engine::stack top(g);
 
     // set up package.path and package.cpath
     // FIXME this should be done initially in cmake/vidre/deps/lua.cmake
@@ -45,9 +46,8 @@ void vidre_lua_init(script::engine &g) {
         g.addpath(PROJECT_BINARY_DIR "/lib", "cpath");
     }
 
-    // FIXME
+    // load vidre module (which initializes the scripting sub-system)
     g.require("vidre");
-    g.settop(0);    
 }
 
 vidre::script::engine vidre::script::g(vidre_lua_init);
@@ -111,15 +111,7 @@ void script::engine::addpackage(const std::string &path, const std::string &fiel
 void script::engine::require(const std::string &lib) {
     getglobal("require");
     pushlstring(lib.data(), lib.size());
-    call(1);
-
-    for(lua_Integer i = 1; i <= gettop(); ++i) {
-        std::cerr << type(i) << ":" << std::string(type_name(type(i))) << std::endl;
-    }
-
-    if (type(-2) == lua::type::nil) {
-        throw lua::exception(*this,tostring(-1));
-    }
+    call(1,1);
 }
 
 lua::status script::engine::exec(const std::string &s) {

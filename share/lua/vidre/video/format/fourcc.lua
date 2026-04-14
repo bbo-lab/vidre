@@ -1,1979 +1,1979 @@
 local fourcc = {
-    [826427218] = {
+    [0x52474231] = {
         name = "rgb332",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-3-3-2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875836498] = {
+    [0x52343434] = {
         name = "rgb444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "xxxxrrrr ggggbbbb",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093121] = {
+    [0x41523132] = {
         name = "argb444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "aaaarrrr ggggbbbb",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093144] = {
+    [0x58523132] = {
         name = "xrgb444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "xxxxrrrr ggggbbbb",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842088786] = {
+    [0x52413132] = {
         name = "rgba444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "rrrrgggg bbbbaaaa",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842094674] = {
+    [0x52583132] = {
         name = "rgbx444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "rrrrgggg bbbbxxxx",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842089025] = {
+    [0x41423132] = {
         name = "abgr444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "aaaabbbb ggggrrrr",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842089048] = {
+    [0x58423132] = {
         name = "xbgr444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "xxxxbbbb ggggrrrr",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842088775] = {
+    [0x47413132] = {
         name = "bgra444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "bbbbgggg rrrraaaa",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842094658] = {
+    [0x42583132] = {
         name = "bgrx444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "bbbbgggg rrrrxxxx",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1329743698] = {
+    [0x5247424F] = {
         name = "rgb555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-5-5-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892424769] = {
+    [0x41523135] = {
         name = "argb555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ARGB-1-5-5-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892424792] = {
+    [0x58523135] = {
         name = "xrgb555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "XRGB-1-5-5-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892420434] = {
+    [0x52413135] = {
         name = "rgba555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGBA-5-5-5-1",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892426322] = {
+    [0x52583135] = {
         name = "rgbx555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGBX-5-5-5-1",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892420673] = {
+    [0x41423135] = {
         name = "abgr555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ABGR-1-5-5-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892420696] = {
+    [0x58423135] = {
         name = "xbgr555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "XBGR-1-5-5-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892420418] = {
+    [0x42413135] = {
         name = "bgra555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGRA-5-5-5-1",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892426306] = {
+    [0x42583135] = {
         name = "bgrx555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGRX-5-5-5-1",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1346520914] = {
+    [0x52474250] = {
         name = "rgb565",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-5-6-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1363298130] = {
+    [0x52474251] = {
         name = "rgb555x",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-5-5-5 BE",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [3039908417] = {
+    [0xC1523135] = {
         name = "argb555x",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ARGB-5-5-5 BE",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [3039908440] = {
+    [0xD8523135] = {
         name = "xrgb555x",
         USB3Vision = nil,
         GigEVision = nil,
         description = "XRGB-5-5-5 BE",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1380075346] = {
+    [0x52474252] = {
         name = "rgb565x",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-5-6-5 BE",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1213351746] = {
+    [0x42475248] = {
         name = "bgr666",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGR-6-6-6",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [861030210] = {
+    [0x42475233] = {
         name = "bgr24",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGR-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [859981650] = {
+    [0x52474233] = {
         name = "rgb24",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [877807426] = {
+    [0x42475234] = {
         name = "bgr32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGR-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875713089] = {
+    [0x41523234] = {
         name = "abgr32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGRA-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875713112] = {
+    [0x58523234] = {
         name = "xbgr32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGRX-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875708754] = {
+    [0x52413234] = {
         name = "bgra32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ABGR-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875714642] = {
+    [0x52583234] = {
         name = "bgrx32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "XBGR-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [876758866] = {
+    [0x52474234] = {
         name = "rgb32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGB-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875708993] = {
+    [0x41423234] = {
         name = "rgba32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGBA-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875709016] = {
+    [0x58423234] = {
         name = "rgbx32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGBX-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875708738] = {
+    [0x42413234] = {
         name = "argb32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ARGB-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875714626] = {
+    [0x42583234] = {
         name = "xrgb32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "XRGB-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808671314] = {
+    [0x52583330] = {
         name = "rgbx1010102",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGBX-10-10-10-2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808665426] = {
+    [0x52413330] = {
         name = "rgba1010102",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGBA-10-10-10-2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808669761] = {
+    [0x41523330] = {
         name = "argb2101010",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ARGB-2-10-10-10",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842085186] = {
+    [0x42333132] = {
         name = "bgr48_12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGR 12-bit per component",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842085442] = {
+    [0x42343132] = {
         name = "abgr64_12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGRA 12-bit per component",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1497715271] = {
+    [0x47524559] = {
         name = "grey",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [540291161] = {
+    [0x59303420] = {
         name = "y4",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [540422233] = {
+    [0x59303620] = {
         name = "y6",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [540029273] = {
+    [0x59313020] = {
         name = "y10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [540160345] = {
+    [0x59313220] = {
         name = "y12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [842084441] = {
+    [0x59303132] = {
         name = "y012",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [540291417] = {
+    [0x59313420] = {
         name = "y14",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [540422489] = {
+    [0x59313620] = {
         name = "y16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [2687906137] = {
+    [0xD9313620] = {
         name = "y16_be",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale BE",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [1110454617] = {
+    [0x59313042] = {
         name = "y10bpack",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale bit-packed",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [1345335641] = {
+    [0x59313050] = {
         name = "y10p",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale, MIPI RAW10 packed",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [2033414249] = {
+    [0x69703379] = {
         name = "ipu3_y10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IPU3 packed 10-bit greyscale",
+        gray = "1",
         converter = nil,
-        GRAY = true,
     },
-    [944521552] = {
+    [0x50414C38] = {
         name = "pal8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "8-bit palette",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [540563029] = {
+    [0x55563820] = {
         name = "uv8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "UV 4:4",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1448695129] = {
+    [0x59555956] = {
         name = "yuyv",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1448434009] = {
+    [0x59595556] = {
         name = "yyuv",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1431918169] = {
+    [0x59565955] = {
         name = "yvyu",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1498831189] = {
+    [0x55595659] = {
         name = "uyvy",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1498765654] = {
+    [0x56595559] = {
         name = "vyuy",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1345401945] = {
+    [0x59343150] = {
         name = "y41p",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:1:1",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875836505] = {
+    [0x59343434] = {
         name = "yuv444",
         USB3Vision = nil,
         GigEVision = nil,
         description = "xxxxyyyy uuuuvvvv",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1331058009] = {
+    [0x5955564F] = {
         name = "yuv555",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV-5-5-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1347835225] = {
+    [0x59555650] = {
         name = "yuv565",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV-5-6-5",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [861295961] = {
+    [0x59555633] = {
         name = "yuv24",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [878073177] = {
+    [0x59555634] = {
         name = "yuv32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1448433985] = {
+    [0x41595556] = {
         name = "ayuv32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "AYUV-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1448434008] = {
+    [0x58595556] = {
         name = "xyuv32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "XYUV-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1096373590] = {
+    [0x56555941] = {
         name = "vuya32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "VUYA-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1482249558] = {
+    [0x56555958] = {
         name = "vuyx32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "VUYX-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1096176985] = {
+    [0x59555641] = {
         name = "yuva32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUVA-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1482052953] = {
+    [0x59555658] = {
         name = "yuvx32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUVX-8-8-8-8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808596557] = {
+    [0x4D343230] = {
         name = "m420",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:2:0 2 lines y, 1 line uv interleaved",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842085209] = {
+    [0x59333132] = {
         name = "yuv48_12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:4:4 12-bit per component",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808530521] = {
+    [0x59323130] = {
         name = "y210",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUYV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842084953] = {
+    [0x59323132] = {
         name = "y212",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUYV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909193817] = {
+    [0x59323136] = {
         name = "y216",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUYV 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842094158] = {
+    [0x4E563132] = {
         name = "nv12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825382478] = {
+    [0x4E563231] = {
         name = "nv21",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CrCb 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909203022] = {
+    [0x4E563136] = {
         name = "nv16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825644622] = {
+    [0x4E563631] = {
         name = "nv61",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CrCb 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875714126] = {
+    [0x4E563234] = {
         name = "nv24",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:4:4",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842290766] = {
+    [0x4E563432] = {
         name = "nv42",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CrCb 4:4:4",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808530000] = {
+    [0x50303130] = {
         name = "p010",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 10-bit per component",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842084432] = {
+    [0x50303132] = {
         name = "p012",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 12-bit per component",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842091854] = {
+    [0x4E4D3132] = {
         name = "nv12m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825380174] = {
+    [0x4E4D3231] = {
         name = "nv21m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CrCb 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909200718] = {
+    [0x4E4D3136] = {
         name = "nv16m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825642318] = {
+    [0x4E4D3631] = {
         name = "nv61m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CrCb 4:2:2",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842091856] = {
+    [0x504D3132] = {
         name = "p012m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 12-bit per component",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [961959257] = {
+    [0x59555639] = {
         name = "yuv410",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:1:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [961893977] = {
+    [0x59565539] = {
         name = "yvu410",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU 4:1:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1345401140] = {
+    [0x34313150] = {
         name = "yuv411p",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU411 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093913] = {
+    [0x59553132] = {
         name = "yuv420",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842094169] = {
+    [0x59563132] = {
         name = "yvu420",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1345466932] = {
+    [0x34323250] = {
         name = "yuv422p",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU422 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842091865] = {
+    [0x594D3132] = {
         name = "yuv420m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV420 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825380185] = {
+    [0x594D3231] = {
         name = "yvu420m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU420 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909200729] = {
+    [0x594D3136] = {
         name = "yuv422m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV422 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825642329] = {
+    [0x594D3631] = {
         name = "yvu422m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU422 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875711833] = {
+    [0x594D3234] = {
         name = "yuv444m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV444 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842288473] = {
+    [0x594D3432] = {
         name = "yvu444m",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YVU444 planar",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093654] = {
+    [0x56543132] = {
         name = "nv12_4l4",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0  4x4 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842091848] = {
+    [0x484D3132] = {
         name = "nv12_16l16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 16x16 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093651] = {
+    [0x53543132] = {
         name = "nv12_32l32",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 32x32 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892425302] = {
+    [0x56543135] = {
         name = "nv15_4l4",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 10-bit 4x4 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808530004] = {
+    [0x54303130] = {
         name = "p010_4l4",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 10-bit 4x4 macroblocks",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093633] = {
+    [0x41543132] = {
         name = "nv12_8l128",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 8x128 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [2989578305] = {
+    [0xC1583132] = {
         name = "nv12_10be_8l128",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 10-bit 8x128 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842091860] = {
+    [0x544D3132] = {
         name = "nv12mt",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 64x32 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842091862] = {
+    [0x564D3132] = {
         name = "nv12mt_16x16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 16x16 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842088782] = {
+    [0x4E413132] = {
         name = "nv12m_8l128",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 8x128 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [2989577294] = {
+    [0xCE543132] = {
         name = "nv12m_10be_8l128",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Y/CbCr 4:2:0 10-bit 8x128 tiles",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825770306] = {
+    [0x42413831] = {
         name = "sbggr8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGBG.. GRGR..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1196573255] = {
+    [0x47425247] = {
         name = "sgbrg8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GBGB.. RGRG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1195528775] = {
+    [0x47524247] = {
         name = "sgrbg8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GRGR.. BGBG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1111967570] = {
+    [0x52474742] = {
         name = "srggb8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGRG.. GBGB..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808535874] = {
+    [0x42473130] = {
         name = "sbggr10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGBG.. GRGR..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808534599] = {
+    [0x47423130] = {
         name = "sgbrg10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GBGB.. RGRG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808534338] = {
+    [0x42413130] = {
         name = "sgrbg10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GRGR.. BGBG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808535890] = {
+    [0x52473130] = {
         name = "srggb10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGRG.. GBGB..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1094795888] = {
+    [0x70424141] = {
         name = "sbggr10p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1094797168] = {
+    [0x70474141] = {
         name = "sgbrg10p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1094805360] = {
+    [0x70674141] = {
         name = "sgrbg10p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1094799984] = {
+    [0x70524141] = {
         name = "srggb10p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943800929] = {
+    [0x61424138] = {
         name = "sbggr10alaw8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943802209] = {
+    [0x61474138] = {
         name = "sgbrg10alaw8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943810401] = {
+    [0x61674138] = {
         name = "sgrbg10alaw8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943805025] = {
+    [0x61524138] = {
         name = "srggb10alaw8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943800930] = {
+    [0x62424138] = {
         name = "sbggr10dpcm8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943802210] = {
+    [0x62474138] = {
         name = "sgbrg10dpcm8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808535106] = {
+    [0x42443130] = {
         name = "sgrbg10dpcm8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [943805026] = {
+    [0x62524138] = {
         name = "srggb10dpcm8",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842090306] = {
+    [0x42473132] = {
         name = "sbggr12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGBG.. GRGR..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842089031] = {
+    [0x47423132] = {
         name = "sgbrg12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GBGB.. RGRG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842088770] = {
+    [0x42413132] = {
         name = "sgrbg12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GRGR.. BGBG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842090322] = {
+    [0x52473132] = {
         name = "srggb12",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGRG.. GBGB..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1128481392] = {
+    [0x70424343] = {
         name = "sbggr12p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1128482672] = {
+    [0x70474343] = {
         name = "sgbrg12p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1128490864] = {
+    [0x70674343] = {
         name = "sgrbg12p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1128485488] = {
+    [0x70524343] = {
         name = "srggb12p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875644738] = {
+    [0x42473134] = {
         name = "sbggr14",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGBG.. GRGR..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875643463] = {
+    [0x47423134] = {
         name = "sgbrg14",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GBGB.. RGRG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875647559] = {
+    [0x47523134] = {
         name = "sgrbg14",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GRGR.. BGBG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875644754] = {
+    [0x52473134] = {
         name = "srggb14",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGRG.. GBGB..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1162166896] = {
+    [0x70424545] = {
         name = "sbggr14p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1162168176] = {
+    [0x70474545] = {
         name = "sgbrg14p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1162176368] = {
+    [0x70674545] = {
         name = "sgrbg14p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1162170992] = {
+    [0x70524545] = {
         name = "srggb14p",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [844257602] = {
+    [0x42595232] = {
         name = "sbggr16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BGBG.. GRGR..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909197895] = {
+    [0x47423136] = {
         name = "sgbrg16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GBGB.. RGRG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909201991] = {
+    [0x47523136] = {
         name = "sgrbg16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "GRGR.. BGBG..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909199186] = {
+    [0x52473136] = {
         name = "srggb16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RGRG.. GBGB..",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [861295432] = {
+    [0x48535633] = {
         name = "hsv24",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [878072648] = {
+    [0x48535634] = {
         name = "hsv32",
         USB3Vision = nil,
         GigEVision = nil,
         description = nil,
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1196444237] = {
+    [0x4D4A5047] = {
         name = "mjpeg",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Motion-JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1195724874] = {
+    [0x4A504547] = {
         name = "jpeg",
         USB3Vision = nil,
         GigEVision = nil,
         description = "JFIF JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1685288548] = {
+    [0x64767364] = {
         name = "dv",
         USB3Vision = nil,
         GigEVision = nil,
         description = "1394",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1195724877] = {
+    [0x4D504547] = {
         name = "mpeg",
         USB3Vision = nil,
         GigEVision = nil,
         description = "MPEG-1/2/4 Multiplexed",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875967048] = {
+    [0x48323634] = {
         name = "h264",
         USB3Vision = nil,
         GigEVision = nil,
         description = "H264 with start codes",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [826496577] = {
+    [0x41564331] = {
         name = "h264_no_sc",
         USB3Vision = nil,
         GigEVision = nil,
         description = "H264 without start codes",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875967053] = {
+    [0x4D323634] = {
         name = "h264_mvc",
         USB3Vision = nil,
         GigEVision = nil,
         description = "H264 MVC",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [859189832] = {
+    [0x48323633] = {
         name = "h263",
         USB3Vision = nil,
         GigEVision = nil,
         description = "H263",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [826757197] = {
+    [0x4D504731] = {
         name = "mpeg1",
         USB3Vision = nil,
         GigEVision = nil,
         description = "MPEG-1 ES",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [843534413] = {
+    [0x4D504732] = {
         name = "mpeg2",
         USB3Vision = nil,
         GigEVision = nil,
         description = "MPEG-2 ES",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1395803981] = {
+    [0x4D473253] = {
         name = "mpeg2_slice",
         USB3Vision = nil,
         GigEVision = nil,
         description = "MPEG-2 parsed slice data",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [877088845] = {
+    [0x4D504734] = {
         name = "mpeg4",
         USB3Vision = nil,
         GigEVision = nil,
         description = "MPEG-4 part 2 ES",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1145656920] = {
+    [0x58564944] = {
         name = "xvid",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Xvid",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1194410838] = {
+    [0x56433147] = {
         name = "vc1_annex_g",
         USB3Vision = nil,
         GigEVision = nil,
         description = "SMPTE 421M Annex G compliant stream",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1278296918] = {
+    [0x5643314C] = {
         name = "vc1_annex_l",
         USB3Vision = nil,
         GigEVision = nil,
         description = "SMPTE 421M Annex L compliant stream",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808996950] = {
+    [0x56503830] = {
         name = "vp8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "VP8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1178095702] = {
+    [0x56503846] = {
         name = "vp8_frame",
         USB3Vision = nil,
         GigEVision = nil,
         description = "VP8 parsed frame",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [809062486] = {
+    [0x56503930] = {
         name = "vp9",
         USB3Vision = nil,
         GigEVision = nil,
         description = "VP9",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1178161238] = {
+    [0x56503946] = {
         name = "vp9_frame",
         USB3Vision = nil,
         GigEVision = nil,
         description = "VP9 parsed frame",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1129727304] = {
+    [0x48455643] = {
         name = "hevc",
         USB3Vision = nil,
         GigEVision = nil,
         description = "HEVC aka H.265",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1414027078] = {
+    [0x46574854] = {
         name = "fwht",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Fast Walsh Hadamard Transform (vicodec)",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1213679187] = {
+    [0x53465748] = {
         name = "fwht_stateless",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Stateless FWHT (vicodec)",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875967059] = {
+    [0x53323634] = {
         name = "h264_slice",
         USB3Vision = nil,
         GigEVision = nil,
         description = "H264 parsed slices",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892744275] = {
+    [0x53323635] = {
         name = "hevc_slice",
         USB3Vision = nil,
         GigEVision = nil,
         description = "HEVC parsed slices",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1177638465] = {
+    [0x41563146] = {
         name = "av1_frame",
         USB3Vision = nil,
         GigEVision = nil,
         description = "AV1 parsed frame",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [810242131] = {
+    [0x53504B30] = {
         name = "spk",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Sorenson Spark",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808670802] = {
+    [0x52563330] = {
         name = "rv30",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RealVideo 8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808736338] = {
+    [0x52563430] = {
         name = "rv40",
         USB3Vision = nil,
         GigEVision = nil,
         description = "RealVideo 9 & 10",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1095323715] = {
+    [0x43504941] = {
         name = "cpia1",
         USB3Vision = nil,
         GigEVision = nil,
         description = "cpia1 YUV",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1096175191] = {
+    [0x574E5641] = {
         name = "wnva",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Winnov hw compress",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808532307] = {
+    [0x53393130] = {
         name = "sn9c10x",
         USB3Vision = nil,
         GigEVision = nil,
         description = "SN9C10x compression",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808597843] = {
+    [0x53393230] = {
         name = "sn9c20x_i420",
         USB3Vision = nil,
         GigEVision = nil,
         description = "SN9C20x YUV 4:2:0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [826496848] = {
+    [0x50574331] = {
         name = "pwc1",
         USB3Vision = nil,
         GigEVision = nil,
         description = "pwc older webcam",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [843274064] = {
+    [0x50574332] = {
         name = "pwc2",
         USB3Vision = nil,
         GigEVision = nil,
         description = "pwc newer webcam",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892483141] = {
+    [0x45363235] = {
         name = "et61x251",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ET61X251 compression",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825242963] = {
+    [0x53353031] = {
         name = "spca501",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUYV per line",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [892351827] = {
+    [0x53353035] = {
         name = "spca505",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YYUV per line",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942683475] = {
+    [0x53353038] = {
         name = "spca508",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUVY per line",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825636179] = {
+    [0x53353631] = {
         name = "spca561",
         USB3Vision = nil,
         GigEVision = nil,
         description = "compressed GBRG bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [925905488] = {
+    [0x50323037] = {
         name = "pac207",
         USB3Vision = nil,
         GigEVision = nil,
         description = "compressed BGGR bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808530765] = {
+    [0x4D333130] = {
         name = "mr97310a",
         USB3Vision = nil,
         GigEVision = nil,
         description = "compressed BGGR bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808602698] = {
+    [0x4A4C3230] = {
         name = "jl2005bcd",
         USB3Vision = nil,
         GigEVision = nil,
         description = "compressed RGGB bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1481527123] = {
+    [0x534F4E58] = {
         name = "sn9c2028",
         USB3Vision = nil,
         GigEVision = nil,
         description = "compressed GBRG bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1127559225] = {
+    [0x39303543] = {
         name = "sq905c",
         USB3Vision = nil,
         GigEVision = nil,
         description = "compressed RGGB bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1196444240] = {
+    [0x504A5047] = {
         name = "pjpg",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Pixart 73xx JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825308495] = {
+    [0x4F353131] = {
         name = "ov511",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ov511 JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942749007] = {
+    [0x4F353138] = {
         name = "ov518",
         USB3Vision = nil,
         GigEVision = nil,
         description = "ov518 JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808990291] = {
+    [0x53363830] = {
         name = "stv0680",
         USB3Vision = nil,
         GigEVision = nil,
         description = "stv0680 bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808865108] = {
+    [0x544D3630] = {
         name = "tm6000",
         USB3Vision = nil,
         GigEVision = nil,
         description = "tm5600/tm60x0",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1448364355] = {
+    [0x43495456] = {
         name = "cit_yyvyuy",
         USB3Vision = nil,
         GigEVision = nil,
         description = "one line of Y then 1 line of VYUY",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1229868875] = {
+    [0x4B4F4E49] = {
         name = "konica420",
         USB3Vision = nil,
         GigEVision = nil,
         description = "YUV420 planar in blocks of 256 pixels",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1279742026] = {
+    [0x4A50474C] = {
         name = "jpgl",
         USB3Vision = nil,
         GigEVision = nil,
         description = "JPEG-Lite",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825242707] = {
+    [0x53343031] = {
         name = "se401",
         USB3Vision = nil,
         GigEVision = nil,
         description = "se401 janggu compressed rgb",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1229141331] = {
+    [0x53354349] = {
         name = "s5c_uyvy_jpg",
         USB3Vision = nil,
         GigEVision = nil,
         description = "S5C73M3 interleaved UYVY/JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [541669465] = {
+    [0x59384920] = {
         name = "y8i",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale 8-bit L/R interleaved",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1228026201] = {
+    [0x59313249] = {
         name = "y12i",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Greyscale 12-bit L/R interleaved",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [540422490] = {
+    [0x5A313620] = {
         name = "z16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Depth data 16-bit",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825381965] = {
+    [0x4D543231] = {
         name = "mt21c",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Mediatek compressed block mode",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [825380173] = {
+    [0x4D4D3231] = {
         name = "mm21",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Mediatek 8-bit block mode, two non-contiguous planes",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1412584525] = {
+    [0x4D543254] = {
         name = "mt2110t",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Mediatek 10-bit block tile mode",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1379030093] = {
+    [0x4D543252] = {
         name = "mt2110r",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Mediatek 10-bit block raster mode",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1230655049] = {
+    [0x494E5A49] = {
         name = "inzi",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Intel Planar Greyscale 10-bit and Depth 16-bit",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [877022787] = {
+    [0x434E4634] = {
         name = "cnf4",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Intel 4-bit packed depth confidence information",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875710792] = {
+    [0x48493234] = {
         name = "hi240",
         USB3Vision = nil,
         GigEVision = nil,
         description = "BTTV 8-bit dithered RGB",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1127755857] = {
+    [0x51303843] = {
         name = "qc08c",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Qualcomm 8-bit compressed",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1127231825] = {
+    [0x51313043] = {
         name = "qc10c",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Qualcomm 10-bit compressed",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1196444225] = {
+    [0x414A5047] = {
         name = "ajpg",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Aspeed JPEG",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1280596040] = {
+    [0x4858544C] = {
         name = "hextile",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Hextile compressed",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1647538281] = {
+    [0x69703362] = {
         name = "ipu3_sbggr10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IPU3 packed 10-bit BGGR bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1731424361] = {
+    [0x69703367] = {
         name = "ipu3_sgbrg10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IPU3 packed 10-bit GBRG bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1194553449] = {
+    [0x69703347] = {
         name = "ipu3_sgrbg10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IPU3 packed 10-bit GRBG bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1915973737] = {
+    [0x69703372] = {
         name = "ipu3_srggb10",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IPU3 packed 10-bit RGGB bayer",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942691651] = {
+    [0x43553038] = {
         name = "cu8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IQ u8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909202755] = {
+    [0x43553136] = {
         name = "cu16le",
         USB3Vision = nil,
         GigEVision = nil,
         description = "IQ u16le",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942691139] = {
+    [0x43533038] = {
         name = "cs8",
         USB3Vision = nil,
         GigEVision = nil,
         description = "complex s8",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [875647811] = {
+    [0x43533134] = {
         name = "cs14le",
         USB3Vision = nil,
         GigEVision = nil,
         description = "complex s14le",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [842093906] = {
+    [0x52553132] = {
         name = "ru12le",
         USB3Vision = nil,
         GigEVision = nil,
         description = "real u12le",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909198160] = {
+    [0x50433136] = {
         name = "pcu16be",
         USB3Vision = nil,
         GigEVision = nil,
         description = "planar complex u16be",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942752592] = {
+    [0x50433138] = {
         name = "pcu18be",
         USB3Vision = nil,
         GigEVision = nil,
         description = "planar complex u18be",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [808600400] = {
+    [0x50433230] = {
         name = "pcu20be",
         USB3Vision = nil,
         GigEVision = nil,
         description = "planar complex u20be",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909198420] = {
+    [0x54443136] = {
         name = "delta_td16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "16-bit signed deltas",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942687316] = {
+    [0x54443038] = {
         name = "delta_td08",
         USB3Vision = nil,
         GigEVision = nil,
         description = "8-bit signed deltas",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [909202772] = {
+    [0x54553136] = {
         name = "tu16",
         USB3Vision = nil,
         GigEVision = nil,
         description = "16-bit unsigned touch data",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [942691668] = {
+    [0x54553038] = {
         name = "tu08",
         USB3Vision = nil,
         GigEVision = nil,
         description = "8-bit unsigned touch data",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1213223766] = {
+    [0x56535048] = {
         name = "vsp1_hgo",
         USB3Vision = nil,
         GigEVision = nil,
         description = "R-Car VSP1 1-D Histogram",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1414550358] = {
+    [0x56535054] = {
         name = "vsp1_hgt",
         USB3Vision = nil,
         GigEVision = nil,
         description = "R-Car VSP1 2-D Histogram",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1212372565] = {
+    [0x55564348] = {
         name = "uvc",
         USB3Vision = nil,
         GigEVision = nil,
         description = "UVC Payload Header metadata",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1482175556] = {
+    [0x44345858] = {
         name = "d4xx",
         USB3Vision = nil,
         GigEVision = nil,
         description = "D4XX Payload Header metadata",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1146505558] = {
+    [0x56495644] = {
         name = "vivid",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Vivid Metadata",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1345407826] = {
+    [0x524B3150] = {
         name = "rk_isp1_params",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Rockchip ISP1 3A Parameters",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
-    [1395739474] = {
+    [0x524B3153] = {
         name = "rk_isp1_stat_3a",
         USB3Vision = nil,
         GigEVision = nil,
         description = "Rockchip ISP1 3A Statistics",
+        gray = nil,
         converter = nil,
-        GRAY = true,
     },
 }
 
