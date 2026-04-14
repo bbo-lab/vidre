@@ -4,10 +4,12 @@
 
 @subpage dev-overview
 
+@subpage dev-goals
+
 @subpage dev-style
 
-@subpage dev-documentation
+@subpage dev-docs
 
-@subpage dev-goals
+@subpage dev-attribution
 
 */

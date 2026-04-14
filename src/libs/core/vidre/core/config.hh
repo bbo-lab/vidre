@@ -80,14 +80,14 @@ namespace vidre {
  * The header <bit> needs to be included for this macro to work.
  * @endinternal
  * */
-#define VIDRE_HAVE_BIGENDIAN (std::endian::native == std::endian::big)
+#define VIDRE_IS_BIGENDIAN (std::endian::native == std::endian::big)
 
 /** Host is little-endian
  * @internal
  * The header <bit> needs to be included for this macro to work.
  * @endinternal
  * */
-#define VIDRE_HAVE_LITTLEENDIAN (std::endian::native == std::endian::little)
+#define VIDRE_IS_LITTLEENDIAN (std::endian::native == std::endian::little)
 
 ///@cond
 #if defined(linux) || defined(__linux__) || defined(__linux)

@@ -1,0 +1,20 @@
+/** @page dev-attribution Attribution
+
+The [copyright holder](https://mpinb.mpg.de/) of this work is the:
+
+    Max-Planck-Institute for Neurobiology of Behavior — caesar, Bonn, Germany
+
+This work is published under the **GNU General Public License version 3** (or, 
+at your option, any later version).
+
+In addition to the copyright holder, contributing authors are credited wherever 
+appropriate. The framework is primarily developed by scientists for scientific purposes.
+Therefore, any type of contribution should be acknowledged.
+
+Both human and artificial contributions must be clearly indicated — either through 
+designated authorship or in the form of an acknowledgement.
+
+<b>Example</b>:<br/>
+[vidre/util/shared.hh](https://github.com/bbo-lab/vidre/blob/main/src/libs/core/vidre/util/shared.hh)
+
+*/

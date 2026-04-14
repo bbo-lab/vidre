@@ -1,8 +1,6 @@
-/** @page dev-style Coding style and documentation
+/** @page dev-style Coding style
 
-## Coding style
-
-### C++
+## C++
 
 For C++, the coding style is provided in form of a <tt>.clang-format</tt> file. The 
 major rules are:
@@ -103,18 +101,12 @@ bool style::ExampleClass::checkCondition(int value) const {
 }
 @endcode
 
-### Lua
+## Lua
 
 @TBD{Coding style for Lua must be decided.}
 
-## Code documentation
+## Python
 
-The code is documented using Doxygen for C++. @TBD{For Lua scripting mark-down
-files are used.} New developers are advised to observe existing code.
-
-To organize the structure, as well as to provide general documentation, '*.dox'
-files can be found throughout the source code tree. A good example is
-<a href="https://github.com/bbo-lab/vidre/blob/main/src/libs/core/vidre/program.hh">src/libs/core/vidre/program.hh</a>
-(note the "details" section).
+@TBD{Coding style for Python must be decided.}
 
 */

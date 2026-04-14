@@ -60,7 +60,10 @@ vidre_library(vidrecore SHARED
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/video.hh vidre/video.cc
             # vidre/video/common.hh
-            # vidre/video/pixel.hh vidre/video/pixel.cc
+            # vidre/video/format.hh vidre/video/format.cc
+                # vidre/video/format/geometry.hh vidre/video/format/geometry.cc
+                # vidre/video/format/pixel.hh vidre/video/format/pixel.cc
+                # vidre/video/format/color.hh vidre/video/format/color.cc
             # vidre/video/frame.hh vidre/video/frame.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/exception.hh

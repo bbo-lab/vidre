@@ -40,5 +40,9 @@ patches/
 !.vscode/tasks.json
 !.vscode/launch.json
 
+# Libreoffice locks
+*.~lock*
+*.~lock.*#
+
 # benchmarks
 *.tmp

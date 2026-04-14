@@ -46,6 +46,8 @@
 #include <cstdint>
 #include <cstddef>
 
+#include <linux/videodev2.h>
+
 namespace vidre {
 
     namespace video {

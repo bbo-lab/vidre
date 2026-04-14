@@ -1,0 +1,272 @@
+﻿Group description,V4L2 name,VidRe name,packed,preferred,FourCC,Endianness,Bit depth,Description
+RGB formats (1 or 2 bytes per pixel) ,,,,,,,,
+,PIX_FMT_RGB332,,,,RGB1,BE,8,RGB-3-3-2
+,PIX_FMT_RGB444,,,,R444,BE,16,xxxxrrrr ggggbbbb 
+,PIX_FMT_ARGB444,,,,AR12,BE,16,aaaarrrr ggggbbbb 
+,PIX_FMT_XRGB444,,,,XR12,BE,16,xxxxrrrr ggggbbbb 
+,PIX_FMT_RGBA444,,,,RA12,BE,16,rrrrgggg bbbbaaaa 
+,PIX_FMT_RGBX444,,,,RX12,BE,16,rrrrgggg bbbbxxxx 
+,PIX_FMT_ABGR444,,,,AB12,BE,16,aaaabbbb ggggrrrr 
+,PIX_FMT_XBGR444,,,,XB12,BE,16,xxxxbbbb ggggrrrr 
+,PIX_FMT_BGRA444,,,,GA12,BE,16,bbbbgggg rrrraaaa 
+,PIX_FMT_BGRX444,,,,BX12,BE,16,bbbbgggg rrrrxxxx 
+,PIX_FMT_RGB555,,,,RGBO,BE,16,RGB-5-5-5     
+,PIX_FMT_ARGB555,,,,AR15,BE,16,ARGB-1-5-5-5  
+,PIX_FMT_XRGB555,,,,XR15,BE,16,XRGB-1-5-5-5  
+,PIX_FMT_RGBA555,,,,RA15,BE,16,RGBA-5-5-5-1  
+,PIX_FMT_RGBX555,,,,RX15,BE,16,RGBX-5-5-5-1  
+,PIX_FMT_ABGR555,,,,AB15,BE,16,ABGR-1-5-5-5  
+,PIX_FMT_XBGR555,,,,XB15,BE,16,XBGR-1-5-5-5  
+,PIX_FMT_BGRA555,,,,BA15,BE,16,BGRA-5-5-5-1  
+,PIX_FMT_BGRX555,,,,BX15,BE,16,BGRX-5-5-5-1  
+,PIX_FMT_RGB565,,,,RGBP,BE,16,RGB-5-6-5     
+,PIX_FMT_RGB555X,,,,RGBQ,BE,16,RGB-5-5-5 BE  
+,PIX_FMT_ARGB555X,,,,AR15,BE,16,ARGB-5-5-5 BE 
+,PIX_FMT_XRGB555X,,,,XR15,BE,16,XRGB-5-5-5 BE 
+,PIX_FMT_RGB565X,,,,RGBR,BE,16,RGB-5-6-5 BE  
+RGB formats (3 or 4 bytes per pixel) ,,,,,,,,
+,PIX_FMT_BGR666,,,,BGRH,BE,18,BGR-6-6-6  
+,PIX_FMT_BGR24,,,,BGR3,BE,24,BGR-8-8-8     
+,PIX_FMT_RGB24,,,x,RGB3,BE,24,RGB-8-8-8     
+,PIX_FMT_BGR32,,,x,BGR4,BE,32,BGR-8-8-8-8   
+,PIX_FMT_ABGR32,,,,AR24,BE,32,BGRA-8-8-8-8  
+,PIX_FMT_XBGR32,,,,XR24,BE,32,BGRX-8-8-8-8  
+,PIX_FMT_BGRA32,,,,RA24,BE,32,ABGR-8-8-8-8  
+,PIX_FMT_BGRX32,,,,RX24,BE,32,XBGR-8-8-8-8  
+,PIX_FMT_RGB32,,,,RGB4,BE,32,RGB-8-8-8-8   
+,PIX_FMT_RGBA32,,,,AB24,BE,32,RGBA-8-8-8-8  
+,PIX_FMT_RGBX32,,,,XB24,BE,32,RGBX-8-8-8-8  
+,PIX_FMT_ARGB32,,,,BA24,BE,32,ARGB-8-8-8-8  
+,PIX_FMT_XRGB32,,,,BX24,BE,32,XRGB-8-8-8-8  
+,PIX_FMT_RGBX1010102,,,,RX30,BE,32,RGBX-10-10-10-2 
+,PIX_FMT_RGBA1010102,,,,RA30,BE,32,RGBA-10-10-10-2 
+,PIX_FMT_ARGB2101010,,,,AR30,BE,32,ARGB-2-10-10-10 
+RGB formats (6 or 8 bytes per pixel) ,,,,,,,,
+,PIX_FMT_BGR48_12,,,,B312,BE,48,BGR 12-bit per component 
+,PIX_FMT_ABGR64_12,,,,B412,BE,64,BGRA 12-bit per component 
+Grey formats ,,,,,,,,
+,PIX_FMT_GREY,,,x,GREY,BE,,8  Greyscale
+,PIX_FMT_Y4,,,,Y04 ,BE,,4  Greyscale
+,PIX_FMT_Y6,,,,Y06 ,BE,,6  Greyscale
+,PIX_FMT_Y10,,,x,Y10 ,BE,10,Greyscale     
+,PIX_FMT_Y12,,,x,Y12 ,BE,12,Greyscale     
+,PIX_FMT_Y012,,,,Y012,BE,12,Greyscale     
+,PIX_FMT_Y14,,,x,Y14 ,BE,14,Greyscale     
+,PIX_FMT_Y16,,,x,Y16 ,BE,16,Greyscale     
+,PIX_FMT_Y16_BE,,,,Y16 ,BE,16,Greyscale BE  
+Grey bit-packed formats ,,,,,,,,
+,PIX_FMT_Y10BPACK,,,,Y10B,BE,10,Greyscale bit-packed 
+,PIX_FMT_Y10P,,,,Y10P,BE,10,"Greyscale, MIPI RAW10 packed "
+,PIX_FMT_IPU3_Y10,,,,ip3y,BE,,IPU3 packed 10-bit greyscale
+Palette formats ,,,,,,,,
+,PIX_FMT_PAL8,,,,PAL8,BE,,8  8-bit palette
+Chrominance formats ,,,,,,,,
+,PIX_FMT_UV8,,,,UV8 ,BE,,8  UV 4:4
+Luminance+Chrominance formats ,,,,,,,,
+,PIX_FMT_YUYV,,,,YUYV,BE,16,YUV 4:2:2     
+,PIX_FMT_YYUV,,,,YYUV,BE,16,YUV 4:2:2     
+,PIX_FMT_YVYU,,,,YVYU,BE,16,YVU 4:2:2 
+,PIX_FMT_UYVY,,,,UYVY,BE,16,YUV 4:2:2     
+,PIX_FMT_VYUY,,,,VYUY,BE,16,YUV 4:2:2     
+,PIX_FMT_Y41P,,,,Y41P,BE,12,YUV 4:1:1     
+,PIX_FMT_YUV444,,,,Y444,BE,16,xxxxyyyy uuuuvvvv 
+,PIX_FMT_YUV555,,,,YUVO,BE,16,YUV-5-5-5     
+,PIX_FMT_YUV565,,,,YUVP,BE,16,YUV-5-6-5     
+,PIX_FMT_YUV24,,,,YUV3,BE,24,YUV-8-8-8     
+,PIX_FMT_YUV32,,,,YUV4,BE,32,YUV-8-8-8-8   
+,PIX_FMT_AYUV32,,,,AYUV,BE,32,AYUV-8-8-8-8  
+,PIX_FMT_XYUV32,,,,XYUV,BE,32,XYUV-8-8-8-8  
+,PIX_FMT_VUYA32,,,,VUYA,BE,32,VUYA-8-8-8-8  
+,PIX_FMT_VUYX32,,,,VUYX,BE,32,VUYX-8-8-8-8  
+,PIX_FMT_YUVA32,,,,YUVA,BE,32,YUVA-8-8-8-8  
+,PIX_FMT_YUVX32,,,,YUVX,BE,32,YUVX-8-8-8-8  
+,PIX_FMT_M420,,,,M420,BE,12,"YUV 4:2:0 2 lines y, 1 line uv interleaved "
+,PIX_FMT_YUV48_12,,,,Y312,BE,48,YUV 4:4:4 12-bit per component 
+" YCbCr packed format. For each Y2xx format, xx bits of valid data occupy the MSBs of the 16 bit components, and 16-xx bits of zero padding occupy the LSBs. ",,,,,,,,
+,PIX_FMT_Y210,,,,Y210,BE,32,YUYV 4:2:2 
+,PIX_FMT_Y212,,,,Y212,BE,32,YUYV 4:2:2 
+,PIX_FMT_Y216,,,,Y216,BE,32,YUYV 4:2:2 
+"two planes -- one Y, one Cr + Cb interleaved  ",,,,,,,,
+,PIX_FMT_NV12,,,,NV12,BE,12,Y/CbCr 4:2:0  
+,PIX_FMT_NV21,,,,NV21,BE,12,Y/CrCb 4:2:0  
+,PIX_FMT_NV16,,,,NV16,BE,16,Y/CbCr 4:2:2  
+,PIX_FMT_NV61,,,,NV61,BE,16,Y/CrCb 4:2:2  
+,PIX_FMT_NV24,,,,NV24,BE,24,Y/CbCr 4:4:4  
+,PIX_FMT_NV42,,,,NV42,BE,24,Y/CrCb 4:4:4  
+,PIX_FMT_P010,,,,P010,BE,24,Y/CbCr 4:2:0 10-bit per component 
+,PIX_FMT_P012,,,,P012,BE,24,Y/CbCr 4:2:0 12-bit per component 
+"two non contiguous planes - one Y, one Cr + Cb interleaved  ",,,,,,,,
+,PIX_FMT_NV12M,,,,NM12,BE,12,Y/CbCr 4:2:0  
+,PIX_FMT_NV21M,,,,NM21,BE,21,Y/CrCb 4:2:0  
+,PIX_FMT_NV16M,,,,NM16,BE,16,Y/CbCr 4:2:2  
+,PIX_FMT_NV61M,,,,NM61,BE,16,Y/CrCb 4:2:2  
+,PIX_FMT_P012M,,,,PM12,BE,24,Y/CbCr 4:2:0 12-bit per component 
+"three planes - Y Cb, Cr ",,,,,,,,
+,PIX_FMT_YUV410,,,,YUV9,BE,,9  YUV 4:1:0
+,PIX_FMT_YVU410,,,,YVU9,BE,,9  YVU 4:1:0
+,PIX_FMT_YUV411P,,,,411P,BE,12,YVU411 planar 
+,PIX_FMT_YUV420,,,,YU12,BE,12,YUV 4:2:0     
+,PIX_FMT_YVU420,,,,YV12,BE,12,YVU 4:2:0     
+,PIX_FMT_YUV422P,,,,422P,BE,16,YVU422 planar 
+"three non contiguous planes - Y, Cb, Cr ",,,,,,,,
+,PIX_FMT_YUV420M,,,,YM12,BE,12,YUV420 planar 
+,PIX_FMT_YVU420M,,,,YM21,BE,12,YVU420 planar 
+,PIX_FMT_YUV422M,,,,YM16,BE,16,YUV422 planar 
+,PIX_FMT_YVU422M,,,,YM61,BE,16,YVU422 planar 
+,PIX_FMT_YUV444M,,,,YM24,BE,24,YUV444 planar 
+,PIX_FMT_YVU444M,,,,YM42,BE,24,YVU444 planar 
+Tiled YUV formats ,,,,,,,,
+,PIX_FMT_NV12_4L4,,,,VT12,BE,12,Y/CbCr 4:2:0  4x4 tiles 
+,PIX_FMT_NV12_16L16,,,,HM12,BE,12,Y/CbCr 4:2:0 16x16 tiles 
+,PIX_FMT_NV12_32L32,,,,ST12,BE,12,Y/CbCr 4:2:0 32x32 tiles 
+,PIX_FMT_NV15_4L4,,,,VT15,BE,15,Y/CbCr 4:2:0 10-bit 4x4 tiles 
+,PIX_FMT_P010_4L4,,,,T010,BE,12,Y/CbCr 4:2:0 10-bit 4x4 macroblocks 
+,PIX_FMT_NV12_8L128,,,,AT12,BE,,Y/CbCr 4:2:0 8x128 tiles
+,PIX_FMT_NV12_10BE_8L128,,,,AX12,BE,,Y/CbCr 4:2:0 10-bit 8x128 tiles
+"Tiled YUV formats, non contiguous planes ",,,,,,,,
+,PIX_FMT_NV12MT,,,,TM12,BE,12,Y/CbCr 4:2:0 64x32 tiles 
+,PIX_FMT_NV12MT_16X16,,,,VM12,BE,12,Y/CbCr 4:2:0 16x16 tiles 
+,PIX_FMT_NV12M_8L128,,,,NA12,BE,,Y/CbCr 4:2:0 8x128 tiles
+,PIX_FMT_NV12M_10BE_8L128,,,,NT12,BE,,Y/CbCr 4:2:0 10-bit 8x128 tiles
+Bayer formats - see http://www.siliconimaging.com/RGB%20Bayer.htm ,,,,,,,,
+,PIX_FMT_SBGGR8,,,,BA81,BE,,8  BGBG.. GRGR..
+,PIX_FMT_SGBRG8,,,,GBRG,BE,,8  GBGB.. RGRG..
+,PIX_FMT_SGRBG8,,,,GRBG,BE,,8  GRGR.. BGBG..
+,PIX_FMT_SRGGB8,,,,RGGB,BE,,8  RGRG.. GBGB..
+,PIX_FMT_SBGGR10,,,,BG10,BE,10,BGBG.. GRGR.. 
+,PIX_FMT_SGBRG10,,,,GB10,BE,10,GBGB.. RGRG.. 
+,PIX_FMT_SGRBG10,,,,BA10,BE,10,GRGR.. BGBG.. 
+,PIX_FMT_SRGGB10,,,,RG10,BE,10,RGRG.. GBGB.. 
+,PIX_FMT_SBGGR10P,,,,pBAA,BE,,
+,PIX_FMT_SGBRG10P,,,,pGAA,BE,,
+,PIX_FMT_SGRBG10P,,,,pgAA,BE,,
+,PIX_FMT_SRGGB10P,,,,pRAA,BE,,
+,PIX_FMT_SBGGR10ALAW8,,,,aBA8,BE,,
+,PIX_FMT_SGBRG10ALAW8,,,,aGA8,BE,,
+,PIX_FMT_SGRBG10ALAW8,,,,agA8,BE,,
+,PIX_FMT_SRGGB10ALAW8,,,,aRA8,BE,,
+,PIX_FMT_SBGGR10DPCM8,,,,bBA8,BE,,
+,PIX_FMT_SGBRG10DPCM8,,,,bGA8,BE,,
+,PIX_FMT_SGRBG10DPCM8,,,,BD10,BE,,
+,PIX_FMT_SRGGB10DPCM8,,,,bRA8,BE,,
+,PIX_FMT_SBGGR12,,,,BG12,BE,12,BGBG.. GRGR.. 
+,PIX_FMT_SGBRG12,,,,GB12,BE,12,GBGB.. RGRG.. 
+,PIX_FMT_SGRBG12,,,,BA12,BE,12,GRGR.. BGBG.. 
+,PIX_FMT_SRGGB12,,,,RG12,BE,12,RGRG.. GBGB.. 
+,PIX_FMT_SBGGR12P,,,,pBCC,BE,,
+,PIX_FMT_SGBRG12P,,,,pGCC,BE,,
+,PIX_FMT_SGRBG12P,,,,pgCC,BE,,
+,PIX_FMT_SRGGB12P,,,,pRCC,BE,,
+,PIX_FMT_SBGGR14,,,,BG14,BE,14,BGBG.. GRGR.. 
+,PIX_FMT_SGBRG14,,,,GB14,BE,14,GBGB.. RGRG.. 
+,PIX_FMT_SGRBG14,,,,GR14,BE,14,GRGR.. BGBG.. 
+,PIX_FMT_SRGGB14,,,,RG14,BE,14,RGRG.. GBGB.. 
+,PIX_FMT_SBGGR14P,,,,pBEE,BE,,
+,PIX_FMT_SGBRG14P,,,,pGEE,BE,,
+,PIX_FMT_SGRBG14P,,,,pgEE,BE,,
+,PIX_FMT_SRGGB14P,,,,pREE,BE,,
+,PIX_FMT_SBGGR16,,,,BYR2,BE,16,BGBG.. GRGR.. 
+,PIX_FMT_SGBRG16,,,,GB16,BE,16,GBGB.. RGRG.. 
+,PIX_FMT_SGRBG16,,,,GR16,BE,16,GRGR.. BGBG.. 
+,PIX_FMT_SRGGB16,,,,RG16,BE,16,RGRG.. GBGB.. 
+HSV formats ,,,,,,,,
+,PIX_FMT_HSV24,,,,HSV3,BE,,
+,PIX_FMT_HSV32,,,,HSV4,BE,,
+compressed formats ,,,,,,,,
+,PIX_FMT_MJPEG,,,,MJPG,BE,,Motion-JPEG
+,PIX_FMT_JPEG,,,,JPEG,BE,,JFIF JPEG
+,PIX_FMT_DV,,,,dvsd,BE,,1394
+,PIX_FMT_MPEG,,,,MPEG,BE,,MPEG-1/2/4 Multiplexed
+,PIX_FMT_H264,,,,H264,BE,,H264 with start codes
+,PIX_FMT_H264_NO_SC,,,,AVC1,BE,,H264 without start codes
+,PIX_FMT_H264_MVC,,,,M264,BE,,H264 MVC
+,PIX_FMT_H263,,,,H263,BE,,H263
+,PIX_FMT_MPEG1,,,,MPG1,BE,,MPEG-1 ES
+,PIX_FMT_MPEG2,,,,MPG2,BE,,MPEG-2 ES
+,PIX_FMT_MPEG2_SLICE,,,,MG2S,BE,,MPEG-2 parsed slice data
+,PIX_FMT_MPEG4,,,,MPG4,BE,,MPEG-4 part 2 ES
+,PIX_FMT_XVID,,,,XVID,BE,,Xvid
+,PIX_FMT_VC1_ANNEX_G,,,,VC1G,BE,,SMPTE 421M Annex G compliant stream
+,PIX_FMT_VC1_ANNEX_L,,,,VC1L,BE,,SMPTE 421M Annex L compliant stream
+,PIX_FMT_VP8,,,,VP80,BE,,VP8
+,PIX_FMT_VP8_FRAME,,,,VP8F,BE,,VP8 parsed frame
+,PIX_FMT_VP9,,,,VP90,BE,,VP9
+,PIX_FMT_VP9_FRAME,,,,VP9F,BE,,VP9 parsed frame
+,PIX_FMT_HEVC,,,,HEVC,BE,,HEVC aka H.265
+,PIX_FMT_FWHT,,,,FWHT,BE,,Fast Walsh Hadamard Transform (vicodec)
+,PIX_FMT_FWHT_STATELESS,,,,SFWH,BE,,Stateless FWHT (vicodec)
+,PIX_FMT_H264_SLICE,,,,S264,BE,,H264 parsed slices
+,PIX_FMT_HEVC_SLICE,,,,S265,BE,,HEVC parsed slices
+,PIX_FMT_AV1_FRAME,,,,AV1F,BE,,AV1 parsed frame
+,PIX_FMT_SPK,,,,SPK0,BE,,Sorenson Spark
+,PIX_FMT_RV30,,,,RV30,BE,,RealVideo 8
+,PIX_FMT_RV40,,,,RV40,BE,,RealVideo 9 & 10
+Vendor-specific formats   ,,,,,,,,
+,PIX_FMT_CPIA1,,,,CPIA,BE,,cpia1 YUV
+,PIX_FMT_WNVA,,,,WNVA,BE,,Winnov hw compress
+,PIX_FMT_SN9C10X,,,,S910,BE,,SN9C10x compression
+,PIX_FMT_SN9C20X_I420,,,,S920,BE,,SN9C20x YUV 4:2:0
+,PIX_FMT_PWC1,,,,PWC1,BE,,pwc older webcam
+,PIX_FMT_PWC2,,,,PWC2,BE,,pwc newer webcam
+,PIX_FMT_ET61X251,,,,E625,BE,,ET61X251 compression
+,PIX_FMT_SPCA501,,,,S501,BE,,YUYV per line
+,PIX_FMT_SPCA505,,,,S505,BE,,YYUV per line
+,PIX_FMT_SPCA508,,,,S508,BE,,YUVY per line
+,PIX_FMT_SPCA561,,,,S561,BE,,compressed GBRG bayer
+,PIX_FMT_PAC207,,,,P207,BE,,compressed BGGR bayer
+,PIX_FMT_MR97310A,,,,M310,BE,,compressed BGGR bayer
+,PIX_FMT_JL2005BCD,,,,JL20,BE,,compressed RGGB bayer
+,PIX_FMT_SN9C2028,,,,SONX,BE,,compressed GBRG bayer
+,PIX_FMT_SQ905C,,,,905C,BE,,compressed RGGB bayer
+,PIX_FMT_PJPG,,,,PJPG,BE,,Pixart 73xx JPEG
+,PIX_FMT_OV511,,,,O511,BE,,ov511 JPEG
+,PIX_FMT_OV518,,,,O518,BE,,ov518 JPEG
+,PIX_FMT_STV0680,,,,S680,BE,,stv0680 bayer
+,PIX_FMT_TM6000,,,,TM60,BE,,tm5600/tm60x0
+,PIX_FMT_CIT_YYVYUY,,,,CITV,BE,,one line of Y then 1 line of VYUY
+,PIX_FMT_KONICA420,,,,KONI,BE,,YUV420 planar in blocks of 256 pixels
+,PIX_FMT_JPGL,,,,JPGL,BE,,JPEG-Lite
+,PIX_FMT_SE401,,,,S401,BE,,se401 janggu compressed rgb
+,PIX_FMT_S5C_UYVY_JPG,,,,S5CI,BE,,S5C73M3 interleaved UYVY/JPEG
+,PIX_FMT_Y8I,,,,Y8I ,BE,,Greyscale 8-bit L/R interleaved
+,PIX_FMT_Y12I,,,,Y12I,BE,,Greyscale 12-bit L/R interleaved
+,PIX_FMT_Z16,,,,Z16 ,BE,,Depth data 16-bit
+,PIX_FMT_MT21C,,,,MT21,BE,,Mediatek compressed block mode
+,PIX_FMT_MM21,,,,MM21,BE,,"Mediatek 8-bit block mode, two non-contiguous planes"
+,PIX_FMT_MT2110T,,,,MT2T,BE,,Mediatek 10-bit block tile mode
+,PIX_FMT_MT2110R,,,,MT2R,BE,,Mediatek 10-bit block raster mode
+,PIX_FMT_INZI,,,,INZI,BE,,Intel Planar Greyscale 10-bit and Depth 16-bit
+,PIX_FMT_CNF4,,,,CNF4,BE,,Intel 4-bit packed depth confidence information
+,PIX_FMT_HI240,,,,HI24,BE,,BTTV 8-bit dithered RGB
+,PIX_FMT_QC08C,,,,Q08C,BE,,Qualcomm 8-bit compressed
+,PIX_FMT_QC10C,,,,Q10C,BE,,Qualcomm 10-bit compressed
+,PIX_FMT_AJPG,,,,AJPG,BE,,Aspeed JPEG
+,PIX_FMT_HEXTILE,,,,HXTL,BE,,Hextile compressed
+"10bit raw packed, 32 bytes for every 25 pixels, last LSB 6 bits unused ",,,,,,,,
+,PIX_FMT_IPU3_SBGGR10,,,,ip3b,BE,,IPU3 packed 10-bit BGGR bayer
+,PIX_FMT_IPU3_SGBRG10,,,,ip3g,BE,,IPU3 packed 10-bit GBRG bayer
+,PIX_FMT_IPU3_SGRBG10,,,,ip3G,BE,,IPU3 packed 10-bit GRBG bayer
+,PIX_FMT_IPU3_SRGGB10,,,,ip3r,BE,,IPU3 packed 10-bit RGGB bayer
+SDR formats - used only for Software Defined Radio devices ,,,,,,,,
+,SDR_FMT_CU8,,,,CU08,BE,,IQ u8
+,SDR_FMT_CU16LE,,,,CU16,BE,,IQ u16le
+,SDR_FMT_CS8,,,,CS08,BE,,complex s8
+,SDR_FMT_CS14LE,,,,CS14,BE,,complex s14le
+,SDR_FMT_RU12LE,,,,RU12,BE,,real u12le
+,SDR_FMT_PCU16BE,,,,PC16,BE,,planar complex u16be
+,SDR_FMT_PCU18BE,,,,PC18,BE,,planar complex u18be
+,SDR_FMT_PCU20BE,,,,PC20,BE,,planar complex u20be
+Touch formats - used for Touch devices ,,,,,,,,
+,TCH_FMT_DELTA_TD16,,,,TD16,BE,,16-bit signed deltas
+,TCH_FMT_DELTA_TD08,,,,TD08,BE,,8-bit signed deltas
+,TCH_FMT_TU16,,,,TU16,BE,,16-bit unsigned touch data
+,TCH_FMT_TU08,,,,TU08,BE,,8-bit unsigned touch data
+Meta-data formats ,,,,,,,,
+,META_FMT_VSP1_HGO,,,,VSPH,BE,,R-Car VSP1 1-D Histogram
+,META_FMT_VSP1_HGT,,,,VSPT,BE,,R-Car VSP1 2-D Histogram
+,META_FMT_UVC,,,,UVCH,BE,,UVC Payload Header metadata
+,META_FMT_D4XX,,,,D4XX,BE,,D4XX Payload Header metadata
+,META_FMT_VIVID,,,,VIVD,BE,,Vivid Metadata
+Vendor specific - used for RK_ISP1 camera sub-system ,,,,,,,,
+,META_FMT_RK_ISP1_PARAMS,,,,RK1P,BE,,Rockchip ISP1 3A Parameters
+,META_FMT_RK_ISP1_STAT_3A,,,,RK1S,BE,,Rockchip ISP1 3A Statistics

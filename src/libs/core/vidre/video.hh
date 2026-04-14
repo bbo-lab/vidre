@@ -32,9 +32,8 @@
  * generically. File formats are, however, only supported through plugins.
  *
  * @{
- * @defgroup api-core-video-pixel Pixel formats
- * @defgroup api-core-video-frame Video frames
- * @defgroup api-core-video-io Video I/O
+ * @defgroup api-core-video-format Video formats
+ * @defgroup api-core-video-frame  Frame handling
  * @}
  * */
 

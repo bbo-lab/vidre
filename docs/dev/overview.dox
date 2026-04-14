@@ -12,7 +12,7 @@ or a graphical user-interface
 provided (src/apps/tools).
 
 Core functionality is provided in C++ (at least [C++20](https://en.cppreference.com/w/cpp/20),
-see @ref api). At the moment of writing, we framework targets Linux® and 
+see @ref api). At the moment of writing, the main system targets are Linux® and 
 Windows®. For graphical user-interface applications [Qt6](https://www.qt.io/product/framework) 
 is used. 
 

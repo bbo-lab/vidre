@@ -29,9 +29,18 @@
  * @details
  * @fileinfo
  *
+ * @{
+ * @defgroup api-core-video-format-geometry     Geometry
+ * @defgroup api-core-video-format-pixel        Pixel format
+ * @defgroup api-core-video-format-color        Color space
+ * @}
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/video/format/geometry.hh>
+#include <vidre/video/format/pixel.hh>
+#include <vidre/video/format/color.hh>
+
 
 namespace vidre {
 

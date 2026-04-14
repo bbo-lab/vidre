@@ -1,0 +1,43 @@
+/** @page dev-docs Documentation
+
+VidRe developers are required to **generously document the code**. This means 
+three main things, regardless of the programming language:
+
+1. Important steps in the program flow are documented.
+
+    This is especially helpful for readers when bit-twiddling, recursion, metaprogramming, 
+    or other non‑obvious techniques are used.
+
+    Language-specific examples are provided in the respective sections below.
+
+2. Essential API elements must be documented.
+
+    Enumerations, classes, methods, functions, modules, etc. that are part of 
+    the exposed API must have proper documentation. Exceptions apply only for 
+    trivial or purely internal items.
+
+3. The API structure is reflected by file/directory structure (and vice versa).
+
+    A developer should be able to guess where to find a piece of functionality 
+    based on the API name alone.
+
+    <b>Example</b>:<br/>
+    See `@addtogroup` and `@defgroup` in 
+    [vidre/core/video.hh](https://github.com/bbo-lab/vidre/blob/main/src/libs/core/vidre/video.hh).
+
+## C++
+
+FIXME
+- Doxygen...
+- .dox files
+- sub-groups require individual headers...
+
+## Lua
+
+@TBD{Must fit into the Doxygen tree.}
+
+## Python
+
+@TBD{Must fit into the Doxygen tree.}
+
+*/
