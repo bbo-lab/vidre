@@ -74,3 +74,8 @@ TEST_CASE("events.hh", "[vidre/util]") {
     REQUIRE(ev.wait() == 5);
     REQUIRE(ev.wait(std::chrono::milliseconds(100)) == std::nullopt);
 }
+
+#include <vidre/util/endian.hh>
+TEST_CASE("endian.hh", "[vidre/util]") {
+    // intentionally empty
+}
