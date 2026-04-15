@@ -59,6 +59,18 @@ TEST_CASE("version.hh", "[vidre/util]") {
     REQUIRE(version{1, 0} < version{1, 1});
     REQUIRE(version{1, 0} < version{2});
 
-    REQUIRE(not (version{} != version{}));
-    REQUIRE(not (version{} == version{}));
+    REQUIRE(not(version{} != version{}));
+    REQUIRE(not(version{} == version{}));
+}
+
+#include <vidre/util/events.hh>
+TEST_CASE("events.hh", "[vidre/util]") {
+    event ev{};
+
+    REQUIRE(ev.notify() == 1);
+    REQUIRE(ev.wait() == 1);
+    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == std::nullopt);
+    REQUIRE(ev.notify(5) == 5);
+    REQUIRE(ev.wait() == 5);
+    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == std::nullopt);
 }
