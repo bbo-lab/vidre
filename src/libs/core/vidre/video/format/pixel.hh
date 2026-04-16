@@ -47,7 +47,10 @@
 #include <cstdint>
 #include <cstddef>
 
+#if defined(__linux__)
+// this is only used during developement, get rid of this dependency later on...
 #include <linux/videodev2.h>
+#endif
 
 namespace vidre {
 
