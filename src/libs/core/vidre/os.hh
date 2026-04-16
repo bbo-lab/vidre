@@ -24,18 +24,18 @@
 #define VIDRE_CORE_OS_HH
 #pragma once
 
+/**@addtogroup api-core-os
+ * @details
+ * @fileinfo
+ * 
+ * @{
+ * @namespace vidre::os Operating system utilities.
+ * @}
+ */
+
 #include <vidre/core/config.hh>
 #include <vidre/os/tty.hh>
 #include <vidre/os/memory.hh>
 #include <vidre/os/paths.hh>
-
-namespace vidre {
-
-    /** Operating-system utilities.
-     * @ingroup api-core-os
-     * */
-    namespace os {} //
-
-} //
 
 #endif  // VIDRE_CORE_OS_HH

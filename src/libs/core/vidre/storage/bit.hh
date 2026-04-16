@@ -24,11 +24,9 @@
 #define VIDRE_CORE_STORAGE_BIT_HH
 #pragma once
 
-/**@defgroup api-core-storage-bit Bit mangling (such as packing).
- * @ingroup api-core-storage
- * @fileinfo
+/**@addtogroup api-core-storage-bit
  * @details
- *
+ * @fileinfo
  * */
 
 #include <vidre/core/config.hh>

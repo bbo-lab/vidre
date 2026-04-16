@@ -24,7 +24,7 @@
 #define VIDRE_CORE_UTIL_FILESYSTEM_HH
 #pragma once
 
-/**@defgroup api-core-util-filesystem File-system tools.
+/**@defgroup api-core-util-filesystem File-system tools
  * @ingroup api-core-util
  * @details
  * @fileinfo
@@ -49,7 +49,7 @@ namespace vidre {
 
     /** Find files recursively using regex-pattern.
      * @param root The start directory.
-     * @param patter Regex pattern (default: ECMAscript, eg. @c R"(^file[.]cpp$)" ).
+     * @param pattern Regex pattern (default: ECMAscript, eg. @c R"(^file[.]cpp$)" ).
      * Example:
      * @code
      * auto list = find_files("/tmp", R"(.*[.]cfg$)");
@@ -59,12 +59,10 @@ namespace vidre {
     inline std::vector<fs::path> find_files(const fs::path &root, const char *pattern) {
         return find_files(root, std::regex(pattern));
     }
-
-    // FIXME
-    // template<std::size_t N>
-    // inline std::vector<fs::path> find_files(const fs::path &root, char const pattern[N]) {
-    //     return find_files(root, std::regex(pattern, N));
-    // }
+    template<std::size_t N>
+    inline std::vector<fs::path> find_files(const fs::path &root, const char (&pattern)[N]) {
+        return find_files(root, std::regex(pattern, N));
+    }
 
     /** Load a file.
      * This helper loads a complete file into a string avoiding the costly standard streams.

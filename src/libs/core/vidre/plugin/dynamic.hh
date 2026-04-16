@@ -44,7 +44,7 @@ namespace vidre {
 
             namespace library {
 
-                /**@addtogroup api-core-details
+                /**@addtogroup api-core-plugin-details
                  * */
                 ///@{
 

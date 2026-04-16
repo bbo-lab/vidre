@@ -31,6 +31,9 @@
  * Among other tools, here we provide a replacement for Qt's QApplication to
  * avoid the heavy framework that must only be used for graphical applications.
  *
+ * @{
+ * @defgroup api-core-program-details Implementation details
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -41,7 +44,7 @@ namespace vidre {
 
     namespace detail {
 
-        /**@addtogroup api-core-details
+        /**@addtogroup api-core-program-details
          * */
         ///@{
 

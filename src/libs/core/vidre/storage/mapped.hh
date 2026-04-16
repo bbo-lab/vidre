@@ -24,10 +24,11 @@
 #define VIDRE_CORE_STORAGE_MAPPED_HH
 #pragma once
 
-/**@defgroup api-core-storage-mapped Memory-mapped file handling.
- * @ingroup api-core-storage
- * @fileinfo
+/**@addtogroup api-core-storage-mapped
  * @details
+ * @fileinfo
+ *
+ * FIXME
  *
  * */
 
@@ -42,27 +43,8 @@
 
 namespace vidre {
 
-    namespace detail {
-
-        namespace memory_mapped {
-
-            /**@addtogroup api-core-details
-             * */
-            ///@{
-
-            //
-
-            ///@}
-
-        }  // namespace file
-
-    }  // namespace detail
-
     namespace storage {
 
-        /** File related functionality.
-         * @ingroup api-core-storage-file
-         * */
         namespace file {
 
             /**@addtogroup api-core-storage-file

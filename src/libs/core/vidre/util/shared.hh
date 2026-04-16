@@ -24,11 +24,10 @@
 #define VIDRE_CORE_UTIL_SHARED_HH
 #pragma once
 
-/**@defgroup api-core-util-shared Shared data structures.
+/**@defgroup api-core-util-shared Shared data structures
  * @ingroup api-core-util
  * @details
  * @fileinfo
- *
  * */
 
 #include <vidre/core/config.hh>

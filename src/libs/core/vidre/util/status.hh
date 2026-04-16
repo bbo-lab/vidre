@@ -24,7 +24,7 @@
 #define VIDRE_CORE_UTIL_STATUS_HH
 #pragma once
 
-/**@defgroup api-core-util-status Return status.
+/**@defgroup api-core-util-status Program flow status
  * @ingroup api-core-util
  * @details
  * @fileinfo

@@ -8,7 +8,7 @@
 using namespace vidre;
 
 TEST_CASE("detail::exception", "[exceptions.hh]") {
-    using store = detail::exception::store;
+    using store = error::detail::store;
 
     {
         // try single allocation and deallocation
@@ -70,7 +70,7 @@ TEST_CASE("detail::exception", "[exceptions.hh]") {
     }
 
     {
-        using exception_string = std::basic_string<char, std::char_traits<char>, detail::exception::allocator<char>>;
+        using exception_string = std::basic_string<char, std::char_traits<char>, error::detail::allocator<char>>;
 
         {
             exception_string str = "Hello error! This is a long message that does not fit into std::string local storage...";
@@ -82,7 +82,7 @@ TEST_CASE("detail::exception", "[exceptions.hh]") {
 }
 
 TEST_CASE("error::info", "[exceptions.hh]") {
-    using store = detail::exception::store;
+    using store = error::detail::store;
 
     {
         {

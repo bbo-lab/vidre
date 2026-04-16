@@ -46,7 +46,6 @@ namespace vidre {
          * */
         ///@}
 
-
         /** Frame index.
          * */
         struct __vidre_packed__ VIDRE_CORE_VISIBILITY index {

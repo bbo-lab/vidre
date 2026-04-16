@@ -24,17 +24,19 @@
 #define VIDRE_CORE_UTIL_VERSION_HH
 #pragma once
 
+/**@defgroup api-core-util-version Version handling
+ * @ingroup api-core-util
+ * @details
+ * @fileinfo
+ * */
+
 #include <vidre/core/config.hh>
 #include <vidre/exception.hh>
 
 #include <compare>
 #include <string_view>
 
-/**@defgroup api-core-util-version Version handling
- * @ingroup api-core-util
- * @details
- * @fileinfo
- * */
+/**@addtogroup api-core-util-version */
 ///@{
 
 /** Macro for calculating an integral value from a version.

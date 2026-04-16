@@ -34,6 +34,10 @@
  *
  * @see
  * https://en.wikipedia.org/wiki/Universally_unique_identifier
+ * 
+ * @{
+ * @defgroup api-core-util-uuid-details Implementation details
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -53,12 +57,11 @@ namespace vidre {
 
     namespace detail {
 
-        /** UUID abstraction (libuuid vs. Boost).
+        /**@addtogroup api-core-util-uuid-details
          * */
-        namespace uuid {}
+        ///@{
 
-        ///@cond
-#if VIDRE_HAVE_LIBUUID
+#if VIDRE_HAVE_LIBUUID or defined(DOXYGEN)
         struct uuid_t {
             ::uuid_t data;
         };
@@ -270,7 +273,7 @@ namespace vidre {
 
         }  // namespace uuid
 #endif
-        ///@endcond
+        ///@}
 
     }  // namespace detail
 

@@ -28,6 +28,8 @@
  * @ingroup api-core-cpp
  * @details
  * @fileinfo
+ * 
+ * @todo symbol demangling support
  * */
 
 #include <vidre/config.hh>
@@ -39,12 +41,6 @@
 
 namespace vidre {
 
-    namespace detail {
-
-        // FIXME
-
-    }  // namespace detail
-
     /**@addtogroup api-core-cpp-util
      * */
     ///@{
@@ -55,9 +51,6 @@ namespace vidre {
     constexpr std::size_t size_of(const T (&)[N]) noexcept {
         return N;
     }
-
-    // /** Get demangled name of FIXME.
-    //  * */
 
     /** Get number of bits in a type.
      * */

@@ -32,26 +32,24 @@
  * generically. File formats are, however, only supported through plugins.
  *
  * @{
+ * @namespace vidre::video Video encoding
  * @defgroup api-core-video-format Video formats
  * @defgroup api-core-video-frame  Frame handling
+ * @defgroup api-core-video-details Implementation details
  * @}
  * */
 
+ /**@addtogroup api-core-video-details
+  * @{
+  * @namespace vidre::video::detail Implementation details.
+  * @}
+  */
+
 #include <vidre/core/config.hh>
-// #include <vidre/video/common.hh>
-// #include <vidre/video/pixel.hh>
 // #include <vidre/video/frame.hh>
+// #include <vidre/video/format.hh>
 
 #include <string>
 #include <string_view>
-
-namespace vidre {
-
-    /** Video-related namespace.
-     * @ingroup api-core-video
-     * */
-    namespace video {}  // namespace video
-
-}  // namespace vidre
 
 #endif  // VIDRE_CORE_VIDEO_HH

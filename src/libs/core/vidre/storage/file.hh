@@ -24,15 +24,18 @@
 #define VIDRE_CORE_STORAGE_FILE_HH
 #pragma once
 
-/**@defgroup api-core-storage-file File handling.
- * @ingroup api-core-storage
- * @fileinfo
+/**@addtogroup api-core-storage-file
  * @details
+ * @fileinfo
  *
  * Apart for data sinks and sources, this module provides basic file handling
  * functionality mostly pulled in from standard libraries (see
  * [std::filesystem](https://en.cppreference.com/w/cpp/filesystem.html))
  * for convenience.
+ *
+ * @{
+ * @namespace vidre::storage::file
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -57,177 +60,177 @@
 
 namespace vidre {
 
-    namespace detail {
+    namespace storage {
 
-        namespace file {
+        namespace detail {
 
-            /**@addtogroup api-core-details
+            /** File IO details.
+             * @ingroup api-core-storage-details
              * */
-            ///@{
+            namespace file {
 
-            using descriptor = int;
-            using size_type = std::size_t;
-            using offset_type = std::make_signed_t<size_type>;
+                /**@addtogroup api-core-storage-details
+                 * */
+                ///@{
 
-            /** Default block size (if otherwise it cannot be retrieved from the OS).
-             * */
+                using descriptor = int;
+                using size_type = std::size_t;
+                using offset_type = std::make_signed_t<size_type>;
+
+                /** Default block size (if otherwise it cannot be retrieved from the OS).
+                 * */
 #define VIDRE_STORAGE_BLOCKSIZE 4096
 
 #if VIDRE_HOST_WINDOWS
-            enum flag_type : int {
-                readonly = _O_RDONLY,
-                writeonly = _O_WRONLY,
-                readwrite = _O_RDWR,
+                enum flag_type : int {
+                    readonly = _O_RDONLY,
+                    writeonly = _O_WRONLY,
+                    readwrite = _O_RDWR,
 
-                append = _O_APPEND,
-                create = _O_CREAT,
-                exclusive = _O_EXCL,
-                truncate = _O_TRUNC,
-                non_block = _O_NONBLOCK,
-                synchronous = _O_SYNC,
-                // FIXME...
-            };
+                    append = _O_APPEND,
+                    create = _O_CREAT,
+                    exclusive = _O_EXCL,
+                    truncate = _O_TRUNC,
+                    non_block = _O_NONBLOCK,
+                    synchronous = _O_SYNC,
+                    // FIXME...
+                };
 
-            inline descriptor open(const char *filename, int flags) {
-                return ::_open(filename, flags);
-            }
-
-            inline descriptor open(const char *filename, int flags, mode_t mode) {
-                return ::_open(filename, flags, mode);
-            }
-
-            inline void close(descriptor fd) {
-                ::_close(fd);
-            }
-
-            inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
-                return ::_read(fd, buf, count);
-            }
-
-            inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
-                return ::_write(fd, buf, count);
-            }
-
-            // FIXME seek, allocate, blocksize, filename, mmap, munmap...
-
-            static constexpr std::size_t path_max = MAX_PATH;
-#else
-            enum flag_type : int {
-                invalid = -1,
-
-                readonly = O_RDONLY,
-                writeonly = O_WRONLY,
-                readwrite = O_RDWR,
-                append = O_APPEND,
-                create = O_CREAT,
-                exclusive = O_EXCL,
-                truncate = O_TRUNC,
-                non_block = O_NONBLOCK,
-                synchronous = O_SYNC,
-                close_on_exec = O_CLOEXEC,
-                asynchrounous = O_ASYNC,
-                direct = O_DIRECT,
-                datasync = O_DSYNC,
-            };
-
-            enum whence_type : int {
-                begin = SEEK_SET,
-                current = SEEK_CUR,
-                end = SEEK_END
-            };
-
-            inline descriptor open(const char *filename, int flags) noexcept {
-                return ::open(filename, flags);
-            }
-
-            inline descriptor open(const char *filename, int flags, mode_t mode) noexcept {
-                return ::open(filename, flags, mode);
-            }
-
-            inline void close(descriptor fd) noexcept {
-                ::close(fd);
-            }
-
-            inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) noexcept {
-                return ::read(fd, buf, count);
-            }
-
-            inline offset_type read(descriptor fd, char *buf, std::size_t count) noexcept {
-                return ::read(fd, buf, count);
-            }
-
-            inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) noexcept {
-                return ::write(fd, buf, count);
-            }
-
-            inline offset_type write(descriptor fd, const char *buf, std::size_t count) noexcept {
-                return ::write(fd, buf, count);
-            }
-
-            inline offset_type seek(descriptor fd, offset_type off, whence_type whence) noexcept {
-                return ::lseek(fd, off, to_underlying(whence));
-            }
-
-            enum allocation_type : int {
-                allocate_range = FALLOC_FL_ALLOCATE_RANGE,
-                keep_size = FALLOC_FL_KEEP_SIZE,
-                punch_hole = FALLOC_FL_PUNCH_HOLE,
-                no_hide_stale = FALLOC_FL_NO_HIDE_STALE,
-                collapse_range = FALLOC_FL_COLLAPSE_RANGE,
-                zero_range = FALLOC_FL_ZERO_RANGE,
-                insert_range = FALLOC_FL_INSERT_RANGE,
-                unshare_range = FALLOC_FL_UNSHARE_RANGE
-            };
-
-            inline bool allocate(descriptor fd, allocation_type mode, offset_type length, offset_type offset) noexcept {
-                return 0 == fallocate(fd, static_cast<int>(mode), offset, length);
-            }
-
-            inline size_type blocksize(descriptor fd) {
-                struct stat st;
-                if (fstat(fd, &st) < 0)
-                    return VIDRE_STORAGE_BLOCKSIZE;
-                return st.st_blksize;
-            }
-
-            inline offset_type filesize(descriptor fd) {
-                struct stat st;
-                if (fstat(fd, &st) < 0)
-                    return -1;
-                return st.st_size;
-            }
-
-            inline std::string filename(descriptor fd) {
-#if defined(__linux__)
-                char path[PATH_MAX];
-                ssize_t len = readlink((std::string("/proc/self/fd/") + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
-                if (len != -1) {
-                    path[len] = 0;
-                    return std::string(path);
+                inline descriptor open(const char *filename, int flags) {
+                    return ::_open(filename, flags);
                 }
-                return {};
+
+                inline descriptor open(const char *filename, int flags, mode_t mode) {
+                    return ::_open(filename, flags, mode);
+                }
+
+                inline void close(descriptor fd) {
+                    ::_close(fd);
+                }
+
+                inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
+                    return ::_read(fd, buf, count);
+                }
+
+                inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
+                    return ::_write(fd, buf, count);
+                }
+
+                // FIXME seek, allocate, blocksize, filename, mmap, munmap...
+
+                static constexpr std::size_t path_max = MAX_PATH;
+#else
+                enum flag_type : int {
+                    invalid = -1,
+
+                    readonly = O_RDONLY,
+                    writeonly = O_WRONLY,
+                    readwrite = O_RDWR,
+                    append = O_APPEND,
+                    create = O_CREAT,
+                    exclusive = O_EXCL,
+                    truncate = O_TRUNC,
+                    non_block = O_NONBLOCK,
+                    synchronous = O_SYNC,
+                    close_on_exec = O_CLOEXEC,
+                    asynchrounous = O_ASYNC,
+                    direct = O_DIRECT,
+                    datasync = O_DSYNC,
+                };
+
+                enum whence_type : int {
+                    begin = SEEK_SET,
+                    current = SEEK_CUR,
+                    end = SEEK_END
+                };
+
+                inline descriptor open(const char *filename, int flags) noexcept {
+                    return ::open(filename, flags);
+                }
+
+                inline descriptor open(const char *filename, int flags, mode_t mode) noexcept {
+                    return ::open(filename, flags, mode);
+                }
+
+                inline void close(descriptor fd) noexcept {
+                    ::close(fd);
+                }
+
+                inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) noexcept {
+                    return ::read(fd, buf, count);
+                }
+
+                inline offset_type read(descriptor fd, char *buf, std::size_t count) noexcept {
+                    return ::read(fd, buf, count);
+                }
+
+                inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) noexcept {
+                    return ::write(fd, buf, count);
+                }
+
+                inline offset_type write(descriptor fd, const char *buf, std::size_t count) noexcept {
+                    return ::write(fd, buf, count);
+                }
+
+                inline offset_type seek(descriptor fd, offset_type off, whence_type whence) noexcept {
+                    return ::lseek(fd, off, to_underlying(whence));
+                }
+
+                enum allocation_type : int {
+                    allocate_range = FALLOC_FL_ALLOCATE_RANGE,
+                    keep_size = FALLOC_FL_KEEP_SIZE,
+                    punch_hole = FALLOC_FL_PUNCH_HOLE,
+                    no_hide_stale = FALLOC_FL_NO_HIDE_STALE,
+                    collapse_range = FALLOC_FL_COLLAPSE_RANGE,
+                    zero_range = FALLOC_FL_ZERO_RANGE,
+                    insert_range = FALLOC_FL_INSERT_RANGE,
+                    unshare_range = FALLOC_FL_UNSHARE_RANGE
+                };
+
+                inline bool allocate(descriptor fd, allocation_type mode, offset_type length, offset_type offset) noexcept {
+                    return 0 == fallocate(fd, static_cast<int>(mode), offset, length);
+                }
+
+                inline size_type blocksize(descriptor fd) {
+                    struct stat st;
+                    if (fstat(fd, &st) < 0)
+                        return VIDRE_STORAGE_BLOCKSIZE;
+                    return st.st_blksize;
+                }
+
+                inline offset_type filesize(descriptor fd) {
+                    struct stat st;
+                    if (fstat(fd, &st) < 0)
+                        return -1;
+                    return st.st_size;
+                }
+
+                inline std::string filename(descriptor fd) {
+#if defined(__linux__)
+                    char path[PATH_MAX];
+                    ssize_t len = readlink((std::string("/proc/self/fd/") + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
+                    if (len != -1) {
+                        path[len] = 0;
+                        return std::string(path);
+                    }
+                    return {};
 #elif defined(F_GETPATH)
-                char path[PATH_MAX];
-                if (fcntl(fd, F_GETPATH, path) != -1)
-                    return std::string(path);
-                return {};
+                    char path[PATH_MAX];
+                    if (fcntl(fd, F_GETPATH, path) != -1)
+                        return std::string(path);
+                    return {};
 #endif
-            }
+                }
 
-            static constexpr std::size_t path_max = PATH_MAX;
+                static constexpr std::size_t path_max = PATH_MAX;
 #endif
 
-            ///@}
+                ///@}
 
-        }  // namespace file
+            }  // namespace file
 
-    }  // namespace detail
+        }  // namespace detail
 
-    namespace storage {
-
-        /** File related functionality.
-         * @ingroup api-core-storage-file
-         * */
         namespace file {
 
             /**@addtogroup api-core-storage-file

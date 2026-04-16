@@ -31,6 +31,15 @@
  * The core library provides a number of fundamental mechanisms for storing data
  * generically. File formats are, however, only supported through plugins.
  *
+ * @{
+ * @namespace vidre::storage Storage related.
+ * @defgroup api-core-storage-io In-/output
+ * @defgroup api-core-storage-file File handling
+ * @defgroup api-core-storage-mapped Memory-mapped file handling
+ * @defgroup api-core-storage-bit Bit packing and more
+ * @defgroup api-core-storage-raw Raw data file
+ * @defgroup api-core-storage-details Implementation details
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -38,14 +47,5 @@
 #include <vidre/storage/file.hh>
 #include <vidre/storage/bit.hh>
 #include <vidre/storage/raw.hh>
-
-namespace vidre {
-
-    /** Storage-related namespace.
-     * @ingroup api-core-storage
-     * */
-    namespace storage {}  // namespace store
-
-}  // namespace vidre
 
 #endif  // VIDRE_CORE_STORAGE_HH

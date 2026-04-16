@@ -28,12 +28,16 @@
  * @ingroup api-core-os
  * @details
  * @fileinfo
- *
+ * 
+ * 
+ * @{
+ * @defgroup api-core-os-tty-details Implementation details.
+ * @}
  * */
 
 #include <vidre/core/config.hh>
 
-/**@addtogroup api-core-os-tty
+/**@addtogroup api-core-os-tty-details
  * */
 ///@{
 

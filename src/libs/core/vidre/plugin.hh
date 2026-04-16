@@ -34,6 +34,9 @@
  * @see vidre::plugin::hub
  * @see @ref examples/core/plugins.cc
  *
+ * @{
+ * @defgroup api-core-plugin-details Implementation details
+ * @}
  * */
 
 #include <vidre/core/config.hh>

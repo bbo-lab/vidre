@@ -41,16 +41,18 @@ vidre_library(vidrecore SHARED
             vidre/os/paths.hh vidre/os/paths.cc
         vidre/cpp/format.hh
         vidre/cpp/util.hh
-        vidre/util/version.hh vidre/util/version.cc
-        vidre/util/develop.hh vidre/util/develop.cc
-        vidre/util/uuid.hh vidre/util/uuid.cc
-        vidre/util/filesystem.hh vidre/util/filesystem.cc
-        vidre/util/variant.hh
-        vidre/util/status.hh
-        vidre/util/events.hh
-        vidre/util/endian.hh
+        vidre/util.cc
+            vidre/util/version.hh vidre/util/version.cc
+            vidre/util/develop.hh vidre/util/develop.cc
+            vidre/util/uuid.hh vidre/util/uuid.cc
+            vidre/util/filesystem.hh vidre/util/filesystem.cc
+            vidre/util/variant.hh
+            vidre/util/status.hh
+            vidre/util/events.hh
+            vidre/util/endian.hh
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
+        vidre/memory.hh vidre/memory.cc
         vidre/script.hh vidre/script.cc
         vidre/settings.hh vidre/settings.cc
             vidre/settings/lua.hh 

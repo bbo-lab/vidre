@@ -24,11 +24,15 @@
 #define VIDRE_CORE_UTIL_EVENTS_HH
 #pragma once
 
-/**@defgroup api-core-util-events Event handling.
+/**@defgroup api-core-util-events Event handling
  * @ingroup api-core-util
  * @details
  * @fileinfo
  *
+ * 
+ * @{
+ * @defgroup api-core-util-events-details Implementation details
+ * @}
  * @todo see signalfd
  * */
 
@@ -36,7 +40,7 @@
 #include <vidre/exception.hh>
 #include <vidre/util/status.hh>
 
-#ifdef __linux__
+#if defined(__linux__)
 #include <poll.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
@@ -56,15 +60,17 @@
 #include <chrono>
 #include <thread>
 
+#include <cassert>
+
 namespace vidre {
 
     namespace detail {
 
-        /**@addtogroup api-core-detail
+        /**@addtogroup api-core-util-events-details
          * */
         ///@{
 
-#ifdef __linux__
+#if defined(__linux__) or defined(DOXYGEN)
         using eventfd_t = int;
 
         eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {
@@ -156,6 +162,8 @@ namespace vidre {
      * */
     ///@{
 
+    /** Event signalling primitive.
+     * */
     class VIDRE_CORE_VISIBILITY event {
     public:
         event() : fd_(detail::eventfd_create()) {}

@@ -28,7 +28,6 @@
  * @ingroup api-core-os
  * @details
  * @fileinfo
- *
  * */
 
 #include <vidre/core/config.hh>

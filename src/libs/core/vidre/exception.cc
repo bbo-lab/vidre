@@ -30,10 +30,10 @@
 
 using namespace vidre;
 
-thread_local size_t vidre::detail::exception::store::used_ = 0;
-thread_local char vidre::detail::exception::store::mem_[VIDRE_EXCEPTION_STORE] = {};
+thread_local size_t vidre::error::detail::store::used_ = 0;
+thread_local char vidre::error::detail::store::mem_[VIDRE_EXCEPTION_STORE] = {};
 
-detail::exception::store::pointer detail::exception::store::allocate(size_t n) noexcept {
+error::detail::store::pointer error::detail::store::allocate(size_t n) noexcept {
     if ((VIDRE_EXCEPTION_STORE - used_) < (n + 2 * granularity))
         abort_with_message("implementation error: exception store depleted");
 
@@ -52,7 +52,7 @@ detail::exception::store::pointer detail::exception::store::allocate(size_t n) n
     return ptr + sizeof(entry);
 }
 
-void detail::exception::store::deallocate(pointer ptr) noexcept {
+void error::detail::store::deallocate(pointer ptr) noexcept {
     const char *cptr = reinterpret_cast<const char *>(ptr);
     // if ((cptr < mem_) || ((cptr - mem_) >= used_) || (not used_))
     //     goto dealloc_failed;
@@ -109,7 +109,7 @@ dealloc_failed:
 }
 
 void vidre::abort_with_message(const char *msg) {
-    detail::file::write(2, msg, strlen(msg));
+    storage::detail::file::write(2, msg, strlen(msg));
     abort();
 }
 

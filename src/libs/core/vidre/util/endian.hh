@@ -24,7 +24,7 @@
 #define VIDRE_CORE_UTIL_ENDIAN_HH
 #pragma once
 
-/**@defgroup api-core-util-endian Endianness handling.
+/**@defgroup api-core-util-endian Endianness handling
  * @ingroup api-core-util
  * @details
  * @fileinfo

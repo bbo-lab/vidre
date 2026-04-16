@@ -24,24 +24,29 @@
 #define VIDRE_CORE_UTIL_DEVELOP_HH
 #pragma once
 
+/**@defgroup api-core-util-develop Development utilities
+ * @ingroup api-core-util
+ * @details
+ * @fileinfo
+ *
+ * The development utilities are only available for development
+ * (see VIDRE_DEVELOP setting in CMake). For releases, empty stubs are
+ * present.
+ *
+ * @see @ref examples/core/develop.cc
+ * */
+
 #include <vidre/core/config.hh>
 
 namespace vidre {
 
 #if VIDRE_DEVELOP or defined DOXYGEN
+    /** Development utilities.
+     * @ingroup api-core-util-develop
+     * */
     namespace develop {
 
-        /**@defgroup api-core-util-develop Development utilities.
-         * @ingroup api-core-util
-         * @details
-         * @fileinfo
-         * 
-         * The development utilities are only available for development
-         * (see VIDRE_DEVELOP setting in CMake). For releases, empty stubs are
-         * present.
-         * 
-         * @see @ref examples/core/develop.cc
-         * 
+        /**@addtogroup api-core-util-develop
          * */
         ///@{
 

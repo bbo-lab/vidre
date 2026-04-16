@@ -67,6 +67,9 @@
  * Example (see @ref examples/core/log.cc):
  * @include examples/core/log.cc
  *
+ * @{
+ * @namespace vider::log
+ * @}
  * */
 /**@defgroup api-core-log-if Interface
  * @ingroup api-core-log
@@ -89,14 +92,14 @@
 /**@defgroup api-core-log-io Output
  * @ingroup api-core-log
  * @brief Log streaming facilities.
- *
- *
- *
+ * 
+ * @{
+ * @namespace vider::log::io
+ * @}
  * */
 /**@defgroup api-core-log-details Implementation details
  * @ingroup api-core-log
  * @brief Internal implementation details.
- *
  * */
 
 #include <vidre/core/config.hh>
@@ -117,8 +120,6 @@
 
 namespace vidre {
 
-    /** Message logging interface.
-     * */
     namespace log {
 
         class fatal;
@@ -131,12 +132,17 @@ namespace vidre {
         class info;
         class debug;
         class trace;
+
         inline namespace io {
             class stream;
         }  // namespace io
 
+        /**@addtogroup api-core-log-details
+         * */
+        ///@{
+
         /** String (or message, respectively) type.
-         * @ingroup api-core-log-details */
+         * */
         using message_type = std::string_view;
 
         template <typename T>
@@ -147,8 +153,14 @@ namespace vidre {
             { t.operator()(outs) } -> std::same_as<Stream &>;
         };
 
+        ///@}
+
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
+
         /** Log levels.
-         * @ingroup api-core-log-if */
+         * */
         enum class level : int {
             fatal = -5,     ///< System is in an unusable state and the program will terminate.
             alert = -4,     ///< Immediate user interaction is required, usually when data corruption occurs.
@@ -162,16 +174,18 @@ namespace vidre {
             trace = 4       ///< Tracing.
         };
 
-        constexpr static unsigned level_n = 10;                            ///<@internal Number of discernable log levels.
-        constexpr static int level_min = static_cast<int>(level::fatal);   ///<@internal Minimum log level (as integer).
-        constexpr static int level_max = std::numeric_limits<int>::max();  ///<@internal Maximum log level (as integer).
+        ///@internal
+        constexpr static unsigned level_n = 10;                            ///< Number of discernable log levels.
+        constexpr static int level_min = static_cast<int>(level::fatal);   ///< Minimum log level (as integer).
+        constexpr static int level_max = std::numeric_limits<int>::max();  ///< Maximum log level (as integer).
 #if defined(DEBUG)
-        constexpr static int level_default = static_cast<int>(level::debug);  ///<@internal Default log level.
+        constexpr static int level_default = static_cast<int>(level::debug);  ///< Default log level.
 #elif defined(NDEBUG)
         constexpr static int level_default = 0;
 #else
         constexpr static int level_default = static_cast<int>(level::info);
 #endif
+        ///@endinternal
 
         /** Log message handler.
          *
@@ -217,10 +231,6 @@ namespace vidre {
             }
         };
 
-        /**@addtogroup api-core-log-if
-         * */
-        ///@{
-
         /** End-of-line.
          * */
         constexpr static message_type endl = {"\n", 1};
@@ -231,8 +241,6 @@ namespace vidre {
 
         ///@}
 
-        /** Logging IO.
-         * */
         inline namespace io {
 
             /**@addtogroup api-core-log-io

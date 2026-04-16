@@ -36,6 +36,10 @@
  * information, and, therefore, should not be used in fast code paths (use
  * @c std::optional and @c std::expected there).
  *
+ * @{
+ * @namespace vidre::error Exception and errors.
+ * @defgroup api-core-exception-details Implementation details.
+ * @}
  * */
 #include <vidre/core/config.hh>
 #include <vidre/util/shared.hh>
@@ -46,21 +50,21 @@
 
 #if not defined(VIDRE_EXCEPTION_STORE) or defined(DOXYGEN)
 /** Size of per-thread storage for exceptions.
- * @ingroup api-core-details
+ * @ingroup api-core-exception-details
  * */
 #define VIDRE_EXCEPTION_STORE (64UL * 1024UL)
 #endif
 
 namespace vidre {
 
-    namespace detail {
+     namespace error {
 
-        /** Exception details.
-         * @ingroup api-core-details
+        /** Implementation details namespace.
+         * @ingroup api-core-exception-details
          * */
-        namespace exception {
+        namespace detail {
 
-            /**@addtogroup api-core-details
+            /**@addtogroup api-core-exception-details
              * */
             ///@{
 
@@ -193,14 +197,7 @@ namespace vidre {
 
             ///@}
 
-        }  // namespace exception
-
-    }  // namespace detail
-
-    /** Exception and error namespace.
-     * @ingroup api-core-exception
-     * */
-    namespace error {
+        }  // namespace detail
 
         /**@addtogroup api-core-exception
          * */
@@ -209,11 +206,11 @@ namespace vidre {
         /** Allocator for exception handling.
          * */
         template <typename T>
-        using allocator = detail::exception::allocator<T>;
+        using allocator = error::detail::allocator<T>;
 
         /** Standard type for error messages.
          * */
-        using string = std::basic_string<char, std::char_traits<char>, detail::exception::allocator<char>>;
+        using string = std::basic_string<char, std::char_traits<char>, error::detail::allocator<char>>;
 
         class diagnostic;
 
@@ -221,14 +218,11 @@ namespace vidre {
 
     }  // namespace error
 
-    namespace detail {
+    namespace error {
 
-        /** Exception details.
-         * @ingroup api-core-details
-         * */
-        namespace exception {
+        namespace detail {
 
-            /**@addtogroup api-core-details
+            /**@addtogroup api-core-exception-details
              * */
             ///@{
 
@@ -248,14 +242,14 @@ namespace vidre {
 
                 /** Make the message.
                  * */
-                virtual void make(error::string &) noexcept {}
+                virtual void make(vidre::error::string &) noexcept {}
             };
 
             ///@}
 
-        }  // namespace exception
+        }  // namespace detail
 
-    }  // namespace detail
+    }  // namespace error
 
     class exception;
 
@@ -289,10 +283,10 @@ namespace vidre {
 
         /** Base class for supplemental exception info.
          * */
-        class VIDRE_CORE_VISIBILITY info : public detail::exception::supplement {
+        class VIDRE_CORE_VISIBILITY info : public error::detail::supplement {
         public:
-            using shared_type = shared<detail::exception::supplement,  //
-                                       detail::exception::allocator<detail::exception::supplement>>;
+            using shared_type = shared<error::detail::supplement,  //
+                                       error::detail::allocator<error::detail::supplement>>;
 
         public:
             info() = default;
@@ -303,7 +297,7 @@ namespace vidre {
 
         public:
             template <class Info>
-            requires std::derived_from<Info, detail::exception::supplement>
+            requires std::derived_from<Info, error::detail::supplement>
             void attach(Info &&inf) {
                 if (next_.get()) {
                     auto nextptr = dynamic_cast<info *>(next_.get());
@@ -316,7 +310,7 @@ namespace vidre {
                     Info *ptr = allocator.allocate(1);
                     new (ptr) Info(std::move(inf));
 
-                    next_ = shared_type(ptr, detail::exception::deleter<Info>());
+                    next_ = shared_type(ptr, error::detail::deleter<Info>());
                 }
             }
 

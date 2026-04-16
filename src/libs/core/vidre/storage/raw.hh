@@ -24,10 +24,9 @@
 #define VIDRE_CORE_STORAGE_RAW_HH
 #pragma once
 
-/**@defgroup api-core-storage-raw Raw data file
- * @ingroup api-core-storage
- * @fileinfo
+/**@addtogroup api-core-storage-raw
  * @details
+ * @fileinfo
  *
  * The raw file format uses [Type-Length-Value](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)
  * (TLV) encoding, inspired by the design principles of ASN.1 (note also some
@@ -136,6 +135,9 @@
  * [<tail-size>]        // 8 bytes (only in data file, not in tail file)
  * @endcode
  *
+ * @{
+ * @namespace vidre::storage::raw 
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -151,9 +153,6 @@ namespace vidre {
 
     namespace storage {
 
-        /** Namespace for "raw file" implementation.
-         * @ingroup api-core-storage-raw
-         * */
         namespace raw {
 
             /**@addtogroup api-core-storage-raw */

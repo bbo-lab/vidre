@@ -20,7 +20,7 @@
  * @defgroup api-core-script        Scripting
  * @defgroup api-core-settings      Settings
  * @defgroup api-core-storage       Storage
- * @defgroup api-core-video         Video related
+ * @defgroup api-core-video         Video encoding
  * @defgroup api-core-plugin        Plugins
  * @defgroup api-core-program       Program invocation and tools
  * @defgroup api-core-details       Implementation details

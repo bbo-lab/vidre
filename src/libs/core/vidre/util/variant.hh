@@ -24,6 +24,12 @@
 #define VIDRE_CORE_UTIL_VARIANT_HH
 #pragma once
 
+/**@defgroup api-core-util-variant Variants
+ * @ingroup api-core-util
+ * @details
+ * @fileinfo
+ * */
+
 #include <vidre/core/config.hh>
 #include <vidre/exception.hh>
 
@@ -31,7 +37,7 @@
 
 namespace vidre {
 
-    /**@addtogroup api-core-util
+    /**@addtogroup api-core-util-variant
      * */
     ///@{
 
@@ -111,7 +117,7 @@ namespace vidre {
         constexpr variant &operator=(const T *);
     };
 
-#if not defined(DOXYGEN)
+    ///@cond
     // FIXME the following needs to go into "implementation details"
     template <>
     struct variant::deduce<unsigned long> {
@@ -269,8 +275,7 @@ namespace vidre {
 
         return *this;
     }
-
-#endif
+    ///@endcond
 
     ///@}
 

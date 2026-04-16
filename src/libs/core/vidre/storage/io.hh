@@ -24,10 +24,9 @@
 #define VIDRE_CORE_STORAGE_IO_HH
 #pragma once
 
-/**@defgroup api-core-storage-io In-/output.
- * @ingroup api-core-storage
- * @fileinfo
+/**@addtogroup api-core-storage-io
  * @details
+ * @fileinfo
  *
  * In principle, the functionality provided by this module resembles the
  * class POSIX read/write. To provide advanced capabilities, such as
@@ -52,31 +51,34 @@
 
 namespace vidre {
 
-    namespace detail {
-
-        /**@addtogroup api-core-details
-         * */
-        ///@{
-
-        /** Check if type has a "data()" method.
-         * */
-        template <typename T>
-        concept has_data_member = requires (T t) {
-            { t.data() } -> std::convertible_to<const void *>;
-        };
-
-        /** Check if type has a "data()" method.
-         * */
-        template <typename T>
-        concept has_size_method = requires (T t) {
-            { t.size() } -> std::convertible_to<std::size_t>;
-        };
-
-        ///@}
-
-    }  // namespace detail
-
     namespace storage {
+
+        /** Implementation details for storage.
+         * @ingroup api-core-storage-details
+         * */
+        namespace detail {
+
+            /**@addtogroup api-core-storage-details
+             * */
+            ///@{
+
+            /** Check if type has a "data()" method.
+             * */
+            template <typename T>
+            concept has_data_member = requires (T t) {
+                { t.data() } -> std::convertible_to<const void *>;
+            };
+
+            /** Check if type has a "data()" method.
+             * */
+            template <typename T>
+            concept has_size_method = requires (T t) {
+                { t.size() } -> std::convertible_to<std::size_t>;
+            };
+
+            ///@}
+
+        }  // namespace detail
 
         /**@addtogroup api-core-storage-io
          * */
@@ -311,20 +313,20 @@ namespace vidre {
          *
          * @code
          * offset_type put(const uint8_t *buf, size_type count) override;
-         * @endcond
+         * @endcode
          *
          * Classes implementing the "region" mode need to implement the @c mode() method
          * and FIXME.
-         * 
+         *
          * @todo document "shared"
          * @todo document "mode::region" interface
          * */
         class VIDRE_CORE_VISIBILITY sink {
-        public:  
+        public:
             using shared = std::shared_ptr<sink>;
             template <typename T, typename... Args>
             static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...); 
+                return std::make_shared<T>(std::forward<Args>(args)...);
             }
 
         public:
@@ -386,11 +388,11 @@ namespace vidre {
          * FIXME
          */
         class VIDRE_CORE_VISIBILITY source {
-        public:  
+        public:
             using shared = std::shared_ptr<source>;
             template <typename T, typename... Args>
             static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...); 
+                return std::make_shared<T>(std::forward<Args>(args)...);
             }
 
         public:
@@ -448,16 +450,16 @@ namespace vidre {
         };
 
         // FIXME filter? transformer? ... ?
-        /* 
+        /*
             Code suggestions from DeepSeek:
 
             file_source.read()
                 .through(encryptor)
                 .through(compressor)
                 .into(file_sink);
-        
-            file_source | pipe(encryptor) | pipe(compressor) | file_sink;        
-        
+
+            file_source | pipe(encryptor) | pipe(compressor) | file_sink;
+
             Names suggested:
             - through
             - pipe
@@ -465,7 +467,6 @@ namespace vidre {
             - duplex
             ...
         */
-
 
         ///@}
 
