@@ -48,7 +48,7 @@ namespace vidre {
 
         /** Frame index.
          * */
-        struct __vidre_packed__ VIDRE_CORE_VISIBILITY index {
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY index {
             uint64_t count;  ///< Frame index, usually but not necessarily starting from 0.
         };
 
@@ -62,7 +62,7 @@ namespace vidre {
          *
          * @see std::chrono::duration for a more flexible representation of time intervals, if needed.
          * */
-        struct __vidre_packed__ VIDRE_CORE_VISIBILITY timestamp {
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY timestamp {
             static_assert(std::chrono::steady_clock::duration::period::num == 1);
 
             /** The systems default resolution for "steady_clock" */

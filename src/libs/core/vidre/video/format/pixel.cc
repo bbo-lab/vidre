@@ -26,43 +26,21 @@
 
 using namespace vidre;
 
-// bool script_get_table(video::format::fourcc code) {
-//     // look-up logic is stored in this module:
-//     script::g.require("vidre.video.format.fourcc");
-//     if (script::g.type(-1) != lua::type::table) 
-//         log::fatal() << "vidre.video.format.fourcc not accessible";
+const char *format::pixel::name() const noexcept {
+    script::engine::stack top(script::g);
 
-//     // get entry for code:
-//     script::g.pushinteger(static_cast<lua::integer>(code));
-//     script::g.gettable(-2);
-
-//     // success if we got a table back:
-//     return script::g.type(-1) == lua::type::table;
-// }
-
-// std::string video::format::pixel::name(convention conv) const noexcept {
-//     script::engine::stack top(script::g);
-
-//     if (not script_get_table(format_)) {
-//         log::warning() << "unknown pixel format 0x" << std::format("{:08X}", static_cast<uint32_t>(format_)) << log::endl;
-//         return {};
-//     }
+    if (not script_get_table(code_)) {
+        log::warning() << "unknown pixel format 0x" << std::format("{:08X}", code_) << log::endl;
+        return {};
+    }
     
-//     // the info table _always_ contains the "name" field:
-//     switch (conv) { 
-//         case convention::fourcc:
-//             break;
-//         case convention::usb3vision:
-//             script::g.pushstring("usb3vision");
-//             script::g.gettable(-2);
-//             break;
-//         case convention::gigevision:
-//             script::g.pushstring("gigevision");
-//             script::g.gettable(-2);
-//             break;
-//     }
-//     script::g.pushlstring("name", 4);
-//     script::g.gettable(-2);
+    // the info table _always_ contains the "name" field:
+    script::g.pushlstring("name", 4);
+    script::g.gettable(-2);
 
-//     return script::g.tostring(-1);
-// }
+    return script::g.tostring(-1);
+}
+
+settings::json format::pixel::json() const noexcept {
+    return {{"name", name()}};
+}

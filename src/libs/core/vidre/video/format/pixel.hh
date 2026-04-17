@@ -54,22 +54,6 @@
 
 namespace vidre {
 
-    namespace detail {
-
-        namespace video {
-
-            /**@addtogroup api-core-detail
-             * */
-            ///@{
-
-            // FIXME
-
-            ///@}
-
-        }  // namespace video
-
-    }  // namespace detail
-
     namespace video {
 
         namespace format {
@@ -79,79 +63,39 @@ namespace vidre {
             ///@{
 
             /** Pixel formats.
-             *
+             * There are a multitude of pixel formats, and they are often encoded in a compact way. This class provides a unified
+             * interface to encode and decode pixel formats, and to convert between them.
              * */
-            class VIDRE_CORE_VISIBILITY pixel {
+            class __vidre_packed__(8) VIDRE_CORE_VISIBILITY pixel {
             public:
-            //     /** Supported pixel format conventions.
-            //      * */
-            //     enum class convention {
-            //         fourcc,      ///< FourCC code (default).
-            //         usb3vision,  ///< USB3 Vision pixel format code (see [USB3 Vision
-            //                      ///< standard](FIXME)).
-            //         gigevision,  ///< GigE Vision pixel format code (see [GigE Vision
-            //                      ///< standard](FIXME)).
-            //     };
+                /** Supported pixel format conventions.
+                 * */
+                enum class convention : uint8_t {
+                    vidre = 0,       ///< VidRe's internal pixel format convention (default).
+                    fourcc = 1,      ///< FourCC code (default).
+                    usb3vision = 2,  ///< USB3 Vision pixel format code (see [USB3 Vision
+                                     ///< standard](FIXME)).
+                    gigevision = 3,  ///< GigE Vision pixel format code (see [GigE Vision
+                                     ///< standard](FIXME)).
+                };
 
-            //     /** Generate pixel format from a string representation.
-            //      * @tparam Conv The pixel format convention to use (default: FourCC).
-            //      * @param name The string representation of the pixel format.
-            //      * @return A pixel object representing the specified format.
-            //      * */
-            //     template <convention Conv = convention::fourcc>
-            //     pixel make(const std::string &name) noexcept;
+            public:
+                pixel() noexcept = default;
 
-            //     /** Preferred pixel formats.
-            //      * */
-            //     struct preferred {
-            //         static constexpr fourcc gray8 = fourcc::grey;
-            //         static constexpr fourcc gray10 = fourcc::y10;
-            //         static constexpr fourcc gray12 = fourcc::y12;
-            //         static constexpr fourcc gray14 = fourcc::y14;
-            //         static constexpr fourcc gray16 = fourcc::y16;
+            protected:
+                convention convention_{convention::vidre};
+                uint8_t reserved_[3]{};
+                uint32_t code_{};
 
-            //         static constexpr fourcc rgb24 = fourcc::rgb24;
-            //         static constexpr fourcc rgb32 = fourcc::rgba32;
-            //     };
+            public:
+                /** Pixel-format name.
+                 * */
+                const char *name() const noexcept;
 
-            // public:
-            //     pixel() noexcept = default;
-            //     explicit pixel(fourcc format) noexcept : format_(format) {}
-
-            // protected:
-            //     fourcc format_{};
-
-            // public:
-            //     /** Check if valid.
-            //      * */
-            //     bool valid() const noexcept {
-            //         return format_ != fourcc::invalid;
-            //     }
-
-            //     /** Convert to FourCC code.
-            //      * */
-            //     operator fourcc() const noexcept {
-            //         return format_;
-            //     }
-
-            //     /** Comparison. */
-            //     bool operator==(const pixel &other) const noexcept {
-            //         return format_ == other.format_;
-            //     }
-
-            //     /** Get the name of the pixel format.
-            //      * @return A string representing the name of the pixel format.
-            //      * */
-            //     std::string name(convention conv = convention::fourcc) const noexcept;
+                /** Get JSON representation of the pixel format.
+                 * */
+                settings::json json() const noexcept;
             };
-
-            // /** FIXME pixel-format converter
-            //  * */
-            // template <auto Input, auto Output>
-            // struct convert {
-            //     storage::size_type size(format::size) const noexcept;
-            //     status operator()(format::size, const uint8_t *, uint8_t *) noexcept;
-            // };
 
             ///@}
 
