@@ -48,7 +48,17 @@ namespace vidre {
         /** Format namespace.
          * @ingroup api-core-video-format
          * */
-        namespace format {}  // namespace format
+        namespace format {
+
+            /**@addtogroup api-core-video-format
+             * */
+            ///@{
+
+            //
+
+            ///@}
+
+        }  // namespace format
 
     }  // namespace video
 

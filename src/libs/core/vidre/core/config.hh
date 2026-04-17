@@ -60,7 +60,7 @@ namespace vidre {
  *       compiled with GNU C/Clang compatible compilers, that understand
  *       this attribute syntax.
  * */
-#define __vidre_packed__ __attribute__((packed, aligned(8)))
+#define __vidre_packed__(ALIGN) __attribute__((packed, aligned(ALIGN)))
 
 #if defined(DOXYGEN)
 

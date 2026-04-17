@@ -171,7 +171,7 @@ namespace vidre {
 
             /** Version layout.
              * */
-            struct __vidre_packed__ VIDRE_CORE_VISIBILITY version_type {
+            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY version_type {
                 uint32_t major{};
                 uint32_t minor{};
             };
@@ -240,7 +240,7 @@ namespace vidre {
             /** The "T" type.
              * @see raw::major
              * */
-            struct __vidre_packed__ VIDRE_CORE_VISIBILITY id {
+            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY id {
                 uint16_t major_{};     ///< Major "T"ype.
                 uint16_t minor_{};     ///< Sub-"T"ype.
                 uint32_t reserved_{};  ///< Reserved for future use.
@@ -294,7 +294,7 @@ namespace vidre {
 
             /** The "TL" prefix.
              * */
-            struct __vidre_packed__ VIDRE_CORE_VISIBILITY prefix : id {
+            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY prefix : id {
                 length_type length;  ///< Message length (offset to next field).
             };
 
@@ -311,7 +311,7 @@ namespace vidre {
                  * */
                 template <class Value, raw::major major, auto minor>
                 requires (not std::derived_from<Value, dynamic>)
-                struct __vidre_packed__ VIDRE_CORE_VISIBILITY fixed {
+                struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY fixed {
                     static_assert(compatible_minor<decltype(minor)>);
 
                     using value_type = Value;
