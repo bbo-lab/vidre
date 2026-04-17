@@ -29,3 +29,4 @@
 #include "util/uuid.hh"
 #include "util/variant.hh"
 #include "util/version.hh"
+#include "util/bit.hh"

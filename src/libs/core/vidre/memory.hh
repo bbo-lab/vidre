@@ -27,9 +27,23 @@
 /**@addtogroup api-core-memory
  * @details
  * @fileinfo
- * @todo memory handling
+ * 
+ * The C++-API of VidRe provides several ways of managing memory, especially 
+ * those for recording data. 
+ * 
+ * FIXME 
+ * - camera drivers provide their own "buffer factories" vs.
+ * - we provide a memory factory tailored for data recording devices...
+ * - etc.
+ * 
+ * @{
+ * @namespace vidre::memory Memory handling.
+ * @defgroup api-core-memory-chunk Data chunk handling
+ * @defgroup api-core-memory-details Implementation details
+ * @}
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/memory/chunk.hh>
 
 #endif  // VIDRE_CORE_MEMORY_HH
