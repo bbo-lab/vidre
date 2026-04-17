@@ -28,6 +28,8 @@
  * @details
  * @fileinfo
  *
+ * This header provides utilities to manage "chunks" of data (e.g. a video image).
+ * ...FIXME..
  *
  * @{
  * @namespace vider::memory::chunk Chunk handling.
@@ -35,8 +37,11 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/memory/base.hh>
+#include <vidre/util/events.hh>
 
 #include <bit>
+#include <atomic>
 
 namespace vidre {
 
@@ -48,61 +53,146 @@ namespace vidre {
              * */
             ///@{
 
-            /** FIXME
+            /** A FIFO chunk manager.
+             * @tparam N    Ring size.
+             *              If zero (default), the ring is dynamically allocated, otherwise
+             *              (requiring N being a power of 2) it is statically allocated.
+             *
+             * This class is designed to manage a ring of pointers to data chunks (e.g. video frames)
+             * in a FIFO manner, where a "producer" queues pointers to new data chunks,
+             * while the output is consumed by a "consumer" in the same order.
+             *
+             * FIXME
+             * - event based...
+             * - producer-consumer synchronization (e.g. via eventfd)...
+             * - buffer management (e.g. via a "buffer factory",see "data accessors")...
+             * - how to signal if the producer dies?
+             * etc.
+             *
+             * @todo need to work out, if atomic operations are required....
              * */
-            class VIDRE_CORE_VISIBILITY ring {
-            public:
-                using size_type = std::size_t;
-                using value_type = uint8_t;
-                using pointer = uint8_t *;
-                using const_pointer = const uint8_t *;
+            template <size_type N = 0>
+            class fifo;
 
+            template <>
+            class VIDRE_CORE_VISIBILITY fifo<0> {
             public:
-                ring() = delete;
+                fifo() = default;
 
-                ring(size_type n);
+                fifo(const fifo &) = delete;
+                fifo &operator=(const fifo &) = delete;
+
+                fifo(fifo &&) noexcept = delete; // FIXME should be movable...
+                fifo &operator=(fifo &&) noexcept = delete;
+
+                fifo(size_type n) : size_(n), store_(new pointer[n]) {}
+                ~fifo() {
+                    if (store_)
+                        delete[] store_;
+                }
 
             protected:
-                size_type size_{};  ///< Ring size.
-                pointer *data_{};  ///< Data store.
+                size_type size_{};              ///< Ring size.
+                pointer *store_{};              ///< Pointer store.
+                size_type in_{};                ///< Ring head.
+                std::atomic<size_type> out_{};  ///< Ring tail.
+
+                event signal_{};  ///< Event to signal the consumer about new data.
+
+            protected:
+                void skip(size_type n) noexcept {
+                    // FIXME adjust out_ to make space for the new element, i.e. drop the oldest one
+                    abort_with_message("internal error: fifo full");
+                }
+
+                void next() noexcept {
+                    ++in_;
+                    in_ *= (in_ < size_);
+                }
 
             public:
+                /** Allocate space.
+                 * @note This method may only be called once, iff the ring is not yet
+                 *       allocated (i.e. size() == 0).
+                 * */
+                void allocate(size_type n) noexcept {
+                    if (size_)
+                        abort_with_message("internal error: fifo already allocated");
+
+                    size_ = n;
+                    store_ = new pointer[size_];
+                }
+
                 /** Get buffer count.
                  * */
                 size_type size() const noexcept {
                     return size_;
                 }
 
-                // /** Get free size.
-                //  * */
-                // size_type free() const noexcept {
-                //     bool trail = (in_ >= out_);
-                //     size_type a = trail * ((size_ - in_) + out_);  // out_ <= in_
+                /** Data accessors.
+                 * */
+                ///@{
+                pointer operator[](size_type i) noexcept {
+                    return store_[i];
+                }
+                const_pointer operator[](size_type i) const noexcept {
+                    return store_[i];
+                }
+                ///@}
 
-                //     bool lead = not trail;
-                //     size_type b = lead * (out_ - in_);  // in_ < out_;
+                /** Get free size.
+                 * */
+                size_type free() const noexcept {
+                    bool trail = (in_ >= out_);
+                    size_type a = trail * ((size_ - in_) + out_);  // out_ <= in_
 
-                //     return a + b;
-                // }
+                    bool lead = not trail;
+                    size_type b = lead * (out_ - in_);  // in_ < out_;
 
-                // /** Add element.
-                //  * */
-                // bool push_back(pointer ptr) noexcept {
-                //     if (not free())
-                //         return false;
+                    return a + b;
+                }
 
-                //     ring_[in_] = ptr;
-                //     ++in_;
-                //     in_ *= (in_<size_);
-                //     return true;
-                // }
+                /** Queue an element.
+                 * */
+                void queue() noexcept {
+                    next();
+                    signal_.notify();
+                }
 
-                // /** Remove element.
-                //  * */
-                // pointer pop_front() noexcept {
-                //     pointer retval = ring_[out_];
-                //     FIXME()
-                // }
+                void queue(pointer ptr) noexcept {
+                    next();
+                    store_[in_] = ptr;
+                    signal_.notify();
+                }
+
+                /** Consume an element.
+                 * FIXME
+                 * */
+                pointer consume() noexcept {
+                    // FIXME
+                    return nullptr;
+                }
+            };
+
+            template <size_type N>
+            class VIDRE_CORE_VISIBILITY fifo {
+            public:
+                static_assert(std::has_single_bit(N), "Ring size must be a power of 2.");
+
+            public:
+                fifo() = delete;
+                fifo(size_type n);
+
+            protected:
+                size_type size_{};  ///< Ring size.
+                pointer *data_{};   ///< Pointer store.
+
+            public:
+                static constexpr size_type size() noexcept {
+                    return N;
+                }
+
+                // FIXME
             };
 
             ///@}

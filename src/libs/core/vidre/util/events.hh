@@ -28,7 +28,6 @@
  * @ingroup api-core-util
  * @details
  * @fileinfo
- *
  * 
  * @{
  * @defgroup api-core-util-events-details Implementation details
@@ -73,15 +72,15 @@ namespace vidre {
 #if defined(__linux__) or defined(DOXYGEN)
         using eventfd_t = int;
 
-        eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {
+        inline eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {
             return eventfd(initval, flags | EFD_CLOEXEC | EFD_NONBLOCK);
         }
-
-        void eventfd_destroy(eventfd_t fd) {
+        
+        inline void eventfd_destroy(eventfd_t fd) {
             close(fd);
         }
 
-        uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {
+        inline uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {
             ssize_t ret = write(fd, &count, sizeof(count));
             if (ret != sizeof(count)) {
                 switch (errno) {
@@ -94,7 +93,7 @@ namespace vidre {
             return count;
         }
 
-        std::optional<uint64_t> eventfd_wait(eventfd_t fd) {
+        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd) {
             uint64_t count;
 
             ssize_t ret = read(fd, &count, sizeof(count));
@@ -115,7 +114,7 @@ namespace vidre {
             return count;
         }
 
-        std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {
+        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {
             struct pollfd pfd = {fd, POLLIN, 0};
             int ret = poll(&pfd, 1, static_cast<int>(timeout.count()));
             if (ret == 0)
@@ -130,28 +129,28 @@ namespace vidre {
         using eventfd_t = int[2];
 
         // see https://chat.deepseek.com/a/chat/s/084df7a5-ea3f-4f74-8078-505668d8dd2d
-        eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {}
+        inline eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {}
 
-        void eventfd_destroy(eventfd_t fd) {}
+        inline void eventfd_destroy(eventfd_t fd) {}
 
-        uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {}
+        inline uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {}
 
-        std::optional<uint64_t> eventfd_wait(eventfd_t fd) {}
+        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd) {}
 
-        std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {}
+        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {}
 #elif defined(_WIN32)
         using eventfd_t = HANDLE;
 
         // see https://chat.deepseek.com/a/chat/s/084df7a5-ea3f-4f74-8078-505668d8dd2d
-        eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {}
+        inline eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {}
 
-        void eventfd_destroy(eventfd_t fd) {}
+        inline void eventfd_destroy(eventfd_t fd) {}
 
-        uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {}
+        inline uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {}
 
-        std::optional<uint64_t> eventfd_wait(eventfd_t fd) {}
+        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd) {}
 
-        std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {}
+        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {}
 #endif
 
         ///@}

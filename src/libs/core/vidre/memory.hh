@@ -38,6 +38,7 @@
  * 
  * @{
  * @namespace vidre::memory Memory handling.
+ * @defgroup api-core-memory-base Basic types and utilities
  * @defgroup api-core-memory-chunk Data chunk handling
  * @defgroup api-core-memory-details Implementation details
  * @}

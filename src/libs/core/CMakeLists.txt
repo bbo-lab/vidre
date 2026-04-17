@@ -54,6 +54,8 @@ vidre_library(vidrecore SHARED
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
         vidre/memory.hh vidre/memory.cc
+            vidre/memory/base.hh
+            vidre/memory/chunk.hh
         vidre/script.hh vidre/script.cc
         vidre/settings.hh vidre/settings.cc
             vidre/settings/lua.hh 
