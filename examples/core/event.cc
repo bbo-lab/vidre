@@ -1,0 +1,69 @@
+#include <vidre/util/events.hh>
+#include <vidre/util/thread.hh>
+#include <vidre/log.hh>
+#include <thread>
+
+#include "benchmark/benchmark.hh"
+
+using namespace vidre;
+
+#define RUN_FOR_S 10
+
+static event ev{};
+
+void consumer() {
+    uint64_t count = 0;
+    bool running = true;
+    while (running) {
+        event::result res = ev.wait(std::chrono::milliseconds(1));
+        switch (res.status) {
+            case event::state::success:
+                count += res.count;
+                break;
+            case event::state::timed_out:
+                continue;
+            case event::state::terminated:
+                running = false;
+                continue;
+            default:
+                log::error() << "Consumer: failed to wait for event" << log::endl;
+                running = false;
+                continue;
+        }
+    }
+
+    log::notice() << "Consumer: received " << count << " events" << log::endl;
+}
+
+void producer() {
+    uint64_t count = 0;
+    benchmark::timer timer;
+
+    timer.start();
+    while (true) {
+        if (timer.elapsed() > RUN_FOR_S)
+            break;
+
+        if (ev.notify(1) != event::state::success) {
+            log::error() << "Producer: failed to notify event" << log::endl;
+            break;
+        }
+        count++;
+    }
+
+    log::notice() << "Producer: sent " << count << " notifications" << log::endl;
+    ev.terminate();
+}
+
+int main(int, const char **) {
+    thread prod(producer);
+    schedule(prod).priority(schedule::policy::fifo, 20);
+
+    thread cons(consumer);
+    schedule(cons).priority(schedule::policy::fifo, 10);
+
+    prod.join();
+    cons.join();
+
+    return 0;
+}

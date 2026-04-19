@@ -30,3 +30,4 @@
 #include "util/variant.hh"
 #include "util/version.hh"
 #include "util/bit.hh"
+#include "util/thread.hh"

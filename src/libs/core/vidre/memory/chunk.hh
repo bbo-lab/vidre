@@ -82,7 +82,7 @@ namespace vidre {
                 fifo(const fifo &) = delete;
                 fifo &operator=(const fifo &) = delete;
 
-                fifo(fifo &&) noexcept = delete; // FIXME should be movable...
+                fifo(fifo &&) noexcept = delete;  // FIXME should be movable...
                 fifo &operator=(fifo &&) noexcept = delete;
 
                 fifo(size_type n) : size_(n), store_(new pointer[n]) {}
@@ -101,13 +101,14 @@ namespace vidre {
 
             protected:
                 void skip(size_type n) noexcept {
-                    // FIXME adjust out_ to make space for the new element, i.e. drop the oldest one
-                    abort_with_message("internal error: fifo full");
+                    n += out_;
+                    out_ = n - (n >= size_) * size_;  // wrap around
                 }
 
-                void next() noexcept {
-                    ++in_;
-                    in_ *= (in_ < size_);
+                inline size_type inc(size_type &i) noexcept {
+                    i += 1;
+                    i *= (i < size_);  // wrap around if i == size_
+                    return i;
                 }
 
             public:
@@ -143,11 +144,11 @@ namespace vidre {
                 /** Get free size.
                  * */
                 size_type free() const noexcept {
-                    bool trail = (in_ >= out_);
-                    size_type a = trail * ((size_ - in_) + out_);  // out_ <= in_
+                    bool usea = (in_ >= out_);
+                    size_type a = usea * ((size_ - in_) + out_);  // out_ <= in_
 
-                    bool lead = not trail;
-                    size_type b = lead * (out_ - in_);  // in_ < out_;
+                    bool useb = not usea;
+                    size_type b = useb * (out_ - in_);  // in_ < out_;
 
                     return a + b;
                 }
@@ -155,22 +156,54 @@ namespace vidre {
                 /** Queue an element.
                  * */
                 void queue() noexcept {
-                    next();
+                    inc(in_);
                     signal_.notify();
+                    // FIXME need to check notify failure...
                 }
 
                 void queue(pointer ptr) noexcept {
-                    next();
+                    inc(in_);
                     store_[in_] = ptr;
                     signal_.notify();
+                    // FIXME need to check notify failure...
+                }
+
+                /** Stop.
+                 * FIXME
+                 * */
+                void stop() noexcept {
+                    signal_.terminate();
+                }
+
+                /** Wait for elements.
+                 * */
+                auto wait() noexcept {
+                    return signal_.wait();
+                }
+                auto wait(std::chrono::milliseconds timeout) noexcept {
+                    return signal_.wait(timeout);
+                }
+
+                /** Check how many are available.
+                 * */
+                size_type available() const noexcept {
+                    bool usea = (in_ >= out_);
+                    size_type a = usea * (out_ - in_);  // out_ <= in_
+
+                    bool useb = not usea;
+                    size_type b = useb * (in_ + size_ - out_);  // in_ < out_
+
+                    return a + b;
                 }
 
                 /** Consume an element.
-                 * FIXME
                  * */
                 pointer consume() noexcept {
-                    // FIXME
-                    return nullptr;
+                    if (in_ == out_) [[unlikely]]
+                        return nullptr;  // empty
+                    pointer ptr = store_[out_];
+                    skip(1);
+                    return ptr;
                 }
             };
 

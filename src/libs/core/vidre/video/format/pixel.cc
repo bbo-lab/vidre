@@ -25,18 +25,21 @@
 #include "../../log.hh"
 
 using namespace vidre;
+using namespace vidre::video;
 
 const char *format::pixel::name() const noexcept {
     script::engine::stack top(script::g);
 
-    if (not script_get_table(code_)) {
-        log::warning() << "unknown pixel format 0x" << std::format("{:08X}", code_) << log::endl;
-        return {};
-    }
-    
-    // the info table _always_ contains the "name" field:
-    script::g.pushlstring("name", 4);
-    script::g.gettable(-2);
+    // if (not script_get_table(code_)) {
+    //     log::warning() << "unknown pixel format 0x" << std::format("{:08X}", code_) << log::endl;
+    //     return {};
+    // }
+
+    // // the info table _always_ contains the "name" field:
+    // script::g.pushlstring("name", 4);
+    // script::g.gettable(-2);
+
+    script::g.pushlstring("FIXME", 5);
 
     return script::g.tostring(-1);
 }

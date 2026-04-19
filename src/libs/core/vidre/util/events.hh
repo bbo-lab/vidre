@@ -28,7 +28,7 @@
  * @ingroup api-core-util
  * @details
  * @fileinfo
- * 
+ *
  * @{
  * @defgroup api-core-util-events-details Implementation details
  * @}
@@ -53,11 +53,10 @@
 #include <windows.h>
 #endif
 
-#include <optional>
-
 #include <atomic>
 #include <chrono>
 #include <thread>
+#include <utility>
 
 #include <cassert>
 
@@ -69,89 +68,168 @@ namespace vidre {
          * */
         ///@{
 
+        /** Trivial event notification primitive based on Linux's eventfd.
+         * @note This is only available on Linux, and is emulated on other platforms.
+         * */
+        struct VIDRE_CORE_VISIBILITY event {
+            using value_type = uint64_t;  ///< Type of the notification count.
+
+            static constexpr value_type max_count = 0xfffffffffffffffeULL;  ///< Maximum notification count.
+
+            // clang-format off
+            static constexpr int success = static_cast<int>(std::errc{});                                    ///< Notification was successful.
+            static constexpr int try_again = static_cast<int>(std::errc::resource_unavailable_try_again);    ///< Notification failed and should be retried.
+            static constexpr int timed_out = static_cast<int>(std::errc::timed_out);                         ///< Wait timed out.
+            static constexpr int terminated = static_cast<int>(std::errc::broken_pipe);                      ///< Termination signal received (not handled here).
+            // clang-format on
+
+            using result_type = std::pair<int, value_type>;  ///< Type of the wait result (status code and notification count).
+
+            event() = default;
+            event(const event &) = delete;
+            event &operator=(const event &) = delete;
+            event(event &&other) noexcept : handle(std::exchange(other.handle, -1)), quit(other.quit.load()) {}
+            event &operator=(event &&other) noexcept {
+                if (this != &other) {
+                    close();
+                    handle = std::exchange(other.handle, -1);
+                    quit = other.quit.load();
+                }
+                return *this;
+            }
+
 #if defined(__linux__) or defined(DOXYGEN)
-        using eventfd_t = int;
+            /** Construct event handler.
+             * @param initval The initial value of the event counter (default: 0).
+             * @throw @c exception::runtime with @c error::system information if the event handler could not be created.
+             * */
+            event(value_type initval) {
+                open(initval);
+            }
 
-        inline eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {
-            return eventfd(initval, flags | EFD_CLOEXEC | EFD_NONBLOCK);
-        }
-        
-        inline void eventfd_destroy(eventfd_t fd) {
-            close(fd);
-        }
+            ~event() {
+                if (valid())
+                    ::close(handle);
+            }
 
-        inline uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {
-            ssize_t ret = write(fd, &count, sizeof(count));
-            if (ret != sizeof(count)) {
-                switch (errno) {
-                    case EAGAIN:
-                        return 0;
-                    default:
-                        throw vidre::exception::runtime() << error::system();
+            int handle = -1;                ///< Internal handle (e.g. file descriptor on Linux).
+            std::atomic<bool> quit{false};  ///< Flag to indicate termination.
+
+            /** Check if valid.
+             * */
+            constexpr bool valid() const noexcept {
+                return handle != -1;
+            }
+
+            /** Initialize event handler.
+             * */
+            void open(value_type initval) {
+                handle = ::eventfd(initval, EFD_NONBLOCK | EFD_CLOEXEC);
+                if (handle == -1)
+                    throw exception::runtime() << error::system() << error::message("failed to create eventfd");
+            }
+
+            /** Close the event handler.
+             * */
+            void close() noexcept {
+                if (valid()) {
+                    ::close(handle);
+                    handle = -1;
                 }
             }
-            return count;
-        }
 
-        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd) {
-            uint64_t count;
+            /** Notify receiver of the "terminate" condition.
+             * @param time The time to wait for the consumer to acknowledge the
+             *             termination signal (milliseconds, default: 100ms).
+             * */
+            void terminate(std::chrono::milliseconds timeout) {
+                quit = true;
 
-            ssize_t ret = read(fd, &count, sizeof(count));
-            while ((ret != sizeof(count)) && (errno == EAGAIN)) {
-                std::this_thread::yield();
-                ret = read(fd, &count, sizeof(count));
-            }
+                // clear the eventfd counter to block any waiter
+                value_type count;
+                read(handle, &count, sizeof(count));
 
-            if (ret != sizeof(count)) {
-                switch (errno) {
-                    case EAGAIN:
-                        return std::nullopt;
-                    default:
-                        throw vidre::exception::runtime() << error::system();
+                // wake up any waiter to let them check the termination flag
+                if (notify(max_count) != success)
+                    goto termination_signal_not_acknowledged;
+
+                // wait until we can write again (i.e. the waiter has acknowledged the termination signal)
+                {
+                    struct pollfd pfd = {handle, POLLOUT, 0};
+                    int ret = poll(&pfd, 1, static_cast<int>(timeout.count()));
+                    if (ret > 0)
+                        return;  // acknowledged
                 }
+
+            termination_signal_not_acknowledged:
+                throw vidre::exception::runtime() << error::system() << error::message("failed to notify termination");
             }
 
-            return count;
-        }
+            /** Notify the event, i.e. wake up the consumer.
+             * @param count The number of notifications to send (default: 1).
+             * @return Status indicating whether the notification was successful
+             *         (i.e. count notifications were sent) or not (i.e. the counter is full).
+             * @throw @c exception::runtime with @c error::system information if the notification
+             *        failed due to a system error.
+             * @note This call fails if @c max_count would overflow.
+             * */
+            int notify(value_type count = 1) {
+                ssize_t ret = write(handle, &count, sizeof(count));
+                if (ret != sizeof(count)) {
+                    switch (errno) {
+                        case EAGAIN:
+                            return try_again;
+                        default:
+                            throw vidre::exception::runtime() << error::system();
+                    }
+                }
+                return success;
+            }
 
-        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {
-            struct pollfd pfd = {fd, POLLIN, 0};
-            int ret = poll(&pfd, 1, static_cast<int>(timeout.count()));
-            if (ret == 0)
-                return std::nullopt;
-            else if (ret < 0)
-                throw vidre::exception::runtime() << error::system();
+            /** Wait for the event to be notified.
+             * @return The result of the wait operation, including the status and the notification count.
+             * */
+            result_type wait() {
+                value_type count;
+                ssize_t ret = read(handle, &count, sizeof(count));
+                while ((ret != sizeof(count)) and (errno == EAGAIN)) {
+                    if (quit)
+                        return {terminated, 0};
+                    std::this_thread::yield();
+                    ret = read(handle, &count, sizeof(count));
+                }
+                if (ret != sizeof(count)) {
+                    switch (errno) {
+                        case EAGAIN:
+                            return {try_again, 0};
+                        default:
+                            throw vidre::exception::runtime() << error::system();
+                    }
+                }
+                return {quit ? terminated : success, count};
+            }
 
-            return eventfd_wait(fd);
-        }
+            /** Wait for the event to be notified, with a timeout.
+             * @param timeout The maximum time to wait for the event.
+             * @return The number of notifications received, or std::nullopt if the wait timed out.
+             * */
+            result_type wait(std::chrono::milliseconds timeout) {
+                struct pollfd pfd = {handle, POLLIN, 0};
+                int ret = poll(&pfd, 1, static_cast<int>(timeout.count()));
+                if (ret == 0)
+                    return {timed_out, 0};  // timed out
+                else if (ret < 0) [[unlikely]] {
+                    throw vidre::exception::runtime() << error::system();
+                }
+                return wait();
+            }
 
 #elif defined(__APPLE__)
-        using eventfd_t = int[2];
-
-        // see https://chat.deepseek.com/a/chat/s/084df7a5-ea3f-4f74-8078-505668d8dd2d
-        inline eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {}
-
-        inline void eventfd_destroy(eventfd_t fd) {}
-
-        inline uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {}
-
-        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd) {}
-
-        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {}
+            FIXME
 #elif defined(_WIN32)
-        using eventfd_t = HANDLE;
-
-        // see https://chat.deepseek.com/a/chat/s/084df7a5-ea3f-4f74-8078-505668d8dd2d
-        inline eventfd_t eventfd_create(unsigned int initval = 0, int flags = 0) {}
-
-        inline void eventfd_destroy(eventfd_t fd) {}
-
-        inline uint64_t eventfd_notify(eventfd_t fd, uint64_t count = 1) {}
-
-        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd) {}
-
-        inline std::optional<uint64_t> eventfd_wait(eventfd_t fd, std::chrono::milliseconds timeout) {}
+            FIXME
 #endif
+        };
 
         ///@}
 
@@ -162,44 +240,134 @@ namespace vidre {
     ///@{
 
     /** Event signalling primitive.
+     *
+     * This class provides a simple mechanism for threads to signal events to
+     * each other using the Linux eventfd mechanism (emulated on other platforms).
+     * It allows one thread (the "producer") to notify another thread (the "consumer")
+     * about the occurrence of an event. The consumer will receive the notification
+     * count, which indicates how many times the event was signaled since the last wait.
+     *
+     * @note This class is designed to be used in a single-producer, single-consumer
+     *       scenario. It does not support multiple producers or consumers, and it
+     *       does not provide any synchronization mechanisms for concurrent access.
+     *
+     *       Also, the object of this class should be shared between the producer
+     *       and consumer threads (e.g. via a shared pointer).
+     *
      * */
     class VIDRE_CORE_VISIBILITY event {
     public:
-        event() : fd_(detail::eventfd_create()) {}
-        ~event() {
-            if (fd_)
-                detail::eventfd_destroy(fd_);
-        }
+        using value_type = detail::event::value_type;  ///< Type of the notification count.
 
-    protected:
-        detail::eventfd_t fd_{};
+        /** Notification state.
+         * */
+        enum state : int {
+            success = detail::event::success,       ///< Notification was successful.
+            error = detail::event::try_again,       ///< Notification failed and should be retried.
+            timed_out = detail::event::timed_out,   ///< Wait timed out.
+            terminated = detail::event::terminated  ///< Termination signal received (not handled here).
+        };
+
+        /** Wait result.
+         * */
+        struct VIDRE_CORE_VISIBILITY result {
+            state status;
+            value_type count{};
+
+            operator bool() const noexcept {
+                return status == state::success;
+            }
+
+            bool operator!() const noexcept {
+                return status != state::success;
+            }
+
+            bool operator==(state s) const noexcept {
+                return status == s;
+            }
+
+            template <class T>
+            requires std::is_unsigned_v<T>
+            bool operator==(T v) const noexcept {
+                return (status == state::success) and (count == static_cast<value_type>(v));
+            }
+        };
 
     public:
-        /** Notify the event, i.e. wake up any waiters.
-         * @param count The number of notifications to send.
-         * @return The number of notifications actually sent.
-         * @note On Linux, the eventfd counter is a 64-bit unsigned integer. If the counter would overflow, the call will block
-         *       until it can be incremented without overflowing. In this implementation, we return 0 instead of blocking if the
-         *       counter is full.
+        event() = default;
+        event(event &&) noexcept = delete;  // FIXME should be movable...
+        event &operator=(event &&) noexcept = delete;
+        event(const event &) = delete;
+        event &operator=(const event &) = delete;
+        ~event() {}
+
+    protected:
+        detail::event impl_{0};  ///< Platform-specific event implementation.
+
+    public:
+        /** Notify receiver of the "terminate" condition.
+         * @param time The time to wait for the consumer to acknowledge the
+         *             termination signal (milliseconds, default: 100ms).
+         * @throw @c exception::runtime with @c error::system information if the termination signal could not be sent.
          * */
-        uint64_t notify(uint64_t count = 1) {
+        void terminate(std::chrono::milliseconds timeout = std::chrono::milliseconds(100)) {
+            impl_.terminate(timeout);
+        }
+
+        /** Notify the event, i.e. wake up any waiter.
+         * @param count The number of notifications to send.
+         * @return Status indicating whether the notification was successful
+         *         (i.e. count notifications were sent) or not (i.e. the counter is full).
+         * @throw @c exception::runtime with @c error::system information if the notification
+         *        failed due to a system error.
+         * @note This call fails if @c max_count would overflow.
+         * */
+        state notify(uint64_t count = 1) {
             assert(count > 0);
-            return detail::eventfd_notify(fd_, count);
+            return static_cast<state>(impl_.notify(count));
         }
 
         /** Wait for the event to be notified.
-         * @return The number of notifications received, or std::nullopt if the wait timed out.
+         * @return @c result containing the status and the notification count.
+         * @throw @c exception::runtime with @c error::system information if the wait operation failed due to a system error.
+         * This method blocks indefinitely until the event is notified or a
+         * termination signal is received.
          * */
-        std::optional<uint64_t> wait() {
-            return detail::eventfd_wait(fd_);
+        result wait() {
+            auto retval = impl_.wait();
+            return {static_cast<state>(retval.first), retval.second};
         }
 
         /** Wait for the event to be notified, with a timeout.
          * @param timeout The maximum time to wait for the event.
-         * @return The number of notifications received, or std::nullopt if the wait timed out.
+         * @throw @c exception::runtime with @c error::system information if the wait operation failed due to a system error.
+         * @return @c result containing the status and the notification count.
+         * 
+         * Example:
+         * @code
+         * bool running = true;
+         * while (running) {
+         *      event::result res = ev.wait(std::chrono::milliseconds(100));
+         *      switch (res.status) {
+         *         case event::state::success:
+         *             // handle event, res.count contains the notification count
+         *             break;
+         *         case event::state::timed_out:
+         *             // handle timeout
+         *             continue;
+         *         case event::state::terminated:
+         *             running = false;  // handle termination
+         *             continue;
+         *         default:
+         *             // never reached (exceptions are thrown otherwise)
+         *             break;
+         *      }
+         * }
+         * @endcode 
          * */
-        std::optional<uint64_t> wait(std::chrono::milliseconds timeout) {
-            return detail::eventfd_wait(fd_, timeout);
+        result wait(std::chrono::milliseconds timeout) {
+            auto retval = impl_.wait(timeout);
+            return {static_cast<state>(retval.first), retval.second};
         }
     };
 

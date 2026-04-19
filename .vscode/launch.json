@@ -88,6 +88,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.event",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.event",
+            "args": [ "-s" ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.playground.aptina",
             "type": "cppdbg",
             "request": "launch",

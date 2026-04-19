@@ -38,6 +38,7 @@
 #include <vidre/video/format/geometry.hh>
 #include <vidre/storage.hh>
 #include <vidre/exception.hh>
+#include <vidre/settings/json.hh>
 #include <vidre/util/status.hh>
 
 #include <string>

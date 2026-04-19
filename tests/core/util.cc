@@ -67,15 +67,20 @@ TEST_CASE("version.hh", "[vidre/util]") {
 TEST_CASE("events.hh", "[vidre/util]") {
     event ev{};
 
-    REQUIRE(ev.notify() == 1);
-    REQUIRE(ev.wait() == 1);
-    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == std::nullopt);
-    REQUIRE(ev.notify(5) == 5);
-    REQUIRE(ev.wait() == 5);
-    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == std::nullopt);
+    REQUIRE(ev.notify() == event::success);
+    REQUIRE(ev.wait() == 1ULL);
+    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == event::timed_out);
+    REQUIRE(ev.notify(5) == event::success);
+    REQUIRE(ev.wait() == 5ULL);
+    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == event::timed_out);
 }
 
 #include <vidre/util/endian.hh>
 TEST_CASE("endian.hh", "[vidre/util]") {
+    // intentionally empty
+}
+
+#include <vidre/util/thread.hh>
+TEST_CASE("thread.hh", "[vidre/util]") {
     // intentionally empty
 }

@@ -38,6 +38,13 @@ namespace vidre {
      * */
     ///@{
 
+    /** Program flow status.
+     *
+     * This is a simple wrapper around a boolean value, to make it more explicit
+     * that a function returns a status (i.e. success or failure) rather than a
+     * value.
+     *
+     * */
     class VIDRE_CORE_VISIBILITY status {
     public:
         enum status_type {
@@ -47,13 +54,47 @@ namespace vidre {
 
     public:
         status() = default;
+        status(const status &) = default;
+        status &operator=(const status &) = default;
+        status(status &&) noexcept = default;
+        status &operator=(status &&) noexcept = default;
+        status(status_type s) : status_(s) {}
 
     protected:
         status_type status_ = bad;
 
     public:
+        /** Convert the status to a boolean value.
+         * @return true if the status is good, false otherwise.
+         * Example:
+         * @code
+         * if (some_function() == status::bad) {
+         *     // handle error
+         * }
+         * @endcode
+         * which is equivalent to
+         * @code
+         * if (not some_function()) {
+         *     // handle error
+         * }
+         * @endcode
+         * */
         operator bool() const noexcept {
             return status_ == good;
+        }
+
+        /** Implicit conversion to status type.
+         * @return The status type (good or bad).
+         * */
+        operator status_type() const noexcept {
+            return status_;
+        }
+
+        /** Boolean negation.
+         * @return true if the status is bad, false otherwise.
+         * */
+        bool operator!() const noexcept {
+            return status_ == bad;
         }
     };
 
