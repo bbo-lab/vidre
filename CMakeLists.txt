@@ -203,3 +203,5 @@ add_subdirectory(src) # TODO for future: don't add if used as API
 # endif()
 add_subdirectory(examples)
 add_subdirectory(app)
+
+include(CPack)

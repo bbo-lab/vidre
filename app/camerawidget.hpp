@@ -10,9 +10,11 @@
 #include <QTimer>
 #include <QImage>
 #include <QPixmap>
+#include <QShowEvent>
+#include <QFocusEvent>
 #include <memory>
 
-#include "../src/core/runtime/runtime.hpp"
+#include <core/runtime/runtime.hpp>
 
 namespace Ui {
 class CameraWidget;
@@ -30,18 +32,22 @@ public:
 
     QString getCameraName() const { return cameraName_; }
     void updateStatus();
-    void setRunning() {onStartClicked();}
 
 signals:
     void windowClosed(const QString& cameraName);
+    void windowActivated(const QString& cameraName);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void focusInEvent(QFocusEvent *event) override;
 
 private slots:
     void onStartClicked();
     void onStopClicked();
+    void onShowClicked();
     void onSingleGrabClicked();
+    void onToggleDockClicked();
     void updateFrame();
 
 private:
@@ -51,7 +57,9 @@ private:
     
     QPushButton *startButton_;
     QPushButton *stopButton_;
+    QPushButton *showButton_;
     QPushButton *singleGrabButton_;
+    QPushButton *undockButton_;
     QLabel *statusLabel_;
     QLabel *imageLabel_;
     QLabel *infoLabel_;

@@ -1,5 +1,5 @@
-#include "runtime.hpp"
-#include "shared_frame_header.hpp"
+#include <core/runtime/runtime.hpp>
+#include <core/runtime/shared_frame_header.hpp>
 
 
 namespace vidre

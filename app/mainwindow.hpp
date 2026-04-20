@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "../src/core/runtime/runtime.hpp"
+#include <core/runtime/runtime.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -20,6 +20,7 @@ QT_END_NAMESPACE
 
 class DeviceListDock;
 class CameraWidget;
+class CameraInfosDock;
 
 class MainWindow : public QMainWindow
 {
@@ -41,6 +42,7 @@ private slots:
     void onRefreshDevicesClicked();
     void onDeviceDoubleClicked(const QString& deviceName);
     void onCameraWindowClosed(const QString& cameraName);
+    void onCameraWindowActivated(const QString& cameraName);
     void updateCameraStatus();
     void onTileWindows();
     void onCascadeWindows();
@@ -53,6 +55,7 @@ private:
     QDockWidget *logDock_;
     QTextEdit *logTextEdit_;
     QLabel *statusIndicator_;
+    CameraInfosDock *cameraInfosDock_;
     
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras_;
     std::unordered_map<QString, CameraWidget*> cameraWidgets_;

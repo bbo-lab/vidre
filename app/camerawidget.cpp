@@ -2,8 +2,14 @@
 #include "ui_camerawidget.h"
 #include <QCloseEvent>
 #include <QDateTime>
+#include <QMdiArea>
+#include <QMdiSubWindow>
+#include <QMainWindow>
+#include <QApplication>
+#include <QScreen>
+#include <QGuiApplication>
 
-#include "../src/core/runtime/shared_frame_header.hpp"
+#include <core/runtime/shared_frame_header.hpp>
 
 CameraWidget::CameraWidget(const QString& cameraName, 
                            vidre::RuntimeInstance* runtimeInstance,
@@ -35,8 +41,8 @@ void CameraWidget::setupUI()
     setWindowTitle(cameraName_);
     
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setSpacing(5);
-    mainLayout->setContentsMargins(5, 5, 5, 5);
+    mainLayout->setSpacing(2);
+    mainLayout->setContentsMargins(3, 3, 3, 3);
     
     // Control buttons group
     QGroupBox *controlGroup = new QGroupBox("Camera Control", this);
@@ -46,32 +52,35 @@ void CameraWidget::setupUI()
         "    color: #bbbbbb;"
         "    border: 1px solid #555555;"
         "    border-radius: 3px;"
-        "    margin-top: 10px;"
+        "    margin-top: 5px;"
         "    font-weight: bold;"
+        "    font-size: 9pt;"
         "}"
         "QGroupBox::title {"
         "    subcontrol-origin: margin;"
         "    left: 10px;"
-        "    padding: 0 3px 0 3px;"
+        "    padding: 0 2px 0 2px;"
         "}"
     );
     
     QGridLayout *controlLayout = new QGridLayout(controlGroup);
+    controlLayout->setSpacing(2);
+    controlLayout->setContentsMargins(3, 3, 3, 3);
     
     startButton_ = new QPushButton("Record", this);
-    // TODO show only cam/system 
-    // TODO record system / stop system
     stopButton_ = new QPushButton("Stop", this);
+    showButton_ = new QPushButton("Show", this);
     singleGrabButton_ = new QPushButton("Single Frame", this);
+    undockButton_ = new QPushButton("Undock", this);
     
     QString buttonStyle = 
         "QPushButton {"
         "    background-color: #3c3f41;"
         "    color: #bbbbbb;"
         "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    padding: 8px;"
-        "    font-size: 11pt;"
+        "    border-radius: 2px;"
+        "    padding: 3px 5px;"
+        "    font-size: 9pt;"
         "}"
         "QPushButton:hover {"
         "    background-color: #4b4b4b;"
@@ -87,22 +96,31 @@ void CameraWidget::setupUI()
     
     startButton_->setStyleSheet(buttonStyle);
     stopButton_->setStyleSheet(buttonStyle);
+    showButton_->setStyleSheet(buttonStyle);
+    undockButton_->setStyleSheet(buttonStyle);
+    startButton_->setMaximumHeight(24);
+    stopButton_->setMaximumHeight(24);
+    showButton_->setMaximumHeight(24);
+    undockButton_->setMaximumHeight(24);
     // singleGrabButton_->setStyleSheet(buttonStyle);
     
     controlLayout->addWidget(startButton_, 0, 0);
-    controlLayout->addWidget(stopButton_, 0, 1);
+    controlLayout->addWidget(showButton_, 0, 1);
+    controlLayout->addWidget(stopButton_, 0, 2);
+    controlLayout->addWidget(undockButton_, 0, 3);
     // controlLayout->addWidget(singleGrabButton_, 1, 0, 1, 2);
     
     // Status label
     statusLabel_ = new QLabel("Status: Stopped", this);
+    statusLabel_->setMaximumHeight(20);
     statusLabel_->setStyleSheet(
         "QLabel {"
         "    background-color: #1e1e1e;"
         "    color: #ff8800;"
         "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    padding: 8px;"
-        "    font-size: 11pt;"
+        "    border-radius: 2px;"
+        "    padding: 2px 5px;"
+        "    font-size: 9pt;"
         "    font-weight: bold;"
         "}"
     );
@@ -112,8 +130,10 @@ void CameraWidget::setupUI()
     imageGroup->setStyleSheet(controlGroup->styleSheet());
     
     QVBoxLayout *imageLayout = new QVBoxLayout(imageGroup);
+    imageLayout->setSpacing(1);
+    imageLayout->setContentsMargins(2, 4, 2, 2);
     imageLabel_ = new QLabel("No image", this);
-    imageLabel_->setMinimumSize(640, 480);
+    imageLabel_->setMinimumSize(320, 240);
     imageLabel_->setAlignment(Qt::AlignCenter);
     imageLabel_->setStyleSheet(
         "QLabel {"
@@ -126,27 +146,31 @@ void CameraWidget::setupUI()
     
     // Info label
     infoLabel_ = new QLabel("Camera Information", this);
+    infoLabel_->setMaximumHeight(70);
     infoLabel_->setStyleSheet(
         "QLabel {"
         "    background-color: #1e1e1e;"
-        "    color: #bbbbbb;"
+        "    color: #888888;"
         "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    padding: 5px;"
+        "    border-radius: 2px;"
+        "    padding: 3px 4px;"
         "    font-family: 'Consolas', 'Monaco', monospace;"
+        "    font-size: 8pt;"
         "}"
     );
     
-    mainLayout->addWidget(controlGroup);
-    mainLayout->addWidget(statusLabel_);
+    mainLayout->addWidget(controlGroup, 0);
+    mainLayout->addWidget(statusLabel_, 0);
     mainLayout->addWidget(imageGroup, 1);
-    mainLayout->addWidget(infoLabel_);
+    mainLayout->addWidget(infoLabel_, 0);
     
     setLayout(mainLayout);
     
     // Connect signals
     connect(startButton_, &QPushButton::clicked, this, &CameraWidget::onStartClicked);
     connect(stopButton_, &QPushButton::clicked, this, &CameraWidget::onStopClicked);
+    connect(showButton_, &QPushButton::clicked, this, &CameraWidget::onShowClicked);
+    connect(undockButton_, &QPushButton::clicked, this, &CameraWidget::onToggleDockClicked);
     // connect(singleGrabButton_, &QPushButton::clicked, this, &CameraWidget::onSingleGrabClicked);
     
     // Set dark background
@@ -168,13 +192,14 @@ void CameraWidget::updateStatus()
             "    background-color: #1e1e1e;"
             "    color: #00cc00;"
             "    border: 1px solid #555555;"
-            "    border-radius: 3px;"
-            "    padding: 8px;"
-            "    font-size: 11pt;"
+            "    border-radius: 2px;"
+            "    padding: 2px 5px;"
+            "    font-size: 9pt;"
             "    font-weight: bold;"
             "}"
         );
         startButton_->setEnabled(false);
+        showButton_->setEnabled(false);
         stopButton_->setEnabled(true);
         // singleGrabButton_->setEnabled(false);
     } else {
@@ -184,13 +209,14 @@ void CameraWidget::updateStatus()
             "    background-color: #1e1e1e;"
             "    color: #ff8800;"
             "    border: 1px solid #555555;"
-            "    border-radius: 3px;"
-            "    padding: 8px;"
-            "    font-size: 11pt;"
+            "    border-radius: 2px;"
+            "    padding: 2px 5px;"
+            "    font-size: 9pt;"
             "    font-weight: bold;"
             "}"
         );
         startButton_->setEnabled(true);
+        showButton_->setEnabled(true);
         stopButton_->setEnabled(false);
         // singleGrabButton_->setEnabled(true);
     }
@@ -201,9 +227,33 @@ void CameraWidget::updateStatus()
 void CameraWidget::updateInfoDisplay()
 {
     QString info = QString("Camera: %1\n").arg(cameraName_);
-    info += QString("Status: %1\n").arg(runtimeInstance_->isRunning() ? "Running" : "Stopped");
     
-    if (runtimeInstance_->isRunning()) {
+    vidre::RecordingStatus status = runtimeInstance_->getRecordingStatus();
+    QString statusStr;
+    switch (status) {
+        case vidre::RecordingStatus::Stopped:
+            statusStr = "Stopped";
+            break;
+        case vidre::RecordingStatus::Streaming:
+            statusStr = "Streaming";
+            break;
+        case vidre::RecordingStatus::RecordingFine:
+            statusStr = "Recording";
+            break;
+        case vidre::RecordingStatus::RecordingDroppedFrames:
+            statusStr = "Recording (Dropped Frames)";
+            break;
+        case vidre::RecordingStatus::RecordingError:
+            statusStr = "Recording (Error)";
+            break;
+        default:
+            statusStr = "Unknown";
+    }
+    
+    info += QString("Status: %1\n").arg(statusStr);
+    
+    bool isActive = (status != vidre::RecordingStatus::Stopped);
+    if (isActive) {
         info += QString("Frames Displayed: %1\n").arg(frameCount_);
         info += QString("Last Frame ID: %1\n").arg(lastFrameID_);
         
@@ -230,6 +280,19 @@ void CameraWidget::onStartClicked()
     }
 }
 
+void CameraWidget::onShowClicked()
+{
+    if (runtimeInstance_ && !runtimeInstance_->isRunning()) {
+        runtimeInstance_->show();
+    } 
+    if (!frameTimer_->isActive()) {
+        frameTimer_->start();
+        lastFrameID_ = -1;
+        frameCount_ = 0;
+        updateStatus();
+    }
+}
+
 void CameraWidget::onStopClicked()
 {
     if (runtimeInstance_ && runtimeInstance_->isRunning()) {
@@ -245,22 +308,34 @@ void CameraWidget::onSingleGrabClicked()
 
 void CameraWidget::updateFrame()
 {
-    if (!runtimeInstance_ || !runtimeInstance_->isRunning()) {
+    if (!runtimeInstance_) {
         return;
     }
     
-    const auto [imageData, frameID] = runtimeInstance_->getLatestFrame(); 
+    // Check if camera is running or streaming
+    vidre::RecordingStatus status = runtimeInstance_->getRecordingStatus();
+    bool isActive = (status == vidre::RecordingStatus::RecordingFine || 
+                     status == vidre::RecordingStatus::RecordingDroppedFrames ||
+                     status == vidre::RecordingStatus::RecordingError ||
+                     status == vidre::RecordingStatus::Streaming);
     
+    if (!isActive) {
+        return;
+    }
+    
+
+    
+    const uint8_t* imageData;
+    unsigned int width; 
+    unsigned int height;
+    unsigned int frameID;
+    std::tie(imageData, width, height, frameID) = runtimeInstance_->getLatestFrame(); 
+    auto frameBytes = runtimeInstance_->getFrameBytes();
     if (frameID == lastFrameID_) {
         return; 
     }
     
     lastFrameID_ = frameID;
-    
-    // Get frame dimensions
-    unsigned int width = runtimeInstance_->getFrameWidth();
-    unsigned int height = runtimeInstance_->getFrameHeight();
-    unsigned int frameBytes = runtimeInstance_->getFrameBytes();
     
     if (width == 0 || height == 0 || frameBytes == 0) {
         return;
@@ -270,53 +345,6 @@ void CameraWidget::updateFrame()
     displayFrame(imageData, width, height, bitsPerPixel, frameBytes);
     
     updateInfoDisplay();
-}
-
-void unpack_10bit_to_8bit(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out) {
-    int nsamples_in = floor(nbytes_in * 8.0 / 10.0);
-    size_t nblocks = nsamples_in / 4;
-    
-    for (size_t i = 0; i < nblocks; ++i) {
-        size_t in_idx = i * 5;
-        size_t out_idx = i * 4;
-
-        const uint8_t* src = &data_in[in_idx];
-        uint8_t* dst = &data_out[out_idx];
-
-        uint16_t s0 = src[0] | ((src[1] & 0x03) << 8);
-        dst[0] = s0 >> 2;
-
-        uint16_t s1 = (src[1] >> 2) | ((src[2] & 0x0F) << 6);
-        dst[1] = s1 >> 2;
-
-        uint16_t s2 = (src[2] >> 4) | ((src[3] & 0x3F) << 4);
-        dst[2] = s2 >> 2;
-
-        uint16_t s3 = (src[3] >> 6) | (src[4] << 2);
-        dst[3] = s3 >> 2;
-    }
-
-    size_t remaining_samples = nsamples_in - (nblocks * 4);
-    if (remaining_samples > 0) {
-        size_t in_idx = nblocks * 5;
-        size_t out_idx = nblocks * 4;
-
-        const uint8_t* src = &data_in[in_idx];
-        uint8_t* dst = &data_out[out_idx];
-
-        uint16_t s0 = src[0] | ((src[1] & 0x03) << 8);
-        dst[0] = s0 >> 2;
-
-        if (remaining_samples > 1) {
-            uint16_t s1 = (src[1] >> 2) | ((src[2] & 0x0F) << 6);
-            dst[1] = s1 >> 2;
-
-            if (remaining_samples > 2) {
-                uint16_t s2 = (src[2] >> 4) | ((src[3] & 0x3F) << 4);
-                dst[2] = s2 >> 2;
-            }
-        }
-    }
 }
 
 void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes)
@@ -333,13 +361,7 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
         format = QImage::Format_Grayscale8;
         image = QImage(imageData, width, height, format);
     } else if (bitsPerPixel == 10) {
-        format = QImage::Format_Grayscale8;
-        int nsamples_in = floor(frameBytes * 8.0 / 10.0);
-        unpacked_buffer = new uint8_t[nsamples_in];
-        
-        unpack_10bit_to_8bit(imageData, frameBytes, unpacked_buffer);
-        
-        image = QImage(unpacked_buffer, width, height, format);
+        image = QImage(imageData, width, height, QImage::Format_RGB32);
     } else {
         return; // Unsupported format
     }
@@ -357,8 +379,91 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
     frameCount_++;
 }
 
+void CameraWidget::onToggleDockClicked()
+{
+    QMdiSubWindow *subWindow = qobject_cast<QMdiSubWindow*>(parentWidget());
+    
+    if (subWindow) {
+        subWindow->setWidget(nullptr);
+        subWindow->hide();
+        
+        setParent(nullptr);
+        setWindowTitle(cameraName_);
+        setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+        
+        QScreen *screen = QGuiApplication::primaryScreen();
+        if (screen) {
+            QRect screenGeometry = screen->geometry();
+            int x = screenGeometry.x() + (screenGeometry.width() - width()) / 2;
+            int y = screenGeometry.y() + (screenGeometry.height() - height()) / 2;
+            move(x, y);
+        }
+        
+        show();
+        raise();
+        activateWindow();
+        setFocus();
+        
+        undockButton_->setText("Dock");
+    } else {
+        QMdiArea *mdiArea = nullptr;
+        
+        QWidget *widget = qobject_cast<QWidget*>(sender());
+        while (widget) {
+            QMainWindow *mainWin = qobject_cast<QMainWindow*>(widget);
+            if (mainWin) {
+                mdiArea = qobject_cast<QMdiArea*>(mainWin->centralWidget());
+                break;
+            }
+            widget = widget->parentWidget();
+        }
+        
+        if (!mdiArea) {
+            for (QWidget *w : QApplication::topLevelWidgets()) {
+                QMainWindow *mainWin = qobject_cast<QMainWindow*>(w);
+                if (mainWin) {
+                    mdiArea = qobject_cast<QMdiArea*>(mainWin->centralWidget());
+                    if (mdiArea) break;
+                }
+            }
+        }
+        
+        if (mdiArea) {
+            subWindow = new QMdiSubWindow();
+            subWindow->setWidget(this);
+            subWindow->setWindowTitle(cameraName_);
+            subWindow->setAttribute(Qt::WA_DeleteOnClose);
+            subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+            
+            mdiArea->addSubWindow(subWindow);
+            
+            hide();
+            setParent(subWindow);
+            setWindowFlags(Qt::Widget);
+            
+            subWindow->show();
+            mdiArea->setActiveSubWindow(subWindow);
+            show();
+            
+            undockButton_->setText("Undock");
+        }
+    }
+}
+
 void CameraWidget::closeEvent(QCloseEvent *event)
 {
     emit windowClosed(cameraName_);
     event->accept();
+}
+
+void CameraWidget::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    emit windowActivated(cameraName_);
+}
+
+void CameraWidget::focusInEvent(QFocusEvent *event)
+{
+    QWidget::focusInEvent(event);
+    emit windowActivated(cameraName_);
 }

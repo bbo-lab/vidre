@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include "../src/core/runtime/runtime.hpp"
+#include <core/runtime/runtime.hpp>
 
 class DeviceListDock : public QWidget
 {

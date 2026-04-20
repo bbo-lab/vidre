@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "devicelistdock.hpp"
 #include "camerawidget.hpp"
+#include "camerainfosdock.hpp"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -15,7 +16,7 @@
 #include <iostream>
 #include "yaml-cpp/yaml.h"
 
-#include "utils/dynamic_loader/dynamic_library_loader.hpp"
+#include <utils/dynamic_loader/dynamic_library_loader.hpp>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -125,6 +126,11 @@ void MainWindow::createDockWidgets()
             this, &MainWindow::onDeviceDoubleClicked);
     connect(ui->actionDeviceList, &QAction::toggled, deviceDock, &QDockWidget::setVisible);
     connect(deviceDock, &QDockWidget::visibilityChanged, ui->actionDeviceList, &QAction::setChecked);
+    
+    // Camera info dock (right side)
+    cameraInfosDock_ = new CameraInfosDock(this);
+    cameraInfosDock_->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, cameraInfosDock_);
     
     // Log dock
     logDock_ = new QDockWidget("Log", this);
@@ -270,10 +276,24 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     // Check if window already exists
     if (cameraWidgets_.find(deviceName) != cameraWidgets_.end()) {
         // Activate existing window
-        QDockWidget *dock = qobject_cast<QDockWidget*>(cameraWidgets_[deviceName]->parentWidget());
-        if (dock) {
-            dock->show();
-            dock->raise();
+        CameraWidget *widget = cameraWidgets_[deviceName];
+        
+        QMdiSubWindow *subWindow = qobject_cast<QMdiSubWindow*>(widget->parentWidget());
+        if (subWindow) {
+            subWindow->show();
+            subWindow->raise();
+            subWindow->setFocus();
+            mdiArea_->setActiveSubWindow(subWindow);
+            return;
+        }
+        
+        // Check if floating (standalone window)
+        QWidget *window = widget->window();
+        if (window && window != this) {
+            window->show();
+            window->raise();
+            window->activateWindow();
+            window->setFocus();
             return;
         }
     }
@@ -282,23 +302,28 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     auto it = cameras_.find(deviceName.toStdString());
     if (it != cameras_.end()) {
         CameraWidget *cameraWidget = new CameraWidget(deviceName, it->second.get(), this);
-        
-        QDockWidget *dockWidget = new QDockWidget(deviceName, this);
-        dockWidget->setWidget(cameraWidget);
-        dockWidget->setAllowedAreas(Qt::AllDockWidgetAreas);
-        dockWidget->setAttribute(Qt::WA_DeleteOnClose);
-        
-        addDockWidget(Qt::RightDockWidgetArea, dockWidget);
-        
         cameraWidgets_[deviceName] = cameraWidget;
+        
+        QMdiSubWindow *subWindow = new QMdiSubWindow();
+        subWindow->setWidget(cameraWidget);
+        subWindow->setWindowTitle(deviceName);
+        subWindow->setAttribute(Qt::WA_DeleteOnClose);
+        subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+        
+        mdiArea_->addSubWindow(subWindow);
+        
+        cameraWidget->setProperty("mdiSubWindow", QVariant::fromValue((void*)subWindow));
         
         connect(cameraWidget, &CameraWidget::windowClosed, 
                 this, &MainWindow::onCameraWindowClosed);
-        connect(dockWidget, &QDockWidget::destroyed, [this, deviceName]() {
+        connect(cameraWidget, &CameraWidget::windowActivated,
+                this, &MainWindow::onCameraWindowActivated);
+        connect(subWindow, &QMdiSubWindow::destroyed, [this, deviceName]() {
             onCameraWindowClosed(deviceName);
         });
         
-        dockWidget->show();
+        subWindow->show();
+        mdiArea_->setActiveSubWindow(subWindow);
         logMessage(QString("Opened window for: %1").arg(deviceName));
     }
 }
@@ -306,7 +331,16 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
 void MainWindow::onCameraWindowClosed(const QString& cameraName)
 {
     cameraWidgets_.erase(cameraName);
+    cameraInfosDock_->removeCamera(cameraName);
     logMessage(QString("Closed window for: %1").arg(cameraName));
+}
+
+void MainWindow::onCameraWindowActivated(const QString& cameraName)
+{
+    auto it = cameras_.find(cameraName.toStdString());
+    if (it != cameras_.end()) {
+        cameraInfosDock_->addCamera(cameraName, it->second.get());
+    }
 }
 
 void MainWindow::updateCameraStatus()
@@ -323,7 +357,7 @@ void MainWindow::updateCameraStatus()
     // Update all open camera widgets
     for (auto& widget : cameraWidgets_) {
         widget.second->updateStatus();
-        widget.second->setRunning();
+        // widget.second->setRunning();
     }
 
     // Determine overall system status
@@ -333,7 +367,7 @@ void MainWindow::updateCameraStatus()
     bool anyError = false;
 
     for (const auto& cam : cameras_) {
-        if (cam.second) {
+        if (cam.second) { //TODO fix logic
             vidre::RecordingStatus status = cam.second->getRecordingStatus();
             if (status != vidre::RecordingStatus::Stopped) {
                 anyRunning = true;

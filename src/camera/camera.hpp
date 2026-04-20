@@ -3,7 +3,7 @@
 #include <memory>
 
 #include <boost/interprocess/managed_shared_memory.hpp>
-#include "core/storage/storage.hpp"
+#include <core/storage/storage.hpp>
 
 
 
@@ -68,5 +68,7 @@ namespace vidre {
 
         virtual void SetTriggerIn(unsigned int line) = 0;
         virtual void SetTriggerOut(unsigned int line) = 0;
+
+        virtual uint8_t* RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) = 0;
     };
 }  // namespace vidre

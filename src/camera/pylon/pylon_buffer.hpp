@@ -5,7 +5,7 @@
 #include <pylon/PylonIncludes.h>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
-#include "core/runtime/shared_frame_header.hpp"
+#include <core/runtime/shared_frame_header.hpp>
 
 class ShrBufferFactory : public Pylon::IBufferFactory {
 public:
