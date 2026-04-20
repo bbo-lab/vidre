@@ -36,6 +36,10 @@
  * @{
  * @namespace vidre::storage::file
  * @}
+ * 
+ * @todo This needs to be completely overhauled. _open on Windows may actually ignore O_SYNC etal. so
+ *       CreateFile has to be used...
+ * @todo UTF-8 support on Windows (see https://chat.deepseek.com/a/chat/s/cbb1b2b5-8943-4e15-9caf-956ec9e969fc)
  * */
 
 #include <vidre/core/config.hh>
@@ -73,7 +77,6 @@ namespace vidre {
                  * */
                 ///@{
 
-                using descriptor = int;
                 using size_type = std::size_t;
                 using offset_type = std::make_signed_t<size_type>;
 
@@ -82,6 +85,8 @@ namespace vidre {
 #define VIDRE_STORAGE_BLOCKSIZE 4096
 
 #if VIDRE_HOST_WINDOWS
+                using descriptor = HANDLE;
+
                 enum flag_type : int {
                     readonly = _O_RDONLY,
                     writeonly = _O_WRONLY,
@@ -97,29 +102,26 @@ namespace vidre {
                 };
 
                 inline descriptor open(const char *filename, int flags) {
-                    return ::_open(filename, flags);
                 }
 
                 inline descriptor open(const char *filename, int flags, mode_t mode) {
-                    return ::_open(filename, flags, mode);
                 }
 
                 inline void close(descriptor fd) {
-                    ::_close(fd);
                 }
 
                 inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
-                    return ::_read(fd, buf, count);
                 }
 
                 inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
-                    return ::_write(fd, buf, count);
                 }
 
                 // FIXME seek, allocate, blocksize, filename, mmap, munmap...
 
                 static constexpr std::size_t path_max = MAX_PATH;
 #else
+               using descriptor = int;
+
                 enum flag_type : int {
                     invalid = -1,
 
@@ -206,7 +208,12 @@ namespace vidre {
                 }
 
                 inline std::string filename(descriptor fd) {
-#if defined(__linux__)
+#if defined(F_GETPATH)
+                    char path[PATH_MAX];
+                    if (fcntl(fd, F_GETPATH, path) != -1)
+                        return std::string(path);
+                    return {};
+#elif defined(__linux__)
                     char path[PATH_MAX];
                     ssize_t len = readlink((std::string("/proc/self/fd/") + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
                     if (len != -1) {
@@ -214,10 +221,8 @@ namespace vidre {
                         return std::string(path);
                     }
                     return {};
-#elif defined(F_GETPATH)
-                    char path[PATH_MAX];
-                    if (fcntl(fd, F_GETPATH, path) != -1)
-                        return std::string(path);
+#else
+                    assert(false && "filename retrieval not implemented for this platform");
                     return {};
 #endif
                 }

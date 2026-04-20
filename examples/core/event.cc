@@ -57,10 +57,7 @@ void producer() {
 
 int main(int, const char **) {
     thread prod(producer);
-    schedule(prod).priority(schedule::policy::fifo, 20);
-
     thread cons(consumer);
-    schedule(cons).priority(schedule::policy::fifo, 10);
 
     prod.join();
     cons.join();

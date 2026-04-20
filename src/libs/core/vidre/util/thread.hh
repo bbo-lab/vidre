@@ -183,55 +183,57 @@ namespace vidre {
      * */
     ///@{
 
-    /** Scheduling settings.
-     *
-     * Scheduling is a highly platform-specific topic, and the available policies
-     * and priority levels can vary widely between different operating systems.
-     * The `schedule` class provides a common interface for setting thread
-     * scheduling policies and priorities, while the underlying implementation
-     * in `detail::schedule` handles the platform-specific details.
-     *
-     * */
-    class VIDRE_CORE_VISIBILITY schedule {
-    public:
-        /** Scheduling policies.
-         * @todo need to find some commonality between Windows and Linux scheduling policies, or at least provide a common
-         * interface.
-         * */
-        enum class policy : int {
-            invalid = -1,                                                ///< Invalid scheduling policy.
-            system = to_underlying(detail::schedule::system),            ///< Default Linux time-sharing scheduling policy.
-            fifo = to_underlying(detail::schedule::fifo),                ///< First-in, first-out real-time scheduling policy.
-            round_robin = to_underlying(detail::schedule::round_robin),  ///< Round-robin real-time scheduling policy.
-            batch = to_underlying(detail::schedule::batch),              ///< Scheduling policy for "batch" style execution.
-            idle = to_underlying(detail::schedule::idle),  ///< Scheduling policy for running a thread only when the system is idle.
-            deadline = to_underlying(detail::schedule::deadline)  ///< Scheduling policy for threads with specific deadlines.
-        };
+    // @todo This needs quite a bit of work to make it look cross-platform...
 
-        /** Default system scheduling policy.
-         * */
-        static constexpr policy default_policy = static_cast<policy>(detail::schedule::default_policy);
+    // /** Scheduling settings.
+    //  *
+    //  * Scheduling is a highly platform-specific topic, and the available policies
+    //  * and priority levels can vary widely between different operating systems.
+    //  * The `schedule` class provides a common interface for setting thread
+    //  * scheduling policies and priorities, while the underlying implementation
+    //  * in `detail::schedule` handles the platform-specific details.
+    //  *
+    //  * */
+    // class VIDRE_CORE_VISIBILITY schedule {
+    // public:
+    //     /** Scheduling policies.
+    //      * @todo need to find some commonality between Windows and Linux scheduling policies, or at least provide a common
+    //      * interface.
+    //      * */
+    //     enum class policy : int {
+    //         invalid = -1,                                                ///< Invalid scheduling policy.
+    //         system = to_underlying(detail::schedule::system),            ///< Default Linux time-sharing scheduling policy.
+    //         fifo = to_underlying(detail::schedule::fifo),                ///< First-in, first-out real-time scheduling policy.
+    //         round_robin = to_underlying(detail::schedule::round_robin),  ///< Round-robin real-time scheduling policy.
+    //         batch = to_underlying(detail::schedule::batch),              ///< Scheduling policy for "batch" style execution.
+    //         idle = to_underlying(detail::schedule::idle),  ///< Scheduling policy for running a thread only when the system is idle.
+    //         deadline = to_underlying(detail::schedule::deadline)  ///< Scheduling policy for threads with specific deadlines.
+    //     };
 
-        schedule(thread &t) noexcept : impl(t) {}
+    //     /** Default system scheduling policy.
+    //      * */
+    //     static constexpr policy default_policy = static_cast<policy>(detail::schedule::default_policy);
 
-        schedule() = delete;
-        schedule(const schedule &) = delete;
-        schedule &operator=(const schedule &) = delete;
-        schedule(schedule &&) noexcept = delete;
-        schedule &operator=(schedule &&) noexcept = delete;
+    //     schedule(thread &t) noexcept : impl(t) {}
 
-    protected:
-        detail::schedule impl;
+    //     schedule() = delete;
+    //     schedule(const schedule &) = delete;
+    //     schedule &operator=(const schedule &) = delete;
+    //     schedule(schedule &&) noexcept = delete;
+    //     schedule &operator=(schedule &&) noexcept = delete;
 
-    public:
-        status priority(int priority) {
-            return impl.priority(priority);
-        }
+    // protected:
+    //     detail::schedule impl;
 
-        status priority(policy policy_, int priority) {
-            return impl.priority(static_cast<detail::schedule::policy_type>(policy_), priority);
-        }
-    };
+    // public:
+    //     status priority(int priority) {
+    //         return impl.priority(priority);
+    //     }
+
+    //     status priority(policy policy_, int priority) {
+    //         return impl.priority(static_cast<detail::schedule::policy_type>(policy_), priority);
+    //     }
+    // };
 
     ///@}
 
