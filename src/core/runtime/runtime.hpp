@@ -4,9 +4,9 @@
 #include <string>
 #include <iostream>
 
-#include "core/storage/storage.hpp"
-#include "core/buffer/buffer.hpp"
-#include "camera/camera.hpp"
+#include <core/storage/storage.hpp>
+#include <core/buffer/buffer.hpp>
+#include <camera/camera.hpp>
 
 namespace vidre {
     struct Config;
@@ -48,8 +48,13 @@ namespace vidre {
         unsigned int getFrameHeight() { return _camera ? _camera->GetFrameHeight() : 0; }
         unsigned int getFrameBytes() { return _camera ? _camera->GetFrameBytes() : 0; }
         
-        std::pair<const uint8_t*, int> getLatestFrame() { 
-            return {_latestFrameData, _currentFrame}; 
+        std::tuple<const uint8_t*, int, int, int, int> getLatestFrame() {
+            if (_camera->GetVendorName() == "aptina") {
+                uint64_t rgbWidth, rgbHeight, rgbBitDepth;
+                unsigned char *pRGB = _camera->RGBFrame(_latestFrameData, &rgbWidth, &rgbHeight, &rgbBitDepth);
+                return {pRGB, rgbWidth, rgbHeight, _currentFrame};
+            }
+            return {_latestFrameData, getFrameWidth(), getFrameHeight(), _currentFrame}; 
         }
 
         uint64_t getBitsPerPixel() {

@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "../src/core/runtime/runtime.hpp"
+#include <core/runtime/runtime.hpp>
 
 class CameraInfosDock : public QDockWidget
 {

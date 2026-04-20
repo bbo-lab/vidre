@@ -16,7 +16,7 @@
 #include <iostream>
 #include "yaml-cpp/yaml.h"
 
-#include "utils/dynamic_loader/dynamic_library_loader.hpp"
+#include <utils/dynamic_loader/dynamic_library_loader.hpp>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

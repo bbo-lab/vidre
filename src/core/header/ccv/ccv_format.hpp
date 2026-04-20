@@ -1,8 +1,8 @@
 #pragma once
 
-#include "config.h"
+#include <config.h>
 
-#include "core/header/header.hpp"
+#include <core/header/header.hpp>
 
 
 namespace vidre {

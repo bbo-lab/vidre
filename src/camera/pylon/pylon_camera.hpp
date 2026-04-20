@@ -1,5 +1,5 @@
 #pragma once
-#include "camera/camera.hpp"
+#include <camera/camera.hpp>
 
 #include <thread>
 
@@ -7,7 +7,7 @@
 #include <pylon/PylonGUI.h>
 // #endif
 #include <pylon/PylonIncludes.h>
-#include "pylon_buffer.hpp"
+#include <camera/pylon/pylon_buffer.hpp>
 
 namespace vidre {
     // Currently using explicit Pylon Camera. Can it be replace by the more generic GenICam or USB3Vision stuff?
@@ -56,6 +56,7 @@ namespace vidre {
 
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
+        virtual uint8_t* RGBFrame(uint8_t* data, uint64_t* w, uint64_t* h, uint64_t* d) override;
     private:
         void run();
 

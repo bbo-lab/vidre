@@ -14,7 +14,7 @@
 #include <QFocusEvent>
 #include <memory>
 
-#include "../src/core/runtime/runtime.hpp"
+#include <core/runtime/runtime.hpp>
 
 namespace Ui {
 class CameraWidget;

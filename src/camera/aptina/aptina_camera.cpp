@@ -1,5 +1,5 @@
 // #include "aptina_api_loader.hpp"
-#include "aptina_camera.hpp"
+#include <camera/aptina/aptina_camera.hpp>
 
 #include <iostream>
 
@@ -242,6 +242,10 @@ namespace vidre {
         for (int i = 0; i < _buffer_num; ++i) {
             _buffer.AllocateBuffer(_buffer_size_min);
         }
+    }
+
+    uint8_t* AptinaCamera::RGBFrame(uint8_t* data, uint64_t* w, uint64_t* h, uint64_t* d) {
+        return ap_ColorPipe(_handle, data, _buffer_size_min, w, h, d);
     }
 }  // namespace vidre
 

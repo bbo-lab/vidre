@@ -9,7 +9,7 @@
 #include <QScreen>
 #include <QGuiApplication>
 
-#include "../src/core/runtime/shared_frame_header.hpp"
+#include <core/runtime/shared_frame_header.hpp>
 
 CameraWidget::CameraWidget(const QString& cameraName, 
                            vidre::RuntimeInstance* runtimeInstance,
@@ -323,18 +323,19 @@ void CameraWidget::updateFrame()
         return;
     }
     
-    const auto [imageData, frameID] = runtimeInstance_->getLatestFrame(); 
+
+    
+    uint8_t* imageData;
+    unsigned int width; 
+    unsigned int height;
+    unsigned int frameID;
+    std::tie(imageData, width, height, frameID)  = runtimeInstance_->getLatestFrame(); 
     
     if (frameID == lastFrameID_) {
         return; 
     }
     
     lastFrameID_ = frameID;
-    
-    // Get frame dimensions
-    unsigned int width = runtimeInstance_->getFrameWidth();
-    unsigned int height = runtimeInstance_->getFrameHeight();
-    unsigned int frameBytes = runtimeInstance_->getFrameBytes();
     
     if (width == 0 || height == 0 || frameBytes == 0) {
         return;
@@ -344,53 +345,6 @@ void CameraWidget::updateFrame()
     displayFrame(imageData, width, height, bitsPerPixel, frameBytes);
     
     updateInfoDisplay();
-}
-
-void unpack_10bit_to_8bit(const uint8_t *data_in, size_t nbytes_in, uint8_t *data_out) {
-    int nsamples_in = floor(nbytes_in * 8.0 / 10.0);
-    size_t nblocks = nsamples_in / 4;
-    
-    for (size_t i = 0; i < nblocks; ++i) {
-        size_t in_idx = i * 5;
-        size_t out_idx = i * 4;
-
-        const uint8_t* src = &data_in[in_idx];
-        uint8_t* dst = &data_out[out_idx];
-
-        uint16_t s0 = src[0] | ((src[1] & 0x03) << 8);
-        dst[0] = s0 >> 2;
-
-        uint16_t s1 = (src[1] >> 2) | ((src[2] & 0x0F) << 6);
-        dst[1] = s1 >> 2;
-
-        uint16_t s2 = (src[2] >> 4) | ((src[3] & 0x3F) << 4);
-        dst[2] = s2 >> 2;
-
-        uint16_t s3 = (src[3] >> 6) | (src[4] << 2);
-        dst[3] = s3 >> 2;
-    }
-
-    size_t remaining_samples = nsamples_in - (nblocks * 4);
-    if (remaining_samples > 0) {
-        size_t in_idx = nblocks * 5;
-        size_t out_idx = nblocks * 4;
-
-        const uint8_t* src = &data_in[in_idx];
-        uint8_t* dst = &data_out[out_idx];
-
-        uint16_t s0 = src[0] | ((src[1] & 0x03) << 8);
-        dst[0] = s0 >> 2;
-
-        if (remaining_samples > 1) {
-            uint16_t s1 = (src[1] >> 2) | ((src[2] & 0x0F) << 6);
-            dst[1] = s1 >> 2;
-
-            if (remaining_samples > 2) {
-                uint16_t s2 = (src[2] >> 4) | ((src[3] & 0x3F) << 4);
-                dst[2] = s2 >> 2;
-            }
-        }
-    }
 }
 
 void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes)
@@ -407,13 +361,7 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
         format = QImage::Format_Grayscale8;
         image = QImage(imageData, width, height, format);
     } else if (bitsPerPixel == 10) {
-        format = QImage::Format_Grayscale8;
-        int nsamples_in = floor(frameBytes * 8.0 / 10.0);
-        unpacked_buffer = new uint8_t[nsamples_in];
-        
-        unpack_10bit_to_8bit(imageData, frameBytes, unpacked_buffer);
-        
-        image = QImage(unpacked_buffer, width, height, format);
+        image = QImage(imageData, width, height, QImage::Format_RGB32);
     } else {
         return; // Unsupported format
     }

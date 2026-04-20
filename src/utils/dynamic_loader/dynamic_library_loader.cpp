@@ -7,7 +7,7 @@
 #include <dlfcn.h>
 #endif
 
-#include "dynamic_library_loader.hpp"
+#include <utils/dynamic_loader/dynamic_library_loader.hpp>
 
 namespace vidre {
 namespace util {

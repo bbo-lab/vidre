@@ -4,8 +4,8 @@
 
 #include <boost/program_options.hpp>
 
-#include "../src/core/runtime/runtime.hpp"
-#include "utils/dynamic_loader/dynamic_library_loader.hpp"
+#include <core/runtime/runtime.hpp>
+#include <utils/dynamic_loader/dynamic_library_loader.hpp>
 
 #include <boost/filesystem.hpp>
 

@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "../src/core/runtime/runtime.hpp"
+#include <core/runtime/runtime.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
