@@ -87,34 +87,7 @@ namespace vidre {
 #if VIDRE_HOST_WINDOWS
                 using descriptor = HANDLE;
 
-                static constexpr std::size_t path_max = MAX_PATH;
-
-                enum flag_type : int {
-                    readonly = _O_RDONLY,
-                    writeonly = _O_WRONLY,
-                    readwrite = _O_RDWR,
-
-                    append = _O_APPEND,
-                    create = _O_CREAT,
-                    exclusive = _O_EXCL,
-                    truncate = _O_TRUNC,
-                    non_block = _O_NONBLOCK,
-                    synchronous = _O_SYNC,
-                    // FIXME...
-                };
-
-                inline descriptor open(const char *filename, int flags) {}
-
-                inline descriptor open(const char *filename, int flags, mode_t mode) {}
-
-                inline void close(descriptor fd) {}
-
-                inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {}
-
-                inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {}
-
-                // FIXME seek, allocate, blocksize, filename, mmap, munmap...
-
+                // FIXME see https://chat.deepseek.com/a/chat/s/f177940c-6867-47e0-909a-de767477eec0
 #else
                 using descriptor = int;
 
