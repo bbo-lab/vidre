@@ -81,11 +81,11 @@ namespace vidre {
              * interface.
              * */
             enum policy_type : int {
+                invalid = -1,              ///< Invalid scheduling policy.
                 system = SCHED_OTHER,      ///< Default Linux time-sharing scheduling policy
                 fifo = SCHED_FIFO,         ///< First-in, first-out real-time scheduling policy
                 round_robin = SCHED_RR,    ///< Round-robin real-time scheduling policy
                 batch = SCHED_BATCH,       ///< Scheduling policy for "batch" style execution
-                isochronous = SCHED_ISO,   ///< Scheduling policy for "isochronous" style execution
                 idle = SCHED_IDLE,         ///< Scheduling policy for running a thread only when the system is idle
                 deadline = SCHED_DEADLINE  ///< Scheduling policy for threads with specific deadlines
             };
@@ -135,8 +135,8 @@ namespace vidre {
                 auto max_prio = max_priority(static_cast<policy_type>(policy));
 
                 if ((priority < min_prio) || (priority > max_prio)) {
-                    log::debug() << "Invalid priority value: " << priority << ". Valid range for policy " << static_cast<int>(policy) << " is ["
-                                 << min_prio << ", " << max_prio << "]" << log::endl;
+                    log::debug() << "Invalid priority value: " << priority << ". Valid range for policy "
+                                 << static_cast<int>(policy) << " is [" << min_prio << ", " << max_prio << "]" << log::endl;
                     return status::bad;
                 }
 
@@ -155,8 +155,8 @@ namespace vidre {
                 auto max_prio = max_priority(static_cast<policy_type>(policy));
 
                 if ((priority < min_prio) || (priority > max_prio)) {
-                    log::debug() << "Invalid priority value: " << priority << ". Valid range for policy " << static_cast<int>(policy) << " is ["
-                                 << min_prio << ", " << max_prio << "]" << log::endl;
+                    log::debug() << "Invalid priority value: " << priority << ". Valid range for policy "
+                                 << static_cast<int>(policy) << " is [" << min_prio << ", " << max_prio << "]" << log::endl;
                     return status::bad;
                 }
 
@@ -184,6 +184,13 @@ namespace vidre {
     ///@{
 
     /** Scheduling settings.
+     *
+     * Scheduling is a highly platform-specific topic, and the available policies
+     * and priority levels can vary widely between different operating systems.
+     * The `schedule` class provides a common interface for setting thread
+     * scheduling policies and priorities, while the underlying implementation
+     * in `detail::schedule` handles the platform-specific details.
+     *
      * */
     class VIDRE_CORE_VISIBILITY schedule {
     public:
@@ -192,13 +199,13 @@ namespace vidre {
          * interface.
          * */
         enum class policy : int {
-            system = to_underlying(detail::schedule::system),            ///< Default Linux time-sharing scheduling policy
-            fifo = to_underlying(detail::schedule::fifo),                ///< First-in, first-out real-time scheduling policy
-            round_robin = to_underlying(detail::schedule::round_robin),  ///< Round-robin real-time scheduling policy
-            batch = to_underlying(detail::schedule::batch),              ///< Scheduling policy for "batch" style execution
-            isochronous = to_underlying(detail::schedule::isochronous),  ///< Scheduling policy for "isochronous" style execution
-            idle = to_underlying(detail::schedule::idle),  ///< Scheduling policy for running a thread only when the system is idle
-            deadline = to_underlying(detail::schedule::deadline)  ///< Scheduling policy for threads with specific deadlines
+            invalid = -1,                                                ///< Invalid scheduling policy.
+            system = to_underlying(detail::schedule::system),            ///< Default Linux time-sharing scheduling policy.
+            fifo = to_underlying(detail::schedule::fifo),                ///< First-in, first-out real-time scheduling policy.
+            round_robin = to_underlying(detail::schedule::round_robin),  ///< Round-robin real-time scheduling policy.
+            batch = to_underlying(detail::schedule::batch),              ///< Scheduling policy for "batch" style execution.
+            idle = to_underlying(detail::schedule::idle),  ///< Scheduling policy for running a thread only when the system is idle.
+            deadline = to_underlying(detail::schedule::deadline)  ///< Scheduling policy for threads with specific deadlines.
         };
 
         /** Default system scheduling policy.
