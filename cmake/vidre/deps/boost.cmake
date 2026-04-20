@@ -9,7 +9,7 @@
 include(vidre/deps/libuuid)
 if(NOT VIDRE_HAVE_LIBUUID)
     set(BOOST_COMPONENT_UUID uuid)
-    set(UUIDLIB Boost::uuid)
+    set(UUIDLIB Boost::system) # uuid is header-only but needs system for linking
 endif()
 
 set(BOOST_VERSION 1.83.0)
@@ -18,18 +18,23 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
 
+set(BOOST_INCLUDE_LIBRARIES
+            exception
+            system
+            iostreams)
+
 if(VIDRE_DEPS_CHECK_ONLY)
     find_package(Boost QUIET
         ${BOOST_VERSION}
         COMPONENTS
-            exception
-            system
-            iostreams
+            ${BOOST_INCLUDE_LIBRARIES}
             ${BOOST_COMPONENT_UUID}
         CONFIG
     )
     vidre_deps_set(Boost ${Boost_FOUND} REQUIRED)
 else()
+    set(BOOST_ENABLE_CMAKE ON)    
+
     FetchContent_Declare(
         Boost
         GIT_REPOSITORY https://github.com/boostorg/boost.git
@@ -39,11 +44,11 @@ else()
         FIND_PACKAGE_ARGS
             ${BOOST_VERSION}
             COMPONENTS
-                exception
-                system
-                iostreams
+            exception
+                ${BOOST_INCLUDE_LIBRARIES}
                 ${BOOST_COMPONENT_UUID}
             CONFIG
     )
+
     FetchContent_MakeAvailable(Boost)
 endif()

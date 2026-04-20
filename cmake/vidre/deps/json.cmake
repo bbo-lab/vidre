@@ -15,8 +15,12 @@ else()
         GIT_PROGRESS   ON
         FIND_PACKAGE_ARGS
     )
+
+    # FIXME exported targets are not working - probably header only
+
     FetchContent_MakeAvailable(nlohmann_json)
 
     set(JSONLIB nlohmann_json::nlohmann_json)
+    vidre_deps_set(nlohmann-json ON)
 endif()
 

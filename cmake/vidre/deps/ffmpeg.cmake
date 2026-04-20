@@ -30,4 +30,5 @@ else()
                     AVDEVICE
     )
     FetchContent_MakeAvailable(FFmpeg)
+    vidre_deps_set(FFmpeg ON)
 endif()

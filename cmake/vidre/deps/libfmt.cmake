@@ -24,5 +24,6 @@ if(NOT VIDRE_USE_CPP_LIB_FORMAT)
         FetchContent_MakeAvailable(fmt)
 
         set(FMTLIB fmt::fmt)
+        vidre_deps_set(libfmt ON)
     endif()
 endif()

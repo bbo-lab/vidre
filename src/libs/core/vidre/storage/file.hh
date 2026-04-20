@@ -36,7 +36,7 @@
  * @{
  * @namespace vidre::storage::file
  * @}
- * 
+ *
  * @todo This needs to be completely overhauled. _open on Windows may actually ignore O_SYNC etal. so
  *       CreateFile has to be used...
  * @todo UTF-8 support on Windows (see https://chat.deepseek.com/a/chat/s/cbb1b2b5-8943-4e15-9caf-956ec9e969fc)
@@ -87,6 +87,8 @@ namespace vidre {
 #if VIDRE_HOST_WINDOWS
                 using descriptor = HANDLE;
 
+                static constexpr std::size_t path_max = MAX_PATH;
+
                 enum flag_type : int {
                     readonly = _O_RDONLY,
                     writeonly = _O_WRONLY,
@@ -101,26 +103,22 @@ namespace vidre {
                     // FIXME...
                 };
 
-                inline descriptor open(const char *filename, int flags) {
-                }
+                inline descriptor open(const char *filename, int flags) {}
 
-                inline descriptor open(const char *filename, int flags, mode_t mode) {
-                }
+                inline descriptor open(const char *filename, int flags, mode_t mode) {}
 
-                inline void close(descriptor fd) {
-                }
+                inline void close(descriptor fd) {}
 
-                inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {
-                }
+                inline offset_type read(descriptor fd, uint8_t *buf, std::size_t count) {}
 
-                inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {
-                }
+                inline offset_type write(descriptor fd, const uint8_t *buf, std::size_t count) {}
 
                 // FIXME seek, allocate, blocksize, filename, mmap, munmap...
 
-                static constexpr std::size_t path_max = MAX_PATH;
 #else
-               using descriptor = int;
+                using descriptor = int;
+
+                static constexpr std::size_t path_max = PATH_MAX;
 
                 enum flag_type : int {
                     invalid = -1,
@@ -222,12 +220,10 @@ namespace vidre {
                     }
                     return {};
 #else
-                    assert(false && "filename retrieval not implemented for this platform");
+                    static_assert(false, "filename retrieval not implemented for this platform");
                     return {};
 #endif
                 }
-
-                static constexpr std::size_t path_max = PATH_MAX;
 #endif
 
                 ///@}
