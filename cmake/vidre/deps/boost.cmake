@@ -38,7 +38,7 @@ else()
         GIT_PROGRESS ON
         FIND_PACKAGE_ARGS
             ${BOOST_VERSION}
-            REQUIRED COMPONENTS
+            COMPONENTS
                 exception
                 system
                 iostreams
