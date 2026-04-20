@@ -48,9 +48,9 @@ namespace vidre {
         unsigned int getFrameHeight() { return _camera ? _camera->GetFrameHeight() : 0; }
         unsigned int getFrameBytes() { return _camera ? _camera->GetFrameBytes() : 0; }
         
-        std::tuple<const uint8_t*, int, int, int, int> getLatestFrame() {
+        std::tuple<const uint8_t*, int, int, int> getLatestFrame() {
             if (_camera->GetVendorName() == "aptina") {
-                uint64_t rgbWidth, rgbHeight, rgbBitDepth;
+                uint32_t rgbWidth, rgbHeight, rgbBitDepth;
                 unsigned char *pRGB = _camera->RGBFrame(_latestFrameData, &rgbWidth, &rgbHeight, &rgbBitDepth);
                 return {pRGB, rgbWidth, rgbHeight, _currentFrame};
             }

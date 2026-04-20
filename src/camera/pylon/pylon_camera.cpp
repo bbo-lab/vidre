@@ -319,7 +319,7 @@ namespace vidre {
         shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
     }
 
-    uint8_t* PylonCamera::RGBFrame(uint8_t* data, uint64_t* w, uint64_t* h, uint64_t* d) {
+    uint8_t* PylonCamera::RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) {
         return nullptr;
     }
 }  // namespace vidre

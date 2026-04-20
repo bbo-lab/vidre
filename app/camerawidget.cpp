@@ -325,12 +325,12 @@ void CameraWidget::updateFrame()
     
 
     
-    uint8_t* imageData;
+    const uint8_t* imageData;
     unsigned int width; 
     unsigned int height;
     unsigned int frameID;
-    std::tie(imageData, width, height, frameID)  = runtimeInstance_->getLatestFrame(); 
-    
+    std::tie(imageData, width, height, frameID) = runtimeInstance_->getLatestFrame(); 
+    auto frameBytes = runtimeInstance_->getFrameBytes();
     if (frameID == lastFrameID_) {
         return; 
     }
