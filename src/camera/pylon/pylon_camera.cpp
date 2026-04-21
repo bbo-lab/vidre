@@ -260,29 +260,43 @@ namespace vidre {
     void PylonCamera::SetExposure(double newExposure) {
         if (!camera.IsOpen())
             return;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
-        Pylon::CEnumParameter exposureAuto(nodemap, "ExposureAuto");
-        exposureAuto.TrySetValue("Off");
+        try {
+            GenApi::INodeMap &nodemap = GetGenAPINodeMap();
+            Pylon::CEnumParameter exposureAuto(nodemap, "ExposureAuto");
+            exposureAuto.TrySetValue("Off");
 
-        Pylon::CFloatParameter exposure(nodemap, "ExposureTime");
+            Pylon::CFloatParameter exposure(nodemap, "ExposureTime");
 
-        if (!exposure.TrySetValue(newExposure)) {
-            std::cout << "Could not set exposure!" << std::endl;
+            if (!exposure.TrySetValue(newExposure)) {
+                std::cout << "Could not set exposure!" << std::endl;
+            }
+        } catch (const Pylon::GenericException &e)
+        {
+            // Error handling.
+            std::cerr << "An exception occurred." << std::endl
+                    << e.GetDescription() << std::endl;
+            return;
         }
     }
 
     void PylonCamera::SetGain(double newGain) {
-        if (!camera.IsOpen())
-            return;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
-        Pylon::CEnumParameter gainAuto(nodemap, "GainAuto");
-        gainAuto.TrySetValue("Off");
-
-        Pylon::CFloatParameter gain(nodemap, "Gain");
-
-        if (!gain.TrySetValue(newGain)) {
-            std::cout << "Could not set gain!" << std::endl;
-        }
+        try {
+            GenApi::INodeMap &nodemap = GetGenAPINodeMap();
+            Pylon::CEnumParameter gainAuto(nodemap, "GainAuto");
+            gainAuto.TrySetValue("Off");
+    
+            Pylon::CFloatParameter gain(nodemap, "Gain");
+    
+            if (!gain.TrySetValue(newGain)) {
+                std::cout << "Could not set gain!" << std::endl;
+            }
+            } catch (const Pylon::GenericException &e)
+            {
+                // Error handling.
+                std::cerr << "An exception occurred." << std::endl
+                        << e.GetDescription() << std::endl;
+                return;
+            }
     }
 
     
