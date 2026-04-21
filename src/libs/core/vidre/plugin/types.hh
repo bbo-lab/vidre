@@ -68,7 +68,7 @@ namespace vidre {
         /** Plugin interface.
          *
          * The "interface" describes the "data flow" capabilities of a plugin, i.e.
-         * whether it produces and/or consumes data. This is relevant for distinuishing
+         * whether it produces and/or consumes data. This is relevant for distinguishing
          * between "source", "sink" and "pipe" plugins, which can be used in different
          * contexts and have different requirements for their implementation.
          *
@@ -87,10 +87,11 @@ namespace vidre {
 
         /** Communication endpoint(s).
          *
-         * The plugins with interfaces "source", "sink" and "pipe" require some form of
-         * communication with the rest of the system, which can be implemented in different
-         * ways. The enumeration provided here only hints at how further configuration of
-         * the plugin should be interpreted, but does not enforce any specific implementation.
+         * Plugins that produce or consume data require some form of communication 
+         * with the rest of the system, which can be implemented in different ways. 
+         * These communication "endpoints" are categorized by their technical 
+         * implementation and require specific configuration parameters, 
+         * described in FIXME.
          *
          * */
         struct endpoint {
