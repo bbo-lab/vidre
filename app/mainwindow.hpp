@@ -32,6 +32,10 @@ public:
 
     /// Load a YAML configuration file (same as "Load Config" button).
     void loadConfigFile(const QString& filepath);
+    void setLibraryPathsFromCommandLine(const QString& aptinaLibraryPath,
+                                        const QString& pylonLibraryPath,
+                                        const QString& aptinaBaseLibraryPath,
+                                        const QString& pylonBaseLibraryPath);
 
 private slots:
     void onLoadConfigClicked();
@@ -60,6 +64,15 @@ private:
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras_;
     std::unordered_map<QString, CameraWidget*> cameraWidgets_;
     QTimer *statusTimer_;
+
+    std::string aptinaLibraryPath_;
+    std::string pylonLibraryPath_;
+    std::string aptinaBaseLibraryPath_;
+    std::string pylonBaseLibraryPath_;
+    bool aptinaLibraryPathCliOverride_ = false;
+    bool pylonLibraryPathCliOverride_ = false;
+    bool aptinaBaseLibraryPathCliOverride_ = false;
+    bool pylonBaseLibraryPathCliOverride_ = false;
     
     std::unique_ptr<vidre::ICamera> loadCamera(const std::string& cameraName, void* cameraNode);
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> loadSystemSetup(const std::string& setupFilepath);
