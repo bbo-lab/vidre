@@ -97,35 +97,13 @@ namespace vidre {
 
         /** Dynamically linked object plugin loader.
          * */
-        class VIDRE_CORE_VISIBILITY dynamic {
+        class VIDRE_CORE_VISIBILITY native {
         public:
-            /** File extension for dynamic load libraries.
+            /** File extension for dynamically linked libraries.
              * */
             static constexpr const char *extension = VIDRE_DLL_EXTENSION;
 
-            /** Exception.
-             * */
-            class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
-            protected:
-                std::string msg_{};
-
-            public:
-                exception(const std::string &msg, const std::source_location location = std::source_location::current())
-                    : vidre::exception(location), msg_(msg) {}
-
-                const char *what() const noexcept override {
-                    return msg_.c_str();
-                }
-            };
-
-            /** DLL handler abstraction.
-             *
-             * This class should serve as an abstraction of dlopen (or the
-             * respective OS equivalent). It's purpose is not only to load
-             * modules, but may be also used for modules that depend on
-             * proprietry libraries which are not distributed together with
-             * VidRe.
-             *
+            /** Library (dynamically linked object) handler.
              * */
             class VIDRE_CORE_VISIBILITY library {
             public:
@@ -142,13 +120,15 @@ namespace vidre {
             public:
                 library() = default;
 
+                library(const library &other) = delete;
+                library &operator=(const library &other) = delete;
+                library(library &&other) = default;
+                library &operator=(library &&other) = default;
+
                 library(const char *path, mode flags = mode::lazy) {
                     open(path, flags);
                 }
                 library(const std::string &path, mode flags = mode::lazy) : library(path.c_str(), flags) {}
-
-                library(const library &other) = delete;
-                library(library &&other) = delete;
 
                 ~library() {
                     detail::library::close(handle_);
@@ -204,7 +184,7 @@ namespace vidre {
             };
 
         public:
-            dynamic() = default;
+            native() = default;
 
         protected:
             // FIXME path_
@@ -212,6 +192,9 @@ namespace vidre {
             information *info_{};
 
         public:
+            /** Load plugin by name.
+             * @throws plugin::exception
+             * */
             void load(const std::string &name);
 
             /** Check if valid.

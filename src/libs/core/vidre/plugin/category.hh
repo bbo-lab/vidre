@@ -53,14 +53,60 @@ namespace vidre {
          * not its purpose or capabilities - only distinguishing how it is loaded.
          * This also requires that the plugin description is formatted in a specific way.
          *
-         * FIXME
-         *
          * */
         struct category {
-            enum type {
+            enum class type {
                 native,  ///< Compiled and dynamically-linked loadable module.
                 script,  ///< Script-based plugin.
-                program  ///< Other plugin type.
+                program  ///< An executable program that is called by VidRe.
+            };
+
+            static std::string_view name(type t) noexcept;
+            static type id(std::string_view name) noexcept;
+        };
+
+        /** Plugin interface.
+         * 
+         * The "interface" describes the "data flow" capabilities of a plugin, i.e. 
+         * whether it produces and/or consumes data. This is relevant for distinuishing 
+         * between "source", "sink" and "pipe" plugins, which can be used in different 
+         * contexts and have different requirements for their implementation.
+         * 
+         * */
+        struct interface {
+            enum class type {
+                other,   ///< Other plugin type (e.g. GUI).
+                sink,    ///< Plugin that consumes data (e.g. storage).
+                source,  ///< Plugin that produces data (e.g. acquisition).
+                pipe     ///< Plugin that both consumes and produces data (e.g. processing).
+            };
+
+            static std::string_view name(type t) noexcept;
+            static type id(std::string_view name) noexcept;
+        };
+
+        /** Communication endpoint(s).
+         * 
+         * The plugins with interfaces "source", "sink" and "pipe" require some form of 
+         * communication with the rest of the system, which can be implemented in different 
+         * ways. The enumeration provided here only hints at how further configuration of 
+         * the plugin should be interpreted, but does not enforce any specific implementation.
+         * 
+         * */
+        struct endpoint {
+            enum class type {
+                none,    ///< No external endpoint (self-contained, e.g., GUI hooks).
+                memory,  ///< Shared memory region (identifier in config).
+                stream,  ///< FIXME
+                stdio,   ///< Standard input/output of the program process.
+                fifo,    ///< Named pipe (path in config).
+                socket   ///< A socket (address in config).
+                         ///  With few exceptions, plugins will only use local IPC. There, 
+                         ///  in general, Unix domain sockets are preferred. However, to 
+                         ///  support remote communication, especially when the daemon
+                         ///  runs on a headless system, TCP/IP sockets can also be used
+                         ///  for remote control. We recommend, though, using SSH tunnels 
+                         ///  for secure communication in that case.
             };
 
             static std::string_view name(type t) noexcept;
@@ -73,4 +119,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_PLUGIN_INFORMATION_HH
+#endif  // VIDRE_CORE_PLUGIN_CATEGORY_HH

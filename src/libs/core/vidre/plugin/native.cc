@@ -91,8 +91,9 @@ std::pair<symbol_type, std::string> plugin::detail::library::symbol(handle_type 
 }
 #endif
 
-void plugin::dynamic::load(const std::string &name) {
+void plugin::native::load(const std::string &name) {
     // FIXME check if already loaded (this would require library to use shared_ptr for the handle...)
+    // FIXME add search paths, etc.
 
     // open module
     module_.open(name + extension, library::mode::lazy);

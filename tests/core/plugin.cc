@@ -17,7 +17,7 @@ using unaryfn = double (*)(double);
 
 TEST_CASE("Plugins", "[dynamic:library]") {
 #if defined(VIDRE_USING_DLFCN)
-    plugin::dynamic::library dl(LIBM_SO);
+    plugin::native::library dl(LIBM_SO);
     REQUIRE(dl.valid());
     REQUIRE(dl.get("sin"));
     auto libmsin = dl.get<unaryfn>("sin");

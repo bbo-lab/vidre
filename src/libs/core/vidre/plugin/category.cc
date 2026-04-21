@@ -39,11 +39,85 @@ std::string_view plugin::category::name(type t) noexcept {
 plugin::category::type plugin::category::id(std::string_view name) noexcept {
     if (name == "native") {
         return type::native;
-    } else if (name == "script") {
+    }
+    else if (name == "script") {
         return type::script;
-    } else if (name == "program") {
+    }
+    else if (name == "program") {
         return type::program;
-    } else {
-        return static_cast<type>(-1); // Invalid type
+    }
+    else {
+        return static_cast<type>(-1);  // Invalid type
+    }
+}
+
+std::string_view plugin::interface::name(type t) noexcept {
+    switch (t) {
+        case type::other:
+            return "other";
+        case type::sink:
+            return "sink";
+        case type::source:
+            return "source";
+        case type::pipe:
+            return "pipe";
+        default:
+            return {};
+    }
+}
+
+plugin::interface::type plugin::interface::id(std::string_view name) noexcept {
+    if (name == "sink") {
+        return type::sink;
+    }
+    else if (name == "source") {
+        return type::source;
+    }
+    else if (name == "pipe") {
+        return type::pipe;
+    }
+    else if (name == "other") {
+        return type::other;
+    }
+    else {
+        return static_cast<type>(-1);  // Invalid type
+    }
+}
+
+std::string_view plugin::endpoint::name(type t) noexcept {
+    switch (t) {
+        case type::none:
+            return "none";
+        case type::memory:
+            return "memory";
+        case type::stdio:
+            return "stdio";
+        case type::fifo:
+            return "fifo";
+        case type::socket:
+            return "socket";
+        default:
+            return {};
+    }
+}
+
+plugin::endpoint::type plugin::endpoint::id(std::string_view name) noexcept {
+    if (name == "none") {
+        return type::none;
+    }
+    else if (name == "memory") {
+        return type::memory;
+    }
+    else if (name == "stdio") {
+        return type::stdio;
+    }
+    else if (name == "fifo") {
+        return type::fifo;
+    }
+    else if (name == "socket") {
+        return type::socket;
+    }
+    else {
+        return static_cast<type>(-1);  // Invalid type
     }
 }
