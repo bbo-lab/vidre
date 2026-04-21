@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "information.hh"
-#include "dynamic.hh"
+#include "native.hh"
 #include "../util/macros.hh"
 
 #include <utility>

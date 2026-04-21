@@ -20,8 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_PLUGIN_DYNAMIC_HH
-#define VIDRE_CORE_PLUGIN_DYNAMIC_HH
+#ifndef VIDRE_CORE_PLUGIN_NATIVE_HH
+#define VIDRE_CORE_PLUGIN_NATIVE_HH
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -233,4 +233,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_PLUGIN_DYNAMIC_HH
+#endif  // VIDRE_CORE_PLUGIN_NATIVE_HH

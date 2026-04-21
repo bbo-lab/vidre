@@ -74,8 +74,9 @@ vidre_library(vidrecore SHARED
                 vidre/video/format/color.hh vidre/video/format/color.cc
             vidre/video/frame.hh vidre/video/frame.cc
         vidre/plugin.hh vidre/plugin.cc
+            vidre/plugin/category.hh vidre/plugin/category.cc
             vidre/plugin/exception.hh
             vidre/plugin/information.hh
-            vidre/plugin/dynamic.hh vidre/plugin/dynamic.cc
+            vidre/plugin/native.hh vidre/plugin/native.cc
         vidre/program.hh vidre/program.cc        
 )

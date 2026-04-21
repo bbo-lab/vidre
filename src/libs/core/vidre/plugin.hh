@@ -28,13 +28,14 @@
  * @details
  * @fileinfo
  *
- * This header provides an implementation to declare, load and deal
- * with plugins, specifically but not limited to dynamic modules.
+ * This header provides an implementation to declare, load and deal with plugins, 
+ * specifically but not limited to "dynamic" modules (i.e. "DLL"s).
  *
  * @see vidre::plugin::hub
  * @see @ref examples/core/plugins.cc
  *
  * @{
+ * @defgroup api-core-plugin-category Plugin categories.
  * @defgroup api-core-plugin-details Implementation details
  * @}
  * */
@@ -42,7 +43,7 @@
 #include <vidre/core/config.hh>
 #include <vidre/plugin/exception.hh>
 #include <vidre/plugin/information.hh>
-#include <vidre/plugin/dynamic.hh>
+#include <vidre/plugin/native.hh>
 
 namespace vidre {
 

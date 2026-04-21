@@ -1,3 +1,7 @@
+# FIXME This needs a bit of explanation, and, as well, some toolchain specific
+#       flags (-> see -march=native for GCC and Clang might not fit the 
+#       destination platform)
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_C_FLAGS_DEBUG "-g -O0 -DDEBUG -Wall" CACHE STRING "")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -O2" CACHE STRING "")

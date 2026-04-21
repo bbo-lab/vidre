@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <vidre/plugin/dynamic.hh>
+#include <vidre/plugin/native.hh>
 
 using namespace vidre;
 
@@ -27,8 +27,8 @@ TEST_CASE("Plugins", "[dynamic:library]") {
 #endif
 }
 
-TEST_CASE("Plugins", "[dynamic]") {
-    plugin::dynamic null;
+TEST_CASE("Plugins", "[native]") {
+    plugin::native null;
     null.load(Vidre_BINARY_DIR "/lib/test/null");
     REQUIRE(null.valid());
     REQUIRE(std::string(null.info().name) == "TestNull");
