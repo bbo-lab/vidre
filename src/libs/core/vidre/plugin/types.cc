@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "category.hh"
+#include "types.hh"
 
 using namespace vidre;
 
@@ -84,40 +84,40 @@ plugin::interface::type plugin::interface::id(std::string_view name) noexcept {
     }
 }
 
-std::string_view plugin::endpoint::name(type t) noexcept {
+std::string_view plugin::endpoint::name(hint t) noexcept {
     switch (t) {
-        case type::none:
+        case hint::none:
             return "none";
-        case type::memory:
+        case hint::memory:
             return "memory";
-        case type::stdio:
+        case hint::stdio:
             return "stdio";
-        case type::fifo:
+        case hint::fifo:
             return "fifo";
-        case type::socket:
+        case hint::socket:
             return "socket";
         default:
             return {};
     }
 }
 
-plugin::endpoint::type plugin::endpoint::id(std::string_view name) noexcept {
+plugin::endpoint::hint plugin::endpoint::id(std::string_view name) noexcept {
     if (name == "none") {
-        return type::none;
+        return hint::none;
     }
     else if (name == "memory") {
-        return type::memory;
+        return hint::memory;
     }
     else if (name == "stdio") {
-        return type::stdio;
+        return hint::stdio;
     }
     else if (name == "fifo") {
-        return type::fifo;
+        return hint::fifo;
     }
     else if (name == "socket") {
-        return type::socket;
+        return hint::socket;
     }
     else {
-        return static_cast<type>(-1);  // Invalid type
+        return static_cast<hint>(-1);  // Invalid type
     }
 }

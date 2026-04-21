@@ -42,8 +42,12 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/plugin/exception.hh>
+#include <vidre/plugin/types.hh>
+
+// FIXME
 #include <vidre/plugin/information.hh>
 #include <vidre/plugin/native.hh>
+
 
 namespace vidre {
 

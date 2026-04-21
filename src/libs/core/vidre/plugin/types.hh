@@ -20,8 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_PLUGIN_CATEGORY_HH
-#define VIDRE_CORE_PLUGIN_CATEGORY_HH
+#ifndef VIDRE_CORE_PLUGIN_TYPES_HH
+#define VIDRE_CORE_PLUGIN_TYPES_HH
 #pragma once
 
 /**@addtogroup api-core-plugin-category
@@ -66,12 +66,12 @@ namespace vidre {
         };
 
         /** Plugin interface.
-         * 
-         * The "interface" describes the "data flow" capabilities of a plugin, i.e. 
-         * whether it produces and/or consumes data. This is relevant for distinuishing 
-         * between "source", "sink" and "pipe" plugins, which can be used in different 
+         *
+         * The "interface" describes the "data flow" capabilities of a plugin, i.e.
+         * whether it produces and/or consumes data. This is relevant for distinuishing
+         * between "source", "sink" and "pipe" plugins, which can be used in different
          * contexts and have different requirements for their implementation.
-         * 
+         *
          * */
         struct interface {
             enum class type {
@@ -86,31 +86,31 @@ namespace vidre {
         };
 
         /** Communication endpoint(s).
-         * 
-         * The plugins with interfaces "source", "sink" and "pipe" require some form of 
-         * communication with the rest of the system, which can be implemented in different 
-         * ways. The enumeration provided here only hints at how further configuration of 
+         *
+         * The plugins with interfaces "source", "sink" and "pipe" require some form of
+         * communication with the rest of the system, which can be implemented in different
+         * ways. The enumeration provided here only hints at how further configuration of
          * the plugin should be interpreted, but does not enforce any specific implementation.
-         * 
+         *
          * */
         struct endpoint {
-            enum class type {
+            enum class hint {
                 none,    ///< No external endpoint (self-contained, e.g., GUI hooks).
-                memory,  ///< Shared memory region (identifier in config).
-                stream,  ///< FIXME
+                stream,  ///< Standard VidRe data stream (@see @ref api-core-storage-io).
                 stdio,   ///< Standard input/output of the program process.
+                memory,  ///< Shared memory region (identifier in config).
                 fifo,    ///< Named pipe (path in config).
                 socket   ///< A socket (address in config).
-                         ///  With few exceptions, plugins will only use local IPC. There, 
-                         ///  in general, Unix domain sockets are preferred. However, to 
+                         ///  With few exceptions, plugins will only use local IPC. There,
+                         ///  in general, Unix domain sockets are preferred. However, to
                          ///  support remote communication, especially when the daemon
                          ///  runs on a headless system, TCP/IP sockets can also be used
-                         ///  for remote control. We recommend, though, using SSH tunnels 
+                         ///  for remote control. We recommend, though, using SSH tunnels
                          ///  for secure communication in that case.
             };
 
-            static std::string_view name(type t) noexcept;
-            static type id(std::string_view name) noexcept;
+            static std::string_view name(hint t) noexcept;
+            static hint id(std::string_view name) noexcept;
         };
 
         ///@}
@@ -119,4 +119,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_PLUGIN_CATEGORY_HH
+#endif  // VIDRE_CORE_PLUGIN_TYPES_HH
