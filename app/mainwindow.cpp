@@ -131,6 +131,8 @@ void MainWindow::createDockWidgets()
     cameraInfosDock_ = new CameraInfosDock(this);
     cameraInfosDock_->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, cameraInfosDock_);
+    connect(ui->actionCameraInfo, &QAction::toggled, cameraInfosDock_, &QDockWidget::setVisible);
+    connect(cameraInfosDock_, &QDockWidget::visibilityChanged, ui->actionCameraInfo, &QAction::setChecked);
     
     // Log dock
     logDock_ = new QDockWidget("Log", this);

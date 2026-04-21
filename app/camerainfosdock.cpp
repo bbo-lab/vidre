@@ -35,8 +35,10 @@ CameraInfosDock::CameraInfosDock(QWidget *parent)
 
     camerasLayout_->setContentsMargins(8, 8, 8, 8);
     camerasLayout_->setSpacing(8);
+    camerasLayout_->setAlignment(Qt::AlignTop);
 
     emptyLabel_->setStyleSheet("color: #999999; padding: 8px;");
+    emptyLabel_->setAlignment(Qt::AlignCenter);
     camerasLayout_->addWidget(emptyLabel_);
     camerasLayout_->addStretch();
 
@@ -46,6 +48,9 @@ CameraInfosDock::CameraInfosDock(QWidget *parent)
     scrollArea_->setWidgetResizable(true);
     scrollArea_->setWidget(contentWidget_);
     scrollArea_->setFrameShape(QFrame::NoFrame);
+    scrollArea_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    setMinimumWidth(360);
     setWidget(scrollArea_);
     
     // Set up timer for periodic updates
