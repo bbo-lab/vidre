@@ -2,9 +2,13 @@
 #define CAMERAINFOSDOCK_HPP
 
 #include <QDockWidget>
-#include <QTextEdit>
 #include <QTimer>
 #include <QLabel>
+#include <QDoubleSpinBox>
+#include <QPushButton>
+#include <QScrollArea>
+#include <QVBoxLayout>
+#include <QGroupBox>
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -28,18 +32,29 @@ private slots:
     void updateAllCamerasInfo();
 
 private:
-    QTextEdit *infoTextEdit_;
+    QWidget *contentWidget_;
+    QScrollArea *scrollArea_;
+    QVBoxLayout *camerasLayout_;
+    QLabel *emptyLabel_;
     QTimer *updateTimer_;
     
     struct CameraData {
         vidre::RuntimeInstance* runtimeInstance;
         QString lastInfo;
+        QGroupBox* groupBox;
+        QLabel* infoLabel;
+        QDoubleSpinBox* exposureSpin;
+        QDoubleSpinBox* gainSpin;
+        QPushButton* applyButton;
+        bool controlsInitialized;
     };
     
     std::unordered_map<std::string, CameraData> cameras_;
     
     void refreshDisplay();
     QString generateCameraInfo(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance);
+    QGroupBox* createCameraGroup(const QString& cameraName, CameraData& data);
+    void applyCameraSettings(const QString& cameraName);
 };
 
 #endif // CAMERAINFOSDOCK_HPP

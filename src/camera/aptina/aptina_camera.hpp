@@ -2,7 +2,10 @@
 #include <camera/camera.hpp>
 #include <camera/aptina/aptina_buffer.hpp>
 
+#include <optional>
 #include <thread>
+#include <unordered_map>
+#include <vector>
 
 #include "apbase.h"
 
@@ -45,6 +48,8 @@ namespace vidre {
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) override;
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) override;
         virtual void SetFrameRate(double newFrameRate) override;
+        virtual double GetExposure() override;
+        virtual double GetGain() override;
         virtual void SetExposure(double newExposure) override;
         virtual void SetGain(double newGain) override;
 
@@ -76,5 +81,20 @@ namespace vidre {
 
         std::string _serial;
         std::string _config_file;
+
+        std::optional<std::string> FindRegisterSymbol(const std::vector<std::string>& preferredSymbols,
+                                                      const std::vector<std::string>& containsTokens);
+        double GetRegisterValue(const std::vector<std::string>& preferredSymbols,
+                                const std::vector<std::string>& containsTokens);
+        bool SetRegisterValue(const std::vector<std::string>& preferredSymbols,
+                              const std::vector<std::string>& containsTokens,
+                              double value,
+                              const char* valueLabel);
+        std::unordered_map<std::string, std::string> _resolvedRegisterSymbols;
+
+        std::vector<std::string> _exposurePreferredSymbols;
+        std::vector<std::string> _exposureContainsTokens;
+        std::vector<std::string> _gainPreferredSymbols;
+        std::vector<std::string> _gainContainsTokens;
     };
 }  // namespace vidre

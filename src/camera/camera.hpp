@@ -63,6 +63,8 @@ namespace vidre {
         virtual void SetFrameOffsetX(unsigned int newFrameOffsetX) = 0;
         virtual void SetFrameOffsetY(unsigned int newFrameOffsetY) = 0;
         virtual void SetFrameRate(double newFrameRate) = 0;
+        virtual double GetExposure() = 0;
+        virtual double GetGain() = 0;
         virtual void SetExposure(double newExposure) = 0;
         virtual void SetGain(double newGain) = 0;
 
