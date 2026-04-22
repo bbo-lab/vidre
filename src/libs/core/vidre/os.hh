@@ -25,6 +25,7 @@
 #pragma once
 
 /**@addtogroup api-core-os
+ * @brief Operating system utilities.
  * @details
  * @fileinfo
  * 

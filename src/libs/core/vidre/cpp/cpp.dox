@@ -1,4 +1,5 @@
 /**@addtogroup api-core-cpp
+ * @brief Helpers to bridge unimplemented C++ standard features.
  * @details
  * 
  * This directory contains C++20 compatibility helpers.

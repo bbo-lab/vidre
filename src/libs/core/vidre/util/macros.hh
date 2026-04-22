@@ -25,9 +25,11 @@
 #pragma once
 
 /**@defgroup api-core-util-macro Macro utilities
+ * @brief Preprocessor macros for various purposes (such as "stringification").
  * @ingroup api-core-util
  * @details
  * @fileinfo
+ * 
  * */
 ///@{
 
