@@ -24,10 +24,10 @@ CameraWidget::CameraWidget(const QString& cameraName,
 {
     ui->setupUi(this);
     setupUI();
-    updateStatus();
     
     connect(frameTimer_, &QTimer::timeout, this, &CameraWidget::updateFrame);
     frameTimer_->setInterval(33); // ~30 FPS
+    updateStatus();
 }
 
 CameraWidget::~CameraWidget()
@@ -201,6 +201,11 @@ void CameraWidget::updateStatus()
         startButton_->setEnabled(false);
         showButton_->setEnabled(false);
         stopButton_->setEnabled(true);
+        if (!frameTimer_->isActive()) {
+            frameTimer_->start();
+            lastFrameID_ = -1;
+            frameCount_ = 0;
+        }
         // singleGrabButton_->setEnabled(false);
     } else {
         statusLabel_->setText("Status: Stopped");
@@ -218,6 +223,9 @@ void CameraWidget::updateStatus()
         startButton_->setEnabled(true);
         showButton_->setEnabled(true);
         stopButton_->setEnabled(false);
+        if (frameTimer_->isActive()) {
+            frameTimer_->stop();
+        }
         // singleGrabButton_->setEnabled(true);
     }
     

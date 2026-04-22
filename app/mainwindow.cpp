@@ -248,7 +248,7 @@ void MainWindow::onStopShowAllClicked()
     
     int started = 0;
     for (auto& cam : cameras_) {
-        if (!cam.second->isRunning()) {
+        if (cam.second->isRunning()) {
             cam.second->stop();
             logMessage(QString("Stop Showing: %1").arg(QString::fromStdString(cam.first)));
             started++;
