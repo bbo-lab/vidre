@@ -43,13 +43,21 @@ if(VIDRE_HAVE_MIDLIB2)
     )
 endif()
 
-vidre_test(hdspeed EXCLUDE
+vidre_test(datachain EXCLUDE
     BUILD
         LINK_LIBRARIES 
             PUBLIC
                 Vidre::Core
-    SOURCES hdspeed.cc
+    SOURCES datachain.cc
 )
+
+# FIXME vidre_test(hdspeed EXCLUDE
+#     BUILD
+#         LINK_LIBRARIES 
+#             PUBLIC
+#                 Vidre::Core
+#     SOURCES hdspeed.cc
+# )
 
 # vidre_test(uvc EXCLUDE
 #     BUILD

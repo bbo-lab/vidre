@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "exception.hh"
-#include "storage/file.hh"
+// FIXME #include "storage/file.hh"
 
 #include <iostream>
 #include <format>
@@ -109,7 +109,8 @@ dealloc_failed:
 }
 
 void vidre::abort_with_message(const char *msg) {
-    storage::detail::file::write(2, msg, strlen(msg));
+    // FIXME storage::detail::file::write(2, msg, strlen(msg));
+    std::cerr << msg << std::endl;
     abort();
 }
 

@@ -23,6 +23,7 @@ vidre_library(vidrecore SHARED
                 Boost::system
             PUBLIC
                 DeLua::Library::CXX
+                unordered_dense::unordered_dense 
                 ${UUIDLIB}
                 ${UNITSLIB}
                 ${FMTLIB}
@@ -62,17 +63,8 @@ vidre_library(vidrecore SHARED
             vidre/settings/lua.hh 
             vidre/settings/json.hh
             vidre/settings/yaml.hh 
-        vidre/storage.hh vidre/storage.cc
-            vidre/storage/io.hh vidre/storage/io.cc
-            vidre/storage/file.hh vidre/storage/file.cc
-            vidre/storage/bit.hh vidre/storage/bit.cc
-            vidre/storage/raw.hh vidre/storage/raw.cc
-        vidre/video.hh vidre/video.cc
-            vidre/video/format.hh vidre/video/format.cc
-                vidre/video/format/geometry.hh
-                vidre/video/format/pixel.hh vidre/video/format/pixel.cc
-                vidre/video/format/color.hh vidre/video/format/color.cc
-            vidre/video/frame.hh vidre/video/frame.cc
+        vidre/io.hh vidre/io.cc
+            vidre/io/types.hh vidre/io/types.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/types.hh vidre/plugin/types.cc
             vidre/plugin/exception.hh

@@ -12,6 +12,7 @@ struct array_wrapper : std::array<T, N> {
     constexpr array_wrapper(ArgTs &&...args) : std::array<T, N>{std::forward<ArgTs>(args)...} {}
 };
 
+#if 0
 #include <vidre/storage/bit.hh>
 using namespace vidre;
 TEST_CASE("bit.hh", "[vidre/storage]") {
@@ -67,3 +68,4 @@ TEST_CASE("bit.hh", "[vidre/storage]") {
         REQUIRE(memcmp(source, unpacked, NSAMPLES) == 0);
     }
 }
+#endif

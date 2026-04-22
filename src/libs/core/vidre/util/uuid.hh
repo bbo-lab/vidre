@@ -34,13 +34,14 @@
  *
  * @see
  * https://en.wikipedia.org/wiki/Universally_unique_identifier
- * 
+ *
  * @{
  * @defgroup api-core-util-uuid-details Implementation details
  * @}
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/exception.hh>
 
 #if VIDRE_HAVE_LIBUUID
 #include <uuid/uuid.h>
@@ -51,7 +52,7 @@
 #endif
 
 #include <string>
-#include <stdexcept>
+#include <array>
 
 namespace vidre {
 
@@ -198,6 +199,18 @@ namespace vidre {
                 }
             };
 
+            inline uint64_t hash(uuid_t u) noexcept {
+                uint64_t high = 0;
+                uint64_t low = 0;
+
+                for (int i = 0; i < 8; ++i) {
+                    high = (high << 8) | u.data[i];
+                    low = (low << 8) | u.data[i + 8];
+                }
+
+                return low;
+            }
+
         }  // namespace uuid
 #else
         using uuid_t = boost::uuids::uuid;
@@ -271,8 +284,70 @@ namespace vidre {
                 uuid_t operator()() const noexcept;
             };
 
+            inline uint64_t hash(uuid_t u) noexcept {
+                uint64_t high = 0;
+                uint64_t low = 0;
+
+                for (int i = 0; i < 8; ++i) {
+                    high = (high << 8) | u.data[i];
+                    low = (low << 8) | u.data[i + 8];
+                }
+
+                return low;
+            }
+
         }  // namespace uuid
 #endif
+
+        inline constexpr uint8_t hex2byte(char c) {
+            if (c >= '0' && c <= '9')
+                return c - '0';
+            if (c >= 'a' && c <= 'f')
+                return c - 'a' + 10;
+            if (c >= 'A' && c <= 'F')
+                return c - 'A' + 10;
+            throw "internal error: invalid hex character";
+        }
+
+        inline constexpr uint8_t hex2byte(char c1, char c2) {
+            return (hex2byte(c1) << 4) | hex2byte(c2);
+        }
+
+        namespace uuid {
+            inline consteval void parse(uint8_t *bytes, const char *str, std::size_t len) {
+                // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                if (len != 36) {
+                    throw "Internal error: UUID string must be 36 characters long";
+                }
+
+                // Check hyphen positions
+                if (str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-') {
+                    throw "Internal error: invalid UUID format, incorrect hyphen positions";
+                }
+
+                // Parse 16 bytes in their positions
+                // Positions in string:
+                // 0-1, 2-3, 4-5, 6-7, 9-10, 11-12, 14-15, 16-17,
+                // 19-20, 21-22, 24-25, 26-27, 28-29, 30-31, 32-33, 34-35
+
+                size_t byte_idx = 0;
+                size_t str_idx = 0;
+
+                while (byte_idx < 16) {
+                    // Skip hyphens
+                    if (str[str_idx] == '-') {
+                        ++str_idx;
+                        continue;
+                    }
+
+                    // Parse two hex chars
+                    bytes[byte_idx++] = hex2byte(str[str_idx], str[str_idx + 1]);
+                    str_idx += 2;
+                }
+            }
+
+        }  // namespace uuid
+
         ///@}
 
     }  // namespace detail
@@ -395,6 +470,11 @@ namespace vidre {
         }
         uuid(const detail::uuid_t &u) noexcept : uuid_(u) {}
 
+        template <std::size_t N>
+        constexpr uuid(const char (&c)[N]) {
+            detail::uuid::parse(uuid_.data, c, N - 1);
+        }
+
     protected:
         detail::uuid_t uuid_{};
 
@@ -443,9 +523,34 @@ namespace vidre {
         bool operator==(const std::string &s) const noexcept {
             return std::string(*this) == s;
         }
+
+        /** Hash value.
+         * */
+        std::size_t hash() const noexcept {
+            return detail::uuid::hash(uuid_);
+        }
     };
 
     ///@}
+
 }  // namespace vidre
+
+///@cond
+namespace std {
+    template <>
+    struct hash<vidre::uuid> {
+        std::size_t operator()(const vidre::uuid &u) const noexcept {
+            return u.hash();
+        }
+    };
+
+    template <>
+    struct less<vidre::uuid> {
+        bool operator()(const vidre::uuid &lhs, const vidre::uuid &rhs) const noexcept {
+            return lhs.tostring() < rhs.tostring();
+        }
+    };
+}  // namespace std
+///@endcond
 
 #endif  // VIDRE_CORE_UTIL_UUID_HH

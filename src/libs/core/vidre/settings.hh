@@ -48,7 +48,7 @@
  * @{
  * @defgroup api-core-settings-json JSON
  * @defgroup api-core-settings-yaml YAML
- * @defgroup api-core-settings-lua Lua
+ * @defgroup api-core-settings-lua  Lua
  * @}
  * 
  * @see @ref examples/core/settings.cc

@@ -32,6 +32,7 @@ TEST_CASE("uuid.hh", "[vidre/util]") {
     REQUIRE(uuid() == uuid::type::NIL);
     REQUIRE(uuid::makeRandom() == uuid::variant::DCE);
     REQUIRE(uuid::makeRandom() == uuid::type::Random);
+    REQUIRE(uuid("550e8400-e29b-41d4-a716-446655440000") == uuid(std::string("550e8400-e29b-41d4-a716-446655440000")));
     // ...
 }
 

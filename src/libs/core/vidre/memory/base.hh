@@ -30,6 +30,11 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/cpp/util.hh>
+
+#include <utility>
+#include <bit>
+#include <type_traits>
 
 namespace vidre {
 
@@ -39,13 +44,131 @@ namespace vidre {
          * */
         ///@{
 
+        /** Type of memory size. */
         using size_type = std::size_t;
+        /** Type of pointer differences. */
+        using difference_type = std::make_signed_t<size_type>;
+
+        /** Default memory value type.
+         * @note VidRe fundamental purpose is to record and process image data,
+         *       which is commonly represented as byte arrays. Therefore, the default
+         *       value type for memory operations is set to uint8_t, which represents
+         *       an unsigned byte.
+         * */
         using value_type = uint8_t;
-        using pointer = uint8_t *;
-        using const_pointer = const uint8_t *;
+
+        /** Pointer to memory. */
+        using pointer = value_type *;
+        /** Pointer to const memory. */
+        using const_pointer = const value_type *;
+
+        /** Memory view.
+         *
+         * Akin to the STL's std::string_view or std::span, this class provides a non-owning
+         * view on a contiguous memory region.
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY view {
+        public:
+            constexpr view() = default;
+
+            constexpr view(view &&other) = default;
+            constexpr view &operator=(view &&other) = default;
+            constexpr view(const view &other) = default;
+            constexpr view &operator=(const view &other) = default;
+
+            constexpr view(size_type n, pointer ptr) noexcept : size_(n), data_(ptr) {}
+            constexpr view(size_type n, const_pointer ptr) noexcept : size_(n), data_(ptr) {}
+
+            template <typename T>
+            view(const T &value) noexcept : size_(sizeof(T)), data_(reinterpret_cast<pointer>(&value)) {}
+
+        protected:
+            size_type size_{};
+            const_pointer data_{};
+
+        public:
+            /** Get size of stored data.
+             * */
+            constexpr size_type size() const noexcept {
+                return size_;
+            }
+
+            /** Get pointer to data.
+             * */
+            ///@{
+            constexpr const_pointer data() const noexcept {
+                return data_;
+            }
+
+            constexpr operator const_pointer() const noexcept {
+                return data_;
+            }
+
+            constexpr operator const void *() const noexcept {
+                return static_cast<const void *>(data_);
+            }
+            ///@}
+        };
+
+        /** Writable memory view.
+         * This class extends the basic view by allowing write access to the underlying memory.
+         * It is designed for scenarios where mutable access to the data is required, such as
+         * when processing or modifying image data in-place.
+         * */
+        class VIDRE_CORE_VISIBILITY area {
+        public:
+            constexpr area() = default;
+
+            constexpr area(area &&other) = default;
+            constexpr area &operator=(area &&other) = default;
+            constexpr area(const area &other) = default;
+            constexpr area &operator=(const area &other) = default;
+
+            constexpr area(size_type n, pointer ptr) noexcept : size_(n), data_(ptr) {}
+
+        protected:
+            size_type size_{};
+            pointer data_{};
+
+        public:
+            /** Get size of stored data.
+             * */
+            constexpr size_type size() const noexcept {
+                return size_;
+            }
+
+            /** Get pointer to data.
+             * */
+            ///@{
+            constexpr pointer data() noexcept {
+                return data_;
+            }
+
+            constexpr operator pointer() noexcept {
+                return data_;
+            }
+
+            constexpr const_pointer data() const noexcept {
+                return data_;
+            }
+
+            constexpr operator const_pointer() const noexcept {
+                return data_;
+            }
+
+            constexpr operator const void *() const noexcept {
+                return static_cast<const void *>(data_);
+            }
+
+            constexpr operator void *() noexcept {
+                return static_cast<void *>(data_);
+            }
+            ///@}
+        };
 
         ///@}
-        
+
     }  // namespace memory
 
 }  // namespace vidre

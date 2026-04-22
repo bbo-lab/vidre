@@ -38,13 +38,15 @@
  * 
  * @{
  * @namespace vidre::memory Memory handling.
- * @defgroup api-core-memory-base Basic types and utilities
- * @defgroup api-core-memory-chunk Data chunk handling
- * @defgroup api-core-memory-details Implementation details
+ * @defgroup api-core-memory-base       Basic types and utilities
+ * @defgroup api-core-memory-view       Memory views
+ * @defgroup api-core-memory-chunk      Data chunk handling
+ * @defgroup api-core-memory-details    Implementation details
  * @}
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/memory/base.hh>
 #include <vidre/memory/chunk.hh>
 
 #endif  // VIDRE_CORE_MEMORY_HH

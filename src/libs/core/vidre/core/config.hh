@@ -65,13 +65,13 @@ namespace vidre {
 #if defined(DOXYGEN)
 
 /** Host is a Linux system */
-#define VIDRE_HOST_LINUX <0|1>
+#define VIDRE_HOST_LINUX <0/1>
 
 /** Host is a Windows system */
-#define VIDRE_HOST_WINDOWS <0|1>
+#define VIDRE_HOST_WINDOWS <0/1>
 
 /** Host is an Apple system */
-#define VIDRE_HOST_APPLE <0|1>
+#define VIDRE_HOST_APPLE <0/1>
 
 #endif  // DOXYGEN
 
@@ -88,6 +88,12 @@ namespace vidre {
  * @endinternal
  * */
 #define VIDRE_IS_LITTLEENDIAN (std::endian::native == std::endian::little)
+
+#if defined(DOXYGEN)
+#define VIDRE_HOST_LINUX <1/0>
+#define VIDRE_HOST_WINDOWS <1/0>
+#define VIDRE_HOST_APPLE <1/0>
+#endif
 
 ///@cond
 #if defined(linux) || defined(__linux__) || defined(__linux)
@@ -108,6 +114,10 @@ namespace vidre {
 #define VIDRE_HOST_APPLE 0
 #endif
 ///@endcond
+
+/** Check bit-depth of host.
+ * */
+#define VIDRE_HOST_BITS(N) (__SIZEOF_POINTER__ * 8 == (N))
 
 ///@}
 

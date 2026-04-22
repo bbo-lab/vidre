@@ -15,6 +15,7 @@ set(VIDRE_DEPS
     terminal
     units
     yaml
+    unordered_dense
 
     qt
 

@@ -243,7 +243,7 @@ namespace vidre {
             struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY id {
                 uint16_t major_{};     ///< Major "T"ype.
                 uint16_t minor_{};     ///< Sub-"T"ype.
-                uint32_t reserved_{};  ///< Reserved for future use.
+                uint32_t reserved_{};  ///< Reserved for future use. FIXME -> stream id
 
                 constexpr id() = default;
 

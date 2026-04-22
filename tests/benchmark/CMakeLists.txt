@@ -9,3 +9,12 @@ vidre_test(exceptions EXCLUDE
                 Vidre::Core
 )
 
+vidre_test(lookup EXCLUDE
+    SOURCES lookup.cc
+    BUILD
+        LINK_LIBRARIES 
+            PRIVATE 
+                Vidre::Core
+                unordered_dense::unordered_dense
+)
+

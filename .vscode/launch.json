@@ -16,6 +16,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "benchmark.lookup",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/benchmark.lookup",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "benchmark.raw",
             "type": "cppdbg",
             "request": "launch",
