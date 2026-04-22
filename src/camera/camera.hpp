@@ -8,7 +8,7 @@
 
 
 #ifdef _WIN32
-    #define VIDRE_CAMERA_API __declspec(dllexport)
+    #define VIDRE_CAMERA_API extern "C" __declspec(dllexport)
 #else
     #define VIDRE_CAMERA_API __attribute__((visibility("default")))
 #endif

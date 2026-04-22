@@ -14,7 +14,7 @@ namespace util {
 
     bool IsLibraryAvailable(const std::string& library_name) {
     #ifdef _WIN32
-        auto result = LoadLibraryExA(library_name.c_str(), NULL, 0);
+        auto result = LoadLibraryExA(library_name.c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
     #else
         dlerror();
         auto result = dlopen(library_name.c_str(), RTLD_LAZY);
@@ -30,7 +30,7 @@ namespace util {
 
 void* LoadLibrary(const std::string& library_name) {
 #ifdef _WIN32
-    auto result = LoadLibraryExA(library_name.c_str(), NULL, 0);
+        auto result = LoadLibraryExA(library_name.c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 #else
     dlerror();
     auto result = dlopen(library_name.c_str(), RTLD_LAZY);
