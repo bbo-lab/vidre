@@ -20,13 +20,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "file.hh"
-#include "../os/memory.hh"
 
 using namespace vidre;
 
-storage::offset_type storage::file::sink::flush() {
+io::offset_type io::file::sink::flush() {
     if (buf_.used) {
-        auto retval = write(buf_.data, buf_.used);
+        auto retval = fd_.write({buf_.used, buf_.data});
 
         if (retval != buf_.used)
             // if the underlying hardware can't take it, we assume,
@@ -36,39 +35,12 @@ storage::offset_type storage::file::sink::flush() {
     return buf_.flush();
 }
 
-bool storage::file::sink::open(const std::filesystem::path &filename, openmode_type mode, io::perms permissions) noexcept {
-    io::flag_type f = io::writeonly | io::create | io::close_on_exec;
-
-    if (mode & openmode_type::truncate)
-        f |= io::truncate;
-    else
-        f |= io::append;
-
-    if (mode & openmode_type::direct)
-        f |= io::direct;
-
-    bool retval = fd_.open(filename, f, permissions);
-    if (not retval)
-        return false;
-
-    if ((mode & openmode_type::direct) and not(mode & openmode_type::unbuffered)) {
-        auto mem = std::max(detail::file::blocksize(fd_), os::pagesize());
-        buf_.setup(mem);
-    }
-
-    return true;
-}
-
-void storage::file::sink::close() noexcept {
-    if (buf_)
-        flush();
-    fd_.close();
-    return;
-}
-
-storage::offset_type storage::file::sink::put(size_type count, const uint8_t *src) {
+io::offset_type io::file::sink::write(const memory::view &buf) noexcept {
     if (buf_) {
         // using buffer
+        size_type count = buf.size();
+        memory::const_pointer src = buf.data();
+
         offset_type retval = count;
         offset_type pos = 0;
         while (count > 0) {
@@ -83,5 +55,37 @@ storage::offset_type storage::file::sink::put(size_type count, const uint8_t *sr
     }
     else
         // direct write
-        return write(src, count);
+        return fd_.write(buf);
+}
+
+bool io::file::sink::open(const std::filesystem::path &filename, openmode_type mode) noexcept {
+    file::access acc = file::access::writeonly;
+    file::disposition disp = file::disposition::create;
+    file::hint hint = file::hint::none;
+
+    if (mode & openmode_type::truncate)
+        disp |= file::disposition::truncate;
+    else
+        disp |= file::disposition::append;
+
+    if (mode & openmode_type::direct)
+        hint |= file::hint::direct | file::hint::synchronous;
+
+    bool retval = fd_.open(filename, acc, disp, hint);
+    if (not retval)
+        return false;
+
+    if ((mode & openmode_type::direct) and not(mode & openmode_type::unbuffered)) {
+        auto mem = std::max(fd_.blocksize(), os::pagesize());
+        buf_.setup(mem);
+    }
+
+    return true;
+}
+
+void io::file::sink::close() noexcept {
+    if (buf_)
+        flush();
+    fd_.close();
+    return;
 }

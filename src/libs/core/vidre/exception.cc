@@ -190,22 +190,13 @@ void error::message::make(error::string &emsg) noexcept {
     emsg += msg_ + "\n";
 }
 
-void error::errc::make(error::string &emsg) noexcept {
-    auto &cat = std::generic_category();
+void error::code::make(error::string &emsg) noexcept {
+    auto &cat = ec_.category();
 
     emsg += "    ";
     emsg += cat.name();
     emsg += ": ";
-    emsg += cat.message(static_cast<int>(ec_));
+    emsg += cat.message(ec_.value());
     emsg += "\n";
 }
 
-void error::system::make(error::string &emsg) noexcept {
-    auto &cat = std::system_category();
-
-    emsg += "    ";
-    emsg += cat.name();
-    emsg += ": ";
-    emsg += cat.message(ec_);
-    emsg += "\n";
-}

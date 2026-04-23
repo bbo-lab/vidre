@@ -295,10 +295,12 @@ namespace vidre {
 
     public:
         event() = default;
-        event(event &&) noexcept = delete;  // FIXME should be movable...
-        event &operator=(event &&) noexcept = delete;
+
         event(const event &) = delete;
         event &operator=(const event &) = delete;
+        event(event &&) noexcept = default;
+        event &operator=(event &&) noexcept = default;
+
         ~event() {}
 
     protected:

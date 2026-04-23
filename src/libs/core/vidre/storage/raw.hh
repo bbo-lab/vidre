@@ -136,12 +136,12 @@
  * @endcode
  *
  * @{
- * @namespace vidre::storage::raw 
+ * @namespace vidre::storage::raw
  * @}
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/storage/io.hh>
+#include <vidre/io/file.hh>
 #include <vidre/util/version.hh>
 
 #include <bit>
@@ -215,6 +215,7 @@ namespace vidre {
                 integer = 0x0002,  ///< 64-bit signed integer.
                 natural = 0x0003,  ///< 64-bit unsigned integer.
                 number = 0x0004,   ///< 64-bit floating-point value (double).
+                // FIXME '->need IEEE854 representation due to endianness issues!
                 string = 0x0005,   ///< UTF-8 sequence (zero-terminated).
 
                 isodate = 0x0010,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
@@ -351,13 +352,16 @@ namespace vidre {
 
                     /** Write entry to sink.
                      * */
-                    virtual offset_type put(sink &f) const noexcept {
-                        return f.put(&prefix, 1);
+                    virtual offset_type put(io::sink &f) const noexcept {
+                        return f.put({
+                            sizeof(prefix),
+                            reinterpret_cast<memory::const_pointer>(&prefix)
+                        });
                     }
 
                     /** Read data from source.
                      * */
-                    virtual offset_type get(source &) noexcept {
+                    virtual offset_type get(io::source &) noexcept {
                         // FIXME should be abstract!
                         return -1;
                     };
@@ -381,7 +385,7 @@ namespace vidre {
                     /** Add an element.
                      * */
                     template <typename T, typename... Args>
-                    T *add(Args&&... args) noexcept {
+                    T *add(Args &&...args) noexcept {
                         T *obj = new T(std::forward<Args>(args)...);
                         nodes.emplace_back(obj);
                         return obj;
@@ -395,7 +399,7 @@ namespace vidre {
                         return retval;
                     }
 
-                    offset_type put(sink &f) const noexcept override {
+                    offset_type put(io::sink &f) const noexcept override {
                         offset_type retval = 0;  /// no header, just a (fixed) sequence
                         for (auto &obj : nodes)
                             retval += obj->put(f);
@@ -404,7 +408,46 @@ namespace vidre {
                 };
 
                 /** Group of TLV entries.
-                 * */
+                 * */            /** Data packet base type.
+             * */
+            struct VIDRE_CORE_VISIBILITY packet {
+                vidre::uuid uuid{};  ///< Packet type (e.g., video, audio, metadata).
+                uint32_t stream{};   ///< Stream identifier (e.g., for multiplexed streams).
+                // /** Function type for putting a packet-based streams into a sink.
+                //  * */
+                // using put_type = void (*)(const io::packet &source, io::sink &sink);
+
+                // put_type putter{};   ///< Function pointer for putting this packet into a sink.
+
+                // public:
+                //     using selector_type = put_type (*)(const io::packet &source, const io::packet &sink);
+                //     using map_type = ankerl::unordered_dense::map<vidre::uuid, selector_type>;
+
+                // protected:
+                //     static map_type registry;  ///< Static map for registering packet types and their put functions.
+
+                // public:
+                //     /** Register a "selector" function.
+                //      * */
+                //     static void enregister(const vidre::uuid &uuid, selector_type func) {
+                //         auto it = registry.find(uuid);
+                //         if (it != registry.end())
+                //             throw vidre::exception() << error::message("packet type already registered");
+
+                //         registry[uuid] = func;
+                //     }
+
+                //     /** Retrieve selector function.
+                //      * */
+                //     static selector_type retrieve(const vidre::uuid &uuid) {
+                //         auto it = registry.find(uuid);
+                //         if (it == registry.end())
+                //             throw vidre::exception() << error::message("packet type not registered");
+
+                //         return it->second;
+                //     }
+            };
+
                 struct VIDRE_CORE_VISIBILITY group : public virtual sequence {
                     group() noexcept = default;
                     virtual ~group() {}
@@ -415,14 +458,12 @@ namespace vidre {
                         return retval;
                     }
 
-                    virtual offset_type put(sink &f) const noexcept {
+                    virtual offset_type put(io::sink &f) const noexcept {
                         return dynamic::put(f) + sequence::put(f);
                     }
                 };
 
             }  // namespace element
-
-            
 
             // ============================================================================================
             // ============================================================================================

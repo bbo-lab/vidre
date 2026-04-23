@@ -23,4 +23,4 @@
 
 using namespace vidre;
 
-vidre::io::packet::map_type vidre::io::packet::registry{};
+// vidre::io::packet::map_type vidre::io::packet::registry{};

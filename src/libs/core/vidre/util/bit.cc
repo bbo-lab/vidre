@@ -23,8 +23,8 @@
 #include "../exception.hh"
 
 template <>
-vidre::storage::view::size_type vidre::storage::pack<16, 10, false>(const view &input, view output) {
-    using size_type = view::size_type;
+vidre::memory::size_type vidre::bit::pack<16, 10, false>(const  memory::view &input, memory::area output) {
+    using size_type = memory::size_type;
 
     auto data_in = input.data();
     size_type bytes_in = input.size();
@@ -85,8 +85,8 @@ vidre::storage::view::size_type vidre::storage::pack<16, 10, false>(const view &
 }
 
 template <>
-vidre::storage::view::size_type vidre::storage::pack<16, 12, false>(const view &input, view output) {
-    using size_type = view::size_type;
+vidre::memory::size_type vidre::bit::pack<16, 12, false>(const memory::view &input, memory::area output) {
+    using size_type = memory::size_type;
 
     auto data_in = input.data();
     size_type bytes_in = input.size();
@@ -137,8 +137,8 @@ vidre::storage::view::size_type vidre::storage::pack<16, 12, false>(const view &
 }
 
 template <>
-vidre::storage::view::size_type vidre::storage::pack<10, 16, false>(const view &input, view output) {
-    using size_type = view::size_type;
+vidre::memory::size_type vidre::bit::pack<10, 16, false>(const memory::view &input, memory::area output) {
+    using size_type = memory::size_type;
 
     auto data_in = input.data();
     size_type bytes_in = input.size();
@@ -209,8 +209,8 @@ vidre::storage::view::size_type vidre::storage::pack<10, 16, false>(const view &
 }
 
 template <>
-vidre::storage::view::size_type vidre::storage::pack<12, 16, false>(const view &input, view output) {
-    using size_type = view::size_type;
+vidre::memory::size_type vidre::bit::pack<12, 16, false>(const memory::view &input, memory::area output) {
+    using size_type = memory::size_type;
 
     auto data_in = input.data();
     size_type bytes_in = input.size();

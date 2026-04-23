@@ -51,7 +51,7 @@ vidre_library(vidrecore SHARED
             vidre/util/status.hh
             vidre/util/events.hh
             vidre/util/endian.hh
-            vidre/util/bit.hh
+            vidre/util/bit.hh vidre/util/bit.cc
             vidre/util/thread.hh
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
@@ -65,6 +65,10 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/io.hh vidre/io.cc
             vidre/io/types.hh vidre/io/types.cc
+            vidre/io/file.hh vidre/io/file.cc
+            vidre/io/packet.hh vidre/io/packet.cc
+        vidre/storage.hh vidre/storage.cc
+            vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/types.hh vidre/plugin/types.cc
             vidre/plugin/exception.hh

@@ -25,27 +25,27 @@
 #pragma once
 
 /**@addtogroup api-core-storage
+ * @brief Data storage and file formats.
  * @details
  * @fileinfo
  *
- * The core library provides a number of fundamental mechanisms for storing data
- * generically. File formats are, however, only supported through plugins.
+ * VidRe provides a custom raw file format for storing recorded data. The raw file 
+ * format is designed to be flexible and extensible, allowing for the inclusion 
+ * of various types of data streams (e.g., video, audio, metadata) while maintaining 
+ * a consistent structure. The use of TLV encoding facilitates the addition of new 
+ * data types and structures without breaking compatibility.
+ * 
+ * The design coincides with how data is transported within the framework itself 
+ * (see @ref api-core-io-packet).
  *
  * @{
  * @namespace vidre::storage Storage related.
- * @defgroup api-core-storage-io In-/output
- * @defgroup api-core-storage-file File handling
- * @defgroup api-core-storage-mapped Memory-mapped file handling
- * @defgroup api-core-storage-bit Bit packing and more
  * @defgroup api-core-storage-raw Raw data file
  * @defgroup api-core-storage-details Implementation details
  * @}
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/storage/io.hh>
-#include <vidre/storage/file.hh>
-#include <vidre/storage/bit.hh>
 #include <vidre/storage/raw.hh>
 
 #endif  // VIDRE_CORE_STORAGE_HH

@@ -29,7 +29,7 @@ int main(int argc, const char **argv) {
     volatile uint64_t count = 0;
 
     // 0. prepare test data
-    using function_type = void (*)(io::sink &, const io::packet &);
+    using function_type = void (*)(io::sink &, const io::packet::base &);
 
     // uuid<->function map
     std::vector<std::pair<uuid, function_type>> data;

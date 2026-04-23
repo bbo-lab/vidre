@@ -25,27 +25,39 @@
 #pragma once
 
 /**@addtogroup api-core-io
+ * @brief Data packets and general I/O related functionality.
  * @details
  * @fileinfo
  *
- * The IO abstraction focuses on providing mechanism to retrieve, convert and
+ * The I/O abstraction focuses on providing mechanism to retrieve, convert and
  * store data, more specifically data streams of various types (such as video
  * and audio). For that it takes inspiration from streaming libraries, such as
  * gstreamer. That means, for example, that the concept of "source" and "sink" 
  * are used to represent data providers and consumers, respectively. The concept 
  * of "pipes" (or filters, respectively) is used to represent data transformers, 
- * such as decoders and encoders. The implementation, in combination is 
+ * such as decoders and encoders. The implementation, in combination with appropriate
  * synchronization primitives, also allows for concurrent data processing, 
  * passing either raw byte-sequences or data packets with metadata.
  *
  * @{
  * @namespace vidre::io             In-/output related functionality.
- * @defgroup api-core-io-types      Basic I/O types.
- * @defgroup api-core-io-details    Implementation details.
+ * @defgroup api-core-io-types      Streaming fundamentals
+ * @defgroup api-core-io-packet     Packet based I/O
+ * @defgroup api-core-io-file       File and memory I/O
+ * @defgroup api-core-io-details    Implementation details
  * @}
+ * 
+ * @todo memory mapped io
  * */
+
+ /**@addtogroup api-core-io-details
+  * @{
+  * @namespace vidre::detail::io    Implementation details for I/O.
+  * @}
+  */
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/file.hh>
 
 #endif  // VIDRE_CORE_IO_HH

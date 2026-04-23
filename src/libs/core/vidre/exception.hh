@@ -57,7 +57,7 @@
 
 namespace vidre {
 
-     namespace error {
+    namespace error {
 
         /** Implementation details namespace.
          * @ingroup api-core-exception-details
@@ -493,19 +493,19 @@ namespace vidre {
             void make(error::string &emsg) noexcept override;
         };
 
-        /** Generic error.
+        /** General error code.
          * */
-        class VIDRE_CORE_VISIBILITY errc : public virtual info {
+        class VIDRE_CORE_VISIBILITY code : public virtual info {
         public:
-            errc(std::errc ec) noexcept : ec_(ec) {}
-            virtual ~errc() {}
+            code(std::error_code ec) noexcept : ec_(ec) {}
+            virtual ~code() {}
 
         protected:
-            std::errc ec_{};
+            std::error_code ec_{};
 
         public:
             const char *tag() noexcept override {
-                return "errc";
+                return "code";
             }
 
             /** The message.
@@ -513,29 +513,34 @@ namespace vidre {
             void make(error::string &emsg) noexcept override;
         };
 
+        /** Generic error.
+         * */
+        class VIDRE_CORE_VISIBILITY errc : public virtual code {
+        public:
+            errc(std::errc ec) noexcept : code(std::make_error_code(ec)) {}
+            virtual ~errc() {}
+
+        public:
+            const char *tag() noexcept override {
+                return "errc";
+            }
+        };
+
         /** System error.
          * */
-        class VIDRE_CORE_VISIBILITY system : public virtual info {
+        class VIDRE_CORE_VISIBILITY system : public virtual code {
         public:
-#if defined(WIN32_)
-            system() noexcept : ec_(GetLastError()) {}
+#if VEDRE_HOST_WINDOWS
+            system() noexcept : code(std::error_code(GetLastError(), std::system_category())) {}
 #else
-            system() noexcept : ec_(errno) {}
+            system() noexcept : code(std::make_error_code(static_cast<std::errc>(errno))) {}
 #endif
-            system(int ec) noexcept : ec_(ec) {}
             virtual ~system() {}
-
-        protected:
-            int ec_{};
 
         public:
             const char *tag() noexcept override {
                 return "system";
             }
-
-            /** The message.
-             * */
-            void make(error::string &emsg) noexcept override;
         };
 
         ///@}

@@ -25,8 +25,16 @@
 #pragma once
 
 /**@addtogroup api-core-io-types
+ * @brief Basic types and streaming fundamentals.
  * @details
  * @fileinfo
+ *
+ * The data flow in VidRe has to cover various forms of data (such as its main
+ * focus: video images, see @ref api-core-video-format) as well as modes of
+ * transmission (from fixed to variable sized data packets, as well as raw I/O).
+ * FIXME
+ *
+ * ## Overview
  *
  * FIXME
  *
@@ -37,6 +45,8 @@
 #include <vidre/memory/base.hh>
 #include <vidre/exception.hh>
 #include <vidre/util/uuid.hh>
+#include <vidre/util/events.hh>
+#include <vidre/settings/json.hh>
 
 #include <ankerl/unordered_dense.h>
 
@@ -54,97 +64,102 @@ namespace vidre {
 
         namespace io {
 
-            /** Implementation details for I/O.
-             * @ingroup api-core-io-details
+            /**@addtogroup api-core-io-details
              * */
-            namespace detail {
+            ///@{
 
-                /** Write buffer.
-                 * This simple buffer is mainly intended for use with sinks only,
-                 * especially when using synchronous file writes. There, writing
-                 * data not being a multiple of the underlying hardware's block size,
-                 * can be orders of magnitude slower.
+            /** Block buffer.
+             * This simple buffer is mainly intended for use with sinks only,
+             * especially when using synchronous file writes. There, writing
+             * data not being a multiple of the underlying hardware's block size,
+             * can be orders of magnitude slower.
+             *
+             * @see io::file::sink
+             * */
+            struct VIDRE_CORE_VISIBILITY buffer {
+                using size_type = memory::size_type;
+                using value_type = memory::value_type;
+                using pointer = memory::pointer;
+                using const_pointer = memory::const_pointer;
+
+                buffer() = default;
+                ~buffer() {
+                    if (data)
+                        std::free(data);
+                }
+
+                size_type size{};  ///< The overall buffer size.
+                size_type used{};  ///< Number of used bytes.
+                pointer data{};    ///< Memory pointer.
+
+                /** Setup buffer.
+                 * @param len Number of bytes (rounded to the next power of 2).
+                 * @return Number of bytes allocated, or 0 if it was already allocated
+                 *         previously or no memory could be allocated.
+                 *
+                 * @note This method may only be called once.
                  * */
-                struct VIDRE_CORE_VISIBILITY buffer {
-                    using size_type = memory::size_type;
-                    using value_type = memory::value_type;
-                    using pointer = memory::pointer;
-                    using const_pointer = memory::const_pointer;
+                size_type setup(size_type len) noexcept {
+                    if (data)
+                        return 0;
 
-                    buffer() = default;
-                    ~buffer() {
-                        if (data)
-                            std::free(data);
-                    }
+                    len = std::bit_ceil(len);
+                    data = reinterpret_cast<pointer>(std::aligned_alloc(8, len));
+                    if (data)
+                        size = len;
 
-                    size_type size{};  ///< The overall buffer size.
-                    size_type used{};  ///< Number of used bytes.
-                    pointer data{};    ///< Memory pointer.
+                    return size;
+                }
 
-                    /** Setup buffer.
-                     * @param len Number of bytes (rounded to a power of 2).
-                     * @return Number of bytes allocated, or 0 if it was already allocated
-                     *         previously or no memory could be allocated.
-                     *
-                     * @note This method may only be called once.
-                     * */
-                    size_type setup(size_type len) noexcept {
-                        if (data)
-                            return 0;
+                /** Check if buffer is "usable".
+                 * */
+                operator bool() const noexcept {
+                    return nullptr != data;
+                }
 
-                        len = std::bit_ceil(len);
-                        data = reinterpret_cast<pointer>(std::aligned_alloc(8, len));
-                        if (data)
-                            size = len;
+                /** Check if buffer is full.
+                 * */
+                bool full() const noexcept {
+                    return used == size;
+                }
 
-                        return size;
-                    }
+                /** "Flush" data.
+                 * @returns Number of bytes "flushed".
+                 * This routine merely sets the field @c used to zero.
+                 * */
+                size_type flush() noexcept {
+                    size_type retval = used;
+                    used = 0;
+                    return retval;
+                }
 
-                    /** Check if buffer is "usable".
-                     * */
-                    operator bool() const noexcept {
-                        return nullptr != data;
-                    }
+                /** Put data into buffer.
+                 * @param src Pointer to source data.
+                 * @param n Number of bytes to buffer.
+                 * @returns Number of bytes actually buffered.
+                 * */
+                size_type append(const_pointer src, size_type n) noexcept {
+                    assert(data != nullptr);
 
-                    /** Check if buffer is full.
-                     * */
-                    bool full() const noexcept {
-                        return used == size;
-                    }
+                    size_type space = size - used;
+                    size_type done = std::min(space, n);
+                    std::memcpy(data + used, src, done);
+                    used += done;
+                    return done;
+                }
+            };
 
-                    /** "Flush" data.
-                     * @returns Number of bytes "flushed".
-                     * This routine merely sets the field @c used to zero.
-                     * */
-                    size_type flush() noexcept {
-                        size_type retval = used;
-                        used = 0;
-                        return retval;
-                    }
-
-                    /** Put data into buffer.
-                     * @param src Pointer to source data.
-                     * @param n Number of bytes to buffer.
-                     * @returns Number of bytes actually buffered.
-                     * */
-                    size_type append(const_pointer src, size_type n) noexcept {
-                        assert(data != nullptr);
-
-                        size_type space = size - used;
-                        size_type done = std::min(space, n);
-                        std::memcpy(data + used, src, done);
-                        used += done;
-                        return done;
-                    }
-                };
-
-            }  // namespace detail
+            ///@}
 
         }  // namespace io
 
     }  // namespace detail
 
     namespace io {
+
+        namespace packet {
+            struct base; // forward declaration
+        }
 
         /**@addtogroup api-core-io-types
          * */
@@ -155,50 +170,27 @@ namespace vidre {
         using size_type = std::size_t;
 
         /** Signed default offset type.
+         *
+         * Note that this type is also used as return type for read/write
+         * operations, where a negative value (specifically @c invalid) indicates
+         * an error.
+         *
+         * @see io::invalid
          * */
         using offset_type = std::make_signed_t<size_type>;
 
-        class sink;
-
-        /** Data packet base type.
+        /** Invalid offset value.
+         * Typical usage:
+         * @code
+         * if (write(x,y,z) == io::invalid) {
+         *     // handle error
+         * }
+         * @endcode
+         * @see offset_type
          * */
-        struct VIDRE_CORE_VISIBILITY packet {
-            /** Function type for putting a packet-based streams into a sink.
-             * */
-            using put_type = void (*)(const io::packet &source, io::sink &sink);
-
-            vidre::uuid uuid{};  ///< Packet type (e.g., video, audio, metadata).
-            uint32_t stream{};   ///< Stream identifier (e.g., for multiplexed streams).
-            put_type putter{};   ///< Function pointer for putting this packet into a sink.
-
-        public:
-            using selector_type = put_type (*)(const io::packet &source, const io::packet &sink);
-            using map_type = ankerl::unordered_dense::map<vidre::uuid, selector_type>;
-
-        protected:
-            static map_type registry;  ///< Static map for registering packet types and their put functions.
-
-        public:
-            /** Register a "selector" function.
-             * */
-            static void enregister(const vidre::uuid &uuid, selector_type func) {
-                auto it = registry.find(uuid);
-                if (it != registry.end())
-                    throw vidre::exception() << error::message("packet type already registered");
-
-                registry[uuid] = func;
-            }
-
-            /** Retrieve selector function.
-             * */
-            static selector_type retrieve(const vidre::uuid &uuid) {
-                auto it = registry.find(uuid);
-                if (it == registry.end())
-                    throw vidre::exception() << error::message("packet type not registered");
-
-                return it->second;
-            }
-        };
+        template<class T = offset_type>
+        requires std::is_integral_v<T>
+        inline constexpr T invalid = static_cast<T>(-1);
 
         /** Data sink skeleton.
          *
@@ -256,12 +248,13 @@ namespace vidre {
             virtual ~sink() {}
 
         protected:
-            /** The low-level write method.
-             * @param src Pointer to source data.
-             * @param count Number of bytes to write.
-             * @returns Number of bytes actually written.
+            /** The low-level write method (if applicable).
+             * @param buf Memory view containing the data to write.
+             * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type write(memory::const_pointer src, size_type count) = 0;
+            virtual offset_type write(const memory::view &buf) noexcept {
+                return invalid<offset_type>;
+            }
 
         public:
             /** Check if the stream is valid (ie. usable).
@@ -270,38 +263,45 @@ namespace vidre {
                 return false;
             }
 
-            /** Transfer data.
-             * @param count Number of bytes to write.
-             * @param src Pointer to source data.
-             * @returns Number of bytes actually written (-1 for write failure).
+            /** Configure sink.
+             * @param config JSON configuration object.
+             * @throw exception::logic_error if the configuration is invalid for this sink.
+             * @note The configuration format is sink-specific and may be ignored by some sinks.
              * */
-            virtual offset_type put(size_type count, memory::const_pointer src) {
-                return write(src, count);
-            }
+            virtual void configure(const settings::json &config) {}
 
             /** Transfer data from a memory view.
              * @param v Memory view containing the data to write.
-             * @returns Number of bytes actually written (-1 for write failure).
+             * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            offset_type put(const memory::view &v) {
-                return put(v.size(), v.data());
+            virtual offset_type put(const memory::view &v) {
+                return write(v);
             }
 
             /** Write a packet.
+             * @param p Pointer to the packet to write.
+             * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            offset_type put(const packet *p) {
+            virtual offset_type put(const packet::base *p) {
                 // FIXME
-                return -1;
+                return invalid<offset_type>;
             }
         };
 
         /** Data source.
-         * 
-         * FIXME
+         *
+         * Data sources provide data to be read, such as files or filter outputs. They can
+         * be either stream- or packet-based (see @c source::mode).
          *
          * @see source::shared
          * */
         class VIDRE_CORE_VISIBILITY source {
+        public:
+            enum class mode {
+                stream,  ///< Stream mode (e.g., for files or network sockets).
+                packet   ///< Packet mode (e.g., for video frames or audio samples).
+            };
+
         public:
             /** Shared pointer type for source.
              * This type is used for managing the lifetime of source instances,
@@ -324,10 +324,26 @@ namespace vidre {
         public:
             source() = default;
 
+            source(const source &) = delete;
+            source &operator=(const source &) = delete;
+            source(source &&) = default;
+            source &operator=(source &&) = default;
+
+            virtual ~source() {}
+
         protected:
+            event ev_{};  ///< Event for signaling data availability.
+
+        protected:
+            /** Notify, that @a n packets are available.
+             * */
+            event::state notify(size_type n = 1) {
+                return ev_.notify(n);
+            }
+
             /** The low-level read method.
              * */
-            virtual offset_type read(memory::pointer, size_type count) = 0;
+            virtual offset_type read(memory::area &) = 0;
 
         public:
             /** Check if the stream is valid (ie. usable).
@@ -336,38 +352,82 @@ namespace vidre {
                 return false;
             }
 
-            /** Transfer data.
-             * @returns Number of bytes actually read (-1 for read failure).
+            /** Retrieve the mode of the source.
+             * @returns The mode of the source (stream or packet).
              * */
-            virtual offset_type get(size_type count, memory::pointer buf) {
-                return read(buf, count);
+            virtual operator mode() const noexcept {
+                return mode::stream;
             }
 
-            offset_type get(memory::area &v) {
-                return get(v.size(), v.data());
+            /** Configure source.
+             * @param config JSON configuration object.
+             * @throw exception::logic if the configuration is invalid for this source.
+             * @note The configuration format is source-specific and may be ignored by some sources.
+             * */
+            virtual void configure(const settings::json &config) {}
+
+            /** Retrieve data from the source.
+             * @param v Memory area to store the retrieved data.
+             * @throw exception::logic if source is packet based.
+             * @throw exception::runtime for other errors
+             * @returns Number of bytes actually read (@c invalid for read failure).
+             * */
+            virtual offset_type get(memory::area &v) {
+                return read(v);
             }
+
+            /** Wait (indefinitely) for data to become available.
+             * @returns True if data is available, false if the wait was interrupted.
+             * @see vidre::event
+             * */
+            event::result wait() {
+                return ev_.wait();
+            }
+
+            /** Wait for data to become available, with a timeout.
+             * @param timeout The maximum time to wait#include <vidre/cpp/util.hh>
+ for data (milliseconds).
+             * @returns True if data is available, false if the wait timed out or was interrupted.
+             * @see vidre::event
+             * */
+            event::result wait(std::chrono::milliseconds timeout) {
+                return ev_.wait(timeout);
+            }
+
+            /** Retrieve a packet from the source.
+             * @returns Pointer to the retrieved packet, or nullptr if no packet is available.
+             * @throw exception::logic if source is packet based
+             * @throw exception::runtime for other errors
+             * */
+            virtual const packet::base *get() {
+                throw exception::logic();
+            }
+
+            // FIXME needs a way to connect to the next sink or pipe...
         };
 
-        /** FIXME
-         * 
-         * FIXME
+        /** Data pipe.
          *
+         * A data pipe is a combination of a source and a sink, allowing data to flow
+         * from one component to another. It can be used to connect different parts
+         * of a processing pipeline.
+         * 
          * @see source::shared
          * */
-        class VIDRE_CORE_VISIBILITY filter {
+        class VIDRE_CORE_VISIBILITY pipe : public virtual sink, public virtual source {
         public:
-            /** Shared pointer type for filter.
-             * This type is used for managing the lifetime of filter instances,
+            /** Shared pointer type for pipe.
+             * This type is used for managing the lifetime of pipe instances,
              * especially when they are shared across different components or threads.
-             * @see filter::make
+             * @see pipe::make
              * */
-            using shared = std::shared_ptr<filter>;
+            using shared = std::shared_ptr<pipe>;
 
-            /** Create filter as shared pointer.
-             * @tparam T Type of the filter to create.
-             * @param args Arguments to forward to the filter's constructor.
-             * @returns A shared pointer to the newly created filter.
-             * @see filter::shared
+            /** Create pipe as shared pointer.
+             * @tparam T Type of the pipe to create.
+             * @param args Arguments to forward to the pipe's constructor.
+             * @returns A shared pointer to the newly created pipe.
+             * @see pipe::shared
              * */
             template <typename T, typename... Args>
             static shared make(Args &&...args) {
@@ -375,10 +435,24 @@ namespace vidre {
             }
 
         public:
-            filter() = default;
+            pipe() = default;
+
+            pipe(const pipe &) = delete;
+            pipe &operator=(const pipe &) = delete;
+            pipe(pipe &&) = default;
+            pipe &operator=(pipe &&) = default;
+
+            virtual ~pipe() {}
 
         public:
-            // FIXME
+            /** Configure pipe.
+             * @param config JSON configuration object.
+             * @throw exception::logic if the configuration is invalid for this pipe.
+             * @note The configuration format is pipe-specific and may be ignored by some pipes.
+             * */
+             void configure(const settings::json &config) override {}
+
+             // FIXME
         };
 
         ///@}
