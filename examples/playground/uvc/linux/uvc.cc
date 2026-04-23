@@ -442,7 +442,7 @@ device::list<device::camera> uvc::enumerator::find() noexcept {
     bool have_uvch = true;  // flag, if we parse for UVC metadata devices
     int lastcam = -1;       // last camera number found, used to find UVC metadata devices
 
-    for (int dev = 0; dev < 64; ++dev) {
+    for (int dev = 0; dev <V_VI 64; ++dev) {
         std::filesystem::path devpath = std::format("/dev/video{}", dev);
 
         // check if device exists (and get rdev info)

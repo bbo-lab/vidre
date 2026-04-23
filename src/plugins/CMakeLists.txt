@@ -3,5 +3,5 @@ install(FILES ${PLUGIN_OUTPUT_PATH}/devices.cfg
     DESTINATION ${CMAKE_INSTALL_PLUGINDIR}/
     COMPONENT "runtime")
 
-# add_subdirectory(camera)
+add_subdirectory(camera)
 # add_subdirectory(storage)

@@ -1,0 +1,17 @@
+/**@defgroup api-support-uvc UVC support library
+ * @ingroup api-support
+ * @details
+ *
+ * FIXME
+ * 
+ * @{
+ * @namespace vidre::video::uvc            UVC camera support.
+ * @defgroup api-support-uvc-details       Implementation details
+ * @}
+ * */
+
+/**@addtogroup api-support-uvc-details
+ * @{
+ * @namespace vidre::video::uvc::detail UVC support implementation details.
+ * @}
+ * */

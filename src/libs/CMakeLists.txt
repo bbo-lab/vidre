@@ -1,4 +1,5 @@
 add_subdirectory(core)
+add_subdirectory(video)
 add_subdirectory(device)
 if(FFmpeg_FOUND)
     add_subdirectory(ffmpeg)
