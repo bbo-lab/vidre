@@ -24,6 +24,25 @@
 #define VIDRE_UVC_CONFIG_HH
 #pragma once
 
+/**@defgroup api-support-uvc UVC support library
+ * @ingroup api-support
+ * @details
+ * @fileinfo
+ *
+ * FIXME
+ * 
+ * @{
+ * @namespace vidre::video::uvc            UVC camera support.
+ * @defgroup api-support-uvc-details       Implementation details
+ * @}
+ * */
+
+/**@addtogroup api-support-uvc-details
+ * @{
+ * @namespace vidre::video::uvc::detail UVC support implementation details.
+ * @}
+ * */
+
 #include <vidre/config.hh>
 #include <vidre/device/camera.hh>
 

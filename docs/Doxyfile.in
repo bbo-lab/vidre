@@ -21,10 +21,24 @@ ALWAYS_DETAILED_SEC    = YES
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
 STRIP_FROM_PATH        = \
-                         @PROJECT_SOURCE_DIR@/src 
+                         @PROJECT_SOURCE_DIR@/src/libs/core \
+                         @PROJECT_SOURCE_DIR@/src/libs/device \
+                         @PROJECT_SOURCE_DIR@/src/libs/ffmpeg \
+                         @PROJECT_SOURCE_DIR@/src/libs/video \
+                         @PROJECT_SOURCE_DIR@/src/libs \
+                         \
+                         @PROJECT_SOURCE_DIR@/src/plugins/camera/uvc/lib \
+                         \
+                         @PROJECT_SOURCE_DIR@/src
 STRIP_FROM_INC_PATH    = \
                          @PROJECT_SOURCE_DIR@/src/libs/core \
+                         @PROJECT_SOURCE_DIR@/src/libs/device \
                          @PROJECT_SOURCE_DIR@/src/libs/ffmpeg \
+                         @PROJECT_SOURCE_DIR@/src/libs/video \
+                         @PROJECT_SOURCE_DIR@/src/libs \
+                         \
+                         @PROJECT_SOURCE_DIR@/src/plugins/camera/uvc/lib \
+                         \
                          @PROJECT_SOURCE_DIR@/src
 SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = YES
