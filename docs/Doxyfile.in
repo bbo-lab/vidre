@@ -312,10 +312,14 @@ INCLUDE_FILE_PATTERNS  = *.h \
                          *.hpp
 PREDEFINED             =                            \
     DOXYGEN                                         \
-    VIDRE_CORE_VISIBILITY                           \
-    VIDRE_FFMPEG_VISIBILITY                         \
+    VIDRE_CORE_VISIBILITY=                          \
+    VIDRE_VIDEO_VISIBILITY=                         \
+    VIDRE_FFMPEG_VISIBILITY=                        \
+    VIDRE_UVC_VISIBILITY=                           \
+    __vidre_packed__(x)=                            \
+    __attribute__(x)=                               \
     VIDRE_USE_CPP_LIB_FORMAT=1
-EXPAND_AS_DEFINED      =
+EXPAND_AS_DEFINED      = 
 SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references

@@ -32,7 +32,7 @@
 
 /** Declaration specification for import/export for the video library.
  *
- * @see VIDRE_CORE_VISIBILITY
+ * @see VIDRE_VIDEO_VISIBILITY
  * */
 #if not defined(VIDRE_VIDEO_VISIBILITY) or defined(DOXYGEN)
 #define VIDRE_VIDEO_VISIBILITY VIDRE_API_IMPORT

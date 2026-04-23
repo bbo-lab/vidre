@@ -21,7 +21,7 @@
  */
 #include "color.hh"
 
-#include "../../cpp/util.hh"
+#include <vidre/cpp/util.hh>
 
 using namespace vidre;
 using namespace vidre::video;

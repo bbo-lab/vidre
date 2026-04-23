@@ -26,4 +26,10 @@ vidre_library(vidrevideo SHARED
         PUBLIC_HEADER COMPONENT development        
     SOURCES
         vidre/video/config.hh vidre/video/config.cc
+        vidre/video.hh vidre/video.cc
+        vidre/video/format.hh vidre/video/format.cc
+            vidre/video/format/geometry.hh 
+            vidre/video/format/pixel.hh vidre/video/format/pixel.cc
+            vidre/video/format/color.hh vidre/video/format/color.cc
+        vidre/video/frame.hh vidre/video/frame.cc
 )

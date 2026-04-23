@@ -24,8 +24,8 @@
 #define VIDRE_CORE_VIDEO_PIXEL_HH
 #pragma once
 
-/**@addtogroup api-core-video-format-pixel
- * @ingroup api-core-video-format
+/**@addtogroup api-video-format-pixel
+ * @ingroup api-video-format
  * @details
  * @fileinfo
  *
@@ -59,7 +59,7 @@ namespace vidre {
 
         namespace format {
 
-            /**@addtogroup api-core-video-format-pixel
+            /**@addtogroup api-video-format-pixel
              * */
             ///@{
 
@@ -67,7 +67,7 @@ namespace vidre {
              * There are a multitude of pixel formats, and they are often encoded in a compact way. This class provides a unified
              * interface to encode and decode pixel formats, and to convert between them.
              * */
-            class __vidre_packed__(8) VIDRE_CORE_VISIBILITY pixel {
+            class __vidre_packed__(8) VIDRE_VIDEO_VISIBILITY pixel {
             public:
                 /** Supported pixel format conventions.
                  * */

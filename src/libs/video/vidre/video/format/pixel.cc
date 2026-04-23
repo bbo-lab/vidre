@@ -21,8 +21,8 @@
  */
 #include "pixel.hh"
 
-#include "../../script.hh"
-#include "../../log.hh"
+#include <vidre/script.hh>
+#include <vidre/log.hh>
 
 using namespace vidre;
 using namespace vidre::video;
