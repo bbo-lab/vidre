@@ -100,6 +100,8 @@ namespace vidre {
          *              information. The contents of this object are defined by the specific
          *              device implementation and may include details such as hardware parameters,
          *              stream configurations, and other relevant information.
+         * - `preset`:  Presets. This should at least contain a "default" preset, which is used 
+         *              when the device is started without a specific preset (see `setup()` method).
          * - `setup`:   The actual device configuration (see `setup()` method).
          * - `config`:  List of configuration options for the device. This is used to generate
          *              user interfaces for configuring the device.
@@ -150,6 +152,11 @@ namespace vidre {
              * This method is used to configure the device with specific settings. The exact
              * configuration options depend on the device implementation.
              * 
+             * There are three cases for how this method can be used:
+             * 1. The device is not connected
+             * 2. The device is connected but not running
+             * 3. The device is running
+             * 
              * @note The `setup()` method should be called after connecting the device. It
              *       must be called at least once before starting the device. Depending on
              *       the device implementation, it may be possible to call `setup()` also
@@ -159,7 +166,14 @@ namespace vidre {
              * */
             virtual void setup(const settings::json & = {}) = 0;
 
+            /** Start streaming.
+             * @note This method silently returns if the device is not configured or already running.
+             * */
             virtual void start() = 0;
+
+            /** Stop streaming.
+             * @note This method silently returns if the device is not running.
+             * */
             virtual void stop() = 0;
 
             /** Get device ID.
