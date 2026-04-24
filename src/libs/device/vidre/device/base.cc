@@ -26,3 +26,8 @@ using namespace vidre;
 const char *device::exception::what() const noexcept {
     return tag_.c_str();
 }
+
+bool device::base::name(const std::string &username) {
+    log::notice() << "Setting device name is not supported by this device." << log::endl;
+    return false;
+}

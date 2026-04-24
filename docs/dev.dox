@@ -8,10 +8,10 @@
 
 @subpage dev-style
 
+@subpage dev-layout
+
 @subpage dev-docs
 
 @subpage dev-attribution
-
-@todo - page about "file layout" is needed for the developer documentation
 
 */

@@ -1,6 +1,7 @@
 ## Linux
 set(VidreDeviceUVC_SOURCES_Linux
-    vidre/uvc/linux/dummy.hh
+    vidre/uvc/linux/enumerate.cc
+    vidre/uvc/linux/device.cc
 )
 
 if (NOT DEFINED VidreDeviceUVC_SOURCES_${CMAKE_SYSTEM_NAME})

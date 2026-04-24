@@ -196,5 +196,6 @@ int main(int argc, const char **argv) {
 }
 
 /**@example examples/core/raw.cc
- * @brief Raw storage format usage example.
+ * @details
+ * Raw storage format usage example.
  * */

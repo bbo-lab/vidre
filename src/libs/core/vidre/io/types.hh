@@ -268,7 +268,7 @@ namespace vidre {
              * @throw exception::logic_error if the configuration is invalid for this sink.
              * @note The configuration format is sink-specific and may be ignored by some sinks.
              * */
-            virtual void configure(const settings::json &config) {}
+            virtual void setup(const settings::json &config) {}
 
             /** Transfer data from a memory view.
              * @param v Memory view containing the data to write.
@@ -364,7 +364,7 @@ namespace vidre {
              * @throw exception::logic if the configuration is invalid for this source.
              * @note The configuration format is source-specific and may be ignored by some sources.
              * */
-            virtual void configure(const settings::json &config) {}
+            virtual void setup(const settings::json &config) {}
 
             /** Retrieve data from the source.
              * @param v Memory area to store the retrieved data.
@@ -450,7 +450,7 @@ namespace vidre {
              * @throw exception::logic if the configuration is invalid for this pipe.
              * @note The configuration format is pipe-specific and may be ignored by some pipes.
              * */
-             void configure(const settings::json &config) override {}
+             void setup(const settings::json &config) override {}
 
              // FIXME
         };

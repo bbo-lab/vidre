@@ -20,8 +20,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_UVC_CONFIG_HH
-#define VIDRE_UVC_CONFIG_HH
+#ifndef VIDRE_UVC_DEVICE_HH
+#define VIDRE_UVC_DEVICE_HH
 #pragma once
 
 /**@defgroup api-support-uvc UVC support library
@@ -30,7 +30,7 @@
  * @fileinfo
  *
  * FIXME
- * 
+ *
  * @{
  * @namespace vidre::video::uvc            UVC camera support.
  * @defgroup api-support-uvc-details       Implementation details
@@ -43,8 +43,9 @@
  * @}
  * */
 
-#include <vidre/config.hh>
+#include <vidre/uvc/config.hh>
 #include <vidre/device/camera.hh>
+#include <vidre/io.hh>
 
 namespace vidre {
 
@@ -56,36 +57,66 @@ namespace vidre {
              * */
             ///@{
 
-            class VIDRE_UVC_VISIBILITY camera : public virtual device::camera {
+            /** UVC camera.
+             *
+             * FIXME
+             *
+             * */
+            class VIDRE_UVC_VISIBILITY camera
+                : public virtual device::camera
+                , public virtual io::source {
             public:
                 struct enumerator;
-                
+
             public:
                 camera() = default;
+                camera(device::state initial_state) noexcept : device::camera(initial_state), io::source() {}
                 virtual ~camera();
 
+            protected:
+#if VIDRE_HOST_LINUX
+                io::file vid_;  ///< File handle for the video device (e.g., /dev/video0).
+                io::file hdr_;  ///< File handle for the payload header device (e.g., /dev/video1).
+#else
+                FIXME(Windows and APPLE support);
+#endif
+
+                io::offset_type read(memory::area &) override;
+
+                void query() noexcept;
+
             public:
-                const char *tag() const noexcept override {
-                    return "camera/uvc";
+                bool valid() const noexcept override {
+                    return vid_.valid();
                 }
 
-                settings::json info() const noexcept override {
-                    // FIXME
-                    return {};
+                operator mode() const noexcept override {
+                    return mode::packet;
                 }
 
-                void setup(settings::json) override {
-                    // FIXME
+                io::offset_type get(memory::area &v) override {
+                    // not allowed
+                    return io::invalid<io::offset_type>;
                 }
 
-                bool connect() override {
-                    // FIXME
-                    return false;
-                }
+                const io::packet::base *get() override;
 
-                void disconnect() override {
-                    // FIXME
-                }
+                bool connect() override;
+
+                void disconnect() override;
+
+                void setup(const settings::json &) override;
+
+                void start() override;
+
+                void stop() override;
+
+            private:
+                friend struct enumerator;
+            };
+
+            struct camera::enumerator {
+                device::list find() noexcept;
             };
 
             ///@}
@@ -96,4 +127,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_UVC_CONFIG_HH
+#endif  // VIDRE_UVC_DEVICE_HH

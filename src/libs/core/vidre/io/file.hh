@@ -325,13 +325,25 @@ namespace vidre {
             };
 
         protected:
-            detail::io::file::descriptor fd_{detail::io::file::invalid_descriptor};  ///< File descriptor.
+            descriptor fd_{detail::io::file::invalid_descriptor};  ///< File descriptor.
 
         public:
             /** Check if the file is valid (ie. open).
              * */
             bool valid() const noexcept {
                 return detail::io::file::valid(fd_);
+            }
+
+            /** Check if the file is valid (ie. open).
+             * */
+            operator bool() const noexcept {
+                return valid(); 
+            }
+
+            /** Implicit conversion to host descriptor type.
+             * */
+            operator descriptor() const noexcept {
+                return fd_;
             }
 
             /** Get last error.

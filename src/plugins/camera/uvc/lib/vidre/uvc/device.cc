@@ -23,7 +23,3 @@
 
 using namespace vidre;
 using namespace vidre::video;
-
-uvc::camera::~camera() {
-    // FIXME
-}

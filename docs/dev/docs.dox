@@ -19,25 +19,32 @@ three main things, regardless of the programming language:
 3. The API structure is reflected by file/directory structure (and vice versa).
 
     A developer should be able to guess where to find a piece of functionality 
-    based on the API name alone.
+    based on the API name alone. Functionality that is independently 
+    categorizable usually also uses distinct interface or implementation files.
 
-    <b>Example</b>:<br/>
-    See `@addtogroup` and `@defgroup` in 
-    [vidre/core/video.hh](https://github.com/bbo-lab/vidre/blob/main/src/libs/core/vidre/video.hh).
+    @see @ref dev-layout
 
 ## C++
 
-FIXME
-- Doxygen...
-- .dox files
-- sub-groups require individual headers...
+For C++ documentation VidRe uses [doxygen](https://doxygen.nl). Contributors
+should observe previous usage within the source-code tree.
+
+<b>Examples</b>:<br/>
+See `@addtogroup` and `@defgroup` in 
+[vidre/core/video.hh](https://github.com/bbo-lab/vidre/blob/main/src/libs/video/vidre/video.hh) and
+[api.dox](https://github.com/bbo-lab/vidre/blob/main/src/libs/api.dox)
 
 ## Lua
 
-@TBD{Must fit into the Doxygen tree.}
+@TBD{
+At the moment of writing, Lua is not yet actively used in the project. The are
+projects that allow including Lua into the doxygen world 
+(see [Luals2dox](https://github.com/AndreasMatthias/Luals2dox)),
+therefore, it is recommended to use doxygen-style documentation in Lua files.
+}
 
 ## Python
 
-@TBD{Must fit into the Doxygen tree.}
+@TBD{At the moment of writing, native Python integration is only a planned feature.}
 
 */

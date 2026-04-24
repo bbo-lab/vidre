@@ -59,11 +59,14 @@ vidre_test(datachain EXCLUDE
 #     SOURCES hdspeed.cc
 # )
 
-# vidre_test(uvc EXCLUDE
-#     BUILD
-#         LINK_LIBRARIES 
-#             PUBLIC
-#                 Vidre::Core
-#                 Vidre::Device
-#     SOURCES uvc.cc
-# )
+if(Vidre_BUILD_PLUGIN_CAMERA_UVC)
+    vidre_test(uvc EXCLUDE
+        BUILD
+            LINK_LIBRARIES 
+                PUBLIC
+                    Vidre::Core
+                    Vidre::Device
+                    Vidre::Device::UVC
+        SOURCES uvc.cc
+    )
+endif()

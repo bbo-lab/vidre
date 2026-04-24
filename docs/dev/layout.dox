@@ -1,0 +1,57 @@
+/** @page dev-layout Directory layout
+
+## General
+
+The source code tree is organized as follows:
+
+@verbatim
+    .amend/                                     "Amend" source code tool (see https://github.com/fromsawa/amend)
+    cmake/                                      CMake related files and tools
+    docs/                                       Documentation and its configuration 
+    examples/                                   Examples directory
+        {library}/                              - per {library} examples
+        playground/                             - "unrelated" playground for development
+                                                  Scratch space for experimental code and future testing. 
+                                                  No documentation required — just quick (or not‑so‑quick) 
+                                                  validation of ideas. Developers are encouraged to leave 
+                                                  traces of their thinking process in the Git history.
+    icons/                                      VidRe icons
+    share/                                      Non-binary data (e.g. scripts)
+        lua/                                    - Lua scripting.
+    src/                                        Source code
+        apps/                                   Applications folder
+        libs/                                   Framework libraries
+            {library}                           - _a_ framework library (e.g. "core", "device", etc.)
+                CMakeLists.txt
+                vidre/                          - headers and sources are kept in a single place
+                    {library}/                  - library specific header folder
+                        config.hh               - basic library configuration file
+                        config.cc               (*)
+                        ...                     - library specific source files and folders 
+                    ...                         - additional source files or folders (**)
+        lua                                     Lua libraries
+        plugins                                 Plugin tree (***)
+        vidre                                   Fundamental configuration
+    tests                                       Unit test and benchmarks
+        benchmark                               - benchmark tests
+                                                  As with the 'examples/playground' folder above, the 
+                                                  programs contained within here are for testing ideas.
+        {library}                               - per-library unit tests
+@endverbatim
+
+<sup>*</sup> 
+For development purposes, it is recommended to create an accompanying 
+source file (even if otherwise empty) for every header. This allows to detect 
+compilation errors early.
+
+<sup>**</sup>
+The "core" library provides a set of functionality distributed over several
+directories. All other libraries should retain the "vidre/{library}" folder,
+unless reasoning dictates otherwise.
+
+<sup>***</sup>
+The plugin directories may contain additional libraries that are not directly
+part of the fundamental framework. These libraries are only built if conditions
+for the succesful build are met.
+
+*/

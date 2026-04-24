@@ -74,6 +74,6 @@ int main(int, const char **) {
 }
 
 /**@example examples/core/script.cc
- * @brief Script-API usage.
- *
+ * @details
+ * Script-API usage.
  * */

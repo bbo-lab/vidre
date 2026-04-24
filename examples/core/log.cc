@@ -81,7 +81,8 @@ int main(int argc, const char **argv) {
 }
 
 /**@example examples/core/log.cc
- * @brief This file demonstrates logging.
+ * @details
+ * This file demonstrates logging.
  *
  * This example covers the following topics:
  * - simple log use,

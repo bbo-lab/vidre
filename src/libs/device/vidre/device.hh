@@ -29,10 +29,17 @@
  * @fileinfo
  *
  * FIXME
- *
+ * 
+ * @{
+ * @namespace vidre::device Devices namespace.
+ * @defgroup api-device-basics     Fundamentals
+ * @defgroup api-device-impl       Device implementations
+ * @defgroup api-device-details    Implementation details
+ * @}
  * */
 
 #include <vidre/device/config.hh>
 #include <vidre/device/base.hh>
+#include <vidre/device/camera.hh>
 
 #endif  // VIDRE_DEVICE_CONFIG_HH

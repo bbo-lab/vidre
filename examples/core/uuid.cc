@@ -8,6 +8,6 @@ int main(int argc, const char **argv) {
     return 0;
 }
 /**@example examples/core/uuid.cc
- * @brief This file demonstrates UUIDs.
- * 
+ * @details 
+ * This file demonstrates UUIDs.
  */

@@ -55,5 +55,6 @@ int main(int argc, const char **argv) {
 }
 
 /**@example examples/core/program.cc
- * @brief Program invocation and tools example.
+ * @details
+ * Program invocation and tools example.
  * */

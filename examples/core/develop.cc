@@ -12,6 +12,11 @@ int main(int argc, const char **argv) {
     return 0;
 }
 
-/**@example examples/core/develop.cc
- * @brief Development utilities.
+/**@example examples/core/develop.cc 
+ * @details
+ * Development utilities.
+ *  
+ * @note The function `develop::inbuild()` is only available when the VIDRE_DEVELOP 
+ *       setting is enabled in CMake. For release builds, it will always return @c false.
+ * 
  * */

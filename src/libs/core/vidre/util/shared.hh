@@ -318,7 +318,7 @@ namespace vidre {
      * @param args Arguments to forward to T's constructor
      * @return A shared object managing the newly created instance
      *
-     * @example
+     * Example:
      * ```cpp
      * // With default allocator
      * auto p1 = make_shared<MyClass>(42, "example");
