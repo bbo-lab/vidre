@@ -105,7 +105,7 @@ namespace vidre {
 
                 void disconnect() override;
 
-                void setup(const settings::json &) override;
+                void setup(const settings::json & = {}) override;
 
                 void start() override;
 

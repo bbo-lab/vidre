@@ -75,7 +75,60 @@ void uvc::camera::disconnect() {
 }
 
 void uvc::camera::setup(const settings::json &cfg) {
-    // FIXME
+    if ((state_ & device::state::connected) == device::state::undefined) {
+        // FIXME proper error messages...
+        log::error() << "device is not connected";
+        throw device::exception();
+        return;
+    }
+
+    // note: configured means, buffers are allocated
+    bool isconfigured = (state_ & device::state::configured) != device::state::undefined;
+
+    // note: only a subset of options can be changed while running
+    bool isrunning = (state_ & device::state::running) != device::state::undefined;
+
+    if (cfg.is_object()) {
+        if (isrunning) {
+            // only known options while running
+            for (auto &[key, value] : cfg.items()) {
+                auto it = device::camera::options.find(key.c_str());
+                if (it != device::camera::options.end()) {
+                    auto opt = it->second;
+                    if (!device::camera::online[opt])
+                        continue;
+
+                    switch (opt) {
+                        case device::camera::exposure:
+                            // FIXME
+                            break;
+                        case device::camera::gain:
+                            // FIXME
+                            break;
+                        case device::camera::geometry:
+                            // FIXME
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        else {
+            // UVC configuration requires to set some parameters in a specific order:
+            // 1. pixel-format
+            // 2. geometry (width, height)
+            // 3. other options (e.g., exposure, gain)
+        }
+    }
+    else if (!cfg.is_null()) {
+        // we just ignore it for now, but maybe we should throw an error here?
+    }
+
+    if (not isconfigured) {
+        // FIXME allocate buffers, etc.
+        state_ |= device::state::configured;
+    }
 }
 
 void uvc::camera::start() {

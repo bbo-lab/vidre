@@ -26,6 +26,7 @@
 
 #include <vidre/device/config.hh>
 #include <vidre/device/base.hh>
+#include <unordered_map>
 
 namespace vidre {
 
@@ -41,13 +42,22 @@ namespace vidre {
          * capabilities. They typically interface with hardware cameras and manage
          * the acquisition of video frames.
          *
-         * Configuration options for cameras (`setup()` method) must at least 
-         * support the following common options:
-         *     
-         * FIXME 
-         *
          * */
         class VIDRE_DEVICE_VISIBILITY camera : public virtual device::base {
+        public:
+            /** Common options.
+             * These options must be supported by all camera implementations.
+             * */
+            enum option : uint32_t {
+                undefined = 0,  ///< No option specified.
+                exposure,       ///< Camera exposure time (in microseconds, 0.0 for automatic).
+                gain,           ///< Camera gain (in dB).
+                geometry,       ///< Pixel geometry.
+                MAXOPTIONS
+            };
+            static std::unordered_map<const char *, option> options;  ///< Name-option map.
+            static std::array<bool, MAXOPTIONS> online;                       ///< Options settable while running.
+
         public:
             camera() = default;
             camera(state initial_state) : device::base(initial_state) {}

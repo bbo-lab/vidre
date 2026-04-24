@@ -150,8 +150,14 @@ namespace vidre {
              * This method is used to configure the device with specific settings. The exact
              * configuration options depend on the device implementation.
              * 
+             * @note The `setup()` method should be called after connecting the device. It
+             *       must be called at least once before starting the device. Depending on
+             *       the device implementation, it may be possible to call `setup()` also
+             *       in the running state with a subset of options.
+             * 
+             * @see state::configured
              * */
-            virtual void setup(const settings::json &) = 0;
+            virtual void setup(const settings::json & = {}) = 0;
 
             virtual void start() = 0;
             virtual void stop() = 0;
