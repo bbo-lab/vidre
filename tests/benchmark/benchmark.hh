@@ -31,16 +31,23 @@ namespace benchmark {
             stop_ = clock::now();
         }
 
-        template<class Duration = seconds>
+        template <class Duration = seconds>
         double elapsed() {
             return Duration(clock::now() - start_).count();
         }
 
-        template<class Duration = seconds>
+        template <class Duration = seconds>
         double duration() {
             return Duration(stop_ - start_).count();
         }
     };
+
+    template <typename T>
+    void do_not_optimize(T const &val) {
+        asm volatile("" : : "r,m"(val) : "memory");
+    }
+
+#define __benchmark_noinline__ __attribute__((noinline))
 
 }  // namespace benchmark
 

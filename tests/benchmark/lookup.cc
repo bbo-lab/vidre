@@ -20,7 +20,7 @@ hash maps, sorted vectors with binary search, or perfect hashing.
 
 #include <dlfcn.h>
 
-#define REPEAT 10'000'000
+#define REPEAT 1'000'000
 
 using namespace vidre;
 
@@ -56,7 +56,7 @@ int main(int argc, const char **argv) {
     double overhead = t.duration<benchmark::nanoseconds>() / double(REPEAT * size_of(N));
     log::notice() << "overhead: " << overhead << " ns/call" << log::endl;
 
-#if 0
+#if 1
     // 2. linear search
     log::notice() << "LINEAR SEARCH" << log::endl;
     for (int n : N) {
@@ -82,7 +82,7 @@ int main(int argc, const char **argv) {
     }
 #endif
 
-#if 0
+#if 2
     // 3. map
     {
         using map_type = std::map<uuid, function_type>;
