@@ -40,6 +40,11 @@ namespace benchmark {
         double duration() {
             return Duration(stop_ - start_).count();
         }
+
+        template <class Duration = seconds>
+        double percall(uint64_t calls) {
+            return Duration(stop_ - start_).count() / double(calls);
+        }
     };
 
     template <typename T>
