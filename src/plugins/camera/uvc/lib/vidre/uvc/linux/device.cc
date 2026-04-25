@@ -40,7 +40,7 @@ const io::packet::base *uvc::camera::get() {
 }
 
 bool uvc::camera::connect() {
-    if ((state_ & device::state::connected) != device::state::undefined)
+    if (!(state_ & device::state::connected))
         return false;
 
     auto vid_path = meta_["private"]["stream"]["path"].get<std::string>();
@@ -63,7 +63,7 @@ bool uvc::camera::connect() {
 }
 
 void uvc::camera::disconnect() {
-    if ((state_ & device::state::connected) == device::state::undefined)
+    if (!(state_ & device::state::connected))
         return;
 
     if (vid_.valid())
@@ -75,7 +75,7 @@ void uvc::camera::disconnect() {
 }
 
 void uvc::camera::setup(const settings::json &cfg) {
-    if ((state_ & device::state::connected) == device::state::undefined) {
+    if (!(state_ & device::state::connected)) {
         // FIXME proper error messages...
         log::error() << "device is not connected";
         throw device::exception();
@@ -83,10 +83,10 @@ void uvc::camera::setup(const settings::json &cfg) {
     }
 
     // note: configured means, buffers are allocated
-    bool isconfigured = (state_ & device::state::configured) != device::state::undefined;
+    bool isconfigured = (state_ & device::state::configured);
 
     // note: only a subset of options can be changed while running
-    bool isrunning = (state_ & device::state::running) != device::state::undefined;
+    bool isrunning = (state_ & device::state::running);
 
     if (cfg.is_object()) {
         if (isrunning) {
@@ -131,8 +131,19 @@ void uvc::camera::setup(const settings::json &cfg) {
     }
 }
 
+void uvc::camera::prepare() {
+    if (!(state_ & device::state::configured)) {
+        // FIXME proper error messages...
+        log::error() << "device is not configured";
+        throw device::exception();
+        return;
+    }
+
+    // FIXME prepare buffers, etc.
+}
+
 void uvc::camera::start() {
-    if ((state_ & device::state::configured) == device::state::undefined) {
+    if (!(state_ & device::state::configured)) {
         // FIXME proper error messages...
         log::error() << "device is not configured";
         throw device::exception();
@@ -143,14 +154,14 @@ void uvc::camera::start() {
 }
 
 void uvc::camera::stop() {
-    if ((state_ & device::state::running) == device::state::undefined)
+    if (!(state_ & device::state::running))
         return;
 
     // FIXME
 }
 
 void uvc::camera::query() noexcept {
-    bool isconnected = (state_ & device::state::connected) != device::state::undefined;
+    bool isconnected = (state_ & device::state::connected);
     if (!isconnected)
         connect();
 

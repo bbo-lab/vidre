@@ -44,38 +44,109 @@ namespace vidre {
         ///@{
 
         /** Device state.
+         *
+         * Any device follow the sequence:
+         *
+         * available -> connected -> configured -> running
+         *
+         * @todo flag::error is present, but what to do with it?
          * */
-        enum class state : uint32_t {
-            undefined = 0,        ///< Device is in an undefined state.
-            available = 1 << 0,   ///< Device is available.
-            disabled = 1 << 1,    ///< Device is disabled (possibly due to unrecoverable issues).
-            connected = 1 << 2,   ///< Device is connected to VidRe.
-            configured = 1 << 3,  ///< Device is configured and ready to be started.
-            running = 1 << 4,     ///< Device is active.
+        class VIDRE_DEVICE_VISIBILITY state {
+        public:
+            enum flag : uint32_t {
+                undefined = 0,        ///< Device is in an undefined state.
+                available = 1 << 0,   ///< Device is available.
+                disabled = 1 << 1,    ///< Device is disabled (possibly due to unrecoverable issues).
+                error = 1 << 2,       ///< Device experienced issues.
+                connected = 1 << 3,   ///< Device is connected to VidRe.
+                configured = 1 << 4,  ///< Device is configured and ready to be started.
+                running = 1 << 5,     ///< Device is active.
+            };
 
-            failed = 1 << 8,  ///< Device experienced issues.
+            template<typename T>
+            static constexpr bool compatible_v = std::derived_from<T, state> or std::derived_from<T, state::flag>;
+
+            state() noexcept : flags_(flag::undefined) {}
+            state(flag f) noexcept : flags_(f) {}
+
+        protected:
+            uint32_t flags_;  ///< Device state flags.
+
+        public:
+            operator bool() const noexcept {
+                return flags_ != static_cast<uint32_t>(flag::undefined);
+            }   
+
+            bool operator!() const noexcept {
+                return flags_ == static_cast<uint32_t>(flag::undefined);
+            }
+
+            bool operator==(flag f) const noexcept {
+                return flags_ == static_cast<uint32_t>(f);
+            }   
+
+            bool operator==(state s) const noexcept {
+                return flags_ == s.flags_;
+            }
+
+            bool has(flag f) const noexcept {
+                return (flags_ & static_cast<uint32_t>(f)) != 0;
+            }
+
+            state &set(flag f) noexcept {
+                flags_ |= static_cast<uint32_t>(f);
+                return *this;
+            }
+
+            state &clear(flag f) noexcept {
+                flags_ &= ~static_cast<uint32_t>(f);
+                return *this;
+            }
+
+            state &toggle(flag f) noexcept {
+                flags_ ^= static_cast<uint32_t>(f);
+                return *this;
+            }
+
+            state &reset() noexcept {
+                flags_ = static_cast<uint32_t>(flag::undefined);
+                return *this;
+            }
+          
+            state &operator&=(flag f) noexcept {
+                flags_ &= static_cast<uint32_t>(f);
+                return *this;
+            }   
+
+            state &operator&=(const state &f) noexcept {
+                flags_ &= f.flags_;
+                return *this;
+            }   
+
+            state &operator|=(flag f) noexcept {
+                flags_ |= static_cast<uint32_t>(f);
+                return *this;
+            }   
+
+            state &operator|=(const state &f) noexcept {
+                flags_ |= f.flags_;
+                return *this;
+            }   
         };
 
         ///@cond
-        inline state operator|(state lhs, state rhs) noexcept {
-            return static_cast<state>(to_underlying(lhs) | to_underlying(rhs));
+        template<class LHS, class RHS>
+        requires (state::compatible_v<LHS> && state::compatible_v<RHS>)
+        inline LHS operator|(LHS lhs, RHS rhs) noexcept {
+            return (lhs |= rhs);
         }
-        inline state &operator|=(state &lhs, state rhs) noexcept {
-            lhs = lhs | rhs;
-            return lhs;
+        template<class LHS, class RHS>
+        requires (state::compatible_v<LHS> && state::compatible_v<RHS>)
+        inline LHS operator&(LHS lhs, RHS rhs) noexcept {
+            return (lhs &= rhs);
         }
-        inline state operator&(state lhs, state rhs) noexcept {
-            return static_cast<state>(to_underlying(lhs) & to_underlying(rhs));
-        }
-        inline state &operator&=(state &lhs, state rhs) noexcept {
-            lhs = lhs & rhs;
-            return lhs;
-        }
-        inline state operator~(state val) noexcept {
-            return static_cast<state>(~to_underlying(val));
-        }
-        inline bool operator!(state val) noexcept {
-            return !to_underlying(val);
+        inline state::flag operator~(state::flag val) noexcept {
+            return static_cast<state::flag>(~to_underlying(val));
         }
         ///@endcond
 
@@ -85,6 +156,16 @@ namespace vidre {
          * to filters, and the like. Each device provides streams, ie. sinks
          * and sources, as well as generic configuration options. Specific implementations
          * will add more direct functionality.
+         *
+         * Stages:
+         * 1. available: The device is available for use, discovered by the enumerator
+         *               (see state::flag::available).
+         * 2. connected: The device is connected to VidRe, ready for querying and configuration
+         *               (see state::flag::connected).
+         * 3. setup: The device configuration is setup, but not yet configured.
+         * 4. prepare: The device is prepared, which includes internal buffers, signals and streams.
+         *             At this stage, the device is configured (see state::flag::configured).
+         * 5. start/stop: The device can be started and stopped (see state::flag::running).
          *
          * Device configuration is stored internally as a JSON object, which is also
          * returned by the `info()` method. This allows for a flexible and extensible
@@ -100,8 +181,6 @@ namespace vidre {
          *              information. The contents of this object are defined by the specific
          *              device implementation and may include details such as hardware parameters,
          *              stream configurations, and other relevant information.
-         * - `preset`:  Presets. This should at least contain a "default" preset, which is used 
-         *              when the device is started without a specific preset (see `setup()` method).
          * - `setup`:   The actual device configuration (see `setup()` method).
          * - `config`:  List of configuration options for the device. This is used to generate
          *              user interfaces for configuring the device.
@@ -151,20 +230,25 @@ namespace vidre {
              *
              * This method is used to configure the device with specific settings. The exact
              * configuration options depend on the device implementation.
-             * 
+             *
              * There are three cases for how this method can be used:
              * 1. The device is not connected
              * 2. The device is connected but not running
              * 3. The device is running
-             * 
+             *
              * @note The `setup()` method should be called after connecting the device. It
              *       must be called at least once before starting the device. Depending on
              *       the device implementation, it may be possible to call `setup()` also
              *       in the running state with a subset of options.
-             * 
-             * @see state::configured
+             *
+             * @see prepare()
              * */
             virtual void setup(const settings::json & = {}) = 0;
+
+            /** Prepare device for streaming.
+             * @see state::flag::configured
+             * */
+            virtual void prepare() = 0;
 
             /** Start streaming.
              * @note This method silently returns if the device is not configured or already running.
@@ -236,23 +320,6 @@ namespace vidre {
         namespace error {
             using string = vidre::error::string;
             using info = vidre::error::info;
-
-            /** Error message.
-             * */
-            class VIDRE_DEVICE_VISIBILITY tmpl : public virtual error::info {
-            public:
-                tmpl() noexcept {}
-                virtual ~tmpl() {}
-
-            public:
-                const char *tag() noexcept override {
-                    return "template";
-                }
-
-                void make(error::string &emsg) noexcept override {
-                    // FIXME
-                }
-            };
 
             /** Device id info.
              * */
