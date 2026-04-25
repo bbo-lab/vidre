@@ -54,6 +54,7 @@
  * notice << "A notice.\n";
  * notice << "More information for this notice.\n";
  * @endcode
+ * FIXME note about thread-safety, etc.
  *
  * @note VidRe in general only uses a single newline character ('\\n') to
  *      emit or determine an end-of-line (see also @ref log::endl).
@@ -68,7 +69,7 @@
  * @include examples/core/log.cc
  *
  * @{
- * @namespace vider::log
+ * @namespace vidre::log
  * @}
  * */
 /**@defgroup api-core-log-if Interface
@@ -92,7 +93,7 @@
 /**@defgroup api-core-log-io Output
  * @ingroup api-core-log
  * @brief Log streaming facilities.
- * 
+ *
  * @{
  * @namespace vider::log::io
  * @}
@@ -100,6 +101,10 @@
 /**@defgroup api-core-log-details Implementation details
  * @ingroup api-core-log
  * @brief Internal implementation details.
+ *
+ * @{
+ * @namespace vidre::log::details
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -135,6 +140,16 @@ namespace vidre {
         inline namespace io {
             class stream;
         }  // namespace io
+
+        namespace detail {
+
+            /**@addtogroup api-core-log-details
+             * */
+            ///@{
+
+            ///@}
+
+        }  // namespace detail
 
         /**@addtogroup api-core-log-details
          * */
@@ -177,10 +192,10 @@ namespace vidre {
         constexpr static unsigned level_n = 10;                            ///< Number of discernable log levels.
         constexpr static int level_min = static_cast<int>(level::fatal);   ///< Minimum log level (as integer).
         constexpr static int level_max = std::numeric_limits<int>::max();  ///< Maximum log level (as integer).
-#if defined(DEBUG)
+#if defined(DEBUG) or defined(DOXYGEN)
         constexpr static int level_default = static_cast<int>(level::debug);  ///< Default log level.
 #elif defined(NDEBUG)
-        constexpr static int level_default = 0;
+        constexpr static int level_default = static_cast<int>(level::notice);
 #else
         constexpr static int level_default = static_cast<int>(level::info);
 #endif
@@ -556,10 +571,10 @@ namespace vidre {
 #endif
 
         /** Setup log streams.
-         * 
+         *
          * This command intended for use with command line options.
-         * FIXME
-         * 
+         *
+         * @todo show example
          * */
         void setup(const std::string &def);
 

@@ -83,6 +83,16 @@ namespace vidre {
                 using const_pointer = memory::const_pointer;
 
                 buffer() = default;
+
+                buffer(const buffer &) = delete;
+                buffer &operator=(const buffer &) = delete;
+                buffer(buffer &&) = default;
+                buffer &operator=(buffer &&) = default;
+
+                buffer(size_type n) noexcept {
+                    setup(n);
+                }
+                
                 ~buffer() {
                     if (data)
                         std::free(data);
@@ -99,14 +109,14 @@ namespace vidre {
                  *
                  * @note This method may only be called once.
                  * */
-                size_type setup(size_type len) noexcept {
+                size_type setup(size_type n) noexcept {
                     if (data)
                         return 0;
 
-                    len = std::bit_ceil(len);
-                    data = reinterpret_cast<pointer>(std::aligned_alloc(8, len));
+                    n = std::bit_ceil(n);
+                    data = reinterpret_cast<pointer>(std::aligned_alloc(8, n));
                     if (data)
-                        size = len;
+                        size = n;
 
                     return size;
                 }
