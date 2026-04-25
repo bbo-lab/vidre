@@ -39,8 +39,10 @@
 #if defined(_WIN32)
 #include <windows.h>
 #define VIDRE_USE_THREAD_PTHREAD 0
+#define VIDRE_USE_THREAD_WINAPI  1
 #else
 #define VIDRE_USE_THREAD_PTHREAD 1
+#define VIDRE_USE_THREAD_WINAPI  0
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/resource.h>
@@ -58,9 +60,13 @@ namespace vidre {
     ///@{
 
 #if defined(DOXYGEN)
-    /** Indicates whether pthreads are used. 
+    /** Indicates whether pthreads are used.
      * */
 #define VIDRE_USE_THREAD_PTHREAD <0|1>
+
+    /** Indicates whether Windows API threads are used.
+     * */
+#define VIDRE_USE_THREAD_WINAPI <0|1>
 #endif
 
     /** Thread type.

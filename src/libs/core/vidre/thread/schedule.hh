@@ -28,7 +28,7 @@
  * @details
  * @fileinfo
  *
- * @todo see signalfd
+ * @todo link to "linux.md" 
  * */
 
 #include <vidre/core/config.hh>
@@ -47,15 +47,16 @@ namespace vidre {
          * */
         struct VIDRE_CORE_VISIBILITY schedule {
             /** Scheduling policies.
-             * @todo need to find some commonality between Windows and Linux scheduling policies, or at least provide a common
-             * interface.
              * */
             enum policy_type : int {
                 invalid = -1,              ///< Invalid scheduling policy.
+
                 system = SCHED_OTHER,      ///< Default Linux time-sharing scheduling policy
+                batch = SCHED_BATCH,       ///< Scheduling policy for "batch" style execution
+
                 fifo = SCHED_FIFO,         ///< First-in, first-out real-time scheduling policy
                 round_robin = SCHED_RR,    ///< Round-robin real-time scheduling policy
-                batch = SCHED_BATCH,       ///< Scheduling policy for "batch" style execution
+
                 idle = SCHED_IDLE,         ///< Scheduling policy for running a thread only when the system is idle
                 deadline = SCHED_DEADLINE  ///< Scheduling policy for threads with specific deadlines
             };
@@ -197,7 +198,11 @@ namespace vidre {
                 return status::bad;  
             }
         };
+#elif VIDRE_USE_THREAD_WINAPI
+        // Windows API implementation would go here 
+        // FIXME
 #else
+        // Fallback implementation for unsupported platforms
         // FIXME
 #endif
 
