@@ -29,51 +29,65 @@ namespace vidre::detail {
 
 #if VIDRE_USE_THREAD_PTHREAD
 
-    status schedule::priority(int priority) noexcept {
-        int policy;
-        sched_param sch_params;
-
-        // get current scheduling policy and parameters
-        if (pthread_getschedparam(handle, &policy, &sch_params) != 0) {
-            log::debug() << "Failed to get thread priority: " << std::strerror(errno) << log::endl;
+    status schedule::priority(int priority, policy_type policy_) noexcept {
+        if (handle == 0)
             return status::bad;
-        }
 
-        auto min_prio = min_priority(static_cast<policy_type>(policy));
-        auto max_prio = max_priority(static_cast<policy_type>(policy));
+        struct sched_param param = {};
+        param.sched_priority = 0;
 
-        if ((priority < min_prio) || (priority > max_prio)) {
-            log::debug() << "Invalid priority value: " << priority << ". Valid range for policy " << static_cast<int>(policy)
-                         << " is [" << min_prio << ", " << max_prio << "]" << log::endl;
-            return status::bad;
-        }
+        switch (policy_) {
+            case policy_type::system:
+            case policy_type::batch:
+                // For SCHED_OTHER/SCHED_BATCH, priority value is actually the nice level
+                // Convert: our priority value is already the desired nice level (-20 to 19)
+                if (handle != pthread_self()) {
+                    log::debug() << "Warning: nice value can only be set for the current thread.";
+                    return status::bad;
+                }
 
-        // set new priority
-        sch_params.sched_priority = priority;
-        if (pthread_setschedparam(handle, static_cast<int>(policy), &sch_params) != 0) {
-            log::debug() << "Failed to set thread priority: " << std::strerror(errno) << log::endl;
-            return status::bad;
-        }
+                if (priority < -20)
+                    priority = -20;
+                if (priority > 19)
+                    priority = 19;
 
-        return status::good;
-    }
+                if (setpriority(PRIO_PROCESS, syscall(SYS_gettid), priority) != 0) {
+                    log::debug() << "Failed to set nice value: " << std::strerror(errno);
+                }
 
-    status schedule::priority(policy_type policy, int priority) noexcept {
-        auto min_prio = min_priority(static_cast<policy_type>(policy));
-        auto max_prio = max_priority(static_cast<policy_type>(policy));
+                // Also set the scheduling policy itself
+                if (pthread_setschedparam(handle, policy_, &param) != 0) {
+                    log::debug() << "Failed to set scheduling policy: " << std::strerror(errno);
+                    return status::bad;
+                }
+                break;
 
-        if ((priority < min_prio) || (priority > max_prio)) {
-            log::debug() << "Invalid priority value: " << priority << ". Valid range for policy " << static_cast<int>(policy)
-                         << " is [" << min_prio << ", " << max_prio << "]" << log::endl;
-            return status::bad;
-        }
+            case policy_type::fifo:
+            case policy_type::round_robin: {
+                int min_prio = sched_get_priority_min(policy_);
+                int max_prio = sched_get_priority_max(policy_);
 
-        // set new priority
-        sched_param sch_params;
-        sch_params.sched_priority = priority;
-        if (pthread_setschedparam(handle, static_cast<int>(policy), &sch_params) != 0) {
-            log::debug() << "Failed to set thread priority: " << std::strerror(errno) << log::endl;
-            return status::bad;
+                if (priority < min_prio)
+                    priority = min_prio;
+                if (priority > max_prio)
+                    priority = max_prio;
+
+                param.sched_priority = priority;
+
+                if (pthread_setschedparam(handle, policy_, &param) != 0) {
+                    return status::bad;
+                }
+            } break;
+
+            case policy_type::idle:
+                // SCHED_IDLE doesn't use priority values
+                if (pthread_setschedparam(handle, policy_, &param) != 0) {
+                    return status::bad;
+                }
+                break;
+
+            default:
+                return status::bad;
         }
 
         return status::good;

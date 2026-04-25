@@ -33,6 +33,7 @@
 #include <vidre/core/config.hh>
 #include <vidre/exception.hh>
 #include <vidre/util/status.hh>
+#include <vidre/cpp/util.hh>
 
 ///@cond
 #if defined(_WIN32)
@@ -42,6 +43,7 @@
 #define VIDRE_USE_THREAD_PTHREAD 1
 #include <pthread.h>
 #include <unistd.h>
+#include <sys/resource.h>
 #endif
 ///@endcond
 
