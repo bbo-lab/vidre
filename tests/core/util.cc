@@ -81,7 +81,3 @@ TEST_CASE("endian.hh", "[vidre/util]") {
     // intentionally empty
 }
 
-#include <vidre/util/thread.hh>
-TEST_CASE("thread.hh", "[vidre/util]") {
-    // intentionally empty
-}

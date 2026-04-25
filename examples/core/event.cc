@@ -1,5 +1,5 @@
 #include <vidre/util/events.hh>
-#include <vidre/util/thread.hh>
+#include <vidre/thread.hh>
 #include <vidre/log.hh>
 #include <thread>
 

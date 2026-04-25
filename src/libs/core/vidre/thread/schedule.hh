@@ -20,51 +20,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_UTIL_THREAD_HH
-#define VIDRE_CORE_UTIL_THREAD_HH
+#ifndef VIDRE_CORE_THREAD_SCHEDULE_HH
+#define VIDRE_CORE_THREAD_SCHEDULE_HH
 #pragma once
 
-/**@defgroup api-core-util-thread Threading utilities
- * @ingroup api-core-util
+/**@addtogroup api-core-thread-schedule
  * @details
  * @fileinfo
  *
- * @{
- * @defgroup api-core-util-thread-details Implementation details
- * @}
  * @todo see signalfd
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/exception.hh>
-#include <vidre/log.hh>
-#include <vidre/util/status.hh>
-
-#if defined(_WIN32)
-#include <windows.h>
-#define VIDRE_USE_PTHREAD 0
-#else
-// FIXME should check if pthread is used.
-#define VIDRE_USE_PTHREAD 1
-#include <pthread.h>
-#include <unistd.h>
-#endif
-
-#include <atomic>
-#include <thread>
-#include <utility>
-#include <cerrno>
-#include <cstring>
+#include <vidre/thread/types.hh>
 
 namespace vidre {
-
-    /**@addtogroup api-core-util-thread
-     * */
-    ///@{
-
-    using thread = std::thread;
-
-    ///@}
 
     namespace detail {
 
@@ -72,7 +42,7 @@ namespace vidre {
          * */
         ///@{
 
-#if VIDRE_USE_PTHREAD
+#if VIDRE_USE_THREAD_PTHREAD
         /** Scheduling settings.
          * */
         struct VIDRE_CORE_VISIBILITY schedule {
@@ -121,55 +91,14 @@ namespace vidre {
             /** Set priority.
              * @param priority Priority value to set for the thread.
              * */
-            status priority(int priority) {
-                int policy;
-                sched_param sch_params;
+            status priority(int priority) noexcept;
 
-                // get current scheduling policy and parameters
-                if (pthread_getschedparam(handle, &policy, &sch_params) != 0) {
-                    log::debug() << "Failed to get thread priority: " << std::strerror(errno) << log::endl;
-                    return status::bad;
-                }
-
-                auto min_prio = min_priority(static_cast<policy_type>(policy));
-                auto max_prio = max_priority(static_cast<policy_type>(policy));
-
-                if ((priority < min_prio) || (priority > max_prio)) {
-                    log::debug() << "Invalid priority value: " << priority << ". Valid range for policy "
-                                 << static_cast<int>(policy) << " is [" << min_prio << ", " << max_prio << "]" << log::endl;
-                    return status::bad;
-                }
-
-                // set new priority
-                sch_params.sched_priority = priority;
-                if (pthread_setschedparam(handle, static_cast<int>(policy), &sch_params) != 0) {
-                    log::debug() << "Failed to set thread priority: " << std::strerror(errno) << log::endl;
-                    return status::bad;
-                }
-
-                return status::good;
-            }
-
-            status priority(policy_type policy, int priority) {
-                auto min_prio = min_priority(static_cast<policy_type>(policy));
-                auto max_prio = max_priority(static_cast<policy_type>(policy));
-
-                if ((priority < min_prio) || (priority > max_prio)) {
-                    log::debug() << "Invalid priority value: " << priority << ". Valid range for policy "
-                                 << static_cast<int>(policy) << " is [" << min_prio << ", " << max_prio << "]" << log::endl;
-                    return status::bad;
-                }
-
-                // set new priority
-                sched_param sch_params;
-                sch_params.sched_priority = priority;
-                if (pthread_setschedparam(handle, static_cast<int>(policy), &sch_params) != 0) {
-                    log::debug() << "Failed to set thread priority: " << std::strerror(errno) << log::endl;
-                    return status::bad;
-                }
-
-                return status::good;
-            }
+            /** Set priority with specific policy.
+             * @param policy Scheduling policy to set for the thread.
+             * @param priority Priority value to set for the thread.
+             * @return Status indicating success or failure.
+             * */
+            status priority(policy_type policy, int priority) noexcept;
         };
 #else
         // FIXME
@@ -179,6 +108,7 @@ namespace vidre {
 
     }  // namespace detail
 
+#if 0
     /**@addtogroup api-core-util-thread
      * */
     ///@{
@@ -237,6 +167,8 @@ namespace vidre {
 
     ///@}
 
+#endif
+
 }  // namespace vidre
 
-#endif  //  VIDRE_CORE_UTIL_THREAD_HH
+#endif  //  VIDRE_CORE_THREAD_SCHEDULE_HH
