@@ -55,7 +55,7 @@
  *      frame-rate              double                                      0.12
  *      bits-are-packed         uint8_t                                     0.13 (boolean)
  *      endianness              uint8_t                                     0.20
- *      reserved                uint8_t[3]                                  0.20
+ *      reserved                uint8_t[2]                                  0.20
  *      frame-count             uint32_t                                    0.12
  *      offset                  uint32_t[2]                                 0.13
  *      sensor-size             uint32_t[2]                                 0.13
