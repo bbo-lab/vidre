@@ -89,3 +89,9 @@ void io::file::sink::close() noexcept {
     fd_.close();
     return;
 }
+
+io::file vidre::io::standard::input = io::file{::stdin};
+
+io::file vidre::io::standard::output = io::file{::stdout};
+
+io::file vidre::io::standard::error = io::file{::stderr};

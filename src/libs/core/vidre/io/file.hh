@@ -118,6 +118,10 @@ namespace vidre {
                     return std::error_code(errno, std::generic_category());
                 }
 
+                inline descriptor dup(descriptor fd) noexcept {
+                    return ::dup(fd);
+                }
+
                 inline descriptor open(const char *filename, int access, int disposition, int hint = 0) noexcept {
                     return ::open(filename, access | disposition | hint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                 }
@@ -201,7 +205,11 @@ namespace vidre {
                     return 0 == fallocate(fd, mode, offset, length);
                 }
 
-#endif  // VIDRE_HOST_WINDOWS
+                inline descriptor fileno(FILE *f) noexcept {
+                    return ::fileno(f);
+                }
+
+#endif  // not VIDRE_HOST_WINDOWS
 
                 ///@}
 
@@ -319,6 +327,21 @@ namespace vidre {
                 open(filename, access_mode, disposition_mode, hint_mode);
             }
 
+            /** Open a file from a C FILE pointer.
+             * @param f    The C FILE pointer.
+             *
+             * This constructor is intended for use with stdin, stdout, and stderr,
+             * but can be used with any valid FILE pointer.
+             *
+             * @note The file will be duplicated, so the caller retains ownership of the
+             *       FILE pointer and is responsible for closing it. The returned file
+             *       object will have its own file descriptor that is independent of the
+             *       original FILE pointer.
+             * */
+            file(FILE *f) noexcept {
+                fd_ = detail::io::file::dup(detail::io::file::fileno(f));
+            }
+
             ~file() {
                 if (valid())
                     close();
@@ -337,7 +360,7 @@ namespace vidre {
             /** Check if the file is valid (ie. open).
              * */
             operator bool() const noexcept {
-                return valid(); 
+                return valid();
             }
 
             /** Implicit conversion to host descriptor type.
@@ -617,6 +640,19 @@ namespace vidre {
             }
         };
 
+        namespace standard {
+
+            /** Standard input. */
+            extern file input;
+
+            /** Standard output. */
+            extern file output;
+
+            /** Standard error. */
+            extern file error;
+
+        }  // namespace standard
+        
         ///@}
 
     }  // namespace io

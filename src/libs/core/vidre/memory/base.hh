@@ -34,6 +34,9 @@
 
 #include <utility>
 #include <bit>
+#include <string_view>
+#include <string>
+#include <array>
 #include <type_traits>
 
 namespace vidre {
@@ -62,6 +65,11 @@ namespace vidre {
         /** Pointer to const memory. */
         using const_pointer = const value_type *;
 
+        /** Check if type is a string type.
+         * */
+        template <typename T>
+        concept string_type = std::same_as<std::remove_cvref_t<T>, std::string_view> || std::same_as<std::remove_cvref_t<T>, const char *>;
+
         /** Memory view.
          *
          * Akin to the STL's std::string_view or std::span, this class provides a non-owning
@@ -80,7 +88,14 @@ namespace vidre {
             constexpr view(size_type n, pointer ptr) noexcept : size_(n), data_(ptr) {}
             constexpr view(size_type n, const_pointer ptr) noexcept : size_(n), data_(ptr) {}
 
+            view(size_type n, const char *ptr) noexcept : size_(n), data_(reinterpret_cast<const_pointer>(ptr)) {}
+            template <std::size_t N>
+            view(const char (&arr)[N]) noexcept : size_(N - 1), data_(reinterpret_cast<const_pointer>(arr)) {}
+            view(const std::string_view &str) noexcept : size_(str.size()), data_(reinterpret_cast<const_pointer>(str.data())) {}
+            view(const std::string &str) noexcept : size_(str.size()), data_(reinterpret_cast<const_pointer>(str.data())) {}
+
             template <typename T>
+            requires (not string_type<T> and std::contiguous_iterator<T>)
             view(const T &value) noexcept : size_(sizeof(T)), data_(reinterpret_cast<pointer>(&value)) {}
 
         protected:

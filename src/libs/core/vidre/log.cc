@@ -23,8 +23,8 @@
 #include "os/tty.hh"
 #include "cpp/util.hh"
 #include "exception.hh"
+#include "io/file.hh"
 
-#include <iostream>
 #include <array>
 #include <algorithm>
 #include <chrono>
@@ -46,6 +46,10 @@ static vidre::log::stream vidrelog{vidre_use_fret()};
 
 std::vector<vidre::log::io::stream *> vidre::log::io::stream::channels = {&vidrelog};
 int vidre::log::io::stream::maxthreshold = vidrelog.threshold_;
+
+void log::io::stream::put(const message_type &msg) noexcept {
+    vidre::io::standard::error.write({msg.size(), msg.data()});
+}
 
 void log::io::stream::remove(unsigned chanid) noexcept {
     if (chanid == 0)
@@ -286,7 +290,7 @@ static std::vector<log::io::file> vidre_log_files;
 
 void log::setup(const std::string &def) {
     if (def == "help") {
-        std::cout <<                                                                          //
+        vidre::io::standard::output.write(                                                    //
             "Log-levels can be set for console output, but also file logging is possible.\n"  //
             "The general format is:\n"                                                        //
             "\n"                                                                              //
@@ -307,10 +311,10 @@ void log::setup(const std::string &def) {
             "For tracing, the wildcard <pattern>, referring to the source code path(s),\n"    //
             "has to be provided.\n"                                                           //
             "\n"                                                                              //
-            "Available log levels are:\n";
+            "Available log levels are:\n");
 
         for (size_t i = 0; i < size_of(setup_levels); ++i) {
-            std::cout << std::format("    {:<20} {}\n", setup_levels[i].name, setup_levels[i].brief);
+            vidre::io::standard::output.write(std::format("    {:<20} {}\n", setup_levels[i].name, setup_levels[i].brief));
         }
     }
     else {
@@ -363,8 +367,13 @@ void log::setup(const std::string &def) {
                 }
             }
 
-            std::cerr << "invalid tracing option: " << std::string_view(option) << std::endl;
-            std::cerr << "use 'help' for further information." << std::endl;
+            std::string cerr;
+            cerr = "invalid log setup option: ";
+            cerr += std::string_view(option);
+            cerr += "\n";
+            cerr += "use 'help' for further information.\n";
+            vidre::io::standard::error.write(cerr);
+
             std::exit(-1);
         }
     }

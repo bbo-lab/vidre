@@ -62,7 +62,7 @@
  * (see @c log::io::stream) with styling (see @c log::io::style) where each
  * stream may have it's own log threshold (see @c log::threshold).
  *
- * By default, all logging is sent to @c std::clog (id 0).
+ * By default, all logging is sent to @c stderr (id 0).
  *
  * Example (see @ref examples/core/log.cc):
  * @include examples/core/log.cc
@@ -80,7 +80,7 @@
  * log::LEVEL() << "message output" << log::endl;
  * @endcode
  * where @c LEVEL may be any of the existing @ref log::level "log levels" and may
- * be used as if @c std::clog would be used directly.
+ * be used as if @c stderr would be used directly.
  *
  * Special conditions apply to the following levels:
  * - @ref log::fatal terminates the program when the object is destructed.
@@ -107,7 +107,6 @@
 #include <vidre/cpp/format.hh>
 
 #include <limits>
-#include <iostream>
 #include <vector>
 
 #if defined(DEBUG)
@@ -261,7 +260,7 @@ namespace vidre {
 
             /** Default log stream.
              *
-             * This class implements logging to @c std::clog, but also, serves a
+             * This class implements logging to @c stderr, but also, serves a
              * base class for implementing individual log streamers.
              *
              * Developers wishing to implement their own logic should study
@@ -331,9 +330,7 @@ namespace vidre {
                  *      for styling is handled by the vidre::log::handler class.
                  *
                  * */
-                virtual void put(const message_type &msg) noexcept {
-                    std::clog << msg;
-                }
+                virtual void put(const message_type &msg) noexcept;
 
             private:
                 friend class vidre::log::handler;
