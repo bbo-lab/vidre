@@ -46,3 +46,6 @@ patches/
 
 # benchmarks
 *.tmp
+
+# bi
+*.swp
