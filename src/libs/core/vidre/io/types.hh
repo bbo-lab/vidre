@@ -60,9 +60,9 @@
 
 namespace vidre {
 
-    namespace detail {
+    namespace io {
 
-        namespace io {
+        namespace detail {
 
             /**@addtogroup api-core-io-details
              * */
@@ -92,7 +92,7 @@ namespace vidre {
                 buffer(size_type n) noexcept {
                     setup(n);
                 }
-                
+
                 ~buffer() {
                     if (data)
                         std::free(data);
@@ -161,14 +161,14 @@ namespace vidre {
 
             ///@}
 
-        }  // namespace io
+        }  // namespace detail
 
-    }  // namespace detail
+    }  // namespace io
 
     namespace io {
 
         namespace packet {
-            struct base; // forward declaration
+            struct base;  // forward declaration
         }
 
         /**@addtogroup api-core-io-types
@@ -198,7 +198,7 @@ namespace vidre {
          * @endcode
          * @see offset_type
          * */
-        template<class T = offset_type>
+        template <class T = offset_type>
         requires std::is_integral_v<T>
         inline constexpr T invalid = static_cast<T>(-1);
 
@@ -421,10 +421,12 @@ namespace vidre {
          * A data pipe is a combination of a source and a sink, allowing data to flow
          * from one component to another. It can be used to connect different parts
          * of a processing pipeline.
-         * 
+         *
          * @see source::shared
          * */
-        class VIDRE_CORE_VISIBILITY pipe : public virtual sink, public virtual source {
+        class VIDRE_CORE_VISIBILITY pipe
+            : public virtual sink
+            , public virtual source {
         public:
             /** Shared pointer type for pipe.
              * This type is used for managing the lifetime of pipe instances,
@@ -460,9 +462,9 @@ namespace vidre {
              * @throw exception::logic if the configuration is invalid for this pipe.
              * @note The configuration format is pipe-specific and may be ignored by some pipes.
              * */
-             void setup(const settings::json &config) override {}
+            void setup(const settings::json &config) override {}
 
-             // FIXME
+            // FIXME
         };
 
         ///@}

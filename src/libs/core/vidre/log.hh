@@ -95,7 +95,7 @@
  * @brief Log streaming facilities.
  *
  * @{
- * @namespace vider::log::io
+ * @namespace vidre::log::io
  * @}
  * */
 /**@defgroup api-core-log-details Implementation details
@@ -103,7 +103,7 @@
  * @brief Internal implementation details.
  *
  * @{
- * @namespace vidre::log::details
+ * @namespace vidre::log::detail
  * @}
  * */
 
@@ -176,6 +176,11 @@ namespace vidre {
              * */
             ///@{
 
+            /** Default per-thread buffer size. */
+#if not defined(VIDRE_CORE_LOG_BUFFER_SIZE)
+#define VIDRE_CORE_LOG_BUFFER_SIZE 32768
+#endif
+
             /** Per-thread logger.
              * */
             class VIDRE_CORE_VISIBILITY thread {
@@ -187,7 +192,9 @@ namespace vidre {
                 thread &operator=(thread &&) = default;
 
             protected:
-                // thread_local detail::io::buffer buffer_;  ///< Per-thread log buffer.
+                static thread_local io::detail::buffer buffer_;  ///< Per-thread log buffer.
+
+            public:
             };
 
             ///@}

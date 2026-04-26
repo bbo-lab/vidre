@@ -52,7 +52,7 @@
 
  /**@addtogroup api-core-io-details
   * @{
-  * @namespace vidre::detail::io    Implementation details for I/O.
+  * @namespace vidre::io::detail    Implementation details for I/O.
   * @}
   */
 

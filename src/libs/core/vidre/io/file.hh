@@ -33,7 +33,7 @@
 
 /**@addtogroup api-core-io-details
  * @{
- * @namespace vidre::detail::io::file    File based I/O.
+ * @namespace vidre::io::detail::file    File based I/O.
  * @}
  * @todo UTF-8 support on Windows (see https://chat.deepseek.com/a/chat/s/cbb1b2b5-8943-4e15-9caf-956ec9e969fc)
  * */
@@ -55,9 +55,9 @@
 
 namespace vidre {
 
-    namespace detail {
+    namespace io {
 
-        namespace io {
+        namespace detail {
 
             namespace file {
 
@@ -215,9 +215,9 @@ namespace vidre {
 
             }  // namespace file
 
-        }  // namespace io
+        }  // namespace detail
 
-    }  // namespace detail
+    }  // namespace io
 
     namespace io {
 
@@ -230,20 +230,20 @@ namespace vidre {
             class sink;    // forward declaration
             class source;  // forward declaration
 
-            using descriptor = detail::io::file::descriptor;
-            using size_type = detail::io::file::size_type;
-            using offset_type = detail::io::file::offset_type;
+            using descriptor = io::detail::file::descriptor;
+            using size_type = io::detail::file::size_type;
+            using offset_type = io::detail::file::offset_type;
 
             /** Maximum length of a path.
              * */
-            static constexpr size_type path_max = detail::io::file::path_max;
+            static constexpr size_type path_max = io::detail::file::path_max;
 
             /** File access.
              * */
             enum class access {
-                readonly = to_underlying(detail::io::file::access_mode::readonly),    ///< Open file for reading only.
-                writeonly = to_underlying(detail::io::file::access_mode::writeonly),  ///< Open file for writing only.
-                readwrite = to_underlying(detail::io::file::access_mode::readwrite)   ///< Open file for reading and writing.
+                readonly = to_underlying(io::detail::file::access_mode::readonly),    ///< Open file for reading only.
+                writeonly = to_underlying(io::detail::file::access_mode::writeonly),  ///< Open file for writing only.
+                readwrite = to_underlying(io::detail::file::access_mode::readwrite)   ///< Open file for reading and writing.
             };
 
             /** File disposition.
@@ -251,10 +251,10 @@ namespace vidre {
              *       be ignored by the underlying OS.
              * */
             enum class disposition {
-                create = to_underlying(detail::io::file::disposition::create),        ///< Create file if it does not exist.
-                exclusive = to_underlying(detail::io::file::disposition::exclusive),  ///< Fail if file already exists.
-                append = to_underlying(detail::io::file::disposition::append),        ///< Append to end of file.
-                truncate = to_underlying(detail::io::file::disposition::truncate)  ///< Truncate file to zero length if it exists.
+                create = to_underlying(io::detail::file::disposition::create),        ///< Create file if it does not exist.
+                exclusive = to_underlying(io::detail::file::disposition::exclusive),  ///< Fail if file already exists.
+                append = to_underlying(io::detail::file::disposition::append),        ///< Append to end of file.
+                truncate = to_underlying(io::detail::file::disposition::truncate)  ///< Truncate file to zero length if it exists.
             };
 
             /** Additional file hints.
@@ -269,43 +269,43 @@ namespace vidre {
              * */
             enum class hint {
                 none = 0,
-                close_on_exec = to_underlying(detail::io::file::hint::close_on_exec),  ///< Set close-on-exec flag (POSIX only).
-                non_block = to_underlying(detail::io::file::hint::non_block),      ///< Open file in non-blocking mode (POSIX only).
-                synchronous = to_underlying(detail::io::file::hint::synchronous),  ///< Open file in synchronous mode.
-                direct = to_underlying(detail::io::file::hint::direct),            ///< Open file with direct I/O.
-                datasync = to_underlying(detail::io::file::hint::datasync)         ///< Open file with data synchronization.
+                close_on_exec = to_underlying(io::detail::file::hint::close_on_exec),  ///< Set close-on-exec flag (POSIX only).
+                non_block = to_underlying(io::detail::file::hint::non_block),      ///< Open file in non-blocking mode (POSIX only).
+                synchronous = to_underlying(io::detail::file::hint::synchronous),  ///< Open file in synchronous mode.
+                direct = to_underlying(io::detail::file::hint::direct),            ///< Open file with direct I/O.
+                datasync = to_underlying(io::detail::file::hint::datasync)         ///< Open file with data synchronization.
             };
 
             /** Seek options.
              * */
             enum class whence {
-                begin = to_underlying(detail::io::file::whence::begin),      ///< Seek from beginning of file.
-                current = to_underlying(detail::io::file::whence::current),  ///< Seek from current position in file.
-                end = to_underlying(detail::io::file::whence::end)           ///< Seek from end of file.
+                begin = to_underlying(io::detail::file::whence::begin),      ///< Seek from beginning of file.
+                current = to_underlying(io::detail::file::whence::current),  ///< Seek from current position in file.
+                end = to_underlying(io::detail::file::whence::end)           ///< Seek from end of file.
             };
 
             /** Allocation modes.
              * */
             enum class allocation {
                 allocate_range =
-                    to_underlying(detail::io::file::allocation_type::allocate_range),  ///< Allocate space for a range of the file.
+                    to_underlying(io::detail::file::allocation_type::allocate_range),  ///< Allocate space for a range of the file.
                 keep_size =
-                    to_underlying(detail::io::file::allocation_type::keep_size),  ///< Allocate space without changing file size.
+                    to_underlying(io::detail::file::allocation_type::keep_size),  ///< Allocate space without changing file size.
                 punch_hole = to_underlying(
-                    detail::io::file::allocation_type::punch_hole),  ///< Deallocate space (create a "hole") in a range of the file.
-                no_hide_stale = to_underlying(detail::io::file::allocation_type::no_hide_stale),  ///< Do not hide stale data when
+                    io::detail::file::allocation_type::punch_hole),  ///< Deallocate space (create a "hole") in a range of the file.
+                no_hide_stale = to_underlying(io::detail::file::allocation_type::no_hide_stale),  ///< Do not hide stale data when
                                                                                                   ///< punching holes (Linux only).
                 collapse_range = to_underlying(
-                    detail::io::file::allocation_type::collapse_range),  ///< Collapse a range of the file, removing the bytes and
+                    io::detail::file::allocation_type::collapse_range),  ///< Collapse a range of the file, removing the bytes and
                                                                          ///< shifting subsequent data (Linux only).
                 zero_range =
-                    to_underlying(detail::io::file::allocation_type::zero_range),  ///< Zero out a range of the file, deallocating
+                    to_underlying(io::detail::file::allocation_type::zero_range),  ///< Zero out a range of the file, deallocating
                                                                                    ///< space if possible (Linux only).
                 insert_range = to_underlying(
-                    detail::io::file::allocation_type::insert_range),  ///< Insert a range of the file, creating a hole and shifting
+                    io::detail::file::allocation_type::insert_range),  ///< Insert a range of the file, creating a hole and shifting
                                                                        ///< subsequent data (Linux only).
                 unshare_range =
-                    to_underlying(detail::io::file::allocation_type::unshare_range)  ///< Unshare a range of the file, breaking
+                    to_underlying(io::detail::file::allocation_type::unshare_range)  ///< Unshare a range of the file, breaking
                                                                                      ///< copy-on-write sharing (Linux only).
             };
 
@@ -339,7 +339,7 @@ namespace vidre {
              *       original FILE pointer.
              * */
             file(FILE *f) noexcept {
-                fd_ = detail::io::file::dup(detail::io::file::fileno(f));
+                fd_ = io::detail::file::dup(io::detail::file::fileno(f));
             }
 
             ~file() {
@@ -348,13 +348,13 @@ namespace vidre {
             };
 
         protected:
-            descriptor fd_{detail::io::file::invalid_descriptor};  ///< File descriptor.
+            descriptor fd_{io::detail::file::invalid_descriptor};  ///< File descriptor.
 
         public:
             /** Check if the file is valid (ie. open).
              * */
             bool valid() const noexcept {
-                return detail::io::file::valid(fd_);
+                return io::detail::file::valid(fd_);
             }
 
             /** Check if the file is valid (ie. open).
@@ -373,21 +373,21 @@ namespace vidre {
              * @return Last error code.
              * */
             std::error_code error() const noexcept {
-                return detail::io::file::last_error();
+                return io::detail::file::last_error();
             }
 
             /** Get file size.
              * @return File size in bytes, @c -1 on error.
              * */
             offset_type filesize() const noexcept {
-                return detail::io::file::filesize(fd_);
+                return io::detail::file::filesize(fd_);
             }
 
             /** Get file block size.
              * @return Block size in bytes, or a default value if it cannot be retrieved from the OS.
              * */
             size_type blocksize() const noexcept {
-                return detail::io::file::blocksize(fd_);
+                return io::detail::file::blocksize(fd_);
             }
 
             /** Open a file.
@@ -400,7 +400,7 @@ namespace vidre {
              */
             bool open(const std::filesystem::path &filename, access access_mode = access::readonly,
                       disposition disposition_mode = static_cast<disposition>(0), hint hint_mode = hint::none) noexcept {
-                fd_ = detail::io::file::open(filename.c_str(),                    //
+                fd_ = io::detail::file::open(filename.c_str(),                    //
                                              static_cast<int>(access_mode),       //
                                              static_cast<int>(disposition_mode),  //
                                              static_cast<int>(hint_mode));
@@ -410,8 +410,8 @@ namespace vidre {
             /** Close the file.
              * */
             void close() noexcept {
-                detail::io::file::close(fd_);
-                fd_ = detail::io::file::invalid_descriptor;
+                io::detail::file::close(fd_);
+                fd_ = io::detail::file::invalid_descriptor;
             }
 
             /** Seek position in file.
@@ -420,7 +420,7 @@ namespace vidre {
              * @return Offset from beginning, @c -1 on error.
              * */
             offset_type seek(offset_type off, whence from = whence::begin) noexcept {
-                return detail::io::file::seek(fd_, off, static_cast<int>(from));
+                return io::detail::file::seek(fd_, off, static_cast<int>(from));
             }
 
             /** Read data.
@@ -429,7 +429,7 @@ namespace vidre {
              * @return Number of bytes read, @c -1 on error.
              * */
             offset_type read(memory::area &buf) noexcept {
-                return detail::io::file::read(fd_, buf.data(), buf.size());
+                return io::detail::file::read(fd_, buf.data(), buf.size());
             }
 
             /** Write data.
@@ -438,7 +438,7 @@ namespace vidre {
              * @return Number of bytes written, @c -1 on error.
              * */
             offset_type write(const memory::view &buf) noexcept {
-                return detail::io::file::write(fd_, buf.data(), buf.size());
+                return io::detail::file::write(fd_, buf.data(), buf.size());
             }
 
             /** Allocate space.
@@ -454,7 +454,7 @@ namespace vidre {
              *       will be silently ignored.
              * */
             bool allocate(offset_type offset, offset_type length, allocation type = allocation::keep_size) noexcept {
-                return detail::io::file::allocate(fd_, static_cast<int>(type), offset, length);
+                return io::detail::file::allocate(fd_, static_cast<int>(type), offset, length);
             }
         };
 
@@ -539,7 +539,7 @@ namespace vidre {
 
         protected:
             file fd_{};                 ///< Underlying file I/O.
-            detail::io::buffer buf_{};  ///< Internal block buffer.
+            io::detail::buffer buf_{};  ///< Internal block buffer.
 
         protected:
             // Write buffer to disk and flush it.
@@ -652,7 +652,7 @@ namespace vidre {
             extern file error;
 
         }  // namespace standard
-        
+
         ///@}
 
     }  // namespace io
