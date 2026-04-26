@@ -54,7 +54,8 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                // range 0x0001 - 0x000F are reserved for storage::raw
+                log = 0x0001,  ///< Log messages (see @ref vidre::log).
+                // range 0x0002 - 0x000F are reserved for storage::raw
 
                 // standard types
                 video = 0x0010,  ///< Video data (see @ref FIXME).
@@ -93,21 +94,21 @@ namespace vidre {
             };
 
             ///@cond
-            video operator|(video lhs, video rhs) noexcept {
+            inline video operator|(video lhs, video rhs) noexcept {
                 return static_cast<video>(to_underlying(lhs) | to_underlying(rhs));
             }
-            video &operator|=(video &lhs, video rhs) noexcept {
+            inline video &operator|=(video &lhs, video rhs) noexcept {
                 lhs = lhs | rhs;
                 return lhs;
             }
-            video operator&(video lhs, video rhs) noexcept {
+            inline video operator&(video lhs, video rhs) noexcept {
                 return static_cast<video>(to_underlying(lhs) & to_underlying(rhs));
             }
-            video &operator&=(video &lhs, video rhs) noexcept {
+            inline video &operator&=(video &lhs, video rhs) noexcept {
                 lhs = lhs & rhs;
                 return lhs;
             }
-            video operator~(video v) noexcept {
+            inline video operator~(video v) noexcept {
                 return static_cast<video>(~to_underlying(v));
             }
             ///@endcond
@@ -131,21 +132,21 @@ namespace vidre {
             };
 
             ///@cond
-            audio operator|(audio lhs, audio rhs) noexcept {
+            inline audio operator|(audio lhs, audio rhs) noexcept {
                 return static_cast<audio>(to_underlying(lhs) | to_underlying(rhs));
             }
-            audio &operator|=(audio &lhs, audio rhs) noexcept {
+            inline audio &operator|=(audio &lhs, audio rhs) noexcept {
                 lhs = lhs | rhs;
                 return lhs;
             }
-            audio operator&(audio lhs, audio rhs) noexcept {
+            inline audio operator&(audio lhs, audio rhs) noexcept {
                 return static_cast<audio>(to_underlying(lhs) & to_underlying(rhs));
             }
-            audio &operator&=(audio &lhs, audio rhs) noexcept {
+            inline audio &operator&=(audio &lhs, audio rhs) noexcept {
                 lhs = lhs & rhs;
                 return lhs;
             }
-            audio operator~(audio v) noexcept {
+            inline audio operator~(audio v) noexcept {
                 return static_cast<audio>(~to_underlying(v));
             }
             ///@endcond
@@ -181,48 +182,6 @@ namespace vidre {
                 header hdr{};       ///< Packet header.
                 uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
             };
-
-#if 0
-            /** Data packet base type.
-             * */
-            struct VIDRE_CORE_VISIBILITY packet {
-                vidre::uuid uuid{};  ///< Packet type (e.g., video, audio, metadata).
-                uint32_t stream{};   ///< Stream identifier (e.g., for multiplexed streams).
-                // /** Function type for putting a packet-based streams into a sink.
-                //  * */
-                // using put_type = void (*)(const io::packet &source, io::sink &sink);
-
-                // put_type putter{};   ///< Function pointer for putting this packet into a sink.
-
-                // public:
-                //     using selector_type = put_type (*)(const io::packet &source, const io::packet &sink);
-                //     using map_type = ankerl::unordered_dense::map<vidre::uuid, selector_type>;
-
-                // protected:
-                //     static map_type registry;  ///< Static map for registering packet types and their put functions.
-
-                // public:
-                //     /** Register a "selector" function.
-                //      * */
-                //     static void enregister(const vidre::uuid &uuid, selector_type func) {
-                //         auto it = registry.find(uuid);
-                //         if (it != registry.end())
-                //             throw vidre::exception() << error::message("packet type already registered");
-
-                //         registry[uuid] = func;
-                //     }
-
-                //     /** Retrieve selector function.
-                //      * */
-                //     static selector_type retrieve(const vidre::uuid &uuid) {
-                //         auto it = registry.find(uuid);
-                //         if (it == registry.end())
-                //             throw vidre::exception() << error::message("packet type not registered");
-
-                //         return it->second;
-                //     }
-            };
-#endif
 
             ///@}
 

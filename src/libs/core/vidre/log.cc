@@ -33,7 +33,7 @@
 
 using namespace vidre;
 
-thread_local io::detail::buffer vidre::lognew::detail::thread::buffer_{VIDRE_CORE_LOG_BUFFER_SIZE};
+thread_local io::detail::buffer vidre::lognew::detail::store::buffer_{VIDRE_CORE_LOG_BUFFER_SIZE};
 
 // ============================================================================
 // ============================================================================

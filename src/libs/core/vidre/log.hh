@@ -111,6 +111,7 @@
 #include <vidre/cpp/util.hh>
 #include <vidre/cpp/format.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/packet.hh>
 
 #include <limits>
 #include <vector>
@@ -168,10 +169,22 @@ namespace vidre {
 #endif
         ///@endinternal
 
+        /** Log-message packet.
+         * */
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public io::packet::base {
+            uint64_t timestamp[2]{};  ///< FIXME Timestamp.
+            const char *message{};    ///< Pointer to message data.
+            const char pad[8]{};      ///< Padding helper.
+
+            packet(level lvl) noexcept                           //
+                : base({{to_underlying(io::packet::major::log),  //
+                         to_underlying(lvl)},
+                        0}) {}
+        };
+
         ///@}
 
         namespace detail {
-
             /**@addtogroup api-core-log-details
              * */
             ///@{
@@ -181,18 +194,18 @@ namespace vidre {
 #define VIDRE_CORE_LOG_BUFFER_SIZE 32768
 #endif
 
-            /** Per-thread logger.
+            /** Per-thread message store.
              * */
-            class VIDRE_CORE_VISIBILITY thread {
+            class VIDRE_CORE_VISIBILITY store {
             public:
-                thread() = default;
-                thread(const thread &) = delete;
-                thread &operator=(const thread &) = delete;
-                thread(thread &&) = default;
-                thread &operator=(thread &&) = default;
+                store() = default;
+                store(const store &) = delete;
+                store &operator=(const store &) = delete;
+                store(store &&) = default;
+                store &operator=(store &&) = default;
 
             protected:
-                static thread_local io::detail::buffer buffer_;  ///< Per-thread log buffer.
+                static thread_local io::detail::buffer buffer_;  ///< Per-thread buffer.
 
             public:
             };
