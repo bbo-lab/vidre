@@ -1,6 +1,8 @@
 #include <vidre/script.hh>
 #include <vidre/log.hh>
 #include <vidre/exception.hh>
+#include <vidre/storage/raw.hh>
+#include <vidre/io.hh>
 
 using namespace vidre;
 
@@ -8,12 +10,12 @@ void handle_lua_error(lua_State *L, int status) {
     if (status != LUA_OK) {
         /* Get the error message from the stack */
         const char *err_msg = lua_tostring(L, -1);
-        
+
         /* Try to get debug information */
         lua_Debug ar;
         int line_number = -1;
         const char *source = "unknown";
-        
+
         /* Look for debug info about the error */
         if (lua_getstack(L, 0, &ar)) {
             if (lua_getinfo(L, "Sl", &ar)) {
@@ -27,15 +29,15 @@ void handle_lua_error(lua_State *L, int status) {
                 line_number = ar.currentline;
             }
         }
-        
+
         /* Print detailed error information */
         if (line_number > 0) {
-            fprintf(stderr, "Lua error in %s at line %d: %s\n", 
-                    source, line_number, err_msg);
-        } else {
+            fprintf(stderr, "Lua error in %s at line %d: %s\n", source, line_number, err_msg);
+        }
+        else {
             fprintf(stderr, "Lua error: %s\n", err_msg);
         }
-        
+
         /* Remove error message from stack */
         lua_pop(L, 1);
     }
@@ -66,8 +68,8 @@ int main(int, const char **) {
     //! [stack-top]
 
     //! [script-error]
-    handle_lua_error(script::g, (int) script::g.dofile(PROJECT_SOURCE_DIR "/examples/core/lua/script_syntax.lua"));
-    handle_lua_error(script::g, (int) script::g.dofile(PROJECT_SOURCE_DIR "/examples/core/lua/script_error.lua"));
+    handle_lua_error(script::g, (int)script::g.dofile(PROJECT_SOURCE_DIR "/examples/core/lua/script_syntax.lua"));
+    handle_lua_error(script::g, (int)script::g.dofile(PROJECT_SOURCE_DIR "/examples/core/lua/script_error.lua"));
     //! [script-error]
 
     return 0;

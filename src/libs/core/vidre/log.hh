@@ -57,7 +57,7 @@
  * FIXME note about thread-safety, etc.
  *
  * @note VidRe in general only uses a single newline character ('\\n') to
- *      emit or determine an end-of-line (see also @ref log::endl).
+ *       emit or determine an end-of-line (see also @ref log::endl).
  *
  * The logging interface also allows to stream its output to different locations
  * (see @c log::io::stream) with styling (see @c log::io::style) where each
@@ -110,6 +110,7 @@
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
 #include <vidre/cpp/format.hh>
+#include <vidre/io/types.hh>
 
 #include <limits>
 #include <vector>
@@ -123,6 +124,95 @@
 #include <cassert>
 
 namespace vidre {
+
+    namespace lognew {
+
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
+
+        /** Log levels.
+         * @internal
+         * Internally, log events are passed as "raw" data - so, the log level is
+         * represented in the TLV type as minor number.
+         * @see @ref vidre::storage::raw
+         * @see vidre::storage::raw::version_type
+         * @endinternal
+         * */
+        enum class level : uint16_t {
+            fatal = 0,     ///< System is in an unusable state and the program will terminate.
+            alert = 1,     ///< Immediate user interaction is required, usually when data corruption occurs.
+            critical = 2,  ///< A critical error, such as hardware failure.
+            error = 3,     ///< An application error occurred.
+            warning = 4,   ///< Warning level, which may hint to future failure.
+            user = 5,      ///< A user message (such as an experimental note).
+            notice = 6,    ///< A noteworthy condition occurred.
+            status = 7,    ///< A status message.
+            info = 8,      ///< A purely informational message.
+            debug = 9,     ///< Debugging information.
+            trace = 10     ///< Tracing.
+        };
+
+        ///@internal
+        constexpr static unsigned level_n = 11;                                      ///< Number of discernable log levels.
+        constexpr static unsigned level_min = to_underlying(level::fatal);           ///< Minimum log level (as integer).
+        constexpr static unsigned level_max = std::numeric_limits<uint16_t>::max();  ///< Maximum log level (as integer).
+#if defined(DOXYGEN)
+        constexpr static unsigned level_default = defined_at_compile_time;  ///< Default log level.
+#elif defined(DEBUG)
+        constexpr static unsigned level_default = to_underlying(level::debug);
+#elif defined(NDEBUG)
+        constexpr static unsigned level_default = to_underlying(level::notice);
+#else
+        constexpr static unsigned level_default = to_underlying(level::info);
+#endif
+        ///@endinternal
+
+        ///@}
+
+        namespace detail {
+
+            /**@addtogroup api-core-log-details
+             * */
+            ///@{
+
+            /** Per-thread logger.
+             * */
+            class VIDRE_CORE_VISIBILITY thread {
+            public:
+                thread() = default;
+                thread(const thread &) = delete;
+                thread &operator=(const thread &) = delete;
+                thread(thread &&) = default;
+                thread &operator=(thread &&) = default;
+
+            protected:
+                // thread_local detail::io::buffer buffer_;  ///< Per-thread log buffer.
+            };
+
+            ///@}
+
+        }  // namespace detail
+
+    }  // namespace lognew
+
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
 
     namespace log {
 
@@ -140,16 +230,6 @@ namespace vidre {
         inline namespace io {
             class stream;
         }  // namespace io
-
-        namespace detail {
-
-            /**@addtogroup api-core-log-details
-             * */
-            ///@{
-
-            ///@}
-
-        }  // namespace detail
 
         /**@addtogroup api-core-log-details
          * */

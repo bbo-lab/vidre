@@ -167,7 +167,7 @@ namespace vidre {
              * The magic number is expected to be written as byte sequence, therefore,
              * also giving information about the endianness of the file.
              * */
-            static constexpr uint64_t magic = 0x56696452'6542424F;  ///< File magic ("VidReBBO").
+            static constexpr uint64_t magic = 0x4F424265'52646956;  ///< File magic ("VidReBBO").
 
             /** Version layout.
              * */
@@ -199,8 +199,9 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                data = 0x0001,   ///< Plain data (see @ref FIXME).
-                group = 0x0002,  ///< Grouped data (see @ref FIXME).
+                log = 0x0001,    ///< Log messages (see @ref vidre::log).
+                data = 0x0002,   ///< Plain data (see @ref FIXME).
+                group = 0x0003,  ///< Grouped data (see @ref FIXME).
 
                 video = 0x0010,  ///< Video meta-data (see @ref FIXME).
                 audio = 0x0020,  ///< Audio meta-data (see @ref FIXME).
@@ -216,7 +217,7 @@ namespace vidre {
                 natural = 0x0003,  ///< 64-bit unsigned integer.
                 number = 0x0004,   ///< 64-bit floating-point value (double).
                 // FIXME '->need IEEE854 representation due to endianness issues!
-                string = 0x0005,   ///< UTF-8 sequence (zero-terminated).
+                string = 0x0005,  ///< UTF-8 sequence (zero-terminated).
 
                 isodate = 0x0010,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
                 timestamp = 0x0011,  ///< Timestamp.
@@ -353,10 +354,7 @@ namespace vidre {
                     /** Write entry to sink.
                      * */
                     virtual offset_type put(io::sink &f) const noexcept {
-                        return f.put({
-                            sizeof(prefix),
-                            reinterpret_cast<memory::const_pointer>(&prefix)
-                        });
+                        return f.put({sizeof(prefix), reinterpret_cast<memory::const_pointer>(&prefix)});
                     }
 
                     /** Read data from source.
@@ -410,43 +408,43 @@ namespace vidre {
                 /** Group of TLV entries.
                  * */            /** Data packet base type.
              * */
-            struct VIDRE_CORE_VISIBILITY packet {
-                vidre::uuid uuid{};  ///< Packet type (e.g., video, audio, metadata).
-                uint32_t stream{};   ///< Stream identifier (e.g., for multiplexed streams).
-                // /** Function type for putting a packet-based streams into a sink.
-                //  * */
-                // using put_type = void (*)(const io::packet &source, io::sink &sink);
+                struct VIDRE_CORE_VISIBILITY packet {
+                    vidre::uuid uuid{};  ///< Packet type (e.g., video, audio, metadata).
+                    uint32_t stream{};   ///< Stream identifier (e.g., for multiplexed streams).
+                    // /** Function type for putting a packet-based streams into a sink.
+                    //  * */
+                    // using put_type = void (*)(const io::packet &source, io::sink &sink);
 
-                // put_type putter{};   ///< Function pointer for putting this packet into a sink.
+                    // put_type putter{};   ///< Function pointer for putting this packet into a sink.
 
-                // public:
-                //     using selector_type = put_type (*)(const io::packet &source, const io::packet &sink);
-                //     using map_type = ankerl::unordered_dense::map<vidre::uuid, selector_type>;
+                    // public:
+                    //     using selector_type = put_type (*)(const io::packet &source, const io::packet &sink);
+                    //     using map_type = ankerl::unordered_dense::map<vidre::uuid, selector_type>;
 
-                // protected:
-                //     static map_type registry;  ///< Static map for registering packet types and their put functions.
+                    // protected:
+                    //     static map_type registry;  ///< Static map for registering packet types and their put functions.
 
-                // public:
-                //     /** Register a "selector" function.
-                //      * */
-                //     static void enregister(const vidre::uuid &uuid, selector_type func) {
-                //         auto it = registry.find(uuid);
-                //         if (it != registry.end())
-                //             throw vidre::exception() << error::message("packet type already registered");
+                    // public:
+                    //     /** Register a "selector" function.
+                    //      * */
+                    //     static void enregister(const vidre::uuid &uuid, selector_type func) {
+                    //         auto it = registry.find(uuid);
+                    //         if (it != registry.end())
+                    //             throw vidre::exception() << error::message("packet type already registered");
 
-                //         registry[uuid] = func;
-                //     }
+                    //         registry[uuid] = func;
+                    //     }
 
-                //     /** Retrieve selector function.
-                //      * */
-                //     static selector_type retrieve(const vidre::uuid &uuid) {
-                //         auto it = registry.find(uuid);
-                //         if (it == registry.end())
-                //             throw vidre::exception() << error::message("packet type not registered");
+                    //     /** Retrieve selector function.
+                    //      * */
+                    //     static selector_type retrieve(const vidre::uuid &uuid) {
+                    //         auto it = registry.find(uuid);
+                    //         if (it == registry.end())
+                    //             throw vidre::exception() << error::message("packet type not registered");
 
-                //         return it->second;
-                //     }
-            };
+                    //         return it->second;
+                    //     }
+                };
 
                 struct VIDRE_CORE_VISIBILITY group : public virtual sequence {
                     group() noexcept = default;
