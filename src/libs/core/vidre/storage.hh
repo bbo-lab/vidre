@@ -46,6 +46,5 @@
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/storage/raw.hh>
 
 #endif  // VIDRE_CORE_STORAGE_HH

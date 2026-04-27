@@ -386,6 +386,10 @@ namespace vidre {
                 return read(v);
             }
 
+            offset_type get(memory::area v) {
+                return read(v);
+            }
+
             /** Wait (indefinitely) for data to become available.
              * @returns True if data is available, false if the wait was interrupted.
              * @see vidre::event

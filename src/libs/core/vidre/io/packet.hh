@@ -29,6 +29,11 @@
  * @details
  * @fileinfo
  *
+ * Packet-based I/O is designed for handling variable-sized data units, such as video frames or audio
+ * samples, which may not fit well into a stream-based model. It provides a structured way to read and
+ * write packets of data, each with its own header and payload. This allows for more efficient processing
+ * and better support for multiplexed data streams.
+ *
  * @{
  * @namespace vidre::io::packet Packet-based I/O types.
  * @}
@@ -43,6 +48,29 @@ namespace vidre {
 
     namespace io {
 
+        namespace detail {
+
+            /**@addtogroup api-core-io-details
+             * */
+            ///@{
+
+            /** Require IEEE 754 floating point types.
+             * The internal packet system only works at this moment, if the standard 
+             * floating point data types conform to the IEEE 754 standard. 
+             * 
+             * If, though, raw file storage has a system description in the header, 
+             * this requirement could be relaxed in the future.
+             * 
+             * @todo decide how to implement non-IEEE 754 (an "endianness" field could be extended with "strange" system types...?)
+             * */
+            static_assert(std::numeric_limits<float>::is_iec559);
+            static_assert(sizeof(float) == sizeof(uint32_t));
+            static_assert(sizeof(double) == sizeof(uint64_t));
+
+            ///@}
+
+        }  // namespace detail
+
         namespace packet {
 
             /**@addtogroup api-core-io-packet
@@ -54,8 +82,8 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                log = 0x0001,  ///< Log messages (see @ref vidre::log).
-                // range 0x0002 - 0x000F are reserved for storage::raw
+                log = 0x0001,   ///< Log messages (see @ref vidre::log).
+                data = 0x0002,  ///< Arbitrary data (see @ref FIXME).
 
                 // standard types
                 video = 0x0010,  ///< Video data (see @ref FIXME).
@@ -66,90 +94,30 @@ namespace vidre {
                 user = 0x8000,  ///< User-defined packet types (see @ref FIXME).
             };
 
-            /** Sub-type "video" minor types.
+            /** Data types.
              * */
-            enum class video : uint16_t {
-                undefined = 0x0000,  ///< Video format is undefined, relevant information is embedded in the stream config.
+            enum class data : uint16_t {
+                group = 0x0000,  ///< Grouped packet (see @ref FIXME).
 
-                packed = 0x0001,  ///< Data is packed (flag).
-                mask = 0xFFFE,    ///< Mask for extracting format.
+                binary = 0x0008,  ///< Binary data (see @ref FIXME).
 
-                // standard monochrome formats
-                mono8 = 0x0100,
-                mono8_packed = 0x0101,
-                mono10 = 0x0110,
-                mono10_packed = 0x0111,
-                mono12 = 0x0120,
-                mono12_packed = 0x0121,
-                mono14 = 0x0130,
-                mono14_packed = 0x0131,
-                mono16 = 0x0140,
+                nil = 0x0010,      ///< Nil value (no data).
+                boolean = 0x0011,  ///< Boolean value (true/false).
+                integer = 0x0012,  ///< 64-bit signed integer.
+                natural = 0x0013,  ///< 64-bit unsigned integer.
+                number = 0x0014,   ///< 64-bit floating-point value (double).
+                string = 0x0015,   ///< UTF-8 sequence (zero-terminated).
 
-                // standard Bayer formats
-                bggr8 = 0x0200,
-                // FIXME...
-
-                // standard RGB formats
-                rgba32 = 0x0300,
+                isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
+                timestamp = 0x0021,  ///< Timestamp.
+                localtime = 0x0022,  ///< Local time (timestamp with timezone information).
             };
 
-            ///@cond
-            inline video operator|(video lhs, video rhs) noexcept {
-                return static_cast<video>(to_underlying(lhs) | to_underlying(rhs));
-            }
-            inline video &operator|=(video &lhs, video rhs) noexcept {
-                lhs = lhs | rhs;
-                return lhs;
-            }
-            inline video operator&(video lhs, video rhs) noexcept {
-                return static_cast<video>(to_underlying(lhs) & to_underlying(rhs));
-            }
-            inline video &operator&=(video &lhs, video rhs) noexcept {
-                lhs = lhs & rhs;
-                return lhs;
-            }
-            inline video operator~(video v) noexcept {
-                return static_cast<video>(~to_underlying(v));
-            }
-            ///@endcond
-
-            /** Sub-type "audio" minor types.
+            /** Minor type of a packet.
              * */
-            enum class audio : uint16_t {
-                undefined = 0x0000,
-
-                bits = 0x000F,      ///< Mask for extracting bits per sample.
-                type = 0x00F0,      ///< Mask for extracting audio type.
-                encoding = 0xFF00,  ///< Mask for extracting audio encoding.
-
-                // standard audio types
-                mono = 0x0010,
-                stereo = 0x0020,
-                multichannel = 0x0030,
-
-                // standard audio encodings
-                // FIXME...
+            enum class minor : uint16_t {
+                group = 0x0000,  ///< Grouped packet.
             };
-
-            ///@cond
-            inline audio operator|(audio lhs, audio rhs) noexcept {
-                return static_cast<audio>(to_underlying(lhs) | to_underlying(rhs));
-            }
-            inline audio &operator|=(audio &lhs, audio rhs) noexcept {
-                lhs = lhs | rhs;
-                return lhs;
-            }
-            inline audio operator&(audio lhs, audio rhs) noexcept {
-                return static_cast<audio>(to_underlying(lhs) & to_underlying(rhs));
-            }
-            inline audio &operator&=(audio &lhs, audio rhs) noexcept {
-                lhs = lhs & rhs;
-                return lhs;
-            }
-            inline audio operator~(audio v) noexcept {
-                return static_cast<audio>(~to_underlying(v));
-            }
-            ///@endcond
 
             /** Packet header.
              * */
@@ -181,6 +149,14 @@ namespace vidre {
             struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY base {
                 header hdr{};       ///< Packet header.
                 uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
+
+                offset_type put(io::sink &f) const noexcept {
+                    return f.put({sizeof(base), reinterpret_cast<memory::const_pointer>(this)});
+                }
+
+                offset_type get(io::source &s) noexcept {
+                    return s.get({sizeof(base), reinterpret_cast<memory::pointer>(this)});
+                }
             };
 
             ///@}
