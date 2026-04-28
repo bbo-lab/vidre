@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators_all.hpp>
 
+#include <iostream>
+
 #include <vidre/util/macros.hh>
 #define PREPARE(...)                             \
     UNSCOPED_INFO(VIDRE_STRINGIFY(__VA_ARGS__)); \
@@ -11,6 +13,13 @@ struct array_wrapper : std::array<T, N> {
     template <typename... ArgTs>
     constexpr array_wrapper(ArgTs &&...args) : std::array<T, N>{std::forward<ArgTs>(args)...} {}
 };
+
+#include <vidre/io/types.hh>
+using namespace vidre;
+TEST_CASE("types.hh", "[vidre/io]") {
+    std::cout << (sizeof(io::result)) << std::endl;
+}
+
 
 #if 0
 #include <vidre/storage/bit.hh>

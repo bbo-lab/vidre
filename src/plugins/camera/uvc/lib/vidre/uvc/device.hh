@@ -94,7 +94,7 @@ namespace vidre {
                     return mode::packet;
                 }
 
-                io::offset_type get(memory::area &v) override {
+                io::result get(memory::area &v) override {
                     // not allowed
                     return io::invalid<io::offset_type>;
                 }

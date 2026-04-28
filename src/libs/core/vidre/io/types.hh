@@ -202,6 +202,44 @@ namespace vidre {
         requires std::is_integral_v<T>
         inline constexpr T invalid = static_cast<T>(-1);
 
+        /** IO result.
+         * */
+        struct result {
+            bool error{};       ///< Flag indicating whether an error occurred.
+            size_type count{};  ///< Number of bytes read/written, or @c invalid on failure.
+
+            result() = default;
+            result(const result &) = default;
+            result &operator=(const result &) = default;
+            result(result &&) = default;
+            result &operator=(result &&) = default;
+
+            result(offset_type n) noexcept : error(n == invalid<offset_type>), count(n * !error) {}
+
+            /** Check if the operation was successful.
+             * @returns @c true if the operation succeeded, @c false otherwise.
+             * */
+            operator bool() const noexcept {
+                return !error;
+            }
+
+            result &operator+=(const result &other) noexcept {
+                error = error || other.error;
+                if (!error)
+                    count += other.count;
+                return *this;
+            }
+
+            result &operator+=(offset_type n) noexcept {
+                if (n == invalid<offset_type>)
+                    error = true;
+                else if (!error)
+                    count += n;
+
+                return *this;
+            }
+        };
+
         /** Data sink skeleton.
          *
          * The sink class provides a skeleton for data sinks, such as files or filter inputs.
@@ -284,13 +322,13 @@ namespace vidre {
              * @param v Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type put(const memory::view &v) {
+            virtual result put(const memory::view &v) {
                 return write(v);
             }
 
             template <typename T>
             requires (not std::derived_from<T, memory::view>)
-            offset_type put(const T &v) {
+            result put(const T &v) {
                 return put({sizeof(T), reinterpret_cast<const memory::const_pointer>(&v)});
             }
 
@@ -298,7 +336,7 @@ namespace vidre {
              * @param p Pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type put(const packet::base *p) {
+            virtual result put(const packet::base *p) {
                 // FIXME
                 return invalid<offset_type>;
             }
@@ -388,11 +426,11 @@ namespace vidre {
              * @throw exception::runtime for other errors
              * @returns Number of bytes actually read (@c invalid for read failure).
              * */
-            virtual offset_type get(memory::area &v) {
+            virtual result get(memory::area &v) {
                 return read(v);
             }
 
-            offset_type get(memory::area v) {
+            result get(memory::area v) {
                 return read(v);
             }
 

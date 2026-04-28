@@ -192,7 +192,7 @@ namespace vidre {
 
                 /** Write the packet to a sink.
                  * @param f The sink to write to.
-                 * @return The number of bytes written.
+                 * @return The result of the write operation, including any error status and the number of bytes written.
                  * @internal
                  * This method, even though virtual, should always be inlined by
                  * the compiler, allowing for efficient packet writing without
@@ -200,13 +200,13 @@ namespace vidre {
                  * determine the packet type at compile time.
                  * @endinternal
                  * */
-                virtual offset_type put(io::sink &f) const {
+                virtual result put(io::sink &f) const {
                     return f.put({sizeof(basic), reinterpret_cast<memory::const_pointer>(this)});
                 }
 
                 /** Helper for padding.
                  * */
-                offset_type pad(io::sink &f) const {
+                result pad(io::sink &f) const {
                     size_t padding = size() - length;
                     if (padding > 0) {
                         static const uint8_t padbuf[alignment] = {};
@@ -226,7 +226,7 @@ namespace vidre {
                 packe we want to read at compile time...
 
                 */
-                offset_type get(io::source &s) noexcept {
+                result get(io::source &s) noexcept {
                     return s.get({sizeof(basic), reinterpret_cast<memory::pointer>(this)});
                 }
             };

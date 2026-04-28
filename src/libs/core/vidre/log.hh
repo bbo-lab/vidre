@@ -180,17 +180,8 @@ namespace vidre {
                           to_underlying(lvl)},
                          0}) {}
 
-            io::offset_type put(io::sink &f) const override {
-                io::offset_type written = basic::put(f);
-                if (written < 0)
-                    return written;
-
-                io::offset_type tmp = f.put(timestamp);
-                if (tmp < 0)
-                    return tmp;
-                written += tmp;
-
-                return written;
+            io::result put(io::sink &f) const override {
+                return basic::put(f) + f.put(timestamp);
             }
         };
 
