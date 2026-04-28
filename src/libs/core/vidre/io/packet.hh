@@ -41,6 +41,8 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>
+#include <vidre/util/uuid.hh>
+#include <vidre/util/chrono.hh>
 
 #include <functional>
 
@@ -55,12 +57,12 @@ namespace vidre {
             ///@{
 
             /** Require IEEE 754 floating point types.
-             * The internal packet system only works at this moment, if the standard 
-             * floating point data types conform to the IEEE 754 standard. 
-             * 
-             * If, though, raw file storage has a system description in the header, 
+             * The internal packet system only works at this moment, if the standard
+             * floating point data types conform to the IEEE 754 standard.
+             *
+             * If, though, raw file storage has a system description in the header,
              * this requirement could be relaxed in the future.
-             * 
+             *
              * @todo decide how to implement non-IEEE 754 (an "endianness" field could be extended with "strange" system types...?)
              * */
             static_assert(std::numeric_limits<float>::is_iec559);
@@ -77,13 +79,17 @@ namespace vidre {
              * */
             ///@{
 
+            /** Byte alignment.
+             * */
+            inline constexpr size_t alignment = 8;
+
             /** Major type of a packet.
              * */
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                log = 0x0001,   ///< Log messages (see @ref vidre::log).
-                data = 0x0002,  ///< Arbitrary data (see @ref FIXME).
+                log = 0x0001,    ///< Log messages (see @ref vidre::log).
+                plain = 0x0002,  ///< Plain data (see @ref FIXME).
 
                 // standard types
                 video = 0x0010,  ///< Video data (see @ref FIXME).
@@ -96,21 +102,23 @@ namespace vidre {
 
             /** Data types.
              * */
-            enum class data : uint16_t {
+            enum class plain : uint16_t {
                 group = 0x0000,  ///< Grouped packet (see @ref FIXME).
+
+                nil = 0x0001,      ///< Nil value (no data).
+                boolean = 0x0002,  ///< Boolean value (true/false).
+                integer = 0x0003,  ///< 64-bit signed integer.
+                natural = 0x0004,  ///< 64-bit unsigned integer.
+                number = 0x0005,   ///< 64-bit floating-point value (double).
+                string = 0x0006,   ///< UTF-8 sequence (not! zero-terminated).
 
                 binary = 0x0008,  ///< Binary data (see @ref FIXME).
 
-                nil = 0x0010,      ///< Nil value (no data).
-                boolean = 0x0011,  ///< Boolean value (true/false).
-                integer = 0x0012,  ///< 64-bit signed integer.
-                natural = 0x0013,  ///< 64-bit unsigned integer.
-                number = 0x0014,   ///< 64-bit floating-point value (double).
-                string = 0x0015,   ///< UTF-8 sequence (zero-terminated).
+                isodate = 0x000A,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
+                timestamp = 0x000B,  ///< Timestamp.
+                localtime = 0x000C,  ///< Local time (timestamp with timezone information).
 
-                isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
-                timestamp = 0x0021,  ///< Timestamp.
-                localtime = 0x0022,  ///< Local time (timestamp with timezone information).
+                uuid = 0x000F,  ///< UUID (128-bit universally unique identifier).
             };
 
             /** Minor type of a packet.
@@ -119,9 +127,9 @@ namespace vidre {
                 group = 0x0000,  ///< Grouped packet.
             };
 
-            /** Packet header.
+            /** Packet ID.
              * */
-            struct __vidre_packed__(4) VIDRE_CORE_VISIBILITY header {
+            struct __vidre_packed__(4) VIDRE_CORE_VISIBILITY id {
                 uint16_t major{};  ///< Major packet type.
                 uint16_t minor{};  ///< Sub-type.
 
@@ -144,18 +152,82 @@ namespace vidre {
                 }
             };
 
-            /** Base class for stream packets.
+            /** Stream packets.
+             * This reflects the basic type of a packet ([TLV
+             * encoded](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)),
+             * which is used for dispatching to the appropriate handler. The
+             * actual content of the packet is determined by the major and minor
+             * types, and may be further specified by the stream ID (e.g., for
+             * multiplexed streams).
              * */
-            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY base {
-                header hdr{};       ///< Packet header.
+            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY basic {
+                id type{};          ///< Packet ID.
                 uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
+                uint64_t length{};  ///< Size of the packet payload (excluding the header).
 
-                offset_type put(io::sink &f) const noexcept {
-                    return f.put({sizeof(base), reinterpret_cast<memory::const_pointer>(this)});
+                constexpr std::size_t hash() const noexcept {
+                    return type.hash();
                 }
 
+                basic() = default;
+                basic(const basic &) = delete;
+                basic &operator=(const basic &) = delete;
+                basic(basic &&) = default;
+                basic &operator=(basic &&) = default;
+
+                basic(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : type{type_}, stream(stream), length(length) {}
+                basic(uint16_t major, uint16_t minor, uint32_t stream = 0, uint64_t length = 0) noexcept
+                    : type{major, minor}, stream(stream), length(length) {}
+                virtual ~basic() = default;
+
+                /** Get storage size (aligned).
+                 * */
+                constexpr size_t size() const noexcept {
+                    return (length + alignment - 1) & ~(alignment - 1);
+                }
+
+                /** Update packet length (if applicable).
+                 * */
+                virtual void update() noexcept {}
+
+                /** Write the packet to a sink.
+                 * @param f The sink to write to.
+                 * @return The number of bytes written.
+                 * @internal
+                 * This method, even though virtual, should always be inlined by
+                 * the compiler, allowing for efficient packet writing without
+                 * the overhead of virtual function calls when the compiler can
+                 * determine the packet type at compile time.
+                 * @endinternal
+                 * */
+                virtual offset_type put(io::sink &f) const {
+                    return f.put({sizeof(basic), reinterpret_cast<memory::const_pointer>(this)});
+                }
+
+                /** Helper for padding.
+                 * */
+                offset_type pad(io::sink &f) const {
+                    size_t padding = size() - length;
+                    if (padding > 0) {
+                        static const uint8_t padbuf[alignment] = {};
+                        return f.put({padding, padbuf});
+                    }
+                    return 0;
+                }
+
+                /* FIXME how to handle packet-based loading?
+
+                There should be some internal mapping of T <-> reader. The
+                reader should return "basic *" (freshly allocated) or "T*"?
+
+                -> requires some form of registry...
+
+                Note: virtual doesn't cut it here, we do not know what type of
+                packe we want to read at compile time...
+
+                */
                 offset_type get(io::source &s) noexcept {
-                    return s.get({sizeof(base), reinterpret_cast<memory::pointer>(this)});
+                    return s.get({sizeof(basic), reinterpret_cast<memory::pointer>(this)});
                 }
             };
 
@@ -170,9 +242,15 @@ namespace vidre {
 ///@cond
 namespace std {
     template <>
-    struct hash<vidre::io::packet::header> {
-        size_t operator()(const vidre::io::packet::header &h) const noexcept {
+    struct hash<vidre::io::packet::id> {
+        size_t operator()(const vidre::io::packet::id &h) const noexcept {
             return h.hash();
+        }
+    };
+    template <>
+    struct hash<vidre::io::packet::basic> {
+        size_t operator()(const vidre::io::packet::basic &b) const noexcept {
+            return b.hash();
         }
     };
 }  // namespace std

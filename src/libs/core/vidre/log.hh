@@ -112,6 +112,7 @@
 #include <vidre/cpp/format.hh>
 #include <vidre/io/types.hh>
 #include <vidre/io/packet.hh>
+#include <vidre/util/chrono.hh>
 
 #include <limits>
 #include <vector>
@@ -171,15 +172,26 @@ namespace vidre {
 
         /** Log-message packet.
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public io::packet::base {
-            uint64_t timestamp[2]{};  ///< FIXME Timestamp.
-            const char *message{};    ///< Pointer to message data.
-            const char pad[8]{};      ///< Padding helper.
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public io::packet::basic {
+            chrono::timestamp timestamp{};  ///< Timestamp.
 
-            packet(level lvl) noexcept                           //
-                : base({{to_underlying(io::packet::major::log),  //
-                         to_underlying(lvl)},
-                        0}) {}
+            packet(level lvl) noexcept                            //
+                : basic({{to_underlying(io::packet::major::log),  //
+                          to_underlying(lvl)},
+                         0}) {}
+
+            io::offset_type put(io::sink &f) const override {
+                io::offset_type written = basic::put(f);
+                if (written < 0)
+                    return written;
+
+                io::offset_type tmp = f.put(timestamp);
+                if (tmp < 0)
+                    return tmp;
+                written += tmp;
+
+                return written;
+            }
         };
 
         ///@}

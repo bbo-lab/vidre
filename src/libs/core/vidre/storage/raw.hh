@@ -27,10 +27,12 @@
 /**@addtogroup api-core-storage-raw
  * @details
  * @fileinfo
+ * 
+ * FIXME needs rewrite, because we're already using TLV (see io::packet)...
  *
  * The raw file format uses [Type-Length-Value](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)
- * (TLV) encoding, inspired by the design principles of ASN.1 (note also some
- * discomfort with other existing file formats such as BigTIFF).
+ * (TLV) encoding, inspired by the design principles of ASN.1, which is also
+ * used internally for packet transmissions. 
  *
  * The primary goals are:
  *
@@ -78,6 +80,7 @@
  * @code{.unparsed}
  * <magic>              // 8 bytes
  * <version>            // 8 bytes (4 bytes major, 4 bytes minor)
+ * <uuid>               // 16 bytes (for non-standard OS identification)
  * <plain group         // 16+n bytes
  *    <metadata>*       // m*(16+n) bytes
  * >

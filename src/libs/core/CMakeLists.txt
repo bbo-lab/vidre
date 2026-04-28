@@ -52,6 +52,7 @@ vidre_library(vidrecore SHARED
             vidre/util/events.hh
             vidre/util/endian.hh
             vidre/util/bit.hh vidre/util/bit.cc
+            vidre/util/chrono.hh vidre/util/chrono.cc
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
         vidre/memory.hh vidre/memory.cc

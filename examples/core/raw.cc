@@ -1,5 +1,6 @@
 #include <vidre/storage/raw.hh>
-#include <vidre/video.hh>
+#include <vidre/util/chrono.hh>
+// #include <vidre/video.hh>
 #include <vidre/log.hh>
 
 #include <format>
@@ -9,6 +10,7 @@
 #include "benchmark/benchmark.hh"
 
 using namespace vidre;
+#if 0
 namespace raw = vidre::storage::raw;
 
 #define REPEAT 10000000
@@ -88,10 +90,15 @@ namespace variable {
     //! [dynamic-elements]
 }  // namespace variable
 
+#endif
+
 int main(int argc, const char **argv) {
     log::io::stream::threshold(0, log::level::trace);
     log::trace::pattern("*");
 
+    std::cout << chrono::isodate::now() << std::endl;
+
+#if 0
     std::locale::global(std::locale(""));
 
     log::info() << std::format("Running raw storage benchmark with {:L} iterations.", REPEAT) << log::endl << log::endl;
@@ -191,6 +198,7 @@ int main(int argc, const char **argv) {
     // remove temporary files
     storage::file::remove(PROJECT_BINARY_DIR "/fixed.tmp");
     storage::file::remove(PROJECT_BINARY_DIR "/dynamic.tmp");
+#endif
 
     return 0;
 }

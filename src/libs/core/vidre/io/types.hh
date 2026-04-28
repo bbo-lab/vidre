@@ -288,6 +288,12 @@ namespace vidre {
                 return write(v);
             }
 
+            template<typename T>
+            requires (not std::derived_from<T, memory::view>)
+            offset_type put(const T &v) {
+                return put({sizeof(T), reinterpret_cast<const memory::const_pointer>(&v)});
+            }
+
             /** Write a packet.
              * @param p Pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
