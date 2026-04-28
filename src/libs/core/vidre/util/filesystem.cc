@@ -46,11 +46,11 @@ std::vector<fs::path> vidre::find_files(const fs::path &root, const std::regex &
 std::string vidre::loadfile(const fs::path &filename) {
     std::string retval;
 
-    FILE *f = fopen(filename.c_str(), "r");
+    FILE *f = fopen(filename.string().c_str(), "r");
     if (not f)
         throw exception::runtime()  //
             << error::system()      //
-            << error::location(filename.c_str());
+            << error::location(filename.string().c_str());
 
     char buf[1024];
     while (not feof(f)) {

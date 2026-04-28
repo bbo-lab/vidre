@@ -13,7 +13,7 @@ set(VIDRE_DEPS
     libyuv
     lua
     terminal
-    units
+    # units
     yaml
     unordered_dense
 

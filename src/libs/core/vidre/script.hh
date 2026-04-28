@@ -112,7 +112,7 @@ namespace vidre {
              * @param field  "cpath" or "path"
              * */
             void addpath(const std::filesystem::path &path, const std::string &field) {
-                addpackage(path, field);
+                addpackage(path.string(), field);
             }
 
             /** Execute a string.

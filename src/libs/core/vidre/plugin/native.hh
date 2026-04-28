@@ -28,7 +28,7 @@
 #include <vidre/plugin/exception.hh>
 #include <vidre/plugin/information.hh>
 
-#if defined(_MSC_VER)
+#if VIDRE_HOST_WINDOWS
 #include <libloaderapi.h>
 #define VIDRE_USING_LIBLOADERAPI
 #else

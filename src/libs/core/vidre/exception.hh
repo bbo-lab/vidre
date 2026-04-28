@@ -45,6 +45,7 @@
 #include <vidre/util/shared.hh>
 
 #include <source_location>
+#include <system_error>
 #include <string>
 #include <expected>
 

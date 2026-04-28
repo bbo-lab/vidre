@@ -152,10 +152,11 @@ add_subdirectory(icons)
 add_subdirectory(share)
 add_subdirectory(src)
 
-install(EXPORT VidreTargets-${Vidre_RELEASE}
-    DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
-    COMPONENT "development"
-)
+# FIXME
+# install(EXPORT VidreTargets-${Vidre_RELEASE}
+#     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+#     COMPONENT "development"
+# )
 
 add_subdirectory(docs) 
 
