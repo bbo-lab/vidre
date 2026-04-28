@@ -288,7 +288,7 @@ namespace vidre {
                 return write(v);
             }
 
-            template<typename T>
+            template <typename T>
             requires (not std::derived_from<T, memory::view>)
             offset_type put(const T &v) {
                 return put({sizeof(T), reinterpret_cast<const memory::const_pointer>(&v)});
@@ -405,8 +405,7 @@ namespace vidre {
             }
 
             /** Wait for data to become available, with a timeout.
-             * @param timeout The maximum time to wait#include <vidre/cpp/util.hh>
- for data (milliseconds).
+             * @param timeout The maximum time to wait#include <vidre/cpp/util.hh> for data (milliseconds).
              * @returns True if data is available, false if the wait timed out or was interrupted.
              * @see vidre::event
              * */
