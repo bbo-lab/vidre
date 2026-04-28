@@ -175,13 +175,26 @@ namespace vidre {
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public io::packet::basic {
             chrono::timestamp timestamp{};  ///< Timestamp.
 
-            packet(level lvl) noexcept                            //
-                : basic({{to_underlying(io::packet::major::log),  //
-                          to_underlying(lvl)},
-                         0}) {}
+            packet(level lvl, uint16_t stream = 0) noexcept     //
+                : basic(to_underlying(io::packet::major::log),  //
+                        to_underlying(lvl), stream, sizeof(timestamp)) {}
 
             io::result put(io::sink &f) const override {
                 return basic::put(f) + f.put(timestamp);
+            }
+
+            /** Get log level.
+             * @returns The log level of this message.
+             * */
+            level log_level() const noexcept {
+                return static_cast<level>(type.minor);
+            }
+
+            /** Get the log message.
+             * @returns A view of the log message.
+             * */
+            std::string_view message() noexcept {
+                return std::string_view{reinterpret_cast<const char *>(this) + sizeof(packet), length - sizeof(timestamp)};
             }
         };
 
@@ -209,8 +222,26 @@ namespace vidre {
 
             protected:
                 static thread_local io::detail::buffer buffer_;  ///< Per-thread buffer.
+                lognew::packet *ptr_{};                          // Pointer to the current packet being constructed.
 
             public:
+                /** Make packet. */
+                lognew::packet *make(level lvl, uint16_t stream = 0) noexcept {
+                    if ((buffer_.size - buffer_.used) < sizeof(lognew::packet))
+                        return nullptr;
+
+                    if (ptr_) {
+                        // FIXME check if terminated...
+                    }
+                    ptr_ = reinterpret_cast<lognew::packet *>(buffer_.data + buffer_.used);
+                    new (ptr_) lognew::packet(lvl, stream);
+                    buffer_.used += sizeof(lognew::packet);
+                    return ptr_;
+                }
+
+                /** Finalize packet.
+                 * */
+                void finalize() noexcept {}
             };
 
             ///@}
