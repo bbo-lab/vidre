@@ -145,21 +145,24 @@ namespace vidre {
             monotonic::time_point monotonic_ = monotonic::now();  ///< Reference point for monotonic time.
 
         public:
-            /** Get the UTC's reference time point.
+            /** Get the reference clock.
              * */
-            auto clock() const noexcept {
-                return clock_;
-            }
-
-            /** Get the monotonic reference time point.
-             * */
-            auto monotonic() const noexcept {
-                return monotonic_;
-            }
+            template<class T>
+            auto get() const noexcept;
         };
 
+        template<>
+        inline auto reference::get<clock>() const noexcept {
+            return clock_;
+        }
+
+        template<>
+        inline auto reference::get<monotonic>() const noexcept {
+            return monotonic_;
+        }
+
         inline clock::time_point timestamp::to_utc(const reference &ref) const noexcept {
-            return ref.clock() - ref.monotonic().time_since_epoch() + std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec);
+            return ref.get<clock>() - ref.get<monotonic>().time_since_epoch() + std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec);
         }
 
         /** Simple timer.

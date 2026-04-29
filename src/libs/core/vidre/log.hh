@@ -113,9 +113,18 @@
 #include <vidre/io/types.hh>
 #include <vidre/io/packet.hh>
 #include <vidre/util/chrono.hh>
+#include <vidre/util/events.hh>
+#include <vidre/exception.hh>
+
+#include <ankerl/unordered_dense.h>
 
 #include <limits>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <string>
+#include <string_view>
+#include <optional>
 
 #if defined(DEBUG)
 #include <source_location>
@@ -193,7 +202,6 @@ namespace vidre {
                         to_underlying(lvl), stream, sizeof(timestamp))
                 , timestamp{chrono::timestamp::now()} {}
 
-
             io::result put(io::sink &f) const override {
                 return basic::put(f) + f.put(timestamp);
             }
@@ -202,7 +210,7 @@ namespace vidre {
              * @returns The log level of this message.
              * */
             template <std::endian E = std::endian::native>
-            lognew::level level() const noexcept {
+            lognew::level get_level() const noexcept {
                 return static_cast<lognew::level>(type.minor);
             }
 
@@ -230,39 +238,170 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY store {
             public:
+                using size_type = io::size_type;
+                using offset_type = io::offset_type;
+
+                static constexpr size_type alignment = io::packet::alignment;  ///< Required byte alignment for log packets.
+                static constexpr size_type size = VIDRE_CORE_LOG_BUFFER_SIZE;  ///< Default buffer size.
+
+            public:
                 store() = default;
                 store(const store &) = delete;
                 store &operator=(const store &) = delete;
-                store(store &&) = default;
-                store &operator=(store &&) = default;
+                store(store &&) = delete;
+                store &operator=(store &&) = delete;
 
             protected:
-                static thread_local io::detail::buffer buffer_;  ///< Per-thread buffer.
-                lognew::packet *ptr_{};                          // Pointer to the current packet being constructed.
+                static thread_local char buffer_[size];  ///< Per-thread buffer.
+
+                static thread_local std::mutex mutex_;     ///< Mutex for synchronizing access to the buffer.
+                static thread_local io::size_type begin_;  ///< Index of the beginning of unhandled packets.
+                static thread_local io::size_type end_;    ///< Index of the end of finalized packets.
+                static thread_local io::size_type used_;   ///< Index of the end of current packet.
+
+            private:
+                /** Flush buffer.
+                 * */
+                static void flush() noexcept {
+                    std::lock_guard<std::mutex> lock(mutex_);
+
+                    if (used_ > end_)
+                        return;
+
+                    if ((begin_ == end_) and (begin_ > 0)) {
+                        used_ = 0;
+                        end_ = begin_ = 0;
+                    }
+                }
 
             public:
-                /** Make packet. */
-                lognew::packet *make(level lvl, uint16_t stream = 0) noexcept {
-                    if ((buffer_.size - buffer_.used) < sizeof(lognew::packet))
+                /** Get free buffer space.
+                 * @returns The amount of buffer currently free.
+                 * */
+                static size_type free() noexcept {
+                    return size - used_;
+                }
+
+                /** Get a packet.
+                 * @note This method is to be called only from the log processing thread, which
+                 *       is responsible for handling the stored packets.
+                 * @see `pop()`
+                 * */
+                static lognew::packet *get() noexcept {
+                    std::lock_guard<std::mutex> lock(mutex_);
+
+                    if (begin_ >= end_)
                         return nullptr;
 
-                    if (ptr_) {
-                        // FIXME check if terminated...
-                    }
-                    ptr_ = reinterpret_cast<lognew::packet *>(buffer_.data + buffer_.used);
-                    new (ptr_) lognew::packet(lvl, stream);
-                    buffer_.used += sizeof(lognew::packet);
-                    return ptr_;
+                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
+                    return pkt;
+                }
+
+                /** Pop a packet.
+                 * @note This method is to be called only from the log processing thread, which
+                 *       is responsible for handling the stored packets.
+                 * */
+                static void pop() noexcept {
+                    std::lock_guard<std::mutex> lock(mutex_);
+
+                    if (begin_ >= end_)
+                        return;
+
+                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
+                    begin_ += sizeof(io::packet::basic) + pkt->size();
+                }
+
+                /** Generate packet.
+                 * @param lvl The log level of the packet.
+                 * @param stream The stream identifier (default: 0).
+                 * @returns A pointer to the generated packet, or nullptr if there is not enough space.
+                 * */
+                static lognew::packet *generate(level lvl, uint16_t stream = 0) noexcept {
+                    flush();
+
+                    if (free() < sizeof(lognew::packet))
+                        // should not happen...
+                        return nullptr;
+
+                    lognew::packet *ptr = reinterpret_cast<lognew::packet *>(buffer_ + used_);
+                    new (ptr) lognew::packet(lvl, stream);
+
+                    used_ += sizeof(lognew::packet);
+                    return ptr;
+                }
+
+                /** Add data to packet.
+                 * */
+                static void append(const std::string_view &sv) noexcept {
+                    if (used_ == end_)
+                        // should not happen...
+                        return;
+
+                    auto n = std::min(free(), sv.size());  // ignore, if there's not enough space
+
+                    std::memcpy(buffer_ + used_, sv.data(), n);
+                    used_ += n;
+
+                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
+                    pkt->length += n;
                 }
 
                 /** Finalize packet.
                  * */
-                void finalize() noexcept {}
+                static void finalize() {
+                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
+
+                    size_t padding = pkt->size() - pkt->length;
+                    if (padding > 0) {
+                        static const uint8_t padbuf[io::packet::alignment] = {};
+                        std::memcpy(buffer_ + used_, padbuf, padding);
+                        used_ += padding;
+                    }
+
+                    {
+                        std::lock_guard<std::mutex> lock(mutex_);
+                        end_ = used_;
+                    }
+
+                    // FIXME could notify log processing thread here
+                    //       (current implementation just cycles through buffers)
+                }
             };
 
             ///@}
 
         }  // namespace detail
+
+        /**@addtogroup api-core-log-details
+         * */
+        ///@{
+
+        class VIDRE_CORE_VISIBILITY thread {
+        public:
+            /** Get thread instance.
+             * */
+            static thread &instance();
+
+        private:
+            thread();
+            ~thread();
+
+            static std::atomic<bool> stop_;
+            static void worker();
+
+            struct impl;
+            std::unique_ptr<impl> impl_;
+
+            // map detail::store
+        };
+
+        ///@}
+
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
+
+        ///@}
 
     }  // namespace lognew
 

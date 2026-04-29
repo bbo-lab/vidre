@@ -27,13 +27,56 @@
 
 #include <array>
 #include <algorithm>
-#include <chrono>
 #include <ranges>
-#include <string_view>
+#include <iostream>
 
 using namespace vidre;
 
-thread_local io::detail::buffer vidre::lognew::detail::store::buffer_{VIDRE_CORE_LOG_BUFFER_SIZE};
+thread_local char vidre::lognew::detail::store::buffer_[VIDRE_CORE_LOG_BUFFER_SIZE] = {};
+
+thread_local std::mutex vidre::lognew::detail::store::mutex_{};
+thread_local io::size_type vidre::lognew::detail::store::begin_{};
+thread_local io::size_type vidre::lognew::detail::store::end_{};
+thread_local io::size_type vidre::lognew::detail::store::used_{};
+
+std::atomic<bool> vidre::lognew::thread::stop_{false};
+
+void vidre::lognew::thread::worker() {
+    while (!stop_) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+
+        // FIXME
+        // auto *p = detail::store::get();
+        // if (p) {
+        //     // FIXME emit...
+
+        //     detail::store::pop();
+        // }
+    }
+}
+
+struct vidre::lognew::thread::impl {
+    std::thread tid;
+
+    impl() : tid(worker) {
+        // FIXME schedule thread? (idle?)
+    }
+    ~impl() {
+        stop_ = true;
+        if (tid.joinable())
+            tid.join();
+    }
+};
+
+vidre::lognew::thread::thread() : impl_(std::make_unique<impl>()) {}
+vidre::lognew::thread::~thread() = default;
+
+vidre::lognew::thread &vidre::lognew::thread::instance() {
+    static lognew::thread instance;
+    return instance;
+}
+
+[[maybe_unused]] static auto& _log_init = vidre::lognew::thread::instance();
 
 // ============================================================================
 // ============================================================================

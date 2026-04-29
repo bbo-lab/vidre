@@ -44,7 +44,7 @@ int main(int argc, const char **argv) {
     t.start();
     {
         int res = 0;
-        for (int i = 0; i < REPEAT; ++i) {
+        for (unsigned i = 0; i < REPEAT; ++i) {
             res = increment_only(res, 0);
             debug::do_not_optimize(res);
         }
@@ -57,7 +57,7 @@ int main(int argc, const char **argv) {
     t.start();
     {
         int res = 0;
-        for (int i = 0; i < REPEAT; ++i) {
+        for (unsigned i = 0; i < REPEAT; ++i) {
             res = using_modulo(res, MODULO);
             debug::do_not_optimize(res);
         }
@@ -70,7 +70,7 @@ int main(int argc, const char **argv) {
     t.start();
     {
         int res = 0;
-        for (int i = 0; i < REPEAT; ++i) {
+        for (unsigned i = 0; i < REPEAT; ++i) {
             res = (res + 1) % MODULO;
             debug::do_not_optimize(res);
         }
@@ -83,7 +83,7 @@ int main(int argc, const char **argv) {
     t.start();
     {
         int res = 0;
-        for (int i = 0; i < REPEAT; ++i) {
+        for (unsigned i = 0; i < REPEAT; ++i) {
             res = using_if(res, MODULO);
             debug::do_not_optimize(res);
         }
@@ -96,7 +96,7 @@ int main(int argc, const char **argv) {
     t.start();
     {
         int res = 0;
-        for (int i = 0; i < REPEAT; ++i) {
+        for (unsigned i = 0; i < REPEAT; ++i) {
             res = using_unlikely(res, MODULO);
             debug::do_not_optimize(res);
         }
@@ -109,7 +109,7 @@ int main(int argc, const char **argv) {
     t.start();
     {
         int res = 0;
-        for (int i = 0; i < REPEAT; ++i) {
+        for (unsigned i = 0; i < REPEAT; ++i) {
             res = using_cmpmul(res, MODULO);
             debug::do_not_optimize(res);
         }
