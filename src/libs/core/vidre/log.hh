@@ -171,14 +171,28 @@ namespace vidre {
         ///@endinternal
 
         /** Log-message packet.
-         * @note In contrast to standard packages, FIXME
+         * @note In contrast to other packets, the log packet is not "groupable",
+         *       instead, the minor packet type indicates the log level.
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public io::packet::basic {
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public virtual io::packet::basic {
             chrono::timestamp timestamp{};  ///< Timestamp.
+                                            /// Note, that the timestamp is referenced to std::chrono::steady_clock,
+                                            /// which is a high-resolution, monotonic clock. This means that the timestamp
+                                            /// does not necessarily correspond to wall-clock time, but is suitable for measuring
+                                            /// time intervals and ordering log messages.
+
+            packet() = default;
+            packet(const packet &) = delete;
+            packet &operator=(const packet &) = delete;
+            packet(packet &&) = default;
+            packet &operator=(packet &&) = default;
+            virtual ~packet() = default;
 
             packet(level lvl, uint16_t stream = 0) noexcept     //
                 : basic(to_underlying(io::packet::major::log),  //
-                        to_underlying(lvl), stream, sizeof(timestamp)) {}
+                        to_underlying(lvl), stream, sizeof(timestamp))
+                , timestamp{chrono::timestamp::now()} {}
+
 
             io::result put(io::sink &f) const override {
                 return basic::put(f) + f.put(timestamp);
@@ -187,7 +201,7 @@ namespace vidre {
             /** Get log level.
              * @returns The log level of this message.
              * */
-            template<std::endian E = std::endian::native>
+            template <std::endian E = std::endian::native>
             lognew::level level() const noexcept {
                 return static_cast<lognew::level>(type.minor);
             }

@@ -25,15 +25,6 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "benchmark.raw",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/benchmark.raw",
-            "args": [],
-            "environment": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
             "name": "example.core.log",
             "type": "cppdbg",
             "request": "launch",

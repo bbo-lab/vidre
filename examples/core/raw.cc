@@ -94,7 +94,7 @@ int main(int argc, const char **argv) {
     log::io::stream::threshold(0, log::level::trace);
     log::trace::pattern("*");
 
-    std::cout << chrono::isodate::now() << std::endl;
+    std::cout << chrono::isodate::make(chrono::clock::now()) << std::endl;
 
 #if 0
     std::locale::global(std::locale(""));
