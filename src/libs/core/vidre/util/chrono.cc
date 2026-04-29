@@ -44,3 +44,12 @@ chrono::isodate chrono::isodate::now() noexcept {
     result.iso[31] = '\0';
     return result;
 }
+
+std::chrono::time_point<std::chrono::system_clock> chrono::isodate::parse(const std::string_view &) {
+    // TODO implement parsing from ISO 8601 date string (see
+    // https://chat.deepseek.com/a/chat/s/53fa0e95-8e7a-46a4-9170-7ea1fa20f055)
+
+    throw exception::logic() << error::message("invalid format");
+
+    return std::chrono::system_clock::now();
+}

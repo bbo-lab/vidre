@@ -171,6 +171,7 @@ namespace vidre {
         ///@endinternal
 
         /** Log-message packet.
+         * @note In contrast to standard packages, FIXME
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public io::packet::basic {
             chrono::timestamp timestamp{};  ///< Timestamp.
@@ -186,8 +187,9 @@ namespace vidre {
             /** Get log level.
              * @returns The log level of this message.
              * */
-            level log_level() const noexcept {
-                return static_cast<level>(type.minor);
+            template<std::endian E = std::endian::native>
+            lognew::level level() const noexcept {
+                return static_cast<lognew::level>(type.minor);
             }
 
             /** Get the log message.

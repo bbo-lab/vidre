@@ -32,8 +32,10 @@
  * Packet-based I/O is designed for handling variable-sized data units, such as video frames or audio
  * samples, which may not fit well into a stream-based model. It provides a structured way to read and
  * write packets of data, each with its own header and payload. This allows for more efficient processing
- * and better support for multiplexed data streams.
+ * and better support for multiplexed data streams. In addition, VidRe uses the format for storing
+ * data on disk, as well as for inter-process or network communication.
  *
+ * @see @ref vidre::storage::raw
  * @{
  * @namespace vidre::io::packet Packet-based I/O types.
  * @}
@@ -62,8 +64,6 @@ namespace vidre {
              *
              * If, though, raw file storage has a system description in the header,
              * this requirement could be relaxed in the future.
-             *
-             * @todo decide how to implement non-IEEE 754 (an "endianness" field could be extended with "strange" system types...?)
              * */
             static_assert(std::numeric_limits<float>::is_iec559);
             static_assert(sizeof(float) == sizeof(uint32_t));
@@ -88,43 +88,46 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                log = 0x0001,    ///< Log messages (see @ref vidre::log).
-                plain = 0x0002,  ///< Plain data (see @ref FIXME).
+                plain = 0x0001,   ///< Plain data (see @ref FIXME).
+                object = 0x0002,  ///< Structured data (see @ref FIXME).
 
                 // standard types
-                video = 0x0010,  ///< Video data (see @ref FIXME).
-                audio = 0x0020,  ///< Audio data (see @ref FIXME).
-                // FIXME...
+                video = 0x0010,     ///< Video data (see @ref FIXME).
+                audio = 0x0020,     ///< Audio data (see @ref FIXME).
+                sensor = 0x0030,    ///< Sensor data, e.g. temperature (see @ref FIXME).
+
+                log = 0x8080,  ///< Log message (see `log::packet`).
 
                 // user types
-                user = 0x8000,  ///< User-defined packet types (see @ref FIXME).
-            };
-
-            /** Data types.
-             * */
-            enum class plain : uint16_t {
-                group = 0x0000,  ///< Grouped packet (see @ref FIXME).
-
-                nil = 0x0001,      ///< Nil value (no data).
-                boolean = 0x0002,  ///< Boolean value (true/false).
-                integer = 0x0003,  ///< 64-bit signed integer.
-                natural = 0x0004,  ///< 64-bit unsigned integer.
-                number = 0x0005,   ///< 64-bit floating-point value (double).
-                string = 0x0006,   ///< UTF-8 sequence (not! zero-terminated).
-
-                binary = 0x0008,  ///< Binary data (see @ref FIXME).
-
-                isodate = 0x000A,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
-                timestamp = 0x000B,  ///< Timestamp.
-                localtime = 0x000C,  ///< Local time (timestamp with timezone information).
-
-                uuid = 0x000F,  ///< UUID (128-bit universally unique identifier).
+                user = 0xF000,  ///< User-defined packet types (see @ref FIXME).
             };
 
             /** Minor type of a packet.
+             * @note For every major type, the minor type '0x0000' is reserved for
+             *       the group (one prominent exception is the log packet, which
+             *       does not have a group type).
              * */
             enum class minor : uint16_t {
                 group = 0x0000,  ///< Grouped packet.
+            };
+
+            /** Plain data types.
+             * */
+            enum class plain : uint16_t {
+                sequence = 0x0000,  ///< Grouped packet (see @ref FIXME).
+
+                nil = 0x0010,        ///< Nil value (no data).
+                boolean = 0x0011,    ///< Boolean value (true/false).
+                integer = 0x0012,    ///< 64-bit signed integer.
+                natural = 0x0013,    ///< 64-bit unsigned integer.
+                number = 0x0014,     ///< 64-bit floating-point value (double).
+                string = 0x0015,     ///< UTF-8 sequence (not! zero-terminated).
+                binary = 0x0016,     ///< Binary data (see @ref FIXME).
+                uuid = 0x0017,       ///< UUID (128-bit universally unique identifier).
+                                     // === 0x0018-0x001F reserved for future POD types.
+                isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
+                timestamp = 0x0021,  ///< Timestamp.
+                localtime = 0x0022,  ///< Local time (timestamp with timezone information).
             };
 
             /** Packet ID.
@@ -180,13 +183,54 @@ namespace vidre {
                     : type{major, minor}, stream(stream), length(length) {}
                 virtual ~basic() = default;
 
+                /** Type for shared pointer to basic packet.
+                 * Packets, due to life-time considerations, are usually managed
+                 * via shared pointers, especially when they are passed around 
+                 * different components or threads. This type alias simplifies 
+                 * the creation and management of such shared pointers.
+                 * @see basic::make
+                 */
+                using shared = std::shared_ptr<basic>;
+
+                /** Create a shared pointer to a new packet.
+                 * This method simplifies the creation of shared pointers to packets,
+                 * forwarding the provided arguments to the constructor of the packet type.
+                 * @tparam T The type of the packet to create.
+                 * @tparam Args The types of the arguments to forward to the packet constructor.
+                 * @param args The arguments to forward to the packet constructor.
+                 * @return A shared pointer to the newly created packet.
+                 * */
+                template <typename T, typename... Args>
+                static shared make(Args &&...args) {
+                    return std::make_shared<T>(std::forward<Args>(args)...);
+                }
+
+                /** Create a shared pointer to a static packet.
+                 * This method creates a shared pointer to a packet that is
+                 * statically allocated, meaning it does not manage the
+                 * lifetime of the packet. The provided deleter does nothing,
+                 * ensuring that the static packet is not deleted when the
+                 * shared pointer goes out of scope.
+                 * @tparam T The type of the packet.
+                 * @param obj The static packet object.
+                 * @return A shared pointer to the static packet.
+                 * */
+                template <typename T>
+                static shared make_static(T &obj) {
+                    return std::shared_ptr<basic>(&obj, [](basic *) {});
+                }
+
                 /** Get storage size (aligned).
+                 * @return The size of the packet, aligned to the required byte boundary.
                  * */
                 constexpr size_t size() const noexcept {
                     return (length + alignment - 1) & ~(alignment - 1);
                 }
 
                 /** Update packet length (if applicable).
+                 * This method is intended to be overridden by derived packet types
+                 * that need to update their length based on their content or other
+                 * factors. The default implementation does nothing.
                  * */
                 virtual void update() noexcept {}
 
@@ -205,6 +249,9 @@ namespace vidre {
                 }
 
                 /** Helper for padding.
+                 * @note This method is to be called when the packet payload possibly
+                 *       does not align to the required byte boundary (see `alignment`)
+                 *       as packet writing finalization step.
                  * */
                 result pad(io::sink &f) const {
                     size_t padding = size() - length;

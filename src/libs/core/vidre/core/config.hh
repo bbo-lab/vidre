@@ -62,6 +62,10 @@ namespace vidre {
  * */
 #define __vidre_packed__(ALIGN) __attribute__((packed, aligned(ALIGN)))
 
+/** No-inline attribute.
+ * */
+#define __vidre_noinline__ __attribute__((noinline))
+
 #if defined(DOXYGEN)
 
 /** Host is a Linux system */

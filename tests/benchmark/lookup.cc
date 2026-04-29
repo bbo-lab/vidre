@@ -1,5 +1,3 @@
-#include "benchmark.hh"
-
 /*
 For dealing with data packets (see vidre::io::packet) we need to establish a
 fast way to lookup decoder functions for a given packet type. This benchmark
@@ -8,6 +6,7 @@ hash maps, sorted vectors with binary search, or perfect hashing.
 */
 
 #include <vidre/util/uuid.hh>
+#include <vidre/util/chrono.hh>
 #include <vidre/io/types.hh>
 #include <vidre/log.hh>
 
@@ -25,7 +24,7 @@ hash maps, sorted vectors with binary search, or perfect hashing.
 using namespace vidre;
 
 int main(int argc, const char **argv) {
-    benchmark::timer t;
+    chrono::timer t;
     volatile uint64_t count = 0;
 
     // 0. prepare test data
@@ -53,7 +52,7 @@ int main(int argc, const char **argv) {
         }
     }
     t.stop();
-    double overhead = t.duration<benchmark::nanoseconds>() / double(REPEAT * size_of(N));
+    double overhead = t.duration<chrono::timer::nanoseconds>() / double(REPEAT * size_of(N));
     log::notice() << "overhead: " << overhead << " ns/call" << log::endl;
 
 #if 1
@@ -77,7 +76,7 @@ int main(int argc, const char **argv) {
             }
         }
         t.stop();
-        double duration = t.duration<benchmark::nanoseconds>() / double(REPEAT);
+        double duration = t.duration<chrono::timer::nanoseconds>() / double(REPEAT);
         log::notice() << std::format("{:>9.3f} ns/call\n", duration - overhead);
     }
 #endif
@@ -110,7 +109,7 @@ int main(int argc, const char **argv) {
                 }
             }
             t.stop();
-            double duration = t.duration<benchmark::nanoseconds>() / double(REPEAT);
+            double duration = t.duration<chrono::timer::nanoseconds>(REPEAT);
             log::notice() << std::format("{:>9.3f} ns/call\n", duration - overhead);
         }
     }
@@ -143,7 +142,7 @@ int main(int argc, const char **argv) {
                 }
             }
             t.stop();
-            double duration = t.duration<benchmark::nanoseconds>() / double(REPEAT);
+            double duration = t.duration<chrono::timer::nanoseconds>(REPEAT);
             log::notice() << std::format("{:>9.3f} ns/call\n", duration - overhead);
         }
     }
@@ -175,7 +174,7 @@ int main(int argc, const char **argv) {
                 }
             }
             t.stop();
-            double duration = t.duration<benchmark::nanoseconds>() / double(REPEAT);
+            double duration = t.duration<chrono::timer::nanoseconds>(REPEAT);
             log::notice() << std::format("{:>9.3f} ns/call\n", duration - overhead);
         }
     }
@@ -207,7 +206,7 @@ int main(int argc, const char **argv) {
                 }
             }
             t.stop();
-            double duration = t.duration<benchmark::nanoseconds>() / double(REPEAT);
+            double duration = t.duration<chrono::timer::nanoseconds>(REPEAT);
             log::notice() << std::format("{:>9.3f} ns/call\n", duration - overhead);
         }
     }

@@ -31,3 +31,4 @@
 #include "util/version.hh"
 #include "util/bit.hh"
 #include "util/chrono.hh"
+#include "util/debug.hh"

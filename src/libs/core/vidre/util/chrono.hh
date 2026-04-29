@@ -31,6 +31,7 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/exception.hh>
 
 #include <chrono>
 
@@ -65,9 +66,12 @@ namespace vidre {
              * */
             static timestamp now() noexcept {
                 auto now = std::chrono::steady_clock::now();
-                auto sec = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-                auto nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count() % 1'000'000'000;
-                return {static_cast<uint64_t>(sec), static_cast<uint64_t>(nsec)};
+
+                auto sec = std::chrono::time_point_cast<std::chrono::seconds>(now);
+                auto nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(now - sec);
+
+                return {static_cast<uint64_t>(sec.time_since_epoch().count()),  //
+                        static_cast<uint64_t>(nsec.count())};
             }
         };
 
@@ -85,7 +89,68 @@ namespace vidre {
              * @todo implement parsing from ISO 8601 date string (see
              * https://chat.deepseek.com/a/chat/s/53fa0e95-8e7a-46a4-9170-7ea1fa20f055)
              */
-            static std::chrono::time_point<std::chrono::system_clock> parse(const std::string_view &) noexcept;
+            static std::chrono::time_point<std::chrono::system_clock> parse(const std::string_view &);
+        };
+
+        /** Simple timer.
+         * */
+        class VIDRE_CORE_VISIBILITY timer {
+        public:
+            using clock = std::chrono::steady_clock;
+            using timepoint = clock::time_point;
+
+            using nanoseconds = std::chrono::duration<double, std::nano>;
+            using microseconds = std::chrono::duration<double, std::micro>;
+            using milliseconds = std::chrono::duration<double, std::milli>;
+            using seconds = std::chrono::duration<double>;
+
+        public:
+            timer() = default;
+
+        protected:
+            timepoint start_{};  ///< Start time.
+            timepoint stop_{};   ///< Stop time.
+
+        public:
+            /** Start (or continue) the timer.
+             * */
+            void start() {
+                start_ = clock::now();
+            }
+
+            /** Stop the timer.
+             * */
+            void stop() {
+                stop_ = clock::now();
+            }
+
+            /** Resume the timer.
+             * */
+            void resume() {
+                start_ = clock::now() - (stop_ - start_);
+            }
+
+            /** Get the elapsed time since the timer was started.
+             * @tparam Duration The duration type to return (default: microseconds).
+             * */
+            template <class Duration = microseconds>
+            double elapsed() {
+                return Duration(clock::now() - start_).count();
+            }
+
+            /** Get the duration between the start and stop times.
+             * @tparam Duration The duration type to return (default: microseconds).
+             * */
+            template <class Duration = microseconds>
+            double duration() {
+                return Duration(stop_ - start_).count();
+            }
+
+            template <class Duration = microseconds, class T>
+            requires (std::integral<T> or std::floating_point<T>)
+            double duration(T n) {
+                return duration<Duration>() / static_cast<double>(n);
+            }
         };
 
         ///@}
