@@ -52,10 +52,10 @@ namespace vidre {
          * */
         using clock = std::chrono::utc_clock;
 
-        /** Convert UTC to wall clock time.
+        /** Convert UTC to local clock time.
          * */
-        inline auto wall_cast(const clock::time_point &t) noexcept {
-            return std::chrono::clock_cast<std::chrono::system_clock>(t);
+        inline auto local_clock(const clock::time_point &t) noexcept {
+            return std::chrono::zoned_time{std::chrono::current_zone(), clock::to_sys(t)};
         }
 
         /** Monotonic clock.
@@ -99,7 +99,11 @@ namespace vidre {
         /** Representation of an ISO 8601 date.
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY isodate {
-            char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
+            char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSSSSZ").
+
+            operator std::string_view() const noexcept {
+                return std::string_view(iso, sizeof(iso));
+            }
 
             /** Get current time as an ISO 8601 date string.
              * @returns An ISO 8601 date string representing the current time in UTC.
@@ -107,11 +111,56 @@ namespace vidre {
             static isodate make(clock::time_point tp) noexcept;
 
             /** Parse an ISO 8601 date string.
-             * @todo implement parsing from ISO 8601 date string (see
-             * https://chat.deepseek.com/a/chat/s/53fa0e95-8e7a-46a4-9170-7ea1fa20f055)
-             */
+             * */
             static clock::time_point parse(const std::string_view &);
+
+            /** Get the time point represented by this ISO 8601 date string.
+             * @returns A time point corresponding to the ISO 8601 date string.
+             * */
+            clock::time_point time() const noexcept {
+                return parse(iso);
+            }
         };
+
+        /** Clock reference.
+         *
+         * The `reference` class provides a reference point for converting between
+         * different time representations, such as timestamps and UTC wall time.
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY reference {
+        public:
+            reference() = default;
+            reference(const reference &) = delete;
+            reference &operator=(const reference &) = delete;
+            reference(reference &&) = default;
+            reference &operator=(reference &&) = default;
+
+            reference(isodate date, timestamp ts) noexcept : clock_(date.parse(date.iso)), monotonic_(clock_ - ts.to_utc(*this)) {}
+
+            ~reference() = default;
+
+        protected:
+            clock::time_point clock_ = clock::now();              ///< Reference point for UTC time.
+            monotonic::time_point monotonic_ = monotonic::now();  ///< Reference point for monotonic time.
+
+        public:
+            /** Get the UTC's reference time point.
+             * */
+            auto clock() const noexcept {
+                return clock_;
+            }
+
+            /** Get the monotonic reference time point.
+             * */
+            auto monotonic() const noexcept {
+                return monotonic_;
+            }
+        };
+
+        inline clock::time_point timestamp::to_utc(const reference &ref) const noexcept {
+            return ref.clock() - ref.monotonic().time_since_epoch() + std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec);
+        }
 
         /** Simple timer.
          * */
@@ -173,46 +222,6 @@ namespace vidre {
                 return duration<Duration>() / static_cast<double>(n);
             }
         };
-
-        /** Clock reference.
-         *
-         * The `reference` class provides a reference point for converting between
-         * different time representations, such as timestamps and UTC wall time.
-         *
-         * */
-        class VIDRE_CORE_VISIBILITY reference {
-        public:
-            reference() = default;
-            reference(const reference &) = delete;
-            reference &operator=(const reference &) = delete;
-            reference(reference &&) = default;
-            reference &operator=(reference &&) = default;
-
-            reference(isodate date, timestamp ts) noexcept : clock_(date.parse(date.iso)), monotonic_(clock_ - ts.to_utc(*this)) {}
-
-            ~reference() = default;
-
-        protected:
-            clock::time_point clock_ = clock::now();              ///< Reference point for UTC time.
-            monotonic::time_point monotonic_ = monotonic::now();  ///< Reference point for monotonic time.
-
-        public:
-            /** Get the UTC's reference time point.
-             * */
-            auto clock() const noexcept {
-                return clock_;
-            }
-
-            /** Get the monotonic reference time point.
-             * */
-            auto monotonic() const noexcept {
-                return monotonic_;
-            }
-        };
-
-        inline clock::time_point timestamp::to_utc(const reference &ref) const noexcept {
-            return ref.clock() - ref.monotonic().time_since_epoch() + std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec);
-        }
 
         ///@}
 

@@ -64,17 +64,27 @@
  * <magic>              // 8 bytes
  * <version>            // 8 bytes (4 bytes major, 4 bytes minor)
  * @endcode
- * Note that the magic number is designed to be read as a byte sequence, which 
- * also provides information about the endianness of the file.
- *
+ * Note that the magic number is designed to be read and written as a 64-bit integer, 
+ * which also provides information about the endianness of the file.
+ * 
+ * The content header following the preamble contains metadata about the data streams
+ * recorded in the file, such as video frames, audio samples, and any associated metadata.
+ * Each stream has it's own definition of what is contained in the content header:
+ * @code{.unparsed}
+ * <isodate>             // ISO 8601 date string (reference time and file creation time)
+ * <timestamp>           // Associated reference timestamp
+ * <stream header>*      // Definitions of the data streams (e.g., video, audio, metadata)
+ * @endcode
+ * 
  * @{
  * @namespace vidre::storage::raw
  * @}
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/io/file.hh>
 #include <vidre/util/version.hh>
+#include <vidre/util/chrono.hh>
+#include <vidre/io/file.hh>
 
 #include <bit>
 #include <optional>

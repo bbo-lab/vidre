@@ -21,83 +21,88 @@
  */
 #include "chrono.hh"
 
+#include <cstring>
+
 using namespace vidre;
 
 chrono::isodate chrono::isodate::make(clock::time_point tp) noexcept {
     isodate result;
-
+    
+    // Get current UTC time directly
+    auto now = std::chrono::utc_clock::to_sys(tp);
+    
     // Convert to a year-month-day representation
-    auto days = std::chrono::floor<std::chrono::days>(tp);
-    auto ymd = std::chrono::year_month_day(days);
-    // auto time_of_day = tp - days;
-
-    // // Extract components
-    // auto year = static_cast<int>(ymd.year());
-    // auto month = static_cast<unsigned>(ymd.month());
-    // auto day = static_cast<unsigned>(ymd.day());
-
-    // auto hour = std::chrono::duration_cast<std::chrono::hours>(time_of_day);
-    // time_of_day -= hour;
-    // auto minute = std::chrono::duration_cast<std::chrono::minutes>(time_of_day);
-    // time_of_day -= minute;
-    // auto second = std::chrono::duration_cast<std::chrono::seconds>(time_of_day);
-    // time_of_day -= second;
-    // auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_of_day);
-
-    // // Format directly
-    // std::format_to_n(result.iso, sizeof(result.iso) - 1, "{:04d}{:02d}{:02d}T{:02d}{:02d}{:02d}.{:03d}Z", year, month, day,
-    //                  hour.count(), minute.count(), second.count(), ms.count());
-
-    // result.iso[31] = '\0';
+    auto days = std::chrono::floor<std::chrono::days>(now);
+    auto ymd = std::chrono::year_month_day{days};
+    auto time_of_day = now - days;
+    
+    // Extract components
+    auto year = static_cast<int>(ymd.year());
+    auto month = static_cast<unsigned>(ymd.month());
+    auto day = static_cast<unsigned>(ymd.day());
+    
+    auto hour = std::chrono::duration_cast<std::chrono::hours>(time_of_day);
+    time_of_day -= hour;
+    auto minute = std::chrono::duration_cast<std::chrono::minutes>(time_of_day);
+    time_of_day -= minute;
+    auto second = std::chrono::duration_cast<std::chrono::seconds>(time_of_day);
+    time_of_day -= second;
+    auto us = std::chrono::round<std::chrono::microseconds>(time_of_day);
+    
+    // Format directly
+    std::format_to_n(result.iso, sizeof(result.iso), 
+                     "{:04d}{:02d}{:02d}T{:02d}{:02d}{:02d}.{:06d}Z",
+                     year, month, day, 
+                     hour.count(), minute.count(), second.count(), 
+                     us.count());
+    
     return result;
 }
 
-// static std::chrono::system_clock::time_point from(const char* s, size_t n) noexcept {
-//     std::string_view sv(s, n);
-
-//     // Parse with milliseconds (optional)
-//     std::chrono::sys_time<std::chrono::milliseconds> tp;
-
-//     // Try with milliseconds first
-//     std::from_chars_result result;
-//     int year, month, day, hour, minute, second, ms = 0;
-
-//     // Use std::from_chars for each component (most efficient)
-//     auto parse_comp = [&](auto& val, size_t pos, size_t len) -> bool {
-//         auto [ptr, ec] = std::from_chars(sv.data() + pos, sv.data() + pos + len, val);
-//         return ec == std::errc();
-//     };
-
-//     if (parse_comp(year, 0, 4) && parse_comp(month, 4, 2) && parse_comp(day, 6, 2) &&
-//         sv[8] == 'T' &&
-//         parse_comp(hour, 9, 2) && parse_comp(minute, 11, 2) && parse_comp(second, 13, 2)) {
-
-//         size_t pos = 15;
-//         if (pos < sv.size() && sv[pos] == '.') {
-//             pos++;
-//             auto [ptr, ec] = std::from_chars(sv.data() + pos, sv.data() + pos + 3, ms);
-//             if (ec == std::errc()) {
-//                 int digits = ptr - (sv.data() + pos);
-//                 while (digits++ < 3) ms *= 10;
-//                 pos += 3;
-//             }
-//         }
-
-//         if (pos < sv.size() && sv[pos] == 'Z') {
-//             using namespace std::chrono;
-//             return sys_days{year{year}/month{month}/day{day}} +
-//                    hours{hour} + minutes{minute} + seconds{second} + milliseconds{ms};
-//         }
-//     }
-
-//     return {};
-// }
-
-chrono::clock::time_point chrono::isodate::parse(const std::string_view &) {
-    // TODO implement parsing from ISO 8601 date string (see
-    // https://chat.deepseek.com/a/chat/s/53fa0e95-8e7a-46a4-9170-7ea1fa20f055)
-
-    throw exception::logic() << error::message("invalid format");
-
-    return chrono::clock::now();
+chrono::clock::time_point chrono::isodate::parse(const std::string_view &sv) {
+    if (sv.size() < 15) return {};
+    
+    auto parse_int = [&](size_t pos, size_t len) -> std::optional<int> {
+        int value = 0;
+        auto [ptr, ec] = std::from_chars(sv.data() + pos, sv.data() + pos + len, value);
+        if (ec != std::errc()) return std::nullopt;
+        return value;
+    };
+    
+    // parse components
+    auto y = parse_int(0, 4);
+    auto m = parse_int(4, 2);
+    auto d = parse_int(6, 2);
+    
+    if (!y or !m or !d or sv[8] != 'T') return {};
+    
+    auto H = parse_int(9, 2);
+    auto M = parse_int(11, 2);
+    auto S = parse_int(13, 2);
+    
+    if (!H or !M or !S) return {};
+    
+    // parse microseconds
+    int us = 0;
+    size_t pos = 15;
+    if (pos < sv.size() && sv[pos] == '.') {
+        pos++;
+        auto [ptr, ec] = std::from_chars(sv.data() + pos, sv.data() + pos + 6, us);
+        if (ec == std::errc()) {
+            // if fewer than 6 digits, scale up to microseconds
+            int digits = ptr - (sv.data() + pos);
+            while (digits++ < 6) us *= 10;
+            pos += 6;
+        }
+    }
+    
+    // expected trailing 'Z'
+    if (pos >= sv.size() || sv[pos] != 'Z') return {};
+    
+    // Construct time_point using C++20 chrono
+    std::chrono::year_month_day ymd{std::chrono::year{*y}, std::chrono::month{(unsigned) *m}, std::chrono::day{(unsigned) *d}};
+    auto tp = std::chrono::sys_days{ymd} + std::chrono::hours{*H} + std::chrono::minutes{*M} + 
+              std::chrono::seconds{*S} + std::chrono::microseconds{us};
+    
+    return std::chrono::utc_clock::from_sys(tp);
 }
