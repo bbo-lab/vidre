@@ -42,7 +42,7 @@ void copy_source_to_sink() {
     if (not src->valid())
         throw exception::runtime() << error::system();
     if (not dst->valid())
-        throw exception::runtime() << error::system();    
+        throw exception::runtime() << error::system();
 
     connect(src, dst);
 }
@@ -50,7 +50,7 @@ void copy_source_to_sink() {
 
 int main(int argc, const char **argv) {
     try {
-        copy_source_to_sink();
+        // copy_source_to_sink();
     } catch (exception &e) {
         std::cerr << error::diagnostic(e).dump() << std::endl;
     }

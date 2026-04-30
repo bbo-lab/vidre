@@ -90,6 +90,21 @@ void io::file::sink::close() noexcept {
     return;
 }
 
+void io::file::source::routine() {
+    io::thread::entry scope(*this);
+
+    while (not terminate_) {
+        if (not valid())
+            break;
+
+        // event::result res = wait();
+        // if (res.status != event::status::ok)
+        //     break;
+
+        // notify(res.count);
+    }
+}
+
 io::file vidre::io::standard::input = io::file{::stdin};
 
 io::file vidre::io::standard::output = io::file{::stdout};

@@ -47,6 +47,7 @@
 #include <vidre/util/uuid.hh>
 #include <vidre/util/events.hh>
 #include <vidre/settings/json.hh>
+#include <vidre/thread.hh>
 
 #include <ankerl/unordered_dense.h>
 
@@ -366,6 +367,127 @@ namespace vidre {
             busy &busy_;
         };
 
+        /** IO thread.
+         *
+         * This (base) class provides an extension of the standard `std::thread` with some
+         * additional convenience methods, such as setting scheduling policies.
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY thread {
+        public:
+            /** Thread routine.
+             *
+             * This method should be overridden by derived classes to define the thread's behavior.
+             * It is called when the thread starts.
+             *
+             * Typical implementation:
+             * @code
+             * class derived_thread : public virtual io::thread {
+             * public:
+             *     virtual void routine() override {
+             *         thread::entry scope(*this);
+             *
+             *         while (not terminate_) {
+             *             // thread code here
+             *         }
+             *     }
+             * };
+             * @endcode
+             *
+             * */
+            virtual void routine();
+
+            /** Scoped thread entry.
+             * */
+            struct VIDRE_CORE_VISIBILITY entry {
+                entry(thread &t) : thread_(t) {
+                    thread_.running_ = true;
+                }
+
+                entry(thread *t) : thread_(*t) {
+                    thread_.running_ = true;
+                }
+
+                ~entry() {
+                    thread_.running_ = false;
+                }
+
+            protected:
+                thread &thread_;
+            };
+
+        public:
+            thread() noexcept : impl_(&thread::routine, this) {}
+            thread(const thread &) = delete;
+            thread &operator=(const thread &) = delete;
+            thread(thread &&other) noexcept = default;
+            thread &operator=(thread &&other) noexcept = default;
+            virtual ~thread() = default;
+
+            template <class F, class... Args>
+            explicit thread(F &&f, Args &&...args) : impl_(std::forward<F>(f), std::forward<Args>(args)...) {}
+
+        protected:
+            std::thread impl_;        ///< The underlying thread implementation.
+            bool running_ = false;    ///< Flag indicating whether the thread is running.
+            bool terminate_ = false;  ///< Flag indicating whether the thread should terminate.
+
+        public:
+            /** Check if thread is running.
+             * */
+            bool running() const noexcept {
+                return running_;
+            }
+
+            /** Run the thread.
+             * This method is the equivalent of joining the thread, i.e.,
+             * it waits for the thread to finish execution.
+             * */
+            virtual status run() noexcept {
+                if (not impl_.joinable())
+                    return status::bad;
+                impl_.join();
+                return status::good;
+            }
+
+            /** Detach the thread.
+             * This method detaches the thread, allowing it to run independently.
+             * */
+            status detach() {
+                if (not impl_.joinable())
+                    return status::bad;
+                impl_.detach();
+                return status::good;
+            }
+
+            /** Signal the thread to terminate.
+             * */
+            virtual void terminate() noexcept {
+                terminate_ = true;
+            }
+
+            /** Set scheduling priority.
+             * @param priority Priority value as a float (0.0 to 1.0, means minimum to maximum priority).
+             * @param policy Scheduling policy (default: FIFO).
+             * @return Status of the operation.
+             * */
+            status priority(float priority = 0.5f, schedule::policy policy = schedule::policy::fifo) {
+                return schedule(impl_).priority(priority, policy);
+            }
+
+            /** Set deadline scheduling.
+             * @param period The period of the thread.
+             * @param runtime The runtime of the thread.
+             * @param deadline The deadline of the thread.
+             * @return Status of the operation.
+             * */
+            status set_deadline(std::chrono::nanoseconds period,   //
+                                std::chrono::nanoseconds runtime,  //
+                                std::chrono::nanoseconds deadline) {
+                return schedule(impl_).set_deadline(period, runtime, deadline);
+            }
+        };
+
         /** Data sink skeleton.
          *
          * The sink class provides a skeleton for data sinks, such as files or filter inputs.
@@ -459,6 +581,11 @@ namespace vidre {
                 return write(v);
             }
 
+            /** Put a value of type @c T.
+             * @tparam T Type of the value to write.
+             * @param v Value to write (in binary form).
+             * @returns Number of bytes actually written (@c invalid for write failure).
+             * */
             template <typename T>
             requires (not std::derived_from<T, memory::view>)
             result put(const T &v) {
@@ -481,7 +608,7 @@ namespace vidre {
          *
          * @see source::shared
          * */
-        class VIDRE_CORE_VISIBILITY source {
+        class VIDRE_CORE_VISIBILITY source : public virtual thread {
         public:
             /** Shared pointer type for source.
              * This type is used for managing the lifetime of source instances,
@@ -512,7 +639,8 @@ namespace vidre {
             virtual ~source() {}
 
         protected:
-            event ev_{};  ///< Event for signaling data availability.
+            event ev_{};         ///< Event for signaling data availability.
+            sink::shared link_;  ///< Linked sink (if any).
 
         protected:
             /** Notify, that @a n packets are available.
@@ -585,6 +713,10 @@ namespace vidre {
             virtual const packet::basic *get() {
                 throw exception::logic();
             }
+
+            /** Link to a sink.
+             * */
+            virtual void link(sink::shared &snk);
 
         private:
         };

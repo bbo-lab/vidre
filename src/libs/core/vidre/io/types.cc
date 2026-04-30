@@ -24,6 +24,14 @@
 
 using namespace vidre;
 
+void io::thread::routine() {
+    // default implementation does nothing
+}
+
+void io::source::link(sink::shared &snk) {
+    // FIXME
+}
+
 std::shared_ptr<std::thread> io::connect(source::shared &src, sink::shared &snk) noexcept {
     // FIXME all should be done in a separate thread
     if (!(*src & mode::packet)) {

@@ -616,6 +616,9 @@ namespace vidre {
             }
 
         public:
+            void routine() override;
+
+        public:
             /** Check if valid (i.e., usable).
              * */
             bool valid() const noexcept override {
