@@ -29,7 +29,7 @@ uvc::camera::~camera() {
     disconnect();
 }
 
-io::offset_type uvc::camera::read(memory::area &) {
+io::offset_type uvc::camera::read(memory::area) {
     // FIXME
     return io::invalid<io::offset_type>;
 }

@@ -186,6 +186,15 @@ namespace vidre {
                 return success;
             }
 
+            /** Check if notifications are pending (i.e. the counter is zero).
+             * @param timeout The maximum time to wait for notifications (milliseconds, default: 0).
+             * @return <0 if an error occurred, 0 if no notifications are pending, >0 if notifications are pending.
+             * */
+            int avail(std::chrono::milliseconds timeout = {}) const noexcept {
+                struct pollfd pfd = {handle, POLLIN, 0};
+                return poll(&pfd, 1, static_cast<int>(timeout.count()));
+            }
+
             /** Wait for the event to be notified.
              * @return The result of the wait operation, including the status and the notification count.
              * */
@@ -214,8 +223,7 @@ namespace vidre {
              * @return The number of notifications received, or std::nullopt if the wait timed out.
              * */
             result_type wait(std::chrono::milliseconds timeout) {
-                struct pollfd pfd = {handle, POLLIN, 0};
-                int ret = poll(&pfd, 1, static_cast<int>(timeout.count()));
+                int ret = avail(timeout);
                 if (ret == 0)
                     return {timed_out, 0};  // timed out
                 else if (ret < 0) [[unlikely]] {
@@ -325,7 +333,7 @@ namespace vidre {
          * @note This call fails if @c max_count would overflow.
          * */
         state notify(uint64_t count = 1) {
-            assert(count > 0);
+            // assert(count > 0);
             return static_cast<state>(impl_.notify(count));
         }
 
@@ -335,7 +343,7 @@ namespace vidre {
          * This method blocks indefinitely until the event is notified or a
          * termination signal is received.
          * */
-        result wait() {
+        [[nodiscard]] result wait() {
             auto retval = impl_.wait();
             return {static_cast<state>(retval.first), retval.second};
         }
@@ -367,7 +375,7 @@ namespace vidre {
          * }
          * @endcode 
          * */
-        result wait(std::chrono::milliseconds timeout) {
+        [[nodiscard]] result wait(std::chrono::milliseconds timeout) {
             auto retval = impl_.wait(timeout);
             return {static_cast<state>(retval.first), retval.second};
         }

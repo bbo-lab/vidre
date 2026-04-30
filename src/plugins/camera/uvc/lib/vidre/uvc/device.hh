@@ -81,7 +81,7 @@ namespace vidre {
                 FIXME(Windows and APPLE support);
 #endif
 
-                io::offset_type read(memory::area &) override;
+                io::offset_type read(memory::area) override;
 
                 void query() noexcept;
 
@@ -90,11 +90,11 @@ namespace vidre {
                     return vid_.valid();
                 }
 
-                operator mode() const noexcept override {
-                    return mode::packet;
+                operator io::mode::type() const noexcept override {
+                    return io::mode::packet;
                 }
 
-                io::result get(memory::area &v) override {
+                io::result get(memory::area v) override {
                     // not allowed
                     return io::invalid<io::offset_type>;
                 }

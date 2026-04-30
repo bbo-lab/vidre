@@ -27,7 +27,7 @@ io::offset_type io::file::sink::flush() {
     if (buf_.used) {
         auto retval = fd_.write({buf_.used, buf_.data});
 
-        if (retval != buf_.used)
+        if (retval != static_cast<io::offset_type>(buf_.used))
             // if the underlying hardware can't take it, we assume,
             // it's out of memory...
             throw exception::memory();

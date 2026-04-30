@@ -591,8 +591,8 @@ namespace vidre {
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;
-            source(source &&other) noexcept = default;
-            source &operator=(source &&other) noexcept = default;
+            source(source &&) = delete;
+            source &operator=(source &&) = delete;
 
             source(const std::filesystem::path &filename) {
                 if (!open(filename)) {
@@ -611,7 +611,7 @@ namespace vidre {
 
         protected:
             // Low-level read method.
-            offset_type read(memory::area &buf) noexcept override {
+            offset_type read(memory::area buf) noexcept override {
                 return fd_.read(buf);
             }
 

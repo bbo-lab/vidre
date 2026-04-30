@@ -202,9 +202,21 @@ namespace vidre {
         requires std::is_integral_v<T>
         inline constexpr T invalid = static_cast<T>(-1);
 
-        /** IO result.
+        /** IO operation result.
+         *
+         * This struct encapsulates the result of low-level IO operations, including
+         * whether an error occurred and how many bytes were processed.
+         *
+         * Typical usage:
+         * @code
+         * io::result res;
+         * res += sink.write(bufA, countA);
+         * res += sink.write(bufB, countB);
+         * return res;
+         * @endcode
+         *
          * */
-        struct result {
+        struct VIDRE_CORE_VISIBILITY result {
             bool error{};       ///< Flag indicating whether an error occurred.
             size_type count{};  ///< Number of bytes read/written, or @c invalid on failure.
 
@@ -223,6 +235,16 @@ namespace vidre {
                 return !error;
             }
 
+            /** Add another result to this result.
+             * @param other The result to add.
+             * @returns Reference to this result.
+             *
+             * This operator allows for easy accumulation of results, such as when
+             * performing multiple read/write operations in a loop. If any operation
+             * fails (i.e., has an error), the resulting error flag will be set to
+             * @c true (accumulated), and the count will reflect the total number
+             * of bytes successfully processed up to that point.
+             * */
             result &operator+=(const result &other) noexcept {
                 error = error || other.error;
                 if (!error)
@@ -230,6 +252,12 @@ namespace vidre {
                 return *this;
             }
 
+            /** Add the result of a read/write operation.
+             * @param n The number of bytes read/written, or @c invalid on failure.
+             * @returns Reference to this result.
+             *
+             * @see `operator+=(const result &other)`
+             * */
             result &operator+=(offset_type n) noexcept {
                 if (n == invalid<offset_type>)
                     error = true;
@@ -238,6 +266,80 @@ namespace vidre {
 
                 return *this;
             }
+        };
+
+        /** Stream mode.
+         * */
+        struct VIDRE_CORE_VISIBILITY mode {
+            enum type : int {
+                any,     ///< Any mode (default).
+                stream,  ///< Stream mode (e.g., for files or network sockets).
+                packet   ///< Packet mode (e.g., for video frames or audio samples).
+            };
+        };
+
+        /** Business state.
+         *
+         * This class, eventually only used by the `sink`, provides a simple mechanism
+         * for signaling when a component is "busy" (e.g., processing data) and when
+         * it is ready to accept new data.
+         *
+         * The consumer (sink) can call `busy::clear()` to signal that it is ready for new data,
+         * and the producer (source) can call `busy::wait()` to wait until the consumer is ready.
+         * This can be useful for flow control, especially when dealing with components
+         * that have variable processing times or when implementing backpressure mechanisms.
+         *
+         * Note, however, that producers (especially isochronous ones) may ignore the busy state
+         * and continue producing data, which may lead to data loss if the consumer cannot keep up
+         * (which is, in fact, intended behavior).
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY busy {
+        public:
+            class scope;
+
+        public:
+            busy() = default;
+
+        protected:
+            event ev_{};  ///< Event for signaling when the busy state is cleared.
+
+        protected:
+            /** Clear busy state.
+             * */
+            void done() {
+                ev_.notify();
+            }
+
+        public:
+            /** Wait for busy state to be cleared.
+             * @return @c event::result containing the status and the notification count.
+             * */
+            [[nodiscard]] event::result wait() {
+                return ev_.wait();
+            }
+
+            /** Wait for busy state to be cleared (with timeout).
+             * @param timeout The maximum time to wait for the busy state to be cleared.
+             * @return @c event::result containing the status and the notification count.
+             * */
+            [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
+                return ev_.wait(timeout);
+            }
+        };
+
+        /** Busy scope.
+         * */
+        class VIDRE_CORE_VISIBILITY busy::scope {
+        public:
+            scope(busy &b) : busy_(b) {}
+            scope(busy *b) : busy_(*b) {}
+            ~scope() {
+                busy_.done();
+            }
+
+        protected:
+            busy &busy_;
         };
 
         /** Data sink skeleton.
@@ -265,7 +367,7 @@ namespace vidre {
          *
          * @see sink::shared
          * */
-        class VIDRE_CORE_VISIBILITY sink {
+        class VIDRE_CORE_VISIBILITY sink : public busy {
         public:
             /** Shared pointer type for sinks.
              * This type is used for managing the lifetime of sink instances,
@@ -290,8 +392,8 @@ namespace vidre {
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;
-            sink(sink &&) = default;
-            sink &operator=(sink &&) = default;
+            sink(sink &&) = delete;
+            sink &operator=(sink &&) = delete;
 
             virtual ~sink() {}
 
@@ -337,9 +439,11 @@ namespace vidre {
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
             virtual result put(const packet::base *p) {
-                // FIXME
+                busy::scope inprogress(this);
                 return invalid<offset_type>;
             }
+
+        private:
         };
 
         /** Data source.
@@ -350,12 +454,6 @@ namespace vidre {
          * @see source::shared
          * */
         class VIDRE_CORE_VISIBILITY source {
-        public:
-            enum class mode {
-                stream,  ///< Stream mode (e.g., for files or network sockets).
-                packet   ///< Packet mode (e.g., for video frames or audio samples).
-            };
-
         public:
             /** Shared pointer type for source.
              * This type is used for managing the lifetime of source instances,
@@ -380,8 +478,8 @@ namespace vidre {
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;
-            source(source &&) = default;
-            source &operator=(source &&) = default;
+            source(source &&) = delete;
+            source &operator=(source &&) = delete;
 
             virtual ~source() {}
 
@@ -396,8 +494,12 @@ namespace vidre {
             }
 
             /** The low-level read method.
+             * @param buf Memory area to store the retrieved data.
+             * @returns Number of bytes actually read (@c invalid for read failure).
              * */
-            virtual offset_type read(memory::area &) = 0;
+            virtual offset_type read(memory::area buf) {
+                return invalid<offset_type>;
+            }
 
         public:
             /** Check if the stream is valid (ie. usable).
@@ -409,7 +511,7 @@ namespace vidre {
             /** Retrieve the mode of the source.
              * @returns The mode of the source (stream or packet).
              * */
-            virtual operator mode() const noexcept {
+            virtual operator mode::type() const noexcept {
                 return mode::stream;
             }
 
@@ -426,11 +528,7 @@ namespace vidre {
              * @throw exception::runtime for other errors
              * @returns Number of bytes actually read (@c invalid for read failure).
              * */
-            virtual result get(memory::area &v) {
-                return read(v);
-            }
-
-            result get(memory::area v) {
+            virtual result get(memory::area v) {
                 return read(v);
             }
 
@@ -438,7 +536,7 @@ namespace vidre {
              * @returns True if data is available, false if the wait was interrupted.
              * @see vidre::event
              * */
-            event::result wait() {
+            [[nodiscard]] event::result wait() {
                 return ev_.wait();
             }
 
@@ -447,7 +545,7 @@ namespace vidre {
              * @returns True if data is available, false if the wait timed out or was interrupted.
              * @see vidre::event
              * */
-            event::result wait(std::chrono::milliseconds timeout) {
+            [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
                 return ev_.wait(timeout);
             }
 
@@ -461,8 +559,19 @@ namespace vidre {
             }
 
             // FIXME needs a way to connect to the next sink or pipe...
+
+        private:
         };
 
+        /** Connect a sink to a source.
+         * */
+        // std::thread::id connect(source::shared &src, sink::shared &snk) noexcept {
+        //     // FIXME
+
+
+        //     return std::this_thread::get_id();
+        // }
+#if 0
         /** Data pipe.
          *
          * A data pipe is a combination of a source and a sink, allowing data to flow
@@ -513,6 +622,7 @@ namespace vidre {
 
             // FIXME
         };
+#endif
 
         ///@}
 

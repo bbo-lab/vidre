@@ -88,6 +88,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.io",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.io",
+            "args": [  ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.core.event",
             "type": "cppdbg",
             "request": "launch",
