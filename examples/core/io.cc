@@ -11,7 +11,7 @@ using namespace vidre;
 
 //! [create-dummy-file]
 std::filesystem::path create_dummy_file() {
-    std::filesystem::path p = "/tmp/vidre.example.io";
+    std::filesystem::path p = "/tmp/vidre.example.io.dat";
 
     if (not std::filesystem::exists(p)) {
         // dummy "data"
@@ -34,13 +34,23 @@ std::filesystem::path create_dummy_file() {
 
 //! [copy-source-to-sink]
 void copy_source_to_sink() {
-    // FIXME
+    std::filesystem::path data = create_dummy_file();
+
+    auto src = io::source::make<io::file::source>(data);
+    auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate);
+
+    if (not src->valid())
+        throw exception::runtime() << error::system();
+    if (not dst->valid())
+        throw exception::runtime() << error::system();    
+
+    connect(src, dst);
 }
 //! [copy-source-to-sink]
 
 int main(int argc, const char **argv) {
     try {
-        create_dummy_file();
+        copy_source_to_sink();
     } catch (exception &e) {
         std::cerr << error::diagnostic(e).dump() << std::endl;
     }

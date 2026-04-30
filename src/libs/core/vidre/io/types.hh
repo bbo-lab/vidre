@@ -168,7 +168,7 @@ namespace vidre {
     namespace io {
 
         namespace packet {
-            struct base;  // forward declaration
+            struct basic;  // forward declaration
         }
 
         /**@addtogroup api-core-io-types
@@ -271,12 +271,36 @@ namespace vidre {
         /** Stream mode.
          * */
         struct VIDRE_CORE_VISIBILITY mode {
-            enum type : int {
-                any,     ///< Any mode (default).
-                stream,  ///< Stream mode (e.g., for files or network sockets).
-                packet   ///< Packet mode (e.g., for video frames or audio samples).
+            enum type : unsigned {
+                stream = 0x0001,        ///< Stream mode (e.g., for files or network sockets).
+                packet = 0x0002,        ///< Packet mode (e.g., for video frames or audio samples).
+                any = stream | packet,  ///< Any mode (default).
             };
         };
+
+        ///@cond
+        inline constexpr mode::type operator|(mode::type lhs, mode::type rhs) {
+            return static_cast<mode::type>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline constexpr mode::type operator&(mode::type lhs, mode::type rhs) {
+            return static_cast<mode::type>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline constexpr mode::type operator~(mode::type m) {
+            return static_cast<mode::type>(~to_underlying(m));
+        }
+        inline constexpr bool operator!(mode::type m) {
+            return m == static_cast<mode::type>(0);
+        }
+
+        inline constexpr mode::type &operator|=(mode::type &lhs, mode::type rhs) {
+            lhs = static_cast<mode::type>(to_underlying(lhs) | to_underlying(rhs));
+            return lhs;
+        }
+        inline constexpr mode::type &operator&=(mode::type &lhs, mode::type rhs) {
+            lhs = static_cast<mode::type>(to_underlying(lhs) & to_underlying(rhs));
+            return lhs;
+        }
+        ///@endcond
 
         /** Business state.
          *
@@ -413,6 +437,13 @@ namespace vidre {
                 return false;
             }
 
+            /** Retrieve the mode of the sink.
+             * @returns The mode of the sink.
+             * */
+            virtual operator mode::type() const noexcept {
+                return mode::any;
+            }
+
             /** Configure sink.
              * @param config JSON configuration object.
              * @throw exception::logic_error if the configuration is invalid for this sink.
@@ -438,10 +469,7 @@ namespace vidre {
              * @param p Pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual result put(const packet::base *p) {
-                busy::scope inprogress(this);
-                return invalid<offset_type>;
-            }
+            virtual result put(const packet::basic *p);
 
         private:
         };
@@ -509,7 +537,7 @@ namespace vidre {
             }
 
             /** Retrieve the mode of the source.
-             * @returns The mode of the source (stream or packet).
+             * @returns The mode of the source.
              * */
             virtual operator mode::type() const noexcept {
                 return mode::stream;
@@ -554,25 +582,14 @@ namespace vidre {
              * @throw exception::logic if source is packet based
              * @throw exception::runtime for other errors
              * */
-            virtual const packet::base *get() {
+            virtual const packet::basic *get() {
                 throw exception::logic();
             }
-
-            // FIXME needs a way to connect to the next sink or pipe...
 
         private:
         };
 
-        /** Connect a sink to a source.
-         * */
-        // std::thread::id connect(source::shared &src, sink::shared &snk) noexcept {
-        //     // FIXME
-
-
-        //     return std::this_thread::get_id();
-        // }
-#if 0
-        /** Data pipe.
+        /** FIXME Data pipe.
          *
          * A data pipe is a combination of a source and a sink, allowing data to flow
          * from one component to another. It can be used to connect different parts
@@ -580,9 +597,7 @@ namespace vidre {
          *
          * @see source::shared
          * */
-        class VIDRE_CORE_VISIBILITY pipe
-            : public virtual sink
-            , public virtual source {
+        class VIDRE_CORE_VISIBILITY pipe {
         public:
             /** Shared pointer type for pipe.
              * This type is used for managing the lifetime of pipe instances,
@@ -613,16 +628,11 @@ namespace vidre {
             virtual ~pipe() {}
 
         public:
-            /** Configure pipe.
-             * @param config JSON configuration object.
-             * @throw exception::logic if the configuration is invalid for this pipe.
-             * @note The configuration format is pipe-specific and may be ignored by some pipes.
-             * */
-            void setup(const settings::json &config) override {}
-
-            // FIXME
         };
-#endif
+
+        /** Connect a sink to a source.
+         * */
+        std::shared_ptr<std::thread> connect(source::shared &src, sink::shared &snk) noexcept;
 
         ///@}
 

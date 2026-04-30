@@ -521,8 +521,8 @@ namespace vidre {
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;
-            sink(sink &&other) noexcept = default;
-            sink &operator=(sink &&other) noexcept = default;
+            sink(sink &&other) noexcept = delete;
+            sink &operator=(sink &&other) noexcept = delete;
 
             sink(const std::filesystem::path &filename, openmode_type mode = direct) {
                 if (!open(filename, mode)) {

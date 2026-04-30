@@ -20,7 +20,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "types.hh"
+#include "packet.hh"
 
 using namespace vidre;
 
-// vidre::io::packet::map_type vidre::io::packet::registry{};
+std::shared_ptr<std::thread> io::connect(source::shared &src, sink::shared &snk) noexcept {
+    // FIXME all should be done in a separate thread
+    if (!(*src & mode::packet)) {
+        uint8_t buf[4096];
+        while (src->valid() && snk->valid()) {
+            auto res = src->get({4096, buf});
+            if (!res)
+                break;
+            if (res.count == 0)
+                break;
+
+            auto putres = snk->put({res.count, buf});
+            if (!putres)
+                break;
+        }
+
+        return nullptr;
+    }
+    else {
+        // FIXME
+        return nullptr;
+    }
+}

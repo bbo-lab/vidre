@@ -92,9 +92,9 @@ namespace vidre {
                 object = 0x0002,  ///< Structured data (see @ref FIXME).
 
                 // standard types
-                video = 0x0010,     ///< Video data (see @ref FIXME).
-                audio = 0x0020,     ///< Audio data (see @ref FIXME).
-                sensor = 0x0030,    ///< Sensor data, e.g. temperature (see @ref FIXME).
+                video = 0x0010,   ///< Video data (see @ref FIXME).
+                audio = 0x0020,   ///< Audio data (see @ref FIXME).
+                sensor = 0x0030,  ///< Sensor data, e.g. temperature (see @ref FIXME).
 
                 log = 0x8080,  ///< Log message (see `log::packet`).
 
@@ -185,8 +185,8 @@ namespace vidre {
 
                 /** Type for shared pointer to basic packet.
                  * Packets, due to life-time considerations, are usually managed
-                 * via shared pointers, especially when they are passed around 
-                 * different components or threads. This type alias simplifies 
+                 * via shared pointers, especially when they are passed around
+                 * different components or threads. This type alias simplifies
                  * the creation and management of such shared pointers.
                  * @see basic::make
                  */
@@ -281,6 +281,12 @@ namespace vidre {
             ///@}
 
         }  // namespace packet
+
+        ///@cond
+        inline result sink::put(const packet::basic *p) {
+            return p->put(*this);
+        }
+        ///@endcond
 
     }  // namespace io
 

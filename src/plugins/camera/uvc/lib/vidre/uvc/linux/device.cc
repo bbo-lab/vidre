@@ -34,7 +34,7 @@ io::offset_type uvc::camera::read(memory::area) {
     return io::invalid<io::offset_type>;
 }
 
-const io::packet::base *uvc::camera::get() {
+const io::packet::basic *uvc::camera::get() {
     // FIXME
     return nullptr;
 }
