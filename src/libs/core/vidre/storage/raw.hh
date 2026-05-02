@@ -27,10 +27,10 @@
 /**@addtogroup api-core-storage-raw
  * @details
  * @fileinfo
- * 
+ *
  * The raw file format uses [Type-Length-Value](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)
  * (TLV) encoding, inspired by the design principles of ASN.1, which is also
- * used internally for packet transmissions. 
+ * used internally for packet transmissions.
  *
  * The primary goals are:
  *
@@ -55,18 +55,18 @@
  *
  * **File layout**
  *
- * Each "raw" file consists of a preamble and a content header, followed by a 
- * sequence of data packets. 
+ * Each "raw" file consists of a preamble and a content header, followed by a
+ * sequence of data packets.
  *
- * The preamble contains a magic number and version information, which are used 
+ * The preamble contains a magic number and version information, which are used
  * to identify the file format and ensure compatibility:
  * @code{.unparsed}
  * <magic>              // 8 bytes
  * <version>            // 8 bytes (4 bytes major, 4 bytes minor)
  * @endcode
- * Note that the magic number is designed to be read and written as a 64-bit integer, 
+ * Note that the magic number is designed to be read and written as a 64-bit integer,
  * which also provides information about the endianness of the file.
- * 
+ *
  * The content header following the preamble contains metadata about the data streams
  * recorded in the file, such as video frames, audio samples, and any associated metadata.
  * Each stream has it's own definition of what is contained in the content header:
@@ -75,7 +75,7 @@
  * <timestamp>           // Associated reference timestamp
  * <stream header>*      // Definitions of the data streams (e.g., video, audio, metadata)
  * @endcode
- * 
+ *
  * @{
  * @namespace vidre::storage::raw
  * @}
@@ -102,9 +102,9 @@ namespace vidre {
 
             /** Data and packet alignment.
              * @internal
-             * To ensure efficient access on 64-bit architectures, all data is 
-             * aligned to 8 bytes. This means that the size of the header and 
-             * each chunk is a multiple of 8 bytes, and any padding is added 
+             * To ensure efficient access on 64-bit architectures, all data is
+             * aligned to 8 bytes. This means that the size of the header and
+             * each chunk is a multiple of 8 bytes, and any padding is added
              * as necessary.
              * @endinternal
              * */
@@ -133,8 +133,6 @@ namespace vidre {
              *
              * */
             static constexpr version_type version = {1, 0};
-
-
 
             ///@}
 

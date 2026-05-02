@@ -43,6 +43,8 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/types/sink.hh>
+#include <vidre/io/types/source.hh>
 #include <vidre/util/uuid.hh>
 #include <vidre/util/chrono.hh>
 

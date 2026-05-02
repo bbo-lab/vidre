@@ -65,6 +65,12 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/io.hh vidre/io.cc
             vidre/io/types.hh vidre/io/types.cc
+                vidre/io/types/basic.hh vidre/io/types/basic.cc
+                vidre/io/types/sink.hh vidre/io/types/sink.cc
+                vidre/io/types/source.hh vidre/io/types/source.cc
+                vidre/io/types/channel.hh vidre/io/types/channel.cc
+                vidre/io/types/merger.hh vidre/io/types/merger.cc
+                vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
             vidre/io/file.hh vidre/io/file.cc
             vidre/io/packet.hh vidre/io/packet.cc
             vidre/io/flow.hh vidre/io/flow.cc

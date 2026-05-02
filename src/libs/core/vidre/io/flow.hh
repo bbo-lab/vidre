@@ -40,7 +40,8 @@ namespace vidre {
 
     namespace io {
 
-        //
+        //@todo implement "router"
+        //@todo implement "dashboard"
 
     }  // namespace io
 
