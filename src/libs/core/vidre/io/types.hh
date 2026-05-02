@@ -22,6 +22,7 @@
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_HH
 #define VIDRE_CORE_IO_TYPES_HH
+#include <memory>
 #pragma once
 
 /**@addtogroup api-core-io-types
@@ -57,6 +58,7 @@
 #include <vidre/exception.hh>
 #include <vidre/util/uuid.hh>
 #include <vidre/util/events.hh>
+#include <vidre/util/chrono.hh>
 #include <vidre/settings/json.hh>
 #include <vidre/thread.hh>
 
@@ -187,6 +189,9 @@ namespace vidre {
         class arbiter;  // forward declaration
         class merger;   // forward declaration
 
+        class route;
+        class dashboard;
+
         /**@addtogroup api-core-io-types
          * */
         ///@{
@@ -218,22 +223,22 @@ namespace vidre {
         requires std::is_integral_v<T>
         inline constexpr T invalid = static_cast<T>(-1);
 
-        /** IO thread.
+        /** IO task (thread).
          *
          * This (base) class provides an extension of the standard `std::thread` with some
          * additional convenience methods, such as setting scheduling policies.
          *
          * */
-        class VIDRE_CORE_VISIBILITY thread {
+        class VIDRE_CORE_VISIBILITY task {
         public:
-            /** Scoped thread state.
+            /** Scoped task state.
              *
              * FIXME
              *
              * Typical usage:
              * @code
-             * void handler(thread::shared self, thread::shared receiver) {
-             *     thread::scope thr(self.get());
+             * void handler(task::shared self, task::shared receiver) {
+             *     task::scope thr(self.get());
              *     while (not self->terminated()) {
              *         // do work
              *     }
@@ -243,7 +248,7 @@ namespace vidre {
              * */
             struct VIDRE_CORE_VISIBILITY scope {
                 scope() = default;
-                scope(thread *t) : thread_(t) {
+                scope(task *t) : thread_(t) {
                     if (thread_)
                         thread_->running_ = true;
                 }
@@ -260,43 +265,39 @@ namespace vidre {
                 }
 
             protected:
-                thread *thread_{};  ///< Pointer to the associated thread, or @c nullptr if not associated.
+                task *thread_{};  ///< Pointer to the associated thread, or @c nullptr if not associated.
             };
 
             /** Shared thread.
              * */
-            struct shared : public std::shared_ptr<thread> {
-                shared() = default;
-                shared(const shared &) = default;
-                shared &operator=(const shared &) = default;
-                shared(shared &&) = default;
-                shared &operator=(shared &&) = default;
-                shared(std::nullptr_t) : std::shared_ptr<thread>(nullptr) {}
-                template <typename T, typename... Args>
-                shared(Args &&...args) : std::shared_ptr<thread>(std::make_shared<T>(std::forward<Args>(args)...)) {}
-                ~shared() = default;
+            using shared = std::shared_ptr<task>;
+            // struct shared : public std::shared_ptr<thread> {
+            //     shared() = default;
+            //     shared(const shared &) = default;
+            //     shared &operator=(const shared &) = default;
+            //     shared(shared &&) = default;
+            //     shared &operator=(shared &&) = default;
+            //     shared(std::nullptr_t) : std::shared_ptr<thread>(nullptr) {}
+            //     template <typename... Args>
+            //     shared(Args &&...args) : std::shared_ptr<thread>(std::make_shared<thread>(std::forward<Args>(args)...)) {}
+            //     ~shared() = default;
+            // };
 
-                void terminate() const noexcept {
-                    if (auto t = get())
-                        t->terminate();
-                }
-            };
-
-            template <typename T, typename... Args>
+            template <typename... Args>
             static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...);
+                return std::make_shared<task>(std::forward<Args>(args)...);
             }
 
         public:
-            thread() noexcept = default;
-            thread(const thread &) = delete;
-            thread &operator=(const thread &) = delete;
-            thread(thread &&other) noexcept = default;
-            thread &operator=(thread &&other) noexcept = default;
-            virtual ~thread() = default;
+            task() noexcept = default;
+            task(const task &) = delete;
+            task &operator=(const task &) = delete;
+            task(task &&other) noexcept = default;
+            task &operator=(task &&other) noexcept = default;
+            virtual ~task() = default;
 
             template <class F, class... Args>
-            explicit thread(F &&f, Args &&...args) : impl_(std::forward<F>(f), std::forward<Args>(args)...) {}
+            explicit task(F &&f, Args &&...args) : impl_(std::forward<F>(f), std::forward<Args>(args)...) {}
 
         protected:
             std::thread impl_;        ///< The underlying thread implementation.
@@ -306,7 +307,7 @@ namespace vidre {
         public:
             /** Check if thread is running.
              * */
-            bool running() const noexcept {
+            bool isrunning() const noexcept {
                 return running_;
             }
 
@@ -335,6 +336,7 @@ namespace vidre {
              * */
             virtual void terminate() noexcept {
                 terminate_ = true;
+                //@todo should we also delete ourselves here? (if detached)
             }
 
             /** Set scheduling priority.
@@ -426,25 +428,35 @@ namespace vidre {
         };
 
         /** Endpoint capabilities.
+         * @todo Add an "info" struct + method (e.g. transmitted byte count, buffer fill ratio, etc.).
          * */
         class VIDRE_CORE_VISIBILITY endpoint {
         public:
             /** Capabilitie list.
              * */
-            enum cap : uint32_t {
+            enum class cap : uint16_t {
                 none = 0,
 
                 stream = 0x0001,        ///< Stream mode (e.g., for files or network sockets).
                 packet = 0x0002,        ///< Packet mode (e.g., for video frames or audio samples).
                 any = stream | packet,  ///< Any mode (default).
 
-                loop = 0x0010,      ///< Endpoint is thread-based (e.g., for live video capture).
-                                    /// The endpoint produces data in a seperate thread, and data
-                                    /// availability is signaled via events.
-                ondemand = 0x0020,  ///< Endpoint is on-demand (e.g., for memory buffers).
-                                    /// The endpoint produces data on demand, i.e., when the consumer requests it.
+                task = 0x0010,      ///< Endpoint has thread support (e.g., for live video capture).
+                realtime = 0x0020,  ///< Endpoint requires real-time scheduling.
+                push = 0x0040,      ///< Source can push data to the sink.
+                pull = 0x0040,      ///< Sink can pull data from the source.
+            };
 
-                // FIXME
+            /** Source-sink capabilities.
+             * */
+            struct VIDRE_CORE_VISIBILITY caps {
+                cap source;  ///< Source capabilities.
+                cap sink;    ///< Sink capabilities.
+
+                bool valid() const noexcept {
+                    return source != cap::none && sink != cap::none &&
+                           (to_underlying(source) & to_underlying(sink) & to_underlying(cap::any)) != 0;
+                }
             };
 
             template <typename T>
@@ -453,31 +465,50 @@ namespace vidre {
             /** Match capabilities between two endpoint types.
              * @param from The source endpoint type.
              * @param to The sink endpoint type.
-             * @returns The matched type, or @c type::invalid if no match is found.
+             * @returns The matched capabilities.
              * */
-            static constexpr cap match(cap from, cap to) noexcept;
+            static constexpr caps match(cap from, cap to) noexcept;
 
             /** Match capabilities between two endpoint types.
              * @tparam From The source endpoint type.
              * @tparam To The sink endpoint type.
              * @param from The source endpoint instance.
              * @param to The sink endpoint instance.
-             * @returns The matched type, or @c type::invalid if no match is found.
+             * @returns The matched capabilities.
              * */
             template <class From, class To>
             requires (isa_v<From> && isa_v<To>)
-            static constexpr cap match(From *from, To *to) noexcept {
+            static constexpr caps match(From *from, To *to) noexcept {
                 return match(from->output(), to->input());
+            }
+
+            /** Match capabilities between two endpoint types.
+             * @tparam From The source endpoint type.
+             * @tparam To The sink endpoint type.
+             * @param from The source endpoint instance.
+             * @param to The sink endpoint instance.
+             * @returns The matched capabilities.
+             * */
+            template <class From, class To>
+            requires (isa_v<From> && isa_v<To>)
+            static caps match(std::shared_ptr<From> from, std::shared_ptr<To> to) noexcept {
+                return match(from.get(), to.get());
             }
 
         public:
             endpoint() = default;
-            virtual ~endpoint() = default;
+            virtual ~endpoint() {
+                if (task_) {
+                    task_->terminate();
+                    // FIXME wait?
+                    delete task_;
+                }
+            }
 
         protected:
-            thread::shared thread_;  ///< Optional thread for thread-based endpoints.
+            task *task_{};  ///< Optional task for task-based endpoints.
 
-        public: // general
+        public:  // general
             /** Sink capabilities (if applicable).
              * */
             virtual cap input() const noexcept {
@@ -490,12 +521,75 @@ namespace vidre {
                 return cap::none;
             }
 
-        public: // thread-related
+            /** Get endpoint setup.
+             * @returns JSON configuration object for this endpoint.
+             * @todo need to define a standard format...
+             * */
+            virtual settings::json setup() const {
+                return {};
+            }
+
+            /** Setup endpoint.
+             * @param config JSON configuration object for this endpoint.
+             * */
+            virtual void setup(const settings::json &config) {}
+
+        protected:
+            /** Endpoint handler.
+             * */
+            virtual void handler() {
+                throw exception::logic() << error::message("endpoint does not implement a handler");
+            }
+
+        public:  // thread-related
             /** Check if threaded.
              * */
             bool isthread() const noexcept {
-                return thread_.get();
+                return task_;
             }
+
+            /** Make threaded.
+             * */
+            void make_thread() {
+                if (task_)
+                    throw exception::logic() << error::message("endpoint is already threaded");
+
+                task_ = new task(&endpoint::handler, this);
+            }
+
+            /** Start thread in the background.
+             * */
+            void detach() {
+                if (task_)
+                    task_->detach();
+            }
+
+            /** Check if running.
+             * */
+            bool isrunning() const noexcept {
+                return task_ && task_->isrunning();
+            }
+
+            /** Terminate thread.
+             * @param timeout Time to wait for thread termination (if applicable).
+             * */
+            status terminate(std::chrono::milliseconds timeout = std::chrono::milliseconds(10)) {
+                if (not task_)
+                    return status::bad;
+
+                task_->terminate();
+                auto start = chrono::monotonic::now();
+                while (task_->isrunning()) {
+                    if (chrono::monotonic::now() - start > timeout)
+                        return status::bad;
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                }
+                return status::good;
+            };
+
+        private:
+            friend class route;
+            friend class dashboard;
         };
 
         ///@cond
@@ -521,17 +615,38 @@ namespace vidre {
             return lhs;
         }
 
-        inline constexpr endpoint::cap match(endpoint::cap from, endpoint::cap to) noexcept {
+        inline constexpr endpoint::caps match(endpoint::cap from, endpoint::cap to) noexcept {
             auto common = from & to;
 
             if ((common & endpoint::cap::any) == endpoint::cap::none)
-                return endpoint::cap::none;
-            else if ((common & endpoint::cap::any) == endpoint::cap::any)
-                common &= ~endpoint::cap::stream;
+                return {endpoint::cap::none,  //
+                        endpoint::cap::none};
 
-            return common;
+            endpoint::caps result = {};
+
+            // select stream/packet mode
+            if (!!((common & endpoint::cap::any) & endpoint::cap::packet))
+                common = endpoint::cap::packet;  // packet mode
+            else
+                common = endpoint::cap::stream;  // stream mode
+
+            // threading?
+            if (!!(from & endpoint::cap::task))
+                result.source |= endpoint::cap::task;  // source will have a thread
+            else if (!!(to & endpoint::cap::task))
+                result.sink |= endpoint::cap::task;  // sink will have a thread
+
+            // push or pull?
+            else if (!!(from & endpoint::cap::push))
+                result.source |= endpoint::cap::push;  // source handler sends data to sink
+            else if (!!(from & endpoint::cap::pull))
+                result.sink |= endpoint::cap::pull;  // sink handler pulls data from source
+            else
+                return {endpoint::cap::none,  //
+                        endpoint::cap::none};
+
+            return result;
         }
-
         ///@endcond
 
         /** Data sink skeleton.
@@ -590,7 +705,8 @@ namespace vidre {
             virtual ~sink() {}
 
         protected:
-            event ready_{};  ///< Event for signaling sink ready state.
+            event ready_{};                 ///< Event for signaling sink ready state.
+            std::shared_ptr<source> link_;  ///< Linked source (if any).
 
         protected:
             /** The low-level write method (if applicable).
@@ -607,6 +723,13 @@ namespace vidre {
              * */
             void ready() {
                 ready_.notify();
+            }
+
+            /** Link source.
+             * @param src Source to link.
+             * */
+            void link(std::shared_ptr<source> src) {
+                link_ = std::move(src);
             }
 
         public:
@@ -662,6 +785,18 @@ namespace vidre {
             [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
                 return ready_.wait(timeout);
             }
+
+            /** Stream.
+             * @param src The source to stream from.
+             * */
+            void stream(std::shared_ptr<source> src) {
+                link_ = std::move(src);
+                handler();
+            }
+
+        private:
+            friend class route;
+            friend class dashboard;
         };
 
         /** Data source.
@@ -720,6 +855,13 @@ namespace vidre {
                 return invalid<offset_type>;
             }
 
+            /** Link sink.
+             * @param snk Sink to link.
+             * */
+            void link(std::shared_ptr<sink> snk) {
+                link_ = std::move(snk);
+            }
+
         public:
             /** Check if the stream is valid (ie. usable).
              * */
@@ -771,10 +913,16 @@ namespace vidre {
             }
 
             /** Stream.
+             * @param snk The sink to stream to.
              * */
-            virtual void stream(sink::shared snk, thread::shared thr = {}) {}
+            void stream(std::shared_ptr<sink> snk) {
+                link_ = std::move(snk);
+                handler();
+            }
 
         private:
+            friend class route;
+            friend class dashboard;
         };
 
         ///@todo channel

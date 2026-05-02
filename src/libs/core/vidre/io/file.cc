@@ -91,10 +91,10 @@ void io::file::sink::close() noexcept {
     return;
 }
 
-void io::file::source::stream(sink::shared snk, thread::shared thr) {
-    thread::scope state(thr.get());
+void io::file::source::handler() {
+    task::scope state(task_);
 
-    auto recv = snk->input();
+    auto recv = link_->input();
     if (not(recv & endpoint::cap::stream))
         throw exception::logic() << error::message("sink does not support streaming");
 
@@ -106,7 +106,7 @@ void io::file::source::stream(sink::shared snk, thread::shared thr) {
         auto res = get(buf);
 
         if (res.count)
-            snk->put({res.count, buf.data});
+            link_->put({res.count, buf.data});
         else
             // end of file
             break;

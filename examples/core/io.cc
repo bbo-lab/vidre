@@ -32,8 +32,8 @@ std::filesystem::path create_dummy_file() {
 }
 //! [create-dummy-file]
 
-//! [copy-source-to-sink-discrete]
-void copy_source_to_sink() {
+//! [copy-source-to-sink-manual]
+void copy_source_to_sink_manual() {
     std::filesystem::path data = create_dummy_file();
 
     auto src = io::source::make<io::file::source>(data);
@@ -46,14 +46,15 @@ void copy_source_to_sink() {
 
     src->stream(dst);
 }
-//! [copy-source-to-sink-discrete]
+//! [copy-source-to-sink-manual]
 
 int main(int argc, const char **argv) {
     try {
-        copy_source_to_sink();
+        copy_source_to_sink_manual();
     } catch (exception &e) {
         std::cerr << error::diagnostic(e).dump() << std::endl;
     }
+
     return 0;
 }
 

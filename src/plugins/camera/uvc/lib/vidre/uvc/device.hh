@@ -91,7 +91,7 @@ namespace vidre {
                 }
 
                 cap output() const noexcept override {
-                    return cap::packet | cap::loop;
+                    return cap::packet | cap::task | cap::realtime;
                 }
 
                 io::result get(memory::area v) override {

@@ -556,7 +556,6 @@ namespace vidre {
             }
 
             endpoint::cap input() const noexcept override {
-                // FIXME
                 return endpoint::cap::any;
             }
 
@@ -620,6 +619,8 @@ namespace vidre {
                 return fd_.read(buf);
             }
 
+            void handler() override;
+
         public:
             /** Check if valid (i.e., usable).
              * */
@@ -628,8 +629,7 @@ namespace vidre {
             }
 
             endpoint::cap output() const noexcept override {
-                // FIXME
-                return endpoint::cap::any | endpoint::cap::ondemand;
+                return endpoint::cap::any | endpoint::cap::push;
             }
 
             // FIXME void setup(const settings::json &config) override;
@@ -638,7 +638,7 @@ namespace vidre {
              * @param filename The file name to open.
              * @return @c true on success
              * @return @c false otherwise
-             */
+             * */
             bool open(const std::filesystem::path &filename) noexcept {
                 return fd_.open(filename, file::access::readonly);
             }
@@ -648,8 +648,6 @@ namespace vidre {
             void close() noexcept {
                 fd_.close();
             }
-
-            void stream(sink::shared snk, thread::shared thr = {}) override;
         };
 
         namespace standard {
