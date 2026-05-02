@@ -20,6 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "file.hh"
+#include "vidre/io/types.hh"
 
 using namespace vidre;
 
@@ -44,7 +45,7 @@ io::offset_type io::file::sink::write(const memory::view &buf) noexcept {
         offset_type retval = count;
         offset_type pos = 0;
         while (count > 0) {
-            size_type buffered = buf_.append(src + pos, count);
+            size_type buffered = buf_.put(src + pos, count);
             if (buf_.full())
                 flush();
             count -= buffered;
@@ -90,18 +91,29 @@ void io::file::sink::close() noexcept {
     return;
 }
 
-void io::file::source::routine() {
-    io::thread::entry scope(*this);
+void io::file::source::stream(sink::shared snk, thread::shared thr) {
+    thread::state state(thr.get());
 
-    while (not terminate_) {
-        if (not valid())
+    auto recv = snk->input();
+    if (not(recv & endpoint::cap::stream))
+        throw exception::logic() << error::message("sink does not support streaming");
+
+    // setup buffer
+    detail::buffer buf;
+    buf.setup(fd_.blocksize());
+
+    while (not state.terminated()) {
+        auto res = get(buf);
+
+        if (res.count)
+            snk->put({res.count, buf.data});
+        else
+            // end of file
             break;
 
-        // event::result res = wait();
-        // if (res.status != event::status::ok)
-        //     break;
-
-        // notify(res.count);
+        if (not res)
+            // and error occurred
+            throw exception::runtime() << error::code(fd_.error());
     }
 }
 

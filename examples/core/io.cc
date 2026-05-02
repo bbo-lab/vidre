@@ -32,7 +32,7 @@ std::filesystem::path create_dummy_file() {
 }
 //! [create-dummy-file]
 
-//! [copy-source-to-sink]
+//! [copy-source-to-sink-discrete]
 void copy_source_to_sink() {
     std::filesystem::path data = create_dummy_file();
 
@@ -44,13 +44,13 @@ void copy_source_to_sink() {
     if (not dst->valid())
         throw exception::runtime() << error::system();
 
-    connect(src, dst);
+    src->stream(dst);
 }
-//! [copy-source-to-sink]
+//! [copy-source-to-sink-discrete]
 
 int main(int argc, const char **argv) {
     try {
-        // copy_source_to_sink();
+        copy_source_to_sink();
     } catch (exception &e) {
         std::cerr << error::diagnostic(e).dump() << std::endl;
     }

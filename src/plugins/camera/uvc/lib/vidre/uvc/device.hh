@@ -90,8 +90,8 @@ namespace vidre {
                     return vid_.valid();
                 }
 
-                operator io::mode::type() const noexcept override {
-                    return io::mode::packet;
+                cap output() const noexcept override {
+                    return cap::packet | cap::loop;
                 }
 
                 io::result get(memory::area v) override {

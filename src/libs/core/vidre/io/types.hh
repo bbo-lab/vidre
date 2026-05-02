@@ -30,14 +30,22 @@
  * @fileinfo
  *
  * The data flow in VidRe has to cover various forms of data (such as its main
- * focus: video images, see @ref api-core-video-format) as well as modes of
- * transmission (from fixed to variable sized data packets, as well as raw I/O).
- * FIXME
+ * focus: video images, see @ref api-video) as well as modes of transmission
+ * (from fixed to variable sized data packets, as well as raw I/O).
  *
  * ## Overview
  *
- * FIXME
+ * ### Endpoints and transmission
  *
+ * The basic building blocks for data transmission are:
+ * - **source**: a data producer (from input devices, such as video cameras, or data files).
+ * - **sink**: a data consumer (from output devices, such as audio, video, or, as above, data files).
+ * - **channel**: a channel exposing both, source and sink interface, allowing for, e.g., filtering data.
+ * - **arbiter**: arbiters are responsible for distributing a single source to multiple sinks.
+ * - **merger**: mergers are responsible for combining multiple sources into a single sink.
+ *
+ * ### Flow control
+ * FIXME see https://chat.deepseek.com/a/chat/s/8cc10342-f684-4a3e-805a-82c0b7973e4c
  * */
 
 #include <vidre/core/config.hh>
@@ -53,7 +61,6 @@
 
 #include <bit>
 #include <utility>
-#include <filesystem>
 
 #include <cerrno>
 #include <cstring>
@@ -149,7 +156,7 @@ namespace vidre {
                  * @param n Number of bytes to buffer.
                  * @returns Number of bytes actually buffered.
                  * */
-                size_type append(const_pointer src, size_type n) noexcept {
+                size_type put(const_pointer src, size_type n) noexcept {
                     assert(data != nullptr);
 
                     size_type space = size - used;
@@ -158,19 +165,26 @@ namespace vidre {
                     used += done;
                     return done;
                 }
+
+                /** Dress as memory area.
+                 * */
+                operator memory::area() const noexcept {
+                    return {size, data};    
+                }
             };
 
             ///@}
 
         }  // namespace detail
 
-    }  // namespace io
-
-    namespace io {
-
         namespace packet {
             struct basic;  // forward declaration
         }
+        class sink;     // forward declaration
+        class source;   // forward declaration
+        class channel;  // forward declaration
+        class arbiter;  // forward declaration
+        class merger;   // forward declaration
 
         /**@addtogroup api-core-io-types
          * */
@@ -193,7 +207,7 @@ namespace vidre {
         /** Invalid offset value.
          * Typical usage:
          * @code
-         * if (write(x,y,z) == io::invalid) {
+         * if (write(x,y,z) == io::invalid<io::offset_type>) {
          *     // handle error
          * }
          * @endcode
@@ -269,103 +283,104 @@ namespace vidre {
             }
         };
 
-        /** Stream mode.
+        /** Endpoint capabilities.
          * */
-        struct VIDRE_CORE_VISIBILITY mode {
-            enum type : unsigned {
+        class VIDRE_CORE_VISIBILITY endpoint {
+        public:
+            /** Capabilitie list.
+             * */
+            enum cap : uint32_t {
+                none = 0,
+
                 stream = 0x0001,        ///< Stream mode (e.g., for files or network sockets).
                 packet = 0x0002,        ///< Packet mode (e.g., for video frames or audio samples).
                 any = stream | packet,  ///< Any mode (default).
+
+                loop = 0x0010,      ///< Endpoint is thread-based (e.g., for live video capture).
+                                    /// The endpoint produces data in a seperate thread, and data
+                                    /// availability is signaled via events.
+                ondemand = 0x0020,  ///< Endpoint is on-demand (e.g., for memory buffers).
+                                    /// The endpoint produces data on demand, i.e., when the consumer requests it.
+
+                // FIXME
             };
+
+            template <typename T>
+            static constexpr bool isa_v = std::derived_from<T, endpoint>;
+
+            /** Match capabilities between two endpoint types.
+             * @param from The source endpoint type.
+             * @param to The sink endpoint type.
+             * @returns The matched type, or @c type::invalid if no match is found.
+             * */
+            static constexpr cap match(cap from, cap to) noexcept;
+
+            /** Match capabilities between two endpoint types.
+             * @tparam From The source endpoint type.
+             * @tparam To The sink endpoint type.
+             * @param from The source endpoint instance.
+             * @param to The sink endpoint instance.
+             * @returns The matched type, or @c type::invalid if no match is found.
+             * */
+            template <class From, class To>
+            requires (isa_v<From> && isa_v<To>)
+            static constexpr cap match(From *from, To *to) noexcept {
+                return match(from->output(), to->input());
+            }
+
+        public:
+            endpoint() = default;
+            virtual ~endpoint() = default;
+
+        public:
+            /** Sink capabilities (if applicable).
+             * */
+            virtual cap input() const noexcept {
+                return cap::none;
+            }
+
+            /** Source capabilities (if applicable).
+             * */
+            virtual cap output() const noexcept {
+                return cap::none;
+            }
         };
 
         ///@cond
-        inline constexpr mode::type operator|(mode::type lhs, mode::type rhs) {
-            return static_cast<mode::type>(to_underlying(lhs) | to_underlying(rhs));
+        inline constexpr endpoint::cap operator|(endpoint::cap lhs, endpoint::cap rhs) {
+            return static_cast<endpoint::cap>(to_underlying(lhs) | to_underlying(rhs));
         }
-        inline constexpr mode::type operator&(mode::type lhs, mode::type rhs) {
-            return static_cast<mode::type>(to_underlying(lhs) & to_underlying(rhs));
+        inline constexpr endpoint::cap operator&(endpoint::cap lhs, endpoint::cap rhs) {
+            return static_cast<endpoint::cap>(to_underlying(lhs) & to_underlying(rhs));
         }
-        inline constexpr mode::type operator~(mode::type m) {
-            return static_cast<mode::type>(~to_underlying(m));
+        inline constexpr endpoint::cap operator~(endpoint::cap m) {
+            return static_cast<endpoint::cap>(~to_underlying(m));
         }
-        inline constexpr bool operator!(mode::type m) {
-            return m == static_cast<mode::type>(0);
+        inline constexpr bool operator!(endpoint::cap m) {
+            return m == endpoint::cap::none;
         }
 
-        inline constexpr mode::type &operator|=(mode::type &lhs, mode::type rhs) {
-            lhs = static_cast<mode::type>(to_underlying(lhs) | to_underlying(rhs));
+        inline constexpr endpoint::cap &operator|=(endpoint::cap &lhs, endpoint::cap rhs) {
+            lhs = static_cast<endpoint::cap>(to_underlying(lhs) | to_underlying(rhs));
             return lhs;
         }
-        inline constexpr mode::type &operator&=(mode::type &lhs, mode::type rhs) {
-            lhs = static_cast<mode::type>(to_underlying(lhs) & to_underlying(rhs));
+        inline constexpr endpoint::cap &operator&=(endpoint::cap &lhs, endpoint::cap rhs) {
+            lhs = static_cast<endpoint::cap>(to_underlying(lhs) & to_underlying(rhs));
             return lhs;
         }
+
+        inline constexpr endpoint::cap match(endpoint::cap from, endpoint::cap to) noexcept {
+            auto common = from & to;
+
+            if ((common & endpoint::cap::any) == endpoint::cap::none)
+                return endpoint::cap::none;
+            else if ((common & endpoint::cap::any) == endpoint::cap::any)
+                common &= ~endpoint::cap::stream;
+
+            return common;
+        }
+
         ///@endcond
-
-        /** Business state.
-         *
-         * This class, eventually only used by the `sink`, provides a simple mechanism
-         * for signaling when a component is "busy" (e.g., processing data) and when
-         * it is ready to accept new data.
-         *
-         * The consumer (sink) can call `busy::clear()` to signal that it is ready for new data,
-         * and the producer (source) can call `busy::wait()` to wait until the consumer is ready.
-         * This can be useful for flow control, especially when dealing with components
-         * that have variable processing times or when implementing backpressure mechanisms.
-         *
-         * Note, however, that producers (especially isochronous ones) may ignore the busy state
-         * and continue producing data, which may lead to data loss if the consumer cannot keep up
-         * (which is, in fact, intended behavior).
-         *
-         * */
-        class VIDRE_CORE_VISIBILITY busy {
-        public:
-            class scope;
-
-        public:
-            busy() = default;
-
-        protected:
-            event ev_{};  ///< Event for signaling when the busy state is cleared.
-
-        protected:
-            /** Clear busy state.
-             * */
-            void done() {
-                ev_.notify();
-            }
-
-        public:
-            /** Wait for busy state to be cleared.
-             * @return @c event::result containing the status and the notification count.
-             * */
-            [[nodiscard]] event::result wait() {
-                return ev_.wait();
-            }
-
-            /** Wait for busy state to be cleared (with timeout).
-             * @param timeout The maximum time to wait for the busy state to be cleared.
-             * @return @c event::result containing the status and the notification count.
-             * */
-            [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
-                return ev_.wait(timeout);
-            }
-        };
-
-        /** Busy scope.
-         * */
-        class VIDRE_CORE_VISIBILITY busy::scope {
-        public:
-            scope(busy &b) : busy_(b) {}
-            scope(busy *b) : busy_(*b) {}
-            ~scope() {
-                busy_.done();
-            }
-
-        protected:
-            busy &busy_;
-        };
 
         /** IO thread.
          *
@@ -375,49 +390,37 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY thread {
         public:
-            /** Thread routine.
-             *
-             * This method should be overridden by derived classes to define the thread's behavior.
-             * It is called when the thread starts.
-             *
-             * Typical implementation:
-             * @code
-             * class derived_thread : public virtual io::thread {
-             * public:
-             *     virtual void routine() override {
-             *         thread::entry scope(*this);
-             *
-             *         while (not terminate_) {
-             *             // thread code here
-             *         }
-             *     }
-             * };
-             * @endcode
-             *
+            /** Scoped thread state.
              * */
-            virtual void routine();
-
-            /** Scoped thread entry.
-             * */
-            struct VIDRE_CORE_VISIBILITY entry {
-                entry(thread &t) : thread_(t) {
-                    thread_.running_ = true;
+            struct VIDRE_CORE_VISIBILITY state {
+                state() = default;
+                state(thread *t) : thread_(t) {
+                    if (thread_)
+                        thread_->running_ = true;
                 }
 
-                entry(thread *t) : thread_(*t) {
-                    thread_.running_ = true;
+                ~state() {
+                    if (thread_)
+                        thread_->running_ = false;
                 }
 
-                ~entry() {
-                    thread_.running_ = false;
+                bool terminated() const noexcept {
+                    return thread_ && thread_->terminate_;
                 }
 
             protected:
-                thread &thread_;
+                thread *thread_{};  ///< Pointer to the associated thread, or @c nullptr if not associated.
             };
 
+            using shared = std::shared_ptr<thread>;
+
+            template <typename T, typename... Args>
+            static shared make(Args &&...args) {
+                return std::make_shared<T>(std::forward<Args>(args)...);
+            }
+
         public:
-            thread() noexcept : impl_(&thread::routine, this) {}
+            thread() noexcept = default;
             thread(const thread &) = delete;
             thread &operator=(const thread &) = delete;
             thread(thread &&other) noexcept = default;
@@ -513,7 +516,7 @@ namespace vidre {
          *
          * @see sink::shared
          * */
-        class VIDRE_CORE_VISIBILITY sink : public busy {
+        class VIDRE_CORE_VISIBILITY sink : public virtual endpoint {
         public:
             /** Shared pointer type for sinks.
              * This type is used for managing the lifetime of sink instances,
@@ -544,6 +547,9 @@ namespace vidre {
             virtual ~sink() {}
 
         protected:
+            event ready_{};  ///< Event for signaling sink ready state.
+
+        protected:
             /** The low-level write method (if applicable).
              * @param buf Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
@@ -552,18 +558,19 @@ namespace vidre {
                 return invalid<offset_type>;
             }
 
+            /** Signal that the sink is ready.
+             * This method can be called by derived classes to indicate that the sink is ready
+             * to accept data.
+             * */
+            void ready() {
+                ready_.notify();
+            }
+
         public:
             /** Check if the stream is valid (ie. usable).
              * */
             virtual bool valid() const noexcept {
                 return false;
-            }
-
-            /** Retrieve the mode of the sink.
-             * @returns The mode of the sink.
-             * */
-            virtual operator mode::type() const noexcept {
-                return mode::any;
             }
 
             /** Configure sink.
@@ -598,7 +605,20 @@ namespace vidre {
              * */
             virtual result put(const packet::basic *p);
 
-        private:
+            /** Wait for sink ready signal.
+             * @returns True if the sink is ready, false if the wait was interrupted.
+             * */
+            [[nodiscard]] event::result wait() {
+                return ready_.wait();
+            }
+
+            /** Wait for sink ready signal, with a timeout.
+             * @param timeout The maximum time to wait for the sink to become ready (milliseconds).
+             * @returns True if the sink is ready, false if the wait timed out or was interrupted.
+             * */
+            [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
+                return ready_.wait(timeout);
+            }
         };
 
         /** Data source.
@@ -608,7 +628,7 @@ namespace vidre {
          *
          * @see source::shared
          * */
-        class VIDRE_CORE_VISIBILITY source : public virtual thread {
+        class VIDRE_CORE_VISIBILITY source : public virtual endpoint {
         public:
             /** Shared pointer type for source.
              * This type is used for managing the lifetime of source instances,
@@ -639,14 +659,14 @@ namespace vidre {
             virtual ~source() {}
 
         protected:
-            event ev_{};         ///< Event for signaling data availability.
+            event avail_{};      ///< Event for signaling data availability.
             sink::shared link_;  ///< Linked sink (if any).
 
         protected:
             /** Notify, that @a n packets are available.
              * */
             event::state notify(size_type n = 1) {
-                return ev_.notify(n);
+                return avail_.notify(n);
             }
 
             /** The low-level read method.
@@ -662,13 +682,6 @@ namespace vidre {
              * */
             virtual bool valid() const noexcept {
                 return false;
-            }
-
-            /** Retrieve the mode of the source.
-             * @returns The mode of the source.
-             * */
-            virtual operator mode::type() const noexcept {
-                return mode::stream;
             }
 
             /** Configure source.
@@ -688,21 +701,21 @@ namespace vidre {
                 return read(v);
             }
 
-            /** Wait (indefinitely) for data to become available.
+            /** Poll for data availability (waits indefinitely).
              * @returns True if data is available, false if the wait was interrupted.
              * @see vidre::event
              * */
-            [[nodiscard]] event::result wait() {
-                return ev_.wait();
+            [[nodiscard]] event::result poll() {
+                return avail_.wait();
             }
 
-            /** Wait for data to become available, with a timeout.
-             * @param timeout The maximum time to wait#include <vidre/cpp/util.hh> for data (milliseconds).
+            /** Poll for data availability with timeout.
+             * @param timeout The maximum time to wait for data (milliseconds).
              * @returns True if data is available, false if the wait timed out or was interrupted.
              * @see vidre::event
              * */
-            [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
-                return ev_.wait(timeout);
+            [[nodiscard]] event::result poll(std::chrono::milliseconds timeout) {
+                return avail_.wait(timeout);
             }
 
             /** Retrieve a packet from the source.
@@ -714,57 +727,16 @@ namespace vidre {
                 throw exception::logic();
             }
 
-            /** Link to a sink.
+            /** Stream.
              * */
-            virtual void link(sink::shared &snk);
+            virtual void stream(sink::shared snk, thread::shared thr = {}) {}
 
         private:
         };
 
-        /** FIXME Data pipe.
-         *
-         * A data pipe is a combination of a source and a sink, allowing data to flow
-         * from one component to another. It can be used to connect different parts
-         * of a processing pipeline.
-         *
-         * @see source::shared
-         * */
-        class VIDRE_CORE_VISIBILITY pipe {
-        public:
-            /** Shared pointer type for pipe.
-             * This type is used for managing the lifetime of pipe instances,
-             * especially when they are shared across different components or threads.
-             * @see pipe::make
-             * */
-            using shared = std::shared_ptr<pipe>;
-
-            /** Create pipe as shared pointer.
-             * @tparam T Type of the pipe to create.
-             * @param args Arguments to forward to the pipe's constructor.
-             * @returns A shared pointer to the newly created pipe.
-             * @see pipe::shared
-             * */
-            template <typename T, typename... Args>
-            static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...);
-            }
-
-        public:
-            pipe() = default;
-
-            pipe(const pipe &) = delete;
-            pipe &operator=(const pipe &) = delete;
-            pipe(pipe &&) = default;
-            pipe &operator=(pipe &&) = default;
-
-            virtual ~pipe() {}
-
-        public:
-        };
-
-        /** Connect a sink to a source.
-         * */
-        std::shared_ptr<std::thread> connect(source::shared &src, sink::shared &snk) noexcept;
+        ///@todo channel
+        ///@todo arbiter
+        ///@todo merger
 
         ///@}
 

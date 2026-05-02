@@ -24,34 +24,3 @@
 
 using namespace vidre;
 
-void io::thread::routine() {
-    // default implementation does nothing
-}
-
-void io::source::link(sink::shared &snk) {
-    // FIXME
-}
-
-std::shared_ptr<std::thread> io::connect(source::shared &src, sink::shared &snk) noexcept {
-    // FIXME all should be done in a separate thread
-    if (!(*src & mode::packet)) {
-        uint8_t buf[4096];
-        while (src->valid() && snk->valid()) {
-            auto res = src->get({4096, buf});
-            if (!res)
-                break;
-            if (res.count == 0)
-                break;
-
-            auto putres = snk->put({res.count, buf});
-            if (!putres)
-                break;
-        }
-
-        return nullptr;
-    }
-    else {
-        // FIXME
-        return nullptr;
-    }
-}

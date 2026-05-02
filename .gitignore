@@ -47,5 +47,8 @@ patches/
 # benchmarks
 *.tmp
 
-# bi
+# vi
 *.swp
+
+# clangd
+.cache/

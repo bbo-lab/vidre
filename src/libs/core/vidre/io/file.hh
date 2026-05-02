@@ -555,6 +555,11 @@ namespace vidre {
                 return fd_.valid();
             }
 
+            endpoint::cap input() const noexcept override {
+                // FIXME
+                return endpoint::cap::any;
+            }
+
             /** Set buffer size.
              * @param len Buffer size in bytes (should be a power of 2).
              * @return Number of bytes allocated, or 0 if it was already allocated
@@ -565,7 +570,7 @@ namespace vidre {
                 return buf_.setup(len);
             }
 
-            // FIXME void configure(const settings::json &config) override;
+            // FIXME void setup(const settings::json &config) override;
 
             /** Open file.
              * @param filename The file name to open.
@@ -616,16 +621,18 @@ namespace vidre {
             }
 
         public:
-            void routine() override;
-
-        public:
             /** Check if valid (i.e., usable).
              * */
             bool valid() const noexcept override {
                 return fd_.valid();
             }
 
-            // FIXME void configure(const settings::json &config) override;
+            endpoint::cap output() const noexcept override {
+                // FIXME
+                return endpoint::cap::any | endpoint::cap::ondemand;
+            }
+
+            // FIXME void setup(const settings::json &config) override;
 
             /** Open file.
              * @param filename The file name to open.
@@ -641,6 +648,8 @@ namespace vidre {
             void close() noexcept {
                 fd_.close();
             }
+
+            void stream(sink::shared snk, thread::shared thr = {}) override;
         };
 
         namespace standard {
