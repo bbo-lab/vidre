@@ -92,7 +92,7 @@ void io::file::sink::close() noexcept {
 }
 
 void io::file::source::stream(sink::shared snk, thread::shared thr) {
-    thread::state state(thr.get());
+    thread::scope state(thr.get());
 
     auto recv = snk->input();
     if (not(recv & endpoint::cap::stream))
@@ -102,7 +102,7 @@ void io::file::source::stream(sink::shared snk, thread::shared thr) {
     detail::buffer buf;
     buf.setup(fd_.blocksize());
 
-    while (not state.terminated()) {
+    while (not state.isterminated()) {
         auto res = get(buf);
 
         if (res.count)

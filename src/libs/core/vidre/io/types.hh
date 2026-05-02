@@ -45,7 +45,10 @@
  * - **merger**: mergers are responsible for combining multiple sources into a single sink.
  *
  * ### Flow control
+ *
  * FIXME see https://chat.deepseek.com/a/chat/s/8cc10342-f684-4a3e-805a-82c0b7973e4c
+ *
+ * @see @ref api-core-io-flow
  * */
 
 #include <vidre/core/config.hh>
@@ -56,8 +59,6 @@
 #include <vidre/util/events.hh>
 #include <vidre/settings/json.hh>
 #include <vidre/thread.hh>
-
-#include <ankerl/unordered_dense.h>
 
 #include <bit>
 #include <utility>
@@ -169,7 +170,7 @@ namespace vidre {
                 /** Dress as memory area.
                  * */
                 operator memory::area() const noexcept {
-                    return {size, data};    
+                    return {size, data};
                 }
             };
 
@@ -216,6 +217,147 @@ namespace vidre {
         template <class T = offset_type>
         requires std::is_integral_v<T>
         inline constexpr T invalid = static_cast<T>(-1);
+
+        /** IO thread.
+         *
+         * This (base) class provides an extension of the standard `std::thread` with some
+         * additional convenience methods, such as setting scheduling policies.
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY thread {
+        public:
+            /** Scoped thread state.
+             *
+             * FIXME
+             *
+             * Typical usage:
+             * @code
+             * void handler(thread::shared self, thread::shared receiver) {
+             *     thread::scope thr(self.get());
+             *     while (not self->terminated()) {
+             *         // do work
+             *     }
+             * }
+             * @endcode
+             *
+             * */
+            struct VIDRE_CORE_VISIBILITY scope {
+                scope() = default;
+                scope(thread *t) : thread_(t) {
+                    if (thread_)
+                        thread_->running_ = true;
+                }
+
+                ~scope() {
+                    if (thread_)
+                        thread_->running_ = false;
+                }
+
+                /** Check if thread should terminate.
+                 * */
+                bool isterminated() const noexcept {
+                    return thread_ && thread_->terminate_;
+                }
+
+            protected:
+                thread *thread_{};  ///< Pointer to the associated thread, or @c nullptr if not associated.
+            };
+
+            /** Shared thread.
+             * */
+            struct shared : public std::shared_ptr<thread> {
+                shared() = default;
+                shared(const shared &) = default;
+                shared &operator=(const shared &) = default;
+                shared(shared &&) = default;
+                shared &operator=(shared &&) = default;
+                shared(std::nullptr_t) : std::shared_ptr<thread>(nullptr) {}
+                template <typename T, typename... Args>
+                shared(Args &&...args) : std::shared_ptr<thread>(std::make_shared<T>(std::forward<Args>(args)...)) {}
+                ~shared() = default;
+
+                void terminate() const noexcept {
+                    if (auto t = get())
+                        t->terminate();
+                }
+            };
+
+            template <typename T, typename... Args>
+            static shared make(Args &&...args) {
+                return std::make_shared<T>(std::forward<Args>(args)...);
+            }
+
+        public:
+            thread() noexcept = default;
+            thread(const thread &) = delete;
+            thread &operator=(const thread &) = delete;
+            thread(thread &&other) noexcept = default;
+            thread &operator=(thread &&other) noexcept = default;
+            virtual ~thread() = default;
+
+            template <class F, class... Args>
+            explicit thread(F &&f, Args &&...args) : impl_(std::forward<F>(f), std::forward<Args>(args)...) {}
+
+        protected:
+            std::thread impl_;        ///< The underlying thread implementation.
+            bool running_ = false;    ///< Flag indicating whether the thread is running.
+            bool terminate_ = false;  ///< Flag indicating whether the thread should terminate.
+
+        public:
+            /** Check if thread is running.
+             * */
+            bool running() const noexcept {
+                return running_;
+            }
+
+            /** Run the thread.
+             * This method is the equivalent of joining the thread, i.e.,
+             * it waits for the thread to finish execution.
+             * */
+            virtual status run() noexcept {
+                if (not impl_.joinable())
+                    return status::bad;
+                impl_.join();
+                return status::good;
+            }
+
+            /** Detach the thread.
+             * This method detaches the thread, allowing it to run independently.
+             * */
+            status detach() {
+                if (not impl_.joinable())
+                    return status::bad;
+                impl_.detach();
+                return status::good;
+            }
+
+            /** Signal the thread to terminate.
+             * */
+            virtual void terminate() noexcept {
+                terminate_ = true;
+            }
+
+            /** Set scheduling priority.
+             * @param priority Priority value as a float (0.0 to 1.0, means minimum to maximum priority).
+             * @param policy Scheduling policy (default: FIFO).
+             * @return Status of the operation.
+             * */
+            status priority(float priority = 0.5f, schedule::policy policy = schedule::policy::fifo) {
+                return schedule(impl_).priority(priority, policy);
+            }
+
+            /** Set deadline scheduling.
+             * @param period The period of the thread.
+             * @param runtime The runtime of the thread.
+             * @param deadline The deadline of the thread.
+             * @return Status of the operation.
+             * */
+            status set_deadline(std::chrono::nanoseconds period,   //
+                                std::chrono::nanoseconds runtime,  //
+                                std::chrono::nanoseconds deadline) {
+                return schedule(impl_).set_deadline(period, runtime, deadline);
+            }
+        };
 
         /** IO operation result.
          *
@@ -332,7 +474,10 @@ namespace vidre {
             endpoint() = default;
             virtual ~endpoint() = default;
 
-        public:
+        protected:
+            thread::shared thread_;  ///< Optional thread for thread-based endpoints.
+
+        public: // general
             /** Sink capabilities (if applicable).
              * */
             virtual cap input() const noexcept {
@@ -343,6 +488,13 @@ namespace vidre {
              * */
             virtual cap output() const noexcept {
                 return cap::none;
+            }
+
+        public: // thread-related
+            /** Check if threaded.
+             * */
+            bool isthread() const noexcept {
+                return thread_.get();
             }
         };
 
@@ -381,115 +533,6 @@ namespace vidre {
         }
 
         ///@endcond
-
-        /** IO thread.
-         *
-         * This (base) class provides an extension of the standard `std::thread` with some
-         * additional convenience methods, such as setting scheduling policies.
-         *
-         * */
-        class VIDRE_CORE_VISIBILITY thread {
-        public:
-            /** Scoped thread state.
-             * */
-            struct VIDRE_CORE_VISIBILITY state {
-                state() = default;
-                state(thread *t) : thread_(t) {
-                    if (thread_)
-                        thread_->running_ = true;
-                }
-
-                ~state() {
-                    if (thread_)
-                        thread_->running_ = false;
-                }
-
-                bool terminated() const noexcept {
-                    return thread_ && thread_->terminate_;
-                }
-
-            protected:
-                thread *thread_{};  ///< Pointer to the associated thread, or @c nullptr if not associated.
-            };
-
-            using shared = std::shared_ptr<thread>;
-
-            template <typename T, typename... Args>
-            static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...);
-            }
-
-        public:
-            thread() noexcept = default;
-            thread(const thread &) = delete;
-            thread &operator=(const thread &) = delete;
-            thread(thread &&other) noexcept = default;
-            thread &operator=(thread &&other) noexcept = default;
-            virtual ~thread() = default;
-
-            template <class F, class... Args>
-            explicit thread(F &&f, Args &&...args) : impl_(std::forward<F>(f), std::forward<Args>(args)...) {}
-
-        protected:
-            std::thread impl_;        ///< The underlying thread implementation.
-            bool running_ = false;    ///< Flag indicating whether the thread is running.
-            bool terminate_ = false;  ///< Flag indicating whether the thread should terminate.
-
-        public:
-            /** Check if thread is running.
-             * */
-            bool running() const noexcept {
-                return running_;
-            }
-
-            /** Run the thread.
-             * This method is the equivalent of joining the thread, i.e.,
-             * it waits for the thread to finish execution.
-             * */
-            virtual status run() noexcept {
-                if (not impl_.joinable())
-                    return status::bad;
-                impl_.join();
-                return status::good;
-            }
-
-            /** Detach the thread.
-             * This method detaches the thread, allowing it to run independently.
-             * */
-            status detach() {
-                if (not impl_.joinable())
-                    return status::bad;
-                impl_.detach();
-                return status::good;
-            }
-
-            /** Signal the thread to terminate.
-             * */
-            virtual void terminate() noexcept {
-                terminate_ = true;
-            }
-
-            /** Set scheduling priority.
-             * @param priority Priority value as a float (0.0 to 1.0, means minimum to maximum priority).
-             * @param policy Scheduling policy (default: FIFO).
-             * @return Status of the operation.
-             * */
-            status priority(float priority = 0.5f, schedule::policy policy = schedule::policy::fifo) {
-                return schedule(impl_).priority(priority, policy);
-            }
-
-            /** Set deadline scheduling.
-             * @param period The period of the thread.
-             * @param runtime The runtime of the thread.
-             * @param deadline The deadline of the thread.
-             * @return Status of the operation.
-             * */
-            status set_deadline(std::chrono::nanoseconds period,   //
-                                std::chrono::nanoseconds runtime,  //
-                                std::chrono::nanoseconds deadline) {
-                return schedule(impl_).set_deadline(period, runtime, deadline);
-            }
-        };
 
         /** Data sink skeleton.
          *

@@ -67,6 +67,7 @@ vidre_library(vidrecore SHARED
             vidre/io/types.hh vidre/io/types.cc
             vidre/io/file.hh vidre/io/file.cc
             vidre/io/packet.hh vidre/io/packet.cc
+            vidre/io/flow.hh vidre/io/flow.cc
         vidre/storage.hh vidre/storage.cc
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/thread.hh vidre/thread.cc

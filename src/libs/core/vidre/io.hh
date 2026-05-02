@@ -42,6 +42,7 @@
  * @{
  * @namespace vidre::io             In-/output related functionality.
  * @defgroup api-core-io-types      Streaming fundamentals
+ * @defgroup api-core-io-flow       Data flow control
  * @defgroup api-core-io-packet     Packet based I/O
  * @defgroup api-core-io-file       File and memory I/O
  * @defgroup api-core-io-details    Implementation details
@@ -58,6 +59,8 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/packet.hh>
 #include <vidre/io/file.hh>
+#include <vidre/io/flow.hh>
 
 #endif  // VIDRE_CORE_IO_HH
