@@ -232,8 +232,8 @@ namespace vidre {
         public:
             /** Scoped task state.
              *
-             * This helper struct is intended to be used within task handlers to 
-             * manage the task's running state and to provide a convenient method 
+             * This helper struct is intended to be used within task handlers to
+             * manage the task's running state and to provide a convenient method
              * for checking termination requests.
              *
              * @note This scope can be also used in non-threaded context.
@@ -439,22 +439,11 @@ namespace vidre {
                 packet = 0x0002,        ///< Packet mode (e.g., for video frames or audio samples).
                 any = stream | packet,  ///< Any mode (default).
 
-                task = 0x0010,      ///< Endpoint has thread support (e.g., for live video capture).
-                realtime = 0x0020,  ///< Endpoint requires real-time scheduling.
-                push = 0x0040,      ///< Source can push data to the sink.
-                pull = 0x0040,      ///< Sink can pull data from the source.
-            };
+                task = 0x0010,      ///< Endpoint requires a thread (e.g., for live video capture).
+                realtime = 0x0020,  ///< Endpoint requires real-time scheduling (e.g., for audio output).
 
-            /** Source-sink capabilities.
-             * */
-            struct VIDRE_CORE_VISIBILITY caps {
-                cap source;  ///< Source capabilities.
-                cap sink;    ///< Sink capabilities.
-
-                bool valid() const noexcept {
-                    return source != cap::none && sink != cap::none &&
-                           (to_underlying(source) & to_underlying(sink) & to_underlying(cap::any)) != 0;
-                }
+                push = 0x0100,  ///< Source pushes data to sink.
+                pull = 0x0200,  ///< Sink pulls data from source.
             };
 
             template <typename T>
@@ -463,21 +452,24 @@ namespace vidre {
             /** Match capabilities between two endpoint types.
              * @param from The source endpoint type.
              * @param to The sink endpoint type.
-             * @returns The matched capabilities.
+             * @returns @c true if the capabilities are compatible, @c false otherwise.
              * */
-            static constexpr caps match(cap from, cap to) noexcept;
+            static constexpr bool match(cap &from, cap &to) noexcept;
 
             /** Match capabilities between two endpoint types.
              * @tparam From The source endpoint type.
              * @tparam To The sink endpoint type.
              * @param from The source endpoint instance.
              * @param to The sink endpoint instance.
-             * @returns The matched capabilities.
+             * @returns @c true if the capabilities are compatible, @c false otherwise.
              * */
             template <class From, class To>
             requires (isa_v<From> && isa_v<To>)
-            static constexpr caps match(From *from, To *to) noexcept {
-                return match(from->output(), to->input());
+            static constexpr bool match(From *from, To *to) {
+                if (not from || not to)
+                    throw exception::logic() << "invalid endpoint(s)";
+
+                return match(from->cap_, to->cap_);
             }
 
             /** Match capabilities between two endpoint types.
@@ -485,38 +477,56 @@ namespace vidre {
              * @tparam To The sink endpoint type.
              * @param from The source endpoint instance.
              * @param to The sink endpoint instance.
-             * @returns The matched capabilities.
+             * @returns @c true if the capabilities are compatible, @c false otherwise.
              * */
             template <class From, class To>
             requires (isa_v<From> && isa_v<To>)
-            static caps match(std::shared_ptr<From> from, std::shared_ptr<To> to) noexcept {
+            static bool match(std::shared_ptr<From> from, std::shared_ptr<To> to) {
                 return match(from.get(), to.get());
             }
 
         public:
-            endpoint() = default;
-            virtual ~endpoint() {
-                if (task_) {
-                    task_->terminate();
-                    // FIXME wait?
-                    delete task_;
-                }
-            }
+            endpoint(cap c = cap::none) : cap_(c) {}
+            virtual ~endpoint() = default;
 
         protected:
-            task *task_{};  ///< Optional task for task-based endpoints.
+            // std::string name_{};  ///< Endpoint name (used by dashboard).
+            cap cap_{};           ///< Endpoint capabilities.
 
-        public:  // general
-            /** Sink capabilities (if applicable).
+        public:
+            // /** Get endpoint name.
+            //  * @returns The name of this endpoint.
+            //  * */
+            // const std::string &name() const noexcept {
+            //     return name_;
+            // }
+
+            // /** Set enpoint name.
+            //  * @param name The name to set for this endpoint.
+            //  * */
+            // void name(const std::string &nm) noexcept {
+            //     name_ = nm;
+            // }
+
+            /** Get capabilities.
+             * @returns The capabilities of this endpoint.
              * */
-            virtual cap input() const noexcept {
-                return cap::none;
+            cap getcap() const noexcept {
+                return cap_;
             }
 
-            /** Source capabilities (if applicable).
+            /** Set capability bit.
+             * @param cap The capability bit to set.
              * */
-            virtual cap output() const noexcept {
-                return cap::none;
+            void setcap(cap c) noexcept {
+                cap_ = static_cast<cap>(to_underlying(cap_) | to_underlying(c));
+            }
+
+            /** Clear capability bit.
+             * @param cap The capability bit to clear (default: all bits).
+             * */
+            void clearcap(cap c = static_cast<cap>(-1)) noexcept {
+                cap_ = static_cast<cap>(to_underlying(cap_) & ~to_underlying(c));
             }
 
             /** Get endpoint setup.
@@ -531,59 +541,6 @@ namespace vidre {
              * @param config JSON configuration object for this endpoint.
              * */
             virtual void setup(const settings::json &config) {}
-
-        protected:
-            /** Endpoint handler.
-             * */
-            virtual void handler() {
-                throw exception::logic() << error::message("endpoint does not implement a handler");
-            }
-
-        public:  // thread-related
-            /** Check if threaded.
-             * */
-            bool isthread() const noexcept {
-                return task_;
-            }
-
-            /** Make threaded.
-             * */
-            void make_thread() {
-                if (task_)
-                    throw exception::logic() << error::message("endpoint is already threaded");
-
-                task_ = new task(&endpoint::handler, this);
-            }
-
-            /** Start thread in the background.
-             * */
-            void detach() {
-                if (task_)
-                    task_->detach();
-            }
-
-            /** Check if running.
-             * */
-            bool isrunning() const noexcept {
-                return task_ && task_->isrunning();
-            }
-
-            /** Terminate thread.
-             * @param timeout Time to wait for thread termination (if applicable).
-             * */
-            status terminate(std::chrono::milliseconds timeout = std::chrono::milliseconds(10)) {
-                if (not task_)
-                    return status::bad;
-
-                task_->terminate();
-                auto start = chrono::monotonic::now();
-                while (task_->isrunning()) {
-                    if (chrono::monotonic::now() - start > timeout)
-                        return status::bad;
-                    std::this_thread::sleep_for(std::chrono::microseconds(10));
-                }
-                return status::good;
-            };
 
         private:
             friend class route;
@@ -613,14 +570,11 @@ namespace vidre {
             return lhs;
         }
 
-        inline constexpr endpoint::caps match(endpoint::cap from, endpoint::cap to) noexcept {
+        inline constexpr bool endpoint::match(endpoint::cap &from, endpoint::cap &to) noexcept {
             auto common = from & to;
 
             if ((common & endpoint::cap::any) == endpoint::cap::none)
-                return {endpoint::cap::none,  //
-                        endpoint::cap::none};
-
-            endpoint::caps result = {};
+                return false;
 
             // select stream/packet mode
             if (!!((common & endpoint::cap::any) & endpoint::cap::packet))
@@ -628,22 +582,18 @@ namespace vidre {
             else
                 common = endpoint::cap::stream;  // stream mode
 
-            // threading?
-            if (!!(from & endpoint::cap::task))
-                result.source |= endpoint::cap::task;  // source will have a thread
-            else if (!!(to & endpoint::cap::task))
-                result.sink |= endpoint::cap::task;  // sink will have a thread
+            from &= endpoint::cap::any;
+            from |= common;
+            to &= endpoint::cap::any;
+            to |= common;
 
-            // push or pull?
-            else if (!!(from & endpoint::cap::push))
-                result.source |= endpoint::cap::push;  // source handler sends data to sink
-            else if (!!(from & endpoint::cap::pull))
-                result.sink |= endpoint::cap::pull;  // sink handler pulls data from source
-            else
-                return {endpoint::cap::none,  //
-                        endpoint::cap::none};
+            // push/pull mode
+            if (!!(from & endpoint::cap::push))
+                to &= ~endpoint::cap::pull;
+            else if (!!(to & endpoint::cap::pull))
+                from &= ~endpoint::cap::push;
 
-            return result;
+            return true;
         }
         ///@endcond
 

@@ -69,8 +69,9 @@ namespace vidre {
                 struct enumerator;
 
             public:
-                camera() = default;
-                camera(device::state initial_state) noexcept : device::camera(initial_state), io::source() {}
+                camera() = delete;
+                camera(const camera &) = delete;
+                camera(device::state initial_state) noexcept : device::camera(initial_state), io::source(cap::packet | cap::task | cap::realtime) {}
                 virtual ~camera();
 
             protected:
@@ -88,10 +89,6 @@ namespace vidre {
             public:
                 bool valid() const noexcept override {
                     return vid_.valid();
-                }
-
-                cap output() const noexcept override {
-                    return cap::packet | cap::task | cap::realtime;
                 }
 
                 io::result get(memory::area v) override {

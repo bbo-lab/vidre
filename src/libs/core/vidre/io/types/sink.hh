@@ -81,7 +81,7 @@ namespace vidre {
             }
 
         public:
-            sink() = default;
+            sink(endpoint::cap c = endpoint::cap::none) : endpoint(c) {}
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;
@@ -91,8 +91,7 @@ namespace vidre {
             virtual ~sink() {}
 
         protected:
-            event ready_{};                 ///< Event for signaling sink ready state.
-            std::shared_ptr<source> link_;  ///< Linked source (if any).
+            event ready_{};  ///< Event for signaling sink ready state.
 
         protected:
             /** The low-level write method (if applicable).
@@ -111,11 +110,17 @@ namespace vidre {
                 ready_.notify();
             }
 
-            /** Link source.
-             * @param src Source to link.
+        public:  // should be protected
+
+            /** Step method for processing data from the source.
+             * @param src The source to process data from.
+             * @returns @c false if handler should stop processing, @c true to continue.
+             * 
+             * FIXME
+             * 
              * */
-            void link(std::shared_ptr<source> src) {
-                link_ = std::move(src);
+            virtual bool step(source &src) {
+                return false;
             }
 
         public:
@@ -170,14 +175,6 @@ namespace vidre {
              * */
             [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
                 return ready_.wait(timeout);
-            }
-
-            /** Stream.
-             * @param src The source to stream from.
-             * */
-            void stream(std::shared_ptr<source> src) {
-                link_ = std::move(src);
-                handler();
             }
 
         private:

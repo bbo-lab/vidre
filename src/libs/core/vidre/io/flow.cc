@@ -19,5 +19,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- #include "flow.hh"
- 
+#include "flow.hh"
+
+using namespace vidre;
+using namespace vidre::io;
+
+// flow::link flow::route(source::shared src, sink::shared snk) {
+//     if (not endpoint::match(src.get(), snk.get()))
+//         throw exception::logic() << "incompatible source and sink";
+
+//     if (src->capabilities() & endpoint::cap::push) {
+//     }
+//     else if (snk->capabilities() & endpoint::cap::pull) {
+//     }
+//     else {
+//     }
+
+//     return {std::move(src), std::move(snk)};
+// }
+
+void flow::route::execute() {
+    //@todo implement
+}

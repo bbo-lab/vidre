@@ -349,6 +349,8 @@ namespace vidre {
     public:
         virtual const char *what() const noexcept;
 
+        exception &operator<<(const char *msg) noexcept;
+
     public:
         class logic;
         class runtime;
@@ -547,6 +549,10 @@ namespace vidre {
         ///@}
 
     }  // namespace error
+
+    inline exception &exception::operator<<(const char *msg) noexcept {
+        return *this << error::message(msg);
+    }
 
     inline exception::exception(const std::source_location &src) noexcept {
 #if defined(VIDRE_DEVELOP)

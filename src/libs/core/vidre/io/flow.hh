@@ -29,6 +29,10 @@
  * @details
  * @fileinfo
  *
+ *
+ * @{
+ * @namespace vidre::io::flow  Flow control.
+ * @}
  * */
 
 #include <vidre/core/config.hh>
@@ -40,8 +44,58 @@ namespace vidre {
 
     namespace io {
 
-        //@todo implement "router"
-        //@todo implement "dashboard"
+        namespace flow {
+
+            /** Source to sink route.
+             *
+             * This class handles the connection between a source and a sink, including
+             * intermediate channels.
+             *
+             * FIXME
+             *
+             * */
+            class VIDRE_CORE_VISIBILITY route {
+            public:
+                route(std::string name = {}) : name_(std::move(name)) {}
+                route(const route &) = delete;
+                route &operator=(const route &) = delete;
+                route(route &&) = default;
+                route &operator=(route &&) = default;
+                ~route() {
+                    // FIXME
+                }
+
+                route(source::shared src, sink::shared snk, std::string name = {}) : name_(std::move(name)) {
+                    // FIXME
+                }
+
+            protected:
+                std::string name_{};  ///< Route name (used by dashboard).
+
+            public:
+                /** Get endpoint name.
+                 * @returns The name of this endpoint.
+                 * */
+                const std::string &name() const noexcept {
+                    return name_;
+                }
+
+                /** Set enpoint name.
+                 * @param name The name to set for this endpoint.
+                 * */
+                void name(const std::string &nm) noexcept {
+                    name_ = nm;
+                }
+
+                /** Execute the route.
+                 * */
+                void execute();
+            };
+
+            //@todo implement "router"
+            //@todo implement "dashboard"
+
+        }  // namespace flow
 
     }  // namespace io
 

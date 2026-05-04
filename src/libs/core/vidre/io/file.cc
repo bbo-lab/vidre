@@ -91,30 +91,20 @@ void io::file::sink::close() noexcept {
     return;
 }
 
-void io::file::source::handler() {
-    task::scope state(task_);
+bool io::file::source::step(io::sink &snk) {
+    auto res = get(buf_);
 
-    auto recv = link_->input();
-    if (not(recv & endpoint::cap::stream))
-        throw exception::logic() << error::message("sink does not support streaming");
+    if (res.count)
+        snk.put({res.count, buf_.data});
+    else
+        // end of file
+        return false;
 
-    // setup buffer
-    detail::buffer buf;
-    buf.setup(fd_.blocksize());
+    if (not res)
+        // and error occurred
+        throw exception::runtime() << error::code(fd_.error());
 
-    while (not state.isterminated()) {
-        auto res = get(buf);
-
-        if (res.count)
-            link_->put({res.count, buf.data});
-        else
-            // end of file
-            break;
-
-        if (not res)
-            // and error occurred
-            throw exception::runtime() << error::code(fd_.error());
-    }
+    return true;
 }
 
 io::file vidre::io::standard::input = io::file{::stdin};

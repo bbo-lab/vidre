@@ -32,25 +32,49 @@ std::filesystem::path create_dummy_file() {
 }
 //! [create-dummy-file]
 
+struct files {
+    io::source::shared src;
+    io::sink::shared dst;
+
+    static files make() {
+        std::filesystem::path data = create_dummy_file();
+
+        auto src = io::source::make<io::file::source>(data);
+        auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate);
+
+        if (not src->valid())
+            throw exception::runtime() << error::system();
+        if (not dst->valid())
+            throw exception::runtime() << error::system();
+
+        if (not io::endpoint::match(src.get(), dst.get()))
+            throw exception::logic() << "incompatible source and sink";
+
+        return {src, dst};
+    }
+};
+
 //! [copy-source-to-sink-manual]
 void copy_source_to_sink_manual() {
-    std::filesystem::path data = create_dummy_file();
+    auto files = files::make();
 
-    auto src = io::source::make<io::file::source>(data);
-    auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate);
-
-    if (not src->valid())
-        throw exception::runtime() << error::system();
-    if (not dst->valid())
-        throw exception::runtime() << error::system();
-
-    src->stream(dst);
+    while (files.src->step(*files.dst.get()))
+        ;
 }
 //! [copy-source-to-sink-manual]
+
+//! [copy-source-to-sink-route]
+void copy_source_to_sink_route() {
+    auto files = files::make();
+
+    io::flow::route(files.src, files.dst).execute();
+}
+//! [copy-source-to-sink-route]
 
 int main(int argc, const char **argv) {
     try {
         copy_source_to_sink_manual();
+        copy_source_to_sink_route();
     } catch (exception &e) {
         std::cerr << error::diagnostic(e).dump() << std::endl;
     }

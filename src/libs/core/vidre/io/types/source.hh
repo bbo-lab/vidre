@@ -63,7 +63,7 @@ namespace vidre {
             }
 
         public:
-            source() = default;
+            source(endpoint::cap c = endpoint::cap::none) : endpoint(c) {}
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;
@@ -73,8 +73,7 @@ namespace vidre {
             virtual ~source() {}
 
         protected:
-            event avail_{};      ///< Event for signaling data availability.
-            sink::shared link_;  ///< Linked sink (if any).
+            event avail_{};  ///< Event for signaling data availability.
 
         protected:
             /** Notify, that @a n packets are available.
@@ -91,11 +90,16 @@ namespace vidre {
                 return invalid<offset_type>;
             }
 
-            /** Link sink.
-             * @param snk Sink to link.
+        public:  // should be protected
+            /** Step method for generating data the sink.
+             * @param snk The sink to send data to.
+             * @returns @c false if handler should stop processing, @c true to continue.
+             *
+             * FIXME
+             *
              * */
-            void link(std::shared_ptr<sink> snk) {
-                link_ = std::move(snk);
+            virtual bool step(sink &snk) {
+                return false;
             }
 
         public:
@@ -146,14 +150,6 @@ namespace vidre {
              * */
             virtual const packet::basic *get() {
                 throw exception::logic();
-            }
-
-            /** Stream.
-             * @param snk The sink to stream to.
-             * */
-            void stream(std::shared_ptr<sink> snk) {
-                link_ = std::move(snk);
-                handler();
             }
 
         private:

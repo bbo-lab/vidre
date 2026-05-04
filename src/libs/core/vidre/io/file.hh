@@ -517,14 +517,14 @@ namespace vidre {
             };
 
         public:
-            sink() = default;
+            sink() : io::sink(endpoint::cap::any) {}
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;
             sink(sink &&other) noexcept = delete;
             sink &operator=(sink &&other) noexcept = delete;
 
-            sink(const std::filesystem::path &filename, openmode_type mode = direct) {
+            sink(const std::filesystem::path &filename, openmode_type mode = direct) : sink() {
                 if (!open(filename, mode)) {
                     throw exception::runtime()                                          //
                         << error::message("failed to open file: " + filename.string())  //
@@ -553,10 +553,6 @@ namespace vidre {
              * */
             bool valid() const noexcept override {
                 return fd_.valid();
-            }
-
-            endpoint::cap input() const noexcept override {
-                return endpoint::cap::any;
             }
 
             /** Set buffer size.
@@ -591,14 +587,14 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY file::source : public virtual io::source {
         public:
-            source() = default;
+            source() : io::source(endpoint::cap::any | endpoint::cap::push) {}
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;
             source(source &&) = delete;
             source &operator=(source &&) = delete;
 
-            source(const std::filesystem::path &filename) {
+            source(const std::filesystem::path &filename) : source() {
                 if (!open(filename)) {
                     throw exception::runtime()                                          //
                         << error::message("failed to open file: " + filename.string())  //
@@ -611,7 +607,8 @@ namespace vidre {
             }
 
         protected:
-            file fd_{};  ///< Underlying file I/O.
+            file fd_{};             ///< Underlying file I/O.
+            detail::buffer buf_{};  ///< Internal block buffer.
 
         protected:
             // Low-level read method.
@@ -619,17 +616,14 @@ namespace vidre {
                 return fd_.read(buf);
             }
 
-            void handler() override;
+        public:
+            bool step(io::sink &snk) override;
 
         public:
             /** Check if valid (i.e., usable).
              * */
             bool valid() const noexcept override {
                 return fd_.valid();
-            }
-
-            endpoint::cap output() const noexcept override {
-                return endpoint::cap::any | endpoint::cap::push;
             }
 
             // FIXME void setup(const settings::json &config) override;
@@ -640,7 +634,10 @@ namespace vidre {
              * @return @c false otherwise
              * */
             bool open(const std::filesystem::path &filename) noexcept {
-                return fd_.open(filename, file::access::readonly);
+                bool retval = fd_.open(filename, file::access::readonly);
+                if (retval) 
+                    buf_.setup(fd_.blocksize());
+                return retval;
             }
 
             /** Close file.
