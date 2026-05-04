@@ -188,8 +188,8 @@ namespace vidre {
         class arbiter;  // forward declaration
         class merger;   // forward declaration
 
-        class route;
-        class dashboard;
+        class route;      // forward declaration
+        class dashboard;  // forward declaration
 
         /**@addtogroup api-core-io-types
          * */
@@ -232,7 +232,11 @@ namespace vidre {
         public:
             /** Scoped task state.
              *
-             * FIXME
+             * This helper struct is intended to be used within task handlers to 
+             * manage the task's running state and to provide a convenient method 
+             * for checking termination requests.
+             *
+             * @note This scope can be also used in non-threaded context.
              *
              * Typical usage:
              * @code
@@ -246,12 +250,18 @@ namespace vidre {
              *
              * */
             struct VIDRE_CORE_VISIBILITY scope {
-                scope() = default;
+                scope() = delete;
+
+                /** Constructor signalling running state.
+                 * @param t Pointer to the associated task.
+                 * */
                 scope(task *t) : thread_(t) {
                     if (thread_)
                         thread_->running_ = true;
                 }
 
+                /** Destructor ending running state.
+                 * */
                 ~scope() {
                     if (thread_)
                         thread_->running_ = false;
@@ -270,17 +280,6 @@ namespace vidre {
             /** Shared thread.
              * */
             using shared = std::shared_ptr<task>;
-            // struct shared : public std::shared_ptr<thread> {
-            //     shared() = default;
-            //     shared(const shared &) = default;
-            //     shared &operator=(const shared &) = default;
-            //     shared(shared &&) = default;
-            //     shared &operator=(shared &&) = default;
-            //     shared(std::nullptr_t) : std::shared_ptr<thread>(nullptr) {}
-            //     template <typename... Args>
-            //     shared(Args &&...args) : std::shared_ptr<thread>(std::make_shared<thread>(std::forward<Args>(args)...)) {}
-            //     ~shared() = default;
-            // };
 
             template <typename... Args>
             static shared make(Args &&...args) {
