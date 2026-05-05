@@ -81,7 +81,7 @@ namespace vidre {
             }
 
         public:
-            sink(endpoint::cap c = endpoint::cap::none) : endpoint(c) {}
+            sink(endpoint::cap c = endpoint::cap::none) : endpoint({c, endpoint::cap::none}) {}
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;

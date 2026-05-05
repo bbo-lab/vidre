@@ -56,7 +56,13 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY route {
             public:
-                route(std::string name = {}) : name_(std::move(name)) {}
+                struct link {
+                    source::shared src;  ///< Source endpoint.
+                    sink::shared snk;    ///< Sink endpoint.
+                };
+
+            public:
+                route(std::string tag = {}) : tag_(std::move(tag)) {}
                 route(const route &) = delete;
                 route &operator=(const route &) = delete;
                 route(route &&) = default;
@@ -65,26 +71,26 @@ namespace vidre {
                     // FIXME
                 }
 
-                route(source::shared src, sink::shared snk, std::string name = {}) : name_(std::move(name)) {
+                route(source::shared src, sink::shared snk, std::string tag = {}) : tag_(std::move(tag)) {
                     // FIXME
                 }
 
             protected:
-                std::string name_{};  ///< Route name (used by dashboard).
+                std::string tag_{};  ///< Route tag (used by dashboard).
 
             public:
-                /** Get endpoint name.
-                 * @returns The name of this endpoint.
+                /** Get endpoint tag.
+                 * @returns The tag of this endpoint.
                  * */
-                const std::string &name() const noexcept {
-                    return name_;
+                const std::string &tag() const noexcept {
+                    return tag_;
                 }
 
-                /** Set enpoint name.
-                 * @param name The name to set for this endpoint.
+                /** Set enpoint tag.
+                 * @param tag The tag to set for this endpoint.
                  * */
-                void name(const std::string &nm) noexcept {
-                    name_ = nm;
+                void tag(const std::string &tg) noexcept {
+                    tag_ = tg;
                 }
 
                 /** Execute the route.

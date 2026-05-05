@@ -47,7 +47,7 @@ struct files {
         if (not dst->valid())
             throw exception::runtime() << error::system();
 
-        if (not io::endpoint::match(src.get(), dst.get()))
+        if (not io::endpoint::match(src, dst))
             throw exception::logic() << "incompatible source and sink";
 
         return {src, dst};
@@ -58,7 +58,7 @@ struct files {
 void copy_source_to_sink_manual() {
     auto files = files::make();
 
-    while (files.src->step(*files.dst.get()))
+    while (files.src->step(*(files.dst.get())))
         ;
 }
 //! [copy-source-to-sink-manual]

@@ -19,5 +19,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- #include "basic.hh"
- 
+#include "basic.hh"
+
+using namespace vidre;
+using namespace vidre::io;
+
+bool vidre::io::endpoint::match(endpoint::cap &from, endpoint::cap &to) noexcept {
+    auto common = from & to;
+
+    if ((common & endpoint::cap::any) == endpoint::cap::none)
+        return false;
+
+    // select stream/packet mode
+    if (!!((common & endpoint::cap::any) & endpoint::cap::packet))
+        common = endpoint::cap::packet;  // packet mode
+    else
+        common = endpoint::cap::chunk;  // stream mode
+
+    from &= ~endpoint::cap::any;
+    from |= common;
+    to &= ~endpoint::cap::any;
+    to |= common;
+
+    // push/pull mode
+    if (!!(from & endpoint::cap::push))
+        to &= ~endpoint::cap::pull;
+    else if (!!(to & endpoint::cap::pull))
+        from &= ~endpoint::cap::push;
+
+    return true;
+}

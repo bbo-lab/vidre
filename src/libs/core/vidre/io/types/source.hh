@@ -63,7 +63,7 @@ namespace vidre {
             }
 
         public:
-            source(endpoint::cap c = endpoint::cap::none) : endpoint(c) {}
+            source(endpoint::cap c = endpoint::cap::none) : endpoint({endpoint::cap::none, c}) {}
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;

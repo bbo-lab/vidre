@@ -46,7 +46,13 @@
  *
  * ### Flow control
  *
- * FIXME see https://chat.deepseek.com/a/chat/s/8cc10342-f684-4a3e-805a-82c0b7973e4c
+ * Data transmision can be packet (see @ref api-core-io-packet) or chunk based (e.g., a video
+ * stream is only packet based, while an audio device would be able to handle both modes).
+ * For packet based I/O the data is either passed using event mechanisms (i.e. either the
+ * source or the sink wait for the other to signal the availability of data or readiness to
+ * receive data) or by direct calls (i.e. the source directly calls the sink's put method,
+ * or the sink directly calls the source's get method). For chunk based I/O only the latter
+ * is available.
  *
  * @see @ref api-core-io-flow
  * */
@@ -430,32 +436,44 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY endpoint {
         public:
-            /** Capabilitie list.
+            /** Endpoint type.
+             * */
+            enum class type {
+                sink = 0x01,             ///< Endpoint is a sink (i.e., it can consume data).
+                source = 0x02,           ///< Endpoint is a source (i.e., it can produce data).
+                channel = sink | source  ///< Endpoint is a channel (i.e., it can both produce and consume data).
+            };
+
+            /** Endpoint capabilities.
+             * These capabilities are used to determine how endpoints can be connected and how data is transmitted.
              * */
             enum class cap : uint16_t {
                 none = 0,
 
-                stream = 0x0001,        ///< Stream mode (e.g., for files or network sockets).
-                packet = 0x0002,        ///< Packet mode (e.g., for video frames or audio samples).
-                any = stream | packet,  ///< Any mode (default).
+                packet = 0x0002,       ///< Packet mode (see `io::packet`).
+                chunk = 0x0001,        ///< Chunk mode (plain, binary data transmission).
+                any = chunk | packet,  ///< Any mode (default).
 
                 task = 0x0010,      ///< Endpoint requires a thread (e.g., for live video capture).
                 realtime = 0x0020,  ///< Endpoint requires real-time scheduling (e.g., for audio output).
 
-                push = 0x0100,  ///< Source pushes data to sink.
-                pull = 0x0200,  ///< Sink pulls data from source.
+                push = 0x0100,   ///< Source pushes data to sink.
+                pull = 0x0200,   ///< Sink pulls data from source.
+                event = 0x0400,  ///< Endpoint uses event-based transmission (e.g., for packet mode).
             };
 
             template <typename T>
             static constexpr bool isa_v = std::derived_from<T, endpoint>;
 
+        protected:
             /** Match capabilities between two endpoint types.
              * @param from The source endpoint type.
              * @param to The sink endpoint type.
              * @returns @c true if the capabilities are compatible, @c false otherwise.
              * */
-            static constexpr bool match(cap &from, cap &to) noexcept;
+            static bool match(cap &from, cap &to) noexcept;
 
+        public:
             /** Match capabilities between two endpoint types.
              * @tparam From The source endpoint type.
              * @tparam To The sink endpoint type.
@@ -465,11 +483,15 @@ namespace vidre {
              * */
             template <class From, class To>
             requires (isa_v<From> && isa_v<To>)
-            static constexpr bool match(From *from, To *to) {
+            static bool match(From *from, To *to) {
                 if (not from || not to)
                     throw exception::logic() << "invalid endpoint(s)";
 
-                return match(from->cap_, to->cap_);
+                // reset cap_ before matching
+                from->cap_[1] = from->type_[1];
+                to->cap_[0] = to->type_[0];
+
+                return match(from->cap_[1], to->cap_[0]);
             }
 
             /** Match capabilities between two endpoint types.
@@ -486,47 +508,74 @@ namespace vidre {
             }
 
         public:
-            endpoint(cap c = cap::none) : cap_(c) {}
+            endpoint(const cap (&c)[2] = {cap::none, cap::none}) noexcept : type_{c[0], c[1]} {}
             virtual ~endpoint() = default;
 
+        private:
+            cap type_[2]{cap::none, cap::none};  ///< Capabilities for sink (index 0) and source (index 1) mode.
+
         protected:
-            // std::string name_{};  ///< Endpoint name (used by dashboard).
-            cap cap_{};           ///< Endpoint capabilities.
+            std::string tag_{};  ///< Endpoint tag (used by dashboard).
+            cap cap_[2]{};       ///< Matched endpoint capabilities.
 
         public:
-            // /** Get endpoint name.
-            //  * @returns The name of this endpoint.
-            //  * */
-            // const std::string &name() const noexcept {
-            //     return name_;
-            // }
+            /** Endpoint type.
+             * @returns The type of this endpoint.
+             * */
+            type gettype() const noexcept {
+                uint16_t retval = 0;
+                retval |= to_underlying(type::sink) * !!static_cast<bool>(type_[0]);
+                retval |= to_underlying(type::source) * !!static_cast<bool>(type_[1]);
+                return static_cast<type>(retval);
+            }
 
-            // /** Set enpoint name.
-            //  * @param name The name to set for this endpoint.
-            //  * */
-            // void name(const std::string &nm) noexcept {
-            //     name_ = nm;
-            // }
+            /** Get endpoint tag.
+             * @returns The tag of this endpoint.
+             * */
+            const std::string &tag() const noexcept {
+                return tag_;
+            }
+
+            /** Set enpoint tag.
+             * @param tag The tag to set for this endpoint.
+             * */
+            void tag(const std::string &tg) noexcept {
+                tag_ = tg;
+            }
 
             /** Get capabilities.
+             * @param t The endpoint type to query capabilities for (must be given for channels).
              * @returns The capabilities of this endpoint.
              * */
-            cap getcap() const noexcept {
-                return cap_;
+            cap getcap(type t) const noexcept {
+                if (t == type::channel)
+                    return static_cast<cap>(0);
+
+                return cap_[to_underlying(t) - 1];
             }
 
             /** Set capability bit.
+             * @param t The endpoint type to query capabilities for..
              * @param cap The capability bit to set.
              * */
-            void setcap(cap c) noexcept {
-                cap_ = static_cast<cap>(to_underlying(cap_) | to_underlying(c));
+            void setcap(type t, cap c) noexcept {
+                if (t == type::channel)
+                    return;
+
+                auto idx = to_underlying(t) - 1;
+                cap_[idx] = static_cast<cap>(to_underlying(cap_[idx]) | to_underlying(c));
             }
 
             /** Clear capability bit.
+             * @param t The endpoint type to query capabilities for (must be given for channels).
              * @param cap The capability bit to clear (default: all bits).
              * */
-            void clearcap(cap c = static_cast<cap>(-1)) noexcept {
-                cap_ = static_cast<cap>(to_underlying(cap_) & ~to_underlying(c));
+            void clearcap(type t, cap c = static_cast<cap>(-1)) noexcept {
+                if (t == type::channel)
+                    return;
+
+                auto idx = to_underlying(t) - 1;
+                cap_[idx] = static_cast<cap>(to_underlying(cap_[idx]) & ~to_underlying(c));
             }
 
             /** Get endpoint setup.
@@ -568,32 +617,6 @@ namespace vidre {
         inline constexpr endpoint::cap &operator&=(endpoint::cap &lhs, endpoint::cap rhs) {
             lhs = static_cast<endpoint::cap>(to_underlying(lhs) & to_underlying(rhs));
             return lhs;
-        }
-
-        inline constexpr bool endpoint::match(endpoint::cap &from, endpoint::cap &to) noexcept {
-            auto common = from & to;
-
-            if ((common & endpoint::cap::any) == endpoint::cap::none)
-                return false;
-
-            // select stream/packet mode
-            if (!!((common & endpoint::cap::any) & endpoint::cap::packet))
-                common = endpoint::cap::packet;  // packet mode
-            else
-                common = endpoint::cap::stream;  // stream mode
-
-            from &= endpoint::cap::any;
-            from |= common;
-            to &= endpoint::cap::any;
-            to |= common;
-
-            // push/pull mode
-            if (!!(from & endpoint::cap::push))
-                to &= ~endpoint::cap::pull;
-            else if (!!(to & endpoint::cap::pull))
-                from &= ~endpoint::cap::push;
-
-            return true;
         }
         ///@endcond
 
