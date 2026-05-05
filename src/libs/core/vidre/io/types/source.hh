@@ -44,13 +44,6 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY source : public virtual endpoint {
         public:
-            /** Shared pointer type for source.
-             * This type is used for managing the lifetime of source instances,
-             * especially when they are shared across different components or threads.
-             * @see source::make
-             * */
-            using shared = std::shared_ptr<source>;
-
             /** Create source as shared pointer.
              * @tparam T Type of the source to create.
              * @param args Arguments to forward to the source's constructor.
@@ -63,7 +56,7 @@ namespace vidre {
             }
 
         public:
-            source(endpoint::cap c = endpoint::cap::none) : endpoint({endpoint::cap::none, c}) {}
+            source() = default;
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;
@@ -98,17 +91,11 @@ namespace vidre {
              * FIXME
              *
              * */
-            virtual bool step(sink &snk) {
+            virtual bool step(sink *snk) {
                 return false;
             }
 
         public:
-            /** Check if the stream is valid (ie. usable).
-             * */
-            virtual bool valid() const noexcept {
-                return false;
-            }
-
             /** Configure source.
              * @param config JSON configuration object.
              * @throw exception::logic if the configuration is invalid for this source.

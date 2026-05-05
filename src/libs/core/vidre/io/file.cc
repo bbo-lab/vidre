@@ -20,7 +20,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "file.hh"
-#include "vidre/io/types.hh"
 
 using namespace vidre;
 
@@ -91,11 +90,11 @@ void io::file::sink::close() noexcept {
     return;
 }
 
-bool io::file::source::step(io::sink &snk) {
+bool io::file::source::step(io::sink *snk) {
     auto res = get(buf_);
 
     if (res.count)
-        snk.put({res.count, buf_.data});
+        snk->put({res.count, buf_.data});
     else
         // end of file
         return false;

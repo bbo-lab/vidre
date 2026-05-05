@@ -62,13 +62,6 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY sink : public virtual endpoint {
         public:
-            /** Shared pointer type for sinks.
-             * This type is used for managing the lifetime of sink instances,
-             * especially when they are shared across different components or threads.
-             * @see sink::make
-             * */
-            using shared = std::shared_ptr<sink>;
-
             /** Create sink as shared pointer.
              * @tparam T Type of the sink to create.
              * @param args Arguments to forward to the sink's constructor.
@@ -81,7 +74,7 @@ namespace vidre {
             }
 
         public:
-            sink(endpoint::cap c = endpoint::cap::none) : endpoint({c, endpoint::cap::none}) {}
+            sink() = default;
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;
@@ -119,17 +112,11 @@ namespace vidre {
              * FIXME
              * 
              * */
-            virtual bool step(source &src) {
+            virtual bool step(source *src) {
                 return false;
             }
 
         public:
-            /** Check if the stream is valid (ie. usable).
-             * */
-            virtual bool valid() const noexcept {
-                return false;
-            }
-
             /** Configure sink.
              * @param config JSON configuration object.
              * @throw exception::logic_error if the configuration is invalid for this sink.

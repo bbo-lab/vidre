@@ -24,7 +24,7 @@
 using namespace vidre;
 using namespace vidre::io;
 
-bool vidre::io::endpoint::match(endpoint::cap &from, endpoint::cap &to) noexcept {
+bool vidre::io::endpoint::match(endpoint::cap::flag_type &from, endpoint::cap::flag_type &to) noexcept {
     auto common = from & to;
 
     if ((common & endpoint::cap::any) == endpoint::cap::none)

@@ -51,8 +51,6 @@
 #include <sys/stat.h>
 #endif
 
-#include <algorithm>
-
 namespace vidre {
 
     namespace io {
@@ -517,14 +515,14 @@ namespace vidre {
             };
 
         public:
-            sink() : io::sink(endpoint::cap::any) {}
+            sink() = default;
 
             sink(const sink &) = delete;
             sink &operator=(const sink &) = delete;
             sink(sink &&other) noexcept = delete;
             sink &operator=(sink &&other) noexcept = delete;
 
-            sink(const std::filesystem::path &filename, openmode_type mode = direct) : sink() {
+            sink(const std::filesystem::path &filename, openmode_type mode = direct) {
                 if (!open(filename, mode)) {
                     throw exception::runtime()                                          //
                         << error::message("failed to open file: " + filename.string())  //
@@ -549,8 +547,10 @@ namespace vidre {
             offset_type write(const memory::view &buf) noexcept override;
 
         public:
-            /** Check if valid (i.e., usable).
-             * */
+            cap getcap() const noexcept override {
+                return {cap::chunk, cap::none};
+            }
+
             bool valid() const noexcept override {
                 return fd_.valid();
             }
@@ -587,14 +587,14 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY file::source : public virtual io::source {
         public:
-            source() : io::source(endpoint::cap::any | endpoint::cap::push) {}
+            source() = default;
 
             source(const source &) = delete;
             source &operator=(const source &) = delete;
             source(source &&) = delete;
             source &operator=(source &&) = delete;
 
-            source(const std::filesystem::path &filename) : source() {
+            source(const std::filesystem::path &filename) {
                 if (!open(filename)) {
                     throw exception::runtime()                                          //
                         << error::message("failed to open file: " + filename.string())  //
@@ -617,11 +617,13 @@ namespace vidre {
             }
 
         public:
-            bool step(io::sink &snk) override;
+            bool step(io::sink *snk) override;
 
         public:
-            /** Check if valid (i.e., usable).
-             * */
+            cap getcap() const noexcept override {
+                return {cap::none, cap::chunk | cap::push};
+            }
+
             bool valid() const noexcept override {
                 return fd_.valid();
             }
@@ -635,7 +637,7 @@ namespace vidre {
              * */
             bool open(const std::filesystem::path &filename) noexcept {
                 bool retval = fd_.open(filename, file::access::readonly);
-                if (retval) 
+                if (retval)
                     buf_.setup(fd_.blocksize());
                 return retval;
             }

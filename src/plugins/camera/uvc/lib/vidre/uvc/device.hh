@@ -71,7 +71,8 @@ namespace vidre {
             public:
                 camera() = delete;
                 camera(const camera &) = delete;
-                camera(device::state initial_state) noexcept : device::camera(initial_state), io::source(cap::packet | cap::task | cap::realtime) {}
+                camera(device::state initial_state) noexcept
+                    : device::camera(initial_state) {}
                 virtual ~camera();
 
             protected:
@@ -87,6 +88,10 @@ namespace vidre {
                 void query() noexcept;
 
             public:
+                cap getcap() const noexcept override {
+                    return {cap::none, cap::packet | cap::task | cap::realtime};
+                }
+
                 bool valid() const noexcept override {
                     return vid_.valid();
                 }

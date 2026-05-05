@@ -2,6 +2,7 @@
 #include <vidre/exception.hh>
 
 #include <iostream>
+#include "vidre/io/types/source.hh"
 
 using namespace vidre;
 
@@ -58,7 +59,7 @@ struct files {
 void copy_source_to_sink_manual() {
     auto files = files::make();
 
-    while (files.src->step(*(files.dst.get())))
+    while (dynamic_cast<io::source*>(files.src.get())->step(dynamic_cast<io::sink*>(files.dst.get())))
         ;
 }
 //! [copy-source-to-sink-manual]

@@ -56,10 +56,6 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY route {
             public:
-                struct link {
-                    source::shared src;  ///< Source endpoint.
-                    sink::shared snk;    ///< Sink endpoint.
-                };
 
             public:
                 route(std::string tag = {}) : tag_(std::move(tag)) {}
