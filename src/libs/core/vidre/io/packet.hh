@@ -284,12 +284,6 @@ namespace vidre {
 
         }  // namespace packet
 
-        ///@cond
-        inline result sink::put(const packet::basic *p) {
-            return p->put(*this);
-        }
-        ///@endcond
-
     }  // namespace io
 
 }  // namespace vidre

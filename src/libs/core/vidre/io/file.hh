@@ -388,6 +388,13 @@ namespace vidre {
                 return io::detail::file::blocksize(fd_);
             }
 
+            /** Get filename.
+             * @return Filename as a string, or an empty string if the file is not valid.
+             * */
+            std::filesystem::path filename() const noexcept {
+                return io::detail::file::filename(fd_);
+            }
+
             /** Open a file.
              * @param filename    The file name to open.
              * @param access      Access mode (default: readonly).
@@ -578,6 +585,10 @@ namespace vidre {
             /** Close file.
              * */
             void close() noexcept;
+
+        public:
+            settings::json setup() const override;
+            void setup(const settings::json &config) override;
         };
 
         /** File source.
@@ -647,6 +658,10 @@ namespace vidre {
             void close() noexcept {
                 fd_.close();
             }
+
+        public:
+            settings::json setup() const override;
+            void setup(const settings::json &config) override;
         };
 
         namespace standard {

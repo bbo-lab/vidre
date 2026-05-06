@@ -49,3 +49,31 @@ bool vidre::io::endpoint::match(endpoint::cap::flag_type &from, endpoint::cap::f
 
     return true;
 }
+
+settings::json endpoint::cap::setup(flag_type flgs) const {
+    return {
+        //
+        {"packet", !!(flgs & endpoint::cap::packet)},      //
+        {"chunk", !!(flgs & endpoint::cap::chunk)},        //
+                                                           //
+        {"task", !!(flgs & endpoint::cap::task)},          //
+        {"realtime", !!(flgs & endpoint::cap::realtime)},  //
+                                                           //
+        {"push", !!(flgs & endpoint::cap::push)},          //
+        {"pull", !!(flgs & endpoint::cap::pull)},          //
+        {"event", !!(flgs & endpoint::cap::event)},        //
+                                                           //
+        {"multi", !!(flgs & endpoint::cap::multi)}         //
+    };
+}
+
+settings::json endpoint::cap::setup() const {
+    settings::json retval;
+
+    if (flags[sink] != endpoint::cap::none)
+        retval["sink"] = setup(flags[sink]);
+    if (flags[source] != endpoint::cap::none)
+        retval["source"] = setup(flags[source]);
+
+    return retval;
+}

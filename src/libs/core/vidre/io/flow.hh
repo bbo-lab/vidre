@@ -56,6 +56,14 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY route {
             public:
+                /** Item.
+                 * */
+                struct VIDRE_CORE_VISIBILITY item {
+                    endpoint::shared ep;  ///< Endpoint (source, sink, or channel).
+                    task::shared task;    ///< Task (thread) for this item.
+                };
+
+                using map_type = ankerl::unordered_dense::map<const char *, item>;
 
             public:
                 route(std::string tag = {}) : tag_(std::move(tag)) {}
@@ -67,12 +75,13 @@ namespace vidre {
                     // FIXME
                 }
 
-                route(source::shared src, sink::shared snk, std::string tag = {}) : tag_(std::move(tag)) {
-                    // FIXME
-                }
+                /** Simple source to sink route.
+                 * */
+                route(endpoint::shared src, endpoint::shared snk, std::string tag = {});
 
             protected:
                 std::string tag_{};  ///< Route tag (used by dashboard).
+                map_type items_;     ///< Map of items in this route, indexed by endpoint tag.
 
             public:
                 /** Get endpoint tag.
@@ -89,6 +98,7 @@ namespace vidre {
                     tag_ = tg;
                 }
 
+            public:
                 /** Execute the route.
                  * */
                 void execute();

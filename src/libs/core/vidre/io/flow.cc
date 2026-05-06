@@ -24,19 +24,14 @@
 using namespace vidre;
 using namespace vidre::io;
 
-// flow::link flow::route(source::shared src, sink::shared snk) {
-//     if (not endpoint::match(src.get(), snk.get()))
-//         throw exception::logic() << "incompatible source and sink";
+flow::route::route(endpoint::shared src, endpoint::shared snk, std::string tag) : tag_(std::move(tag)) {
+    if (not io::endpoint::match(src, snk))
+        throw exception::logic() << "incompatible source and sink";
 
-//     if (src->capabilities() & endpoint::cap::push) {
-//     }
-//     else if (snk->capabilities() & endpoint::cap::pull) {
-//     }
-//     else {
-//     }
+    // FIXME
 
-//     return {std::move(src), std::move(snk)};
-// }
+
+}
 
 void flow::route::execute() {
     //@todo implement

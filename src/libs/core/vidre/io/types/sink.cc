@@ -19,5 +19,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- #include "sink.hh"
- 
+#include "sink.hh"
+#include "../packet.hh"
+
+using namespace vidre;
+using namespace vidre::io;
+
+result sink::put(const packet::basic *p) {
+    return p->put(*this);
+}

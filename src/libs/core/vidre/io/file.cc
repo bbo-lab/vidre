@@ -90,6 +90,22 @@ void io::file::sink::close() noexcept {
     return;
 }
 
+settings::json io::file::sink::setup() const {
+    return {{"endpoint",
+             {
+                 {"type", "file"},                                          //
+                 {"tag", tag()},                                            //
+                 {"capabilities", cap_.setup()},                            //
+                 {"filename", fd_.valid() ? fd_.filename().string() : ""},  //
+                 {"blocksize", fd_.blocksize()},                            //
+                 {"buffered", !!buf_},                                      //
+             }}};
+}
+
+void io::file::sink::setup(const settings::json &config) {
+    // TODO: Implement configuration setup
+}
+
 bool io::file::source::step(io::sink *snk) {
     auto res = get(buf_);
 
@@ -104,6 +120,22 @@ bool io::file::source::step(io::sink *snk) {
         throw exception::runtime() << error::code(fd_.error());
 
     return true;
+}
+
+settings::json io::file::source::setup() const {
+    return {{"endpoint",
+             {
+                 {"type", "file"},                                          //
+                 {"tag", tag()},                                            //
+                 {"capabilities", cap_.setup()},                            //
+                 {"filename", fd_.valid() ? fd_.filename().string() : ""},  //
+                 {"blocksize", fd_.blocksize()},                            //
+                 {"buffered", !!buf_},                                      //
+             }}};
+}
+
+void io::file::source::setup(const settings::json &config) {
+    // TODO: Implement configuration setup
 }
 
 io::file vidre::io::standard::input = io::file{::stdin};

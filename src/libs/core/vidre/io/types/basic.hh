@@ -469,6 +469,8 @@ namespace vidre {
                     push = 0x0100,   ///< Source pushes data to sink.
                     pull = 0x0200,   ///< Sink pulls data from source.
                     event = 0x0400,  ///< Endpoint uses event-based transmission (e.g., for packet mode).
+
+                    multi = 0x1000,  ///< Endpoint can be connected to multiple other endpoints (e.g., for broadcasting).
                 };
 
                 cap() = default;
@@ -480,7 +482,7 @@ namespace vidre {
 
                 cap(const flag_type (&flgs)[2]) noexcept : flags{flgs[0], flgs[1]} {}
                 cap(flag_type flgs_sink, flag_type flgs_source) noexcept : flags{flgs_sink, flgs_source} {}
-                
+
                 flag_type flags[2]{};  ///< Capability flags for sink (index 0) and source (index 1).
 
                 /** Convert capability flags to endpoint type.
@@ -493,6 +495,11 @@ namespace vidre {
                     return static_cast<type>(retval);
                 }
 
+                /** Access capability flags by index.
+                 * @param idx The index of the capability flags (0 for sink, 1 for source).
+                 * @returns A reference to the capability flags at the specified index.
+                 * */
+                ///@{
                 flag_type &operator[](size_type idx) noexcept {
                     assert(idx < 2);
                     return flags[idx];
@@ -502,6 +509,15 @@ namespace vidre {
                     assert(idx < 2);
                     return flags[idx];
                 }
+                ///@}
+
+                /** Get capabilities setup.
+                 * @returns The capabilities setup in JSON format.
+                 * */
+                settings::json setup() const;
+
+            protected:
+                settings::json setup(flag_type flgs) const;
             };
 
             /** Shared pointer type for endpoints.

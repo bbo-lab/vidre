@@ -59,6 +59,7 @@ struct files {
 void copy_source_to_sink_manual() {
     auto files = files::make();
 
+    // manual push
     while (dynamic_cast<io::source*>(files.src.get())->step(dynamic_cast<io::sink*>(files.dst.get())))
         ;
 }
