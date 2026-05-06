@@ -169,7 +169,7 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY timer {
         public:
-            using clock = std::chrono::steady_clock;
+            using clock = monotonic;
             using timepoint = clock::time_point;
 
             using nanoseconds = std::chrono::duration<double, std::nano>;
@@ -178,7 +178,15 @@ namespace vidre {
             using seconds = std::chrono::duration<double>;
 
         public:
-            timer() = default;
+            timer(const timer &) = delete;
+            timer &operator=(const timer &) = delete;
+            timer(timer &&) = default;
+            timer &operator=(timer &&) = default;
+
+            timer(bool start = false) noexcept {
+                if (start)
+                    this->start();
+            }   
 
         protected:
             timepoint start_{};  ///< Start time.
@@ -187,27 +195,30 @@ namespace vidre {
         public:
             /** Start (or continue) the timer.
              * */
-            void start() {
+            timer &start() {
                 start_ = clock::now();
+                return *this;
             }
 
             /** Stop the timer.
              * */
-            void stop() {
+            timer &stop() {
                 stop_ = clock::now();
+                return *this;
             }
 
             /** Resume the timer.
              * */
-            void resume() {
+            timer &resume() {
                 start_ = clock::now() - (stop_ - start_);
+                return *this;
             }
 
             /** Get the elapsed time since the timer was started.
              * @tparam Duration The duration type to return (default: microseconds).
              * */
             template <class Duration = microseconds>
-            double elapsed() {
+            double elapsed() const noexcept{
                 return Duration(clock::now() - start_).count();
             }
 
@@ -215,13 +226,13 @@ namespace vidre {
              * @tparam Duration The duration type to return (default: microseconds).
              * */
             template <class Duration = microseconds>
-            double duration() {
+            double duration() const noexcept {
                 return Duration(stop_ - start_).count();
             }
 
             template <class Duration = microseconds, class T>
             requires (std::integral<T> or std::floating_point<T>)
-            double duration(T n) {
+            double duration(T n) const noexcept {
                 return duration<Duration>() / static_cast<double>(n);
             }
         };

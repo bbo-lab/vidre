@@ -143,6 +143,12 @@ namespace vidre {
                     return nullptr != data;
                 }
 
+                /** Check if buffer is empty.
+                 * */
+                bool empty() const noexcept {
+                    return used == 0;
+                }
+
                 /** Check if buffer is full.
                  * */
                 bool full() const noexcept {
@@ -188,6 +194,7 @@ namespace vidre {
         namespace packet {
             struct basic;  // forward declaration
         }
+
         class sink;     // forward declaration
         class source;   // forward declaration
         class channel;  // forward declaration
@@ -439,9 +446,11 @@ namespace vidre {
             /** Endpoint type.
              * */
             enum class type {
-                sink = 0x01,             ///< Endpoint is a sink (i.e., it can consume data).
-                source = 0x02,           ///< Endpoint is a source (i.e., it can produce data).
-                channel = sink | source  ///< Endpoint is a channel (i.e., it can both produce and consume data).
+                sink = 0x01,               ///< Endpoint is a sink (i.e., it can consume data).
+                source = 0x02,             ///< Endpoint is a source (i.e., it can produce data).
+                channel = sink | source,   ///< Endpoint is a channel (i.e., it can both produce and consume data).
+                merger = 0x04 | channel,   ///< Endpoint is a merger (i.e., it can combine multiple sources into a single sink).
+                arbiter = 0x08 | channel,  ///< Endpoint is an arbiter (i.e., it can distribute a single source to multiple sinks).
             };
 
             /** Endpoint capabilities.
@@ -492,6 +501,8 @@ namespace vidre {
                     uint16_t retval = 0;
                     retval |= to_underlying(type::sink) * !!static_cast<bool>(flags[sink]);
                     retval |= to_underlying(type::source) * !!static_cast<bool>(flags[source]);
+                    retval |= to_underlying(type::merger) * !!static_cast<bool>(flags[sink] & flag_type::multi);
+                    retval |= to_underlying(type::arbiter) * !!static_cast<bool>(flags[source] & flag_type::multi);
                     return static_cast<type>(retval);
                 }
 
@@ -518,6 +529,21 @@ namespace vidre {
 
             protected:
                 settings::json setup(flag_type flgs) const;
+            };
+
+            /** Endpoint statistics.
+             * */
+            struct VIDRE_CORE_VISIBILITY stats {
+                chrono::timer timer{true};  ///< Timer for measuring transmission duration.
+
+                size_type bytes_transmitted{};    ///< Total number of data bytes transmitted through this endpoint.
+                size_type packets_transmitted{};  ///< Total number of data packets transmitted.
+                size_type errors{};               ///< Total number of transmission errors encountered by this endpoint.
+
+                double throughput() const noexcept {
+                    double duration = timer.elapsed<chrono::timer::seconds>();
+                    return duration > 0 ? static_cast<double>(bytes_transmitted) / duration : 0.0;
+                }
             };
 
             /** Shared pointer type for endpoints.
@@ -584,6 +610,7 @@ namespace vidre {
         protected:
             std::string tag_{};  ///< Endpoint tag (used by dashboard).
             cap cap_{};          ///< Matched endpoint capabilities.
+            stats stats_{};      ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
 
         public:
             /** Get endpoint tag.
@@ -605,42 +632,19 @@ namespace vidre {
              * */
             virtual cap getcap() const noexcept = 0;
 
-#if 0
-            /** Get capabilities.
-             * @param t The endpoint type to query capabilities for (must be given for channels).
-             * @returns The capabilities of this endpoint.
+            /** Get endpoint statistics.
+             * @returns The statistics of this endpoint.
              * */
-            cap getcap(type t) const noexcept {
-                if (t == type::channel)
-                    return static_cast<cap>(0);
-
-                return cap_[to_underlying(t) - 1];
+            const stats &getstats() const noexcept {
+                return stats_;
             }
 
-            /** Set capability bit.
-             * @param t The endpoint type to query capabilities for..
-             * @param cap The capability bit to set.
+            /** Reset endpoint statistics.
+             * This method resets the statistics of this endpoint, including the start and stop timestamps.
              * */
-            void setcap(type t, cap c) noexcept {
-                if (t == type::channel)
-                    return;
-
-                auto idx = to_underlying(t) - 1;
-                cap_[idx] = static_cast<cap>(to_underlying(cap_[idx]) | to_underlying(c));
+            void reset() noexcept {
+                stats_ = {};
             }
-
-            /** Clear capability bit.
-             * @param t The endpoint type to query capabilities for (must be given for channels).
-             * @param cap The capability bit to clear (default: all bits).
-             * */
-            void clearcap(type t, cap c = static_cast<cap>(-1)) noexcept {
-                if (t == type::channel)
-                    return;
-
-                auto idx = to_underlying(t) - 1;
-                cap_[idx] = static_cast<cap>(to_underlying(cap_[idx]) & ~to_underlying(c));
-            }
-#endif
 
             /** Get endpoint setup.
              * @returns JSON configuration object for this endpoint.

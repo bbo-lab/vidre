@@ -110,7 +110,14 @@ namespace vidre {
              * @returns Number of bytes actually read (@c invalid for read failure).
              * */
             virtual result get(memory::area v) {
-                return read(v);
+                result retval = read(v);
+
+                if (retval)
+                    stats_.bytes_transmitted += retval.count;
+                else
+                    stats_.errors++;
+
+                return retval;
             }
 
             /** Poll for data availability (waits indefinitely).

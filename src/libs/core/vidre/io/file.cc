@@ -35,27 +35,39 @@ io::offset_type io::file::sink::flush() {
     return buf_.flush();
 }
 
-io::offset_type io::file::sink::write(const memory::view &buf) noexcept {
+io::offset_type io::file::sink::write(const memory::view &v) {
     if (buf_) {
         // using buffer
-        size_type count = buf.size();
-        memory::const_pointer src = buf.data();
+        size_type count = v.size();
+        memory::const_pointer src = v.data();
 
         offset_type retval = count;
         offset_type pos = 0;
         while (count > 0) {
-            size_type buffered = buf_.put(src + pos, count);
-            if (buf_.full())
-                flush();
-            count -= buffered;
-            pos += buffered;
+            if (buf_.empty() and (count >= buf_.size)) {
+                // circumvent buffer and write directly
+                auto written = fd_.write({buf_.size, src + pos});
+
+                if (written != static_cast<io::offset_type>(buf_.size))  // see flush()
+                    throw exception::memory();
+
+                count -= written;
+                pos += written;
+            }
+            else {
+                size_type buffered = buf_.put(src + pos, count);
+                if (buf_.full())
+                    flush();
+                count -= buffered;
+                pos += buffered;
+            }
         }
 
         return retval;
     }
     else
         // direct write
-        return fd_.write(buf);
+        return fd_.write(v);
 }
 
 bool io::file::sink::open(const std::filesystem::path &filename, openmode_type mode) noexcept {
@@ -69,7 +81,7 @@ bool io::file::sink::open(const std::filesystem::path &filename, openmode_type m
         disp |= file::disposition::append;
 
     if (mode & openmode_type::direct)
-        hint |= file::hint::direct | file::hint::synchronous;
+        hint |= file::hint::synchronous | file::hint::direct;
 
     bool retval = fd_.open(filename, acc, disp, hint);
     if (not retval)
@@ -77,6 +89,7 @@ bool io::file::sink::open(const std::filesystem::path &filename, openmode_type m
 
     if ((mode & openmode_type::direct) and not(mode & openmode_type::unbuffered)) {
         auto mem = std::max(fd_.blocksize(), os::pagesize());
+        mem = std::max(mem, 1048576UL);  // ensure a reasonable minimum buffer size
         buf_.setup(mem);
     }
 

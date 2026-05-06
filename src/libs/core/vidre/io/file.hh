@@ -551,11 +551,11 @@ namespace vidre {
             offset_type flush();
 
             // Low-level write method.
-            offset_type write(const memory::view &buf) noexcept override;
+            offset_type write(const memory::view &buf) override;
 
         public:
             cap getcap() const noexcept override {
-                return {cap::chunk, cap::none};
+                return {cap::chunk | cap::packet, cap::none};
             }
 
             bool valid() const noexcept override {
@@ -576,7 +576,7 @@ namespace vidre {
 
             /** Open file.
              * @param filename The file name to open.
-             * @param mode     File flags (default: direct with block-wise buffering).
+             * @param mode     File flags (default: synchronous with block-wise buffering).
              * @return @c true on success
              * @return @c false otherwise
              */
@@ -590,6 +590,26 @@ namespace vidre {
             settings::json setup() const override;
             void setup(const settings::json &config) override;
         };
+
+        ///@cond
+        inline file::sink::openmode_type operator|(file::sink::openmode_type lhs, file::sink::openmode_type rhs) {
+            return static_cast<file::sink::openmode_type>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline file::sink::openmode_type &operator|=(file::sink::openmode_type &lhs, file::sink::openmode_type rhs) {
+            lhs = static_cast<file::sink::openmode_type>(to_underlying(lhs) | to_underlying(rhs));
+            return lhs;
+        }
+        inline file::sink::openmode_type operator&(file::sink::openmode_type lhs, file::sink::openmode_type rhs) {
+            return static_cast<file::sink::openmode_type>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline file::sink::openmode_type &operator&=(file::sink::openmode_type &lhs, file::sink::openmode_type rhs) {
+            lhs = static_cast<file::sink::openmode_type>(to_underlying(lhs) & to_underlying(rhs));
+            return lhs;
+        }
+        inline file::sink::openmode_type operator~(file::sink::openmode_type rhs) {
+            return static_cast<file::sink::openmode_type>(~to_underlying(rhs));
+        }
+        ///@endcond
 
         /** File source.
          *

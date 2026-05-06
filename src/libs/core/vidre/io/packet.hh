@@ -247,7 +247,8 @@ namespace vidre {
                  * @endinternal
                  * */
                 virtual result put(io::sink &f) const {
-                    return f.put({sizeof(basic), reinterpret_cast<memory::const_pointer>(this)});
+                    result retval = f.put({sizeof(basic), reinterpret_cast<memory::const_pointer>(this)});
+                    return retval;
                 }
 
                 /** Helper for padding.

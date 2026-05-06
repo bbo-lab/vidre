@@ -51,13 +51,13 @@ vidre_test(datachain EXCLUDE
     SOURCES datachain.cc
 )
 
-# FIXME vidre_test(hdspeed EXCLUDE
-#     BUILD
-#         LINK_LIBRARIES 
-#             PUBLIC
-#                 Vidre::Core
-#     SOURCES hdspeed.cc
-# )
+vidre_test(hdspeed EXCLUDE
+    BUILD
+        LINK_LIBRARIES 
+            PUBLIC
+                Vidre::Core
+    SOURCES hdspeed.cc
+)
 
 if(Vidre_BUILD_PLUGIN_CAMERA_UVC)
     vidre_test(uvc EXCLUDE

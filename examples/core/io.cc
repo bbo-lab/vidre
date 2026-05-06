@@ -41,7 +41,9 @@ struct files {
         std::filesystem::path data = create_dummy_file();
 
         auto src = io::source::make<io::file::source>(data);
-        auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate);
+        auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate  //
+                                                   | io::file::sink::direct
+        );
 
         if (not src->valid())
             throw exception::runtime() << error::system();
@@ -59,9 +61,20 @@ struct files {
 void copy_source_to_sink_manual() {
     auto files = files::make();
 
+    // show endpoint setup
+    std::cout << files.src->setup().dump(4) << std::endl;
+    std::cout << files.dst->setup().dump(4) << std::endl;
+
+    // reset stats
+    files.src->reset();
+    files.dst->reset();
+
     // manual push
-    while (dynamic_cast<io::source*>(files.src.get())->step(dynamic_cast<io::sink*>(files.dst.get())))
+    while (dynamic_cast<io::source *>(files.src.get())->step(dynamic_cast<io::sink *>(files.dst.get())))
         ;
+
+    std::cout << "read speed: " << files.src->getstats().throughput() / (1024. * 1024.) << " MiB/s" << std::endl;
+    std::cout << "write speed: " << files.dst->getstats().throughput() / (1024. * 1024.) << " MiB/s" << std::endl;
 }
 //! [copy-source-to-sink-manual]
 

@@ -91,7 +91,7 @@ namespace vidre {
              * @param buf Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type write(const memory::view &buf) noexcept {
+            virtual offset_type write(const memory::view &buf) {
                 return invalid<offset_type>;
             }
 
@@ -104,13 +104,12 @@ namespace vidre {
             }
 
         public:  // should be protected
-
             /** Step method for processing data from the source.
              * @param src The source to process data from.
              * @returns @c false if handler should stop processing, @c true to continue.
-             * 
+             *
              * FIXME
-             * 
+             *
              * */
             virtual bool step(source *src) {
                 return false;
@@ -129,7 +128,14 @@ namespace vidre {
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
             virtual result put(const memory::view &v) {
-                return write(v);
+                result retval = write(v);
+
+                if (retval)
+                    stats_.bytes_transmitted += retval.count;
+                else
+                    stats_.errors++;
+
+                return retval;
             }
 
             /** Put a value of type @c T.

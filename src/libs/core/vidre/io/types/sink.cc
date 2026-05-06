@@ -26,5 +26,11 @@ using namespace vidre;
 using namespace vidre::io;
 
 result sink::put(const packet::basic *p) {
-    return p->put(*this);
+    result retval = p->put(*this);
+
+    // update stats
+    if (retval) 
+        stats_.packets_transmitted++;
+
+    return retval;
 }
