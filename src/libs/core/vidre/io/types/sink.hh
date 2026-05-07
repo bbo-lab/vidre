@@ -131,7 +131,7 @@ namespace vidre {
                 result retval = write(v);
 
                 if (retval)
-                    stats_.bytes_transmitted += retval.count;
+                    stats_.bytes.transmitted += retval.count;
                 else
                     stats_.errors++;
 

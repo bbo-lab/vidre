@@ -35,19 +35,22 @@
  *
  * ## Overview
  *
- * ### Endpoints and transmission
- *
  * The basic building blocks for data transmission are:
- * - **source**: a data producer (from input devices, such as video cameras, or data files).
- * - **sink**: a data consumer (from output devices, such as audio, video, or, as above, data files).
- * - **channel**: a channel exposing both, source and sink interface, allowing for, e.g., filtering data.
- * - **arbiter**: arbiters are responsible for distributing a single source to multiple sinks.
- * - **merger**: mergers are responsible for combining multiple sources into a single sink.
+ * - `io::source`: a data producer (from input devices, such as video cameras, or data files).
+ * - `io::sink`: a data consumer (from output devices, such as audio, video, or, as above, data files).
+ * - `io::channel`: a channel exposing both, source and sink interface, allowing for, e.g., filtering data.
+ * - `io::arbiter`: arbiters are responsible for distributing a single source to multiple sinks.
+ * - `io::merger`: mergers are responsible for combining multiple sources into a single sink.
  *
- * ### Flow control
+ * Many of sources and sinks are related to actual devices (see @ref api-device), but may also be
+ * software based components, such as the logging facility (see @ref api-core-log), or simply a
+ * file or data buffer. Their bevhavior may also be very different concerning buffering. A video
+ * device, for example, should buffer video frames of at least 1 second, but will drop frames
+ * if the processing cannot keep up. A keyboard, on the other hand, must not drop key strokes—which
+ * also, for example, applies to the logging facility. 
  *
- * FIXME see https://chat.deepseek.com/a/chat/s/8cc10342-f684-4a3e-805a-82c0b7973e4c
- *
+ * FIXME introduce "stepping", "capabilities", "tasks", etc. 
+ * 
  * @see @ref api-core-io-flow
  * */
 

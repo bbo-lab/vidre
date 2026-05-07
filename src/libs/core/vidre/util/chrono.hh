@@ -146,23 +146,27 @@ namespace vidre {
 
         public:
             /** Get the reference clock.
+             * @tparam T The clock type to return (either `chrono::clock` or `chrono::monotonic`).
+             * @returns The reference clock of the specified type.
              * */
-            template<class T>
+            template <class T>
+            requires (std::same_as<T, clock> or std::same_as<T, monotonic>)
             auto get() const noexcept;
         };
 
-        template<>
+        template <>
         inline auto reference::get<clock>() const noexcept {
             return clock_;
         }
 
-        template<>
+        template <>
         inline auto reference::get<monotonic>() const noexcept {
             return monotonic_;
         }
 
         inline clock::time_point timestamp::to_utc(const reference &ref) const noexcept {
-            return ref.get<clock>() - ref.get<monotonic>().time_since_epoch() + std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec);
+            return ref.get<clock>() - ref.get<monotonic>().time_since_epoch() + std::chrono::seconds(sec) +
+                   std::chrono::nanoseconds(nsec);
         }
 
         /** Simple timer.
@@ -170,7 +174,7 @@ namespace vidre {
         class VIDRE_CORE_VISIBILITY timer {
         public:
             using clock = monotonic;
-            using timepoint = clock::time_point;
+            using time_point = clock::time_point;
 
             using nanoseconds = std::chrono::duration<double, std::nano>;
             using microseconds = std::chrono::duration<double, std::micro>;
@@ -186,11 +190,11 @@ namespace vidre {
             timer(bool start = false) noexcept {
                 if (start)
                     this->start();
-            }   
+            }
 
         protected:
-            timepoint start_{};  ///< Start time.
-            timepoint stop_{};   ///< Stop time.
+            time_point start_{};  ///< Start time.
+            time_point stop_{};   ///< Stop time.
 
         public:
             /** Start (or continue) the timer.
@@ -218,7 +222,7 @@ namespace vidre {
              * @tparam Duration The duration type to return (default: microseconds).
              * */
             template <class Duration = microseconds>
-            double elapsed() const noexcept{
+            double elapsed() const noexcept {
                 return Duration(clock::now() - start_).count();
             }
 

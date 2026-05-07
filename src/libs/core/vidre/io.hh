@@ -34,7 +34,7 @@
  * and audio). For that it takes inspiration from streaming libraries, such as
  * gstreamer. That means, for example, that the concept of "source" and "sink" 
  * are used to represent data providers and consumers, respectively. The concept 
- * of "pipes" (or filters, respectively) is used to represent data transformers, 
+ * of "channels" (or filters, respectively) is used to represent data transformers, 
  * such as decoders and encoders. The implementation, in combination with appropriate
  * synchronization primitives, also allows for concurrent data processing, 
  * passing either raw byte-sequences or data packets with metadata.
@@ -45,6 +45,7 @@
  * @defgroup api-core-io-flow       Data flow control
  * @defgroup api-core-io-packet     Packet based I/O
  * @defgroup api-core-io-file       File and memory I/O
+ * @defgroup api-core-io-monitor    Monitoring
  * @defgroup api-core-io-details    Implementation details
  * @}
  * 

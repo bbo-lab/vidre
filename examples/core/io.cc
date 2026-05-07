@@ -2,7 +2,8 @@
 #include <vidre/exception.hh>
 
 #include <iostream>
-#include "vidre/io/types/source.hh"
+#include <vidre/io/types.hh>
+#include <vidre/io/monitor.hh>
 
 using namespace vidre;
 
@@ -42,8 +43,7 @@ struct files {
 
         auto src = io::source::make<io::file::source>(data);
         auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate  //
-                                                   | io::file::sink::direct
-        );
+                                                                                    | io::file::sink::direct);
 
         if (not src->valid())
             throw exception::runtime() << error::system();
@@ -73,8 +73,12 @@ void copy_source_to_sink_manual() {
     while (dynamic_cast<io::source *>(files.src.get())->step(dynamic_cast<io::sink *>(files.dst.get())))
         ;
 
-    std::cout << "read speed: " << files.src->getstats().throughput() / (1024. * 1024.) << " MiB/s" << std::endl;
-    std::cout << "write speed: " << files.dst->getstats().throughput() / (1024. * 1024.) << " MiB/s" << std::endl;
+
+    // FIXME
+    auto srcstats = io::monitor::calculate(files.src.get());
+    std::cout << "write speed: " << srcstats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
+    auto dststats = io::monitor::calculate(files.dst.get());
+    std::cout << "write speed: " << dststats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
 }
 //! [copy-source-to-sink-manual]
 

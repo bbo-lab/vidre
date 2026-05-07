@@ -28,6 +28,21 @@
  * @brief Flow control.
  * @details
  * @fileinfo
+ * 
+ * Data transmision can be packet (see @ref api-core-io-packet) or chunk based (e.g., a video
+ * stream is only packet based, while an audio device would be able to handle both modes).
+ * For packet based I/O the data is either passed using event mechanisms (i.e. either the
+ * source or the sink wait for the other to signal the availability of data or readiness to
+ * receive data) or by direct calls (i.e. the source directly calls the sink's put method,
+ * or the sink directly calls the source's get method). For chunk based I/O only the latter
+ * is available.
+ *
+ * ## Packet-based data flow
+ *
+ *
+ *
+ * ## Chunk-based data flow
+ *
  *
  *
  * @{

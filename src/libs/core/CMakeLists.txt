@@ -71,6 +71,7 @@ vidre_library(vidrecore SHARED
                 vidre/io/types/channel.hh vidre/io/types/channel.cc
                 vidre/io/types/merger.hh vidre/io/types/merger.cc
                 vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
+            vidre/io/monitor.hh vidre/io/monitor.cc
             vidre/io/file.hh vidre/io/file.cc
             vidre/io/packet.hh vidre/io/packet.cc
             vidre/io/flow.hh vidre/io/flow.cc

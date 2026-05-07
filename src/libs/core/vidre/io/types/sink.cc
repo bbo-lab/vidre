@@ -30,7 +30,7 @@ result sink::put(const packet::basic *p) {
 
     // update stats
     if (retval) 
-        stats_.packets_transmitted++;
+        stats_.packets.transmitted++;
 
     return retval;
 }

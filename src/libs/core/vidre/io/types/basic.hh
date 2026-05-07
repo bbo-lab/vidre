@@ -24,39 +24,6 @@
 #define VIDRE_CORE_IO_TYPES_BASIC_HH
 #pragma once
 
-/**@addtogroup api-core-io-types
- * @brief Basic types and streaming fundamentals.
- * @details
- * @fileinfo
- *
- * The data flow in VidRe has to cover various forms of data (such as its main
- * focus: video images, see @ref api-video) as well as modes of transmission
- * (from fixed to variable sized data packets, as well as raw I/O).
- *
- * ## Overview
- *
- * ### Endpoints and transmission
- *
- * The basic building blocks for data transmission are:
- * - **source**: a data producer (from input devices, such as video cameras, or data files).
- * - **sink**: a data consumer (from output devices, such as audio, video, or, as above, data files).
- * - **channel**: a channel exposing both, source and sink interface, allowing for, e.g., filtering data.
- * - **arbiter**: arbiters are responsible for distributing a single source to multiple sinks.
- * - **merger**: mergers are responsible for combining multiple sources into a single sink.
- *
- * ### Flow control
- *
- * Data transmision can be packet (see @ref api-core-io-packet) or chunk based (e.g., a video
- * stream is only packet based, while an audio device would be able to handle both modes).
- * For packet based I/O the data is either passed using event mechanisms (i.e. either the
- * source or the sink wait for the other to signal the availability of data or readiness to
- * receive data) or by direct calls (i.e. the source directly calls the sink's put method,
- * or the sink directly calls the source's get method). For chunk based I/O only the latter
- * is available.
- *
- * @see @ref api-core-io-flow
- * */
-
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
 #include <vidre/memory/base.hh>
@@ -203,6 +170,8 @@ namespace vidre {
 
         class route;      // forward declaration
         class dashboard;  // forward declaration
+
+        class monitor;  // forward declaration
 
         /**@addtogroup api-core-io-types
          * */
@@ -465,7 +434,7 @@ namespace vidre {
                 /** Capabilities flags.
                  * These flags indicate the capabilities of an endpoint, such as supported modes and transmission methods.
                  * */
-                enum flag_type : uint16_t {
+                enum flag_type : uint32_t {
                     none = 0,
 
                     packet = 0x0002,       ///< Packet mode (see `io::packet`).
@@ -532,18 +501,39 @@ namespace vidre {
             };
 
             /** Endpoint statistics.
+             * Endpoints should update these statitics during data transmission,
+             * except for `stamp`, which is set at `start()`.
+             * 
+             * @internal
+             * The I/O API provides an `io::monitor` that reads the stats and generates
+             * overall and current speed measurements using this data.
+             * @endinternal
              * */
             struct VIDRE_CORE_VISIBILITY stats {
-                chrono::timer timer{true};  ///< Timer for measuring transmission duration.
+                struct {
+                    size_type transmitted{};  ///< Total number of packets that were available for transmission.
+                    size_type dropped{};      ///< Total number of packets dropped by this endpoint.
+                } packets;
 
-                size_type bytes_transmitted{};    ///< Total number of data bytes transmitted through this endpoint.
-                size_type packets_transmitted{};  ///< Total number of data packets transmitted.
-                size_type errors{};               ///< Total number of transmission errors encountered by this endpoint.
+                struct {
+                    size_type transmitted{};  ///< Total number of bytes that were available for transmission.
+                } bytes;
 
-                double throughput() const noexcept {
-                    double duration = timer.elapsed<chrono::timer::seconds>();
-                    return duration > 0 ? static_cast<double>(bytes_transmitted) / duration : 0.0;
+                size_type errors{};  ///< Total number of transmission errors encountered by this endpoint.
+
+                /** Start statistics.
+                 * */
+                void start() noexcept {
+                    packets = {0, 0};
+                    bytes = {0};
+                    stamp = chrono::monotonic::now();
                 }
+
+            protected:
+                chrono::timer::time_point stamp{};  ///< Timestamp.
+
+            private:
+                friend class monitor;
             };
 
             /** Shared pointer type for endpoints.

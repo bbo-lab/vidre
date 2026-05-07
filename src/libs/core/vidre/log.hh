@@ -120,11 +120,9 @@
 
 #include <limits>
 #include <vector>
-#include <thread>
 #include <mutex>
 #include <string>
 #include <string_view>
-#include <optional>
 
 #if defined(DEBUG)
 #include <source_location>
@@ -184,13 +182,14 @@ namespace vidre {
          *       instead, the minor packet type indicates the log level.
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public virtual io::packet::basic {
-            chrono::timestamp timestamp{};  ///< Timestamp.
-                                            /// Note, that the timestamp is referenced to std::chrono::steady_clock,
-                                            /// which is a high-resolution, monotonic clock. This means that the timestamp
-                                            /// does not necessarily correspond to wall-clock time, but is suitable for measuring
-                                            /// time intervals and ordering log messages.
+            chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
+                                                                     /// @see chrono::reference
+            std::string message{};                                   ///< Log message (variable length).
 
-            packet() = default;
+            packet() {
+                message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
+                update();
+            }
             packet(const packet &) = delete;
             packet &operator=(const packet &) = delete;
             packet(packet &&) = default;
@@ -200,206 +199,94 @@ namespace vidre {
             packet(level lvl, uint16_t stream = 0) noexcept     //
                 : basic(to_underlying(io::packet::major::log),  //
                         to_underlying(lvl), stream, sizeof(timestamp))
-                , timestamp{chrono::timestamp::now()} {}
+                , timestamp{chrono::timestamp::now()} {
+                message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
+                update();
+            }
+
+            using shared = std::shared_ptr<packet>;
+
+            template <typename... Args>
+            static shared make(Args &&...args) {
+                return std::make_shared<packet>(std::forward<Args>(args)...);
+            }
+
+            void update() noexcept override {
+                length = sizeof(timestamp) + message.size();
+            }
 
             io::result put(io::sink &f) const override {
-                return basic::put(f) + f.put(timestamp);
+                return basic::put(f)                                                                 //
+                       + f.put(timestamp)                                                            //
+                       + f.put({message.size(), reinterpret_cast<const uint8_t *>(message.data())})  //
+                       + pad(f);
             }
 
             /** Get log level.
              * @returns The log level of this message.
              * */
             template <std::endian E = std::endian::native>
-            lognew::level get_level() const noexcept {
+            lognew::level getlevel() const noexcept {
                 return static_cast<lognew::level>(type.minor);
-            }
-
-            /** Get the log message.
-             * @returns A view of the log message.
-             * */
-            std::string_view message() noexcept {
-                return std::string_view{reinterpret_cast<const char *>(this) + sizeof(packet), length - sizeof(timestamp)};
             }
         };
 
         ///@}
-
-        namespace detail {
-            /**@addtogroup api-core-log-details
-             * */
-            ///@{
-
-            /** Default per-thread buffer size. */
-#if not defined(VIDRE_CORE_LOG_BUFFER_SIZE)
-#define VIDRE_CORE_LOG_BUFFER_SIZE 32768
-#endif
-
-            /** Per-thread message store.
-             * */
-            class VIDRE_CORE_VISIBILITY store {
-            public:
-                using size_type = io::size_type;
-                using offset_type = io::offset_type;
-
-                static constexpr size_type alignment = io::packet::alignment;  ///< Required byte alignment for log packets.
-                static constexpr size_type size = VIDRE_CORE_LOG_BUFFER_SIZE;  ///< Default buffer size.
-
-            public:
-                store() = default;
-                store(const store &) = delete;
-                store &operator=(const store &) = delete;
-                store(store &&) = delete;
-                store &operator=(store &&) = delete;
-
-            protected:
-                static thread_local char buffer_[size];  ///< Per-thread buffer.
-
-                static thread_local std::mutex mutex_;     ///< Mutex for synchronizing access to the buffer.
-                static thread_local io::size_type begin_;  ///< Index of the beginning of unhandled packets.
-                static thread_local io::size_type end_;    ///< Index of the end of finalized packets.
-                static thread_local io::size_type used_;   ///< Index of the end of current packet.
-
-            private:
-                /** Flush buffer.
-                 * */
-                static void flush() noexcept {
-                    std::lock_guard<std::mutex> lock(mutex_);
-
-                    if (used_ > end_)
-                        return;
-
-                    if ((begin_ == end_) and (begin_ > 0)) {
-                        used_ = 0;
-                        end_ = begin_ = 0;
-                    }
-                }
-
-            public:
-                /** Get free buffer space.
-                 * @returns The amount of buffer currently free.
-                 * */
-                static size_type free() noexcept {
-                    return size - used_;
-                }
-
-                /** Get a packet.
-                 * @note This method is to be called only from the log processing thread, which
-                 *       is responsible for handling the stored packets.
-                 * @see `pop()`
-                 * */
-                static lognew::packet *get() noexcept {
-                    std::lock_guard<std::mutex> lock(mutex_);
-
-                    if (begin_ >= end_)
-                        return nullptr;
-
-                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
-                    return pkt;
-                }
-
-                /** Pop a packet.
-                 * @note This method is to be called only from the log processing thread, which
-                 *       is responsible for handling the stored packets.
-                 * */
-                static void pop() noexcept {
-                    std::lock_guard<std::mutex> lock(mutex_);
-
-                    if (begin_ >= end_)
-                        return;
-
-                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
-                    begin_ += sizeof(io::packet::basic) + pkt->size();
-                }
-
-                /** Generate packet.
-                 * @param lvl The log level of the packet.
-                 * @param stream The stream identifier (default: 0).
-                 * @returns A pointer to the generated packet, or nullptr if there is not enough space.
-                 * */
-                static lognew::packet *generate(level lvl, uint16_t stream = 0) noexcept {
-                    flush();
-
-                    if (free() < sizeof(lognew::packet))
-                        // should not happen...
-                        return nullptr;
-
-                    lognew::packet *ptr = reinterpret_cast<lognew::packet *>(buffer_ + used_);
-                    new (ptr) lognew::packet(lvl, stream);
-
-                    used_ += sizeof(lognew::packet);
-                    return ptr;
-                }
-
-                /** Add data to packet.
-                 * */
-                static void append(const std::string_view &sv) noexcept {
-                    if (used_ == end_)
-                        // should not happen...
-                        return;
-
-                    auto n = std::min(free(), sv.size());  // ignore, if there's not enough space
-
-                    std::memcpy(buffer_ + used_, sv.data(), n);
-                    used_ += n;
-
-                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
-                    pkt->length += n;
-                }
-
-                /** Finalize packet.
-                 * */
-                static void finalize() {
-                    lognew::packet *pkt = reinterpret_cast<lognew::packet *>(buffer_ + begin_);
-
-                    size_t padding = pkt->size() - pkt->length;
-                    if (padding > 0) {
-                        static const uint8_t padbuf[io::packet::alignment] = {};
-                        std::memcpy(buffer_ + used_, padbuf, padding);
-                        used_ += padding;
-                    }
-
-                    {
-                        std::lock_guard<std::mutex> lock(mutex_);
-                        end_ = used_;
-                    }
-
-                    // FIXME could notify log processing thread here
-                    //       (current implementation just cycles through buffers)
-                }
-            };
-
-            ///@}
-
-        }  // namespace detail
 
         /**@addtogroup api-core-log-details
          * */
         ///@{
 
-        class VIDRE_CORE_VISIBILITY thread {
-        public:
-            /** Get thread instance.
-             * */
-            static thread &instance();
-
-        private:
-            thread();
-            ~thread();
-
-            static std::atomic<bool> stop_;
-            static void worker();
-
-            struct impl;
-            std::unique_ptr<impl> impl_;
-
-            // map detail::store
+        template <typename Stream, typename T>
+        concept functor = requires (Stream &outs, T &&t) {
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
         };
 
-        ///@}
-
-        /**@addtogroup api-core-log-if
+        /** Log message handler.
+         *
+         * This class handles logging and, as well, is the base class for
+         * the individual implementations (see @c log::fatal, etc.);
+         *
          * */
-        ///@{
+        class VIDRE_CORE_VISIBILITY handler {
+        public:
+            handler() = delete;
+            handler(const handler &) = delete;
+            handler &operator=(const handler &) = delete;
+            handler(handler &&) = default;
+            handler &operator=(handler &&) = default;
+            ~handler() {
+                // FIXME ship packet
+            }
+
+            handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
+
+        protected:
+            packet::shared msg_{};  ///< Log message packet.
+
+        public:
+            handler &operator<<(const std::string_view &msg) noexcept {
+                msg_->message += msg;
+                msg_->update();
+                return *this;
+            }
+
+            template <typename T>
+            requires functor<handler, T>
+            handler &operator<<(T &&fn) noexcept {
+                return fn(*this);
+            }
+
+            template <typename V>
+            requires (not std::is_convertible_v<V, std::string_view> and std::formattable<std::remove_cvref_t<V>, char>)
+            handler &operator<<(const V &value) noexcept {
+                msg_->message += std::format("{}", value);
+                msg_->update();
+                return *this;
+            }
+        };
 
         ///@}
 
@@ -453,7 +340,9 @@ namespace vidre {
 
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            { t.operator()(outs) } -> std::same_as<Stream &>;
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
         };
 
         ///@}
