@@ -65,6 +65,7 @@ namespace vidre {
             static monitor::stats calculate(endpoint *ep, chrono::timer::time_point tp = chrono::monotonic::now()) noexcept {
                 auto s = ep->getstats();
                 double t = std::chrono::duration_cast<chrono::timer::seconds>(tp - s.stamp).count();
+                    // FIXME ^--- this could be a helper in "our" chrono namespace...
 
                 return {
                     //

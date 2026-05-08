@@ -66,17 +66,17 @@ void copy_source_to_sink_manual() {
     std::cout << files.dst->setup().dump(4) << std::endl;
 
     // reset stats
-    files.src->reset();
-    files.dst->reset();
+    files.src->clearstats();
+    files.dst->clearstats();
 
     // manual push
     while (dynamic_cast<io::source *>(files.src.get())->step(dynamic_cast<io::sink *>(files.dst.get())))
         ;
 
 
-    // FIXME
+    // report stats
     auto srcstats = io::monitor::calculate(files.src.get());
-    std::cout << "write speed: " << srcstats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
+    std::cout << "read speed:  " << srcstats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
     auto dststats = io::monitor::calculate(files.dst.get());
     std::cout << "write speed: " << dststats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
 }

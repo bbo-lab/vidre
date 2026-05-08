@@ -347,7 +347,7 @@ namespace vidre {
          * whether an error occurred and how many bytes were processed.
          *
          * Typical usage:
-         * @code
+         * @c00ode
          * io::result res;
          * res += sink.write(bufA, countA);
          * res += sink.write(bufB, countB);
@@ -503,7 +503,7 @@ namespace vidre {
             /** Endpoint statistics.
              * Endpoints should update these statitics during data transmission,
              * except for `stamp`, which is set at `start()`.
-             * 
+             *
              * @internal
              * The I/O API provides an `io::monitor` that reads the stats and generates
              * overall and current speed measurements using this data.
@@ -530,7 +530,7 @@ namespace vidre {
                 }
 
             protected:
-                chrono::timer::time_point stamp{};  ///< Timestamp.
+                chrono::timer::time_point stamp = chrono::monotonic::now();  ///< Timestamp.
 
             private:
                 friend class monitor;
@@ -601,6 +601,7 @@ namespace vidre {
             std::string tag_{};  ///< Endpoint tag (used by dashboard).
             cap cap_{};          ///< Matched endpoint capabilities.
             stats stats_{};      ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
+            uint32_t id_{};      ///< Endpoint ID (used by dashboard and storage::raw).
 
         public:
             /** Get endpoint tag.
@@ -617,6 +618,13 @@ namespace vidre {
                 tag_ = tg;
             }
 
+            /** Get endpoint ID.
+             * @returns The ID of this endpoint.
+             * */
+            uint32_t id() const noexcept {
+                return id_;
+            }
+
             /** Get endpoint capabilities.
              * @returns The capabilities of this endpoint.
              * */
@@ -630,9 +638,14 @@ namespace vidre {
             }
 
             /** Reset endpoint statistics.
-             * This method resets the statistics of this endpoint, including the start and stop timestamps.
+             * This method resets the statistics of this endpoint.
+             * @internal
+             * The `io::monitor` uses this method to reset the statistics before
+             * starting a new monitoring interval. The endpoint is only expected
+             * to update the public fields in `io::endpoint::stats`.
+             * @endinternal
              * */
-            void reset() noexcept {
+            void clearstats() noexcept {
                 stats_ = {};
             }
 
