@@ -22,13 +22,14 @@
 /// @file
 #ifndef VIDRE_CORE_IO_FLOW_HH
 #define VIDRE_CORE_IO_FLOW_HH
+#include <vector>
 #pragma once
 
 /**@addtogroup api-core-io-flow
  * @brief Flow control.
  * @details
  * @fileinfo
- * 
+ *
  * Data transmision can be packet (see @ref api-core-io-packet) or chunk based (e.g., a video
  * stream is only packet based, while an audio device would be able to handle both modes).
  * For packet based I/O the data is either passed using event mechanisms (i.e. either the
@@ -37,17 +38,14 @@
  * or the sink directly calls the source's get method). For chunk based I/O only the latter
  * is available.
  *
- * ## Packet-based data flow
- *
- * 
- *
  * ## Chunk-based data flow
  *
  *
  *
- * @{
- * @namespace vidre::io::flow  Flow control.
- * @}
+ * ## Packet-based data flow
+ *
+ *
+ *
  * */
 
 #include <vidre/core/config.hh>
@@ -59,70 +57,75 @@ namespace vidre {
 
     namespace io {
 
-        namespace flow {
+        /**@addtogroup api-core-io-flow
+         * */
+        ///@{
 
-            /** Source to sink route.
-             *
-             * This class handles the connection between a source and a sink, including
-             * intermediate channels.
-             *
-             * FIXME
-             *
+        /** Source to sink route.
+         *
+         * This class handles the connection between a source and a sink, including
+         * intermediate channels.
+         *
+         * FIXME
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY route {
+        public:
+            template <typename Key, typename Value>
+            using map_type = ankerl::unordered_dense::map<Key, Value>;
+
+        public:
+            route(std::string tag = {}) : tag_(std::move(tag)) {}
+            route(const route &) = delete;
+            route &operator=(const route &) = delete;
+            route(route &&) = default;
+            route &operator=(route &&) = default;
+            ~route() {
+                // FIXME
+            }
+
+            /** Simple source to sink route.
              * */
-            class VIDRE_CORE_VISIBILITY route {
-            public:
-                /** Item.
-                 * */
-                struct VIDRE_CORE_VISIBILITY item {
-                    endpoint::shared ep;  ///< Endpoint (source, sink, or channel).
-                    task::shared task;    ///< Task (thread) for this item.
-                };
+            route(endpoint::shared src, endpoint::shared snk, std::string tag = {});
 
-                using map_type = ankerl::unordered_dense::map<const char *, item>;
+        protected:
+            std::string tag_{};                   ///< Route tag (used by dashboard).
+            std::vector<endpoint::shared> ep_{};  ///< Endpoint list on this "route".
 
-            public:
-                route(std::string tag = {}) : tag_(std::move(tag)) {}
-                route(const route &) = delete;
-                route &operator=(const route &) = delete;
-                route(route &&) = default;
-                route &operator=(route &&) = default;
-                ~route() {
-                    // FIXME
-                }
+        public:
+            /** Get endpoint tag.
+             * @returns The tag of this endpoint.
+             * */
+            const std::string &tag() const noexcept {
+                return tag_;
+            }
 
-                /** Simple source to sink route.
-                 * */
-                route(endpoint::shared src, endpoint::shared snk, std::string tag = {});
+            /** Set enpoint tag.
+             * @param tag The tag to set for this endpoint.
+             * */
+            void tag(const std::string &tg) noexcept {
+                tag_ = tg;
+            }
 
-            protected:
-                std::string tag_{};  ///< Route tag (used by dashboard).
-                map_type items_;     ///< Map of items in this route, indexed by endpoint tag.
+        public:
+            /** Execute the route.
+             * */
+            void execute();
+        };
 
-            public:
-                /** Get endpoint tag.
-                 * @returns The tag of this endpoint.
-                 * */
-                const std::string &tag() const noexcept {
-                    return tag_;
-                }
+        /** FIXME
+         * */
+        class VIDRE_CORE_VISIBILITY dashboard {
+        public:
+            dashboard() = default;
+            dashboard(const dashboard &) = delete;
+            dashboard &operator=(const dashboard &) = delete;
+            dashboard(dashboard &&) = default;
+            dashboard &operator=(dashboard &&) = default;
+            ~dashboard() = default;
+        };
 
-                /** Set enpoint tag.
-                 * @param tag The tag to set for this endpoint.
-                 * */
-                void tag(const std::string &tg) noexcept {
-                    tag_ = tg;
-                }
-
-            public:
-                /** Execute the route.
-                 * */
-                void execute();
-            };
-
-            //@todo implement "router"
-            //@todo implement "dashboard"
-
-        }  // namespace flow
+        ///@}
 
     }  // namespace io
 

@@ -27,18 +27,18 @@ using namespace vidre::io;
 bool vidre::io::endpoint::match(endpoint::cap::flag_type &from, endpoint::cap::flag_type &to) noexcept {
     auto common = from & to;
 
-    if ((common & endpoint::cap::any) == endpoint::cap::none)
+    if ((common & endpoint::cap::both) == endpoint::cap::none)
         return false;
 
     // select stream/packet mode
-    if (!!((common & endpoint::cap::any) & endpoint::cap::packet))
+    if (!!((common & endpoint::cap::both) & endpoint::cap::packet))
         common = endpoint::cap::packet;  // packet mode
     else
         common = endpoint::cap::chunk;  // stream mode
 
-    from &= ~endpoint::cap::any;
+    from &= ~endpoint::cap::both;
     from |= common;
-    to &= ~endpoint::cap::any;
+    to &= ~endpoint::cap::both;
     to |= common;
 
     // push/pull mode
@@ -76,4 +76,9 @@ settings::json endpoint::cap::setup() const {
         retval["source"] = setup(flags[source]);
 
     return retval;
+}
+std::vector<endpoint *> endpoint::sources() noexcept {
+    if (parent_.get())
+        return parent_->sources();
+    return {};
 }

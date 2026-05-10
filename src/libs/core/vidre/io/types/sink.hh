@@ -103,18 +103,6 @@ namespace vidre {
                 ready_.notify();
             }
 
-        public:  // should be protected
-            /** Step method for processing data from the source.
-             * @param src The source to process data from.
-             * @returns @c false if handler should stop processing, @c true to continue.
-             *
-             * FIXME
-             *
-             * */
-            virtual bool step(source *src) {
-                return false;
-            }
-
         public:
             /** Configure sink.
              * @param config JSON configuration object.

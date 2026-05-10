@@ -59,6 +59,7 @@ struct files {
 
 //! [copy-source-to-sink-manual]
 void copy_source_to_sink_manual() {
+#if 0
     auto files = files::make();
 
     // show endpoint setup
@@ -70,15 +71,15 @@ void copy_source_to_sink_manual() {
     files.dst->clearstats();
 
     // manual push
-    while (dynamic_cast<io::source *>(files.src.get())->step(dynamic_cast<io::sink *>(files.dst.get())))
+    while (files.src->push(files.dst))
         ;
-
 
     // report stats
     auto srcstats = io::monitor::calculate(files.src.get());
     std::cout << "read speed:  " << srcstats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
     auto dststats = io::monitor::calculate(files.dst.get());
     std::cout << "write speed: " << dststats.bytes.transmitted / (1024. * 1024.) << " MiB/s" << std::endl;
+#endif
 }
 //! [copy-source-to-sink-manual]
 
@@ -86,7 +87,7 @@ void copy_source_to_sink_manual() {
 void copy_source_to_sink_route() {
     auto files = files::make();
 
-    io::flow::route(files.src, files.dst).execute();
+    io::route(files.src, files.dst).execute();
 }
 //! [copy-source-to-sink-route]
 

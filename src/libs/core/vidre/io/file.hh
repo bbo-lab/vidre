@@ -647,8 +647,8 @@ namespace vidre {
                 return fd_.read(buf);
             }
 
-        public:
-            bool step(io::sink *snk) override;
+        protected:
+            // FIXME step()...
 
         public:
             cap getcap() const noexcept override {
@@ -682,6 +682,10 @@ namespace vidre {
         public:
             settings::json setup() const override;
             void setup(const settings::json &config) override;
+
+            std::vector<endpoint *> sources() noexcept override {
+                return {this};
+            }
         };
 
         namespace standard {

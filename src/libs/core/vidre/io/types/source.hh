@@ -40,7 +40,6 @@ namespace vidre {
          * Data sources provide data to be read, such as files or filter outputs. They can
          * be either stream- or packet-based (see @c source::mode).
          *
-         * @see source::shared
          * */
         class VIDRE_CORE_VISIBILITY source : public virtual endpoint {
         public:
@@ -83,17 +82,8 @@ namespace vidre {
                 return invalid<offset_type>;
             }
 
-        public:  // should be protected
-            /** Step method for generating data the sink.
-             * @param snk The sink to send data to.
-             * @returns @c false if handler should stop processing, @c true to continue.
-             *
-             * FIXME
-             *
-             * */
-            virtual bool step(sink *snk) {
-                return false;
-            }
+        protected:
+            // FIXME
 
         public:
             /** Configure source.

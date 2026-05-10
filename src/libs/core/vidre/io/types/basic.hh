@@ -436,19 +436,19 @@ namespace vidre {
                  * */
                 enum flag_type : uint32_t {
                     none = 0,
+                    any = 0xFFFF,  ///< Any mode or method (default).
 
-                    packet = 0x0002,       ///< Packet mode (see `io::packet`).
-                    chunk = 0x0001,        ///< Chunk mode (plain, binary data transmission).
-                    any = chunk | packet,  ///< Any mode (default).
+                    packet = 0x0002,        ///< Packet mode (see `io::packet`).
+                    chunk = 0x0001,         ///< Chunk mode (plain, binary data transmission).
+                    both = chunk | packet,  ///< Both modes.
+                    multi = 0x0004,         ///< Endpoint can be connected to multiple other endpoints (e.g., for broadcasting).
 
                     task = 0x0010,      ///< Endpoint requires a thread (e.g., for live video capture).
                     realtime = 0x0020,  ///< Endpoint requires real-time scheduling (e.g., for audio output).
 
-                    push = 0x0100,   ///< Source pushes data to sink.
-                    pull = 0x0200,   ///< Sink pulls data from source.
+                    push = 0x0100,   ///< Source directly puts data to sink.
+                    pull = 0x0200,   ///< Sink directly gets data from source.
                     event = 0x0400,  ///< Endpoint uses event-based transmission (e.g., for packet mode).
-
-                    multi = 0x1000,  ///< Endpoint can be connected to multiple other endpoints (e.g., for broadcasting).
                 };
 
                 cap() = default;
@@ -599,11 +599,20 @@ namespace vidre {
 
         protected:
             std::string tag_{};  ///< Endpoint tag (used by dashboard).
-            cap cap_{};          ///< Matched endpoint capabilities.
-            stats stats_{};      ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
-            uint32_t id_{};      ///< Endpoint ID (used by dashboard and storage::raw).
+            uint32_t stream_{};  ///< Endpoint ID (used by dashboard and storage::raw).
+
+            cap cap_{};      ///< Matched endpoint capabilities.
+            stats stats_{};  ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
+
+            shared parent_{};  ///< Parent endpoint (if applicable).
 
         public:
+            /** Check if the endpoint is valid (ie. usable).
+             * */
+            virtual bool valid() const noexcept {
+                return false;
+            }
+
             /** Get endpoint tag.
              * @returns The tag of this endpoint.
              * */
@@ -618,17 +627,33 @@ namespace vidre {
                 tag_ = tg;
             }
 
-            /** Get endpoint ID.
-             * @returns The ID of this endpoint.
+            /** Get endpoint stream ID.
+             * @returns The stream ID of this endpoint.
              * */
-            uint32_t id() const noexcept {
-                return id_;
+            uint32_t stream() const noexcept {
+                return stream_;
             }
 
             /** Get endpoint capabilities.
              * @returns The capabilities of this endpoint.
              * */
             virtual cap getcap() const noexcept = 0;
+
+            /** Check sink capabilities.
+             * @param bit The capability bit to check (default: any).
+             * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
+             * */
+            bool issink(cap::flag_type bit = cap::any) const noexcept {
+                return !!static_cast<bool>(cap_.flags[cap::sink] & bit);
+            }
+
+            /** Check if object provides a source interface.
+             * @param bit The capability bit to check (default: any).
+             * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
+             * */
+            bool issource(cap::flag_type bit = cap::any) const noexcept {
+                return !!static_cast<bool>(cap_.flags[cap::source] & bit);
+            }
 
             /** Get endpoint statistics.
              * @returns The statistics of this endpoint.
@@ -662,10 +687,26 @@ namespace vidre {
              * */
             virtual void setup(const settings::json &config) {}
 
-            /** Check if the endpoint is valid (ie. usable).
+            /** Get packet header.
+             * FIXME
              * */
-            virtual bool valid() const noexcept {
-                return false;
+            virtual packet::basic *header() noexcept {
+                return nullptr;
+            }
+
+            /** Find all essential sources.
+             *  */
+            virtual std::vector<endpoint *> sources() noexcept;
+
+        protected:
+            virtual bool push(shared) {
+                throw exception::logic() << "endpoint does not support push transmission";
+            }
+            virtual bool pull() {
+                throw exception::logic() << "endpoint does not support pull transmission";
+            }
+            virtual bool step() {
+                throw exception::logic() << "endpoint does not support events";
             }
 
         private:

@@ -119,21 +119,21 @@ void io::file::sink::setup(const settings::json &config) {
     // TODO: Implement configuration setup
 }
 
-bool io::file::source::step(io::sink *snk) {
-    auto res = get(buf_);
+// bool io::file::source::push(shared other) {
+//     auto res = get(buf_);
 
-    if (res.count)
-        snk->put({res.count, buf_.data});
-    else
-        // end of file
-        return false;
+//     if (res.count)
+//         dynamic_cast<io::sink *>(other.get())->put({res.count, buf_.data});
+//     else
+//         // end of file
+//         return false;
 
-    if (not res)
-        // and error occurred
-        throw exception::runtime() << error::code(fd_.error());
+//     if (not res)
+//         // and error occurred
+//         throw exception::runtime() << error::code(fd_.error());
 
-    return true;
-}
+//     return true;
+// }
 
 settings::json io::file::source::setup() const {
     return {{"endpoint",
