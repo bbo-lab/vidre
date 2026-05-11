@@ -87,7 +87,7 @@ void copy_source_to_sink_manual() {
 void copy_source_to_sink_route() {
     auto files = files::make();
 
-    io::route(files.src, files.dst).execute();
+    // io::route(files.src, files.dst).execute();
 }
 //! [copy-source-to-sink-route]
 

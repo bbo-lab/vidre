@@ -555,7 +555,7 @@ namespace vidre {
 
         public:
             cap getcap() const noexcept override {
-                return {cap::chunk | cap::packet, cap::none};
+                return {cap::none, cap::chunk | cap::packet};
             }
 
             bool valid() const noexcept override {
@@ -652,7 +652,7 @@ namespace vidre {
 
         public:
             cap getcap() const noexcept override {
-                return {cap::none, cap::chunk | cap::push};
+                return {cap::chunk | cap::push, cap::none};
             }
 
             bool valid() const noexcept override {

@@ -347,7 +347,7 @@ namespace vidre {
          * whether an error occurred and how many bytes were processed.
          *
          * Typical usage:
-         * @c00ode
+         * @code
          * io::result res;
          * res += sink.write(bufA, countA);
          * res += sink.write(bufB, countB);
@@ -412,6 +412,29 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY endpoint {
         public:
+            /** Shared pointer type for endpoints.
+             * This type is used for managing the lifetime of endpoint instances,
+             * especially when they are shared across different components or threads.
+             * */
+            using shared = std::shared_ptr<endpoint>;
+
+            /** Type-trait to check if a type is derived from endpoint.
+             * */
+            template <typename T>
+            static constexpr bool isa_v = std::derived_from<T, endpoint>;
+
+            /** Index for source.
+             * @internal
+             * When arrays are used for storing connections, capabilities, etc.,
+             * this index can be used to access the source-related data.
+             * @endinternal
+             * */
+            static constexpr size_type source = 0;
+            /** Index for sink.
+             * @see source
+             * */
+            static constexpr size_type sink = 1;
+
             /** Endpoint type.
              * */
             enum class type {
@@ -426,11 +449,6 @@ namespace vidre {
              * These capabilities are used to determine how endpoints can be connected and how data is transmitted.
              * */
             struct VIDRE_CORE_VISIBILITY cap {
-                /** Index for sink. */
-                static constexpr size_type sink = 0;
-                /** Index for source. */
-                static constexpr size_type source = 1;
-
                 /** Capabilities flags.
                  * These flags indicate the capabilities of an endpoint, such as supported modes and transmission methods.
                  * */
@@ -459,9 +477,9 @@ namespace vidre {
                 ~cap() = default;
 
                 cap(const flag_type (&flgs)[2]) noexcept : flags{flgs[0], flgs[1]} {}
-                cap(flag_type flgs_sink, flag_type flgs_source) noexcept : flags{flgs_sink, flgs_source} {}
+                cap(flag_type flgs_source, flag_type flgs_sink) noexcept : flags{flgs_sink, flgs_source} {}
 
-                flag_type flags[2]{};  ///< Capability flags for sink (index 0) and source (index 1).
+                flag_type flags[2]{};  ///< Capability flags for source (index 0) and sink (index 1).
 
                 /** Convert capability flags to endpoint type.
                  * @returns The endpoint type based on the capability flags.
@@ -476,18 +494,17 @@ namespace vidre {
                 }
 
                 /** Access capability flags by index.
-                 * @param idx The index of the capability flags (0 for sink, 1 for source).
+                 * @param idx The index of the capability flags (0 for source, 1 for sink).
                  * @returns A reference to the capability flags at the specified index.
+                 * @see endpoint::sink, endpoint::source
                  * */
                 ///@{
                 flag_type &operator[](size_type idx) noexcept {
-                    assert(idx < 2);
-                    return flags[idx];
+                    return flags[idx & 1];
                 }
 
                 flag_type operator[](size_type idx) const noexcept {
-                    assert(idx < 2);
-                    return flags[idx];
+                    return flags[idx & 1];
                 }
                 ///@}
 
@@ -496,8 +513,30 @@ namespace vidre {
                  * */
                 settings::json setup() const;
 
-            protected:
+            private:
+                // Internal helper for setup() above.
                 settings::json setup(flag_type flgs) const;
+            };
+
+            /** Endpoint linkage.
+             * */
+            struct VIDRE_CORE_VISIBILITY linkage {
+                shared data[2]{};  ///< Connected endpoints (0 for source, 1 for sink).
+
+                /** Access connected endpoints by index.
+                 * @param idx The index of the connected endpoint (0 for source, 1 for sink).
+                 * @returns A reference to the connected endpoint at the specified index.
+                 * @see endpoint::sink, endpoint::source
+                 * */
+                ///@{
+                shared &operator[](size_type idx) noexcept {
+                    return data[idx & 1];
+                }
+
+                shared operator[](size_type idx) const noexcept {
+                    return data[idx & 1];
+                }
+                ///@}
             };
 
             /** Endpoint statistics.
@@ -536,16 +575,6 @@ namespace vidre {
                 friend class monitor;
             };
 
-            /** Shared pointer type for endpoints.
-             * This type is used for managing the lifetime of endpoint instances,
-             * especially when they are shared across different components or threads.
-             * @see sink::make
-             * */
-            using shared = std::shared_ptr<endpoint>;
-
-            template <typename T>
-            static constexpr bool isa_v = std::derived_from<T, endpoint>;
-
         protected:
             /** Match capabilities between two endpoint types.
              * @param from The source endpoint type.
@@ -569,10 +598,10 @@ namespace vidre {
                     throw exception::logic() << "invalid endpoint(s)";
 
                 // reset cap_ before matching
-                from->cap_[cap::source] = from->getcap()[cap::source];
-                to->cap_[cap::sink] = to->getcap()[cap::sink];
+                from->cap_[endpoint::source] = from->getcap()[endpoint::source];
+                to->cap_[endpoint::sink] = to->getcap()[endpoint::sink];
 
-                return match(from->cap_[cap::source], to->cap_[cap::sink]);
+                return match(from->cap_[endpoint::source], to->cap_[endpoint::sink]);
             }
 
             /** Match capabilities between two endpoint types.
@@ -601,9 +630,9 @@ namespace vidre {
             std::string tag_{};  ///< Endpoint tag (used by dashboard).
             uint32_t stream_{};  ///< Endpoint ID (used by dashboard and storage::raw).
 
-            cap cap_{};      ///< Matched endpoint capabilities.
             stats stats_{};  ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
 
+            cap cap_{};        ///< Matched endpoint capabilities.
             shared parent_{};  ///< Parent endpoint (if applicable).
 
         public:
@@ -620,13 +649,6 @@ namespace vidre {
                 return tag_;
             }
 
-            /** Set enpoint tag.
-             * @param tag The tag to set for this endpoint.
-             * */
-            void tag(const std::string &tg) noexcept {
-                tag_ = tg;
-            }
-
             /** Get endpoint stream ID.
              * @returns The stream ID of this endpoint.
              * */
@@ -635,7 +657,6 @@ namespace vidre {
             }
 
             /** Get endpoint capabilities.
-             * @returns The capabilities of this endpoint.
              * */
             virtual cap getcap() const noexcept = 0;
 
@@ -644,7 +665,7 @@ namespace vidre {
              * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
              * */
             bool issink(cap::flag_type bit = cap::any) const noexcept {
-                return !!static_cast<bool>(cap_.flags[cap::sink] & bit);
+                return !!static_cast<bool>(cap_.flags[endpoint::sink] & bit);
             }
 
             /** Check if object provides a source interface.
@@ -652,7 +673,7 @@ namespace vidre {
              * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
              * */
             bool issource(cap::flag_type bit = cap::any) const noexcept {
-                return !!static_cast<bool>(cap_.flags[cap::source] & bit);
+                return !!static_cast<bool>(cap_.flags[endpoint::source] & bit);
             }
 
             /** Get endpoint statistics.
