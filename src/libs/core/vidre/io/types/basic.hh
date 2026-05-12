@@ -418,6 +418,17 @@ namespace vidre {
              * */
             using shared = std::shared_ptr<endpoint>;
 
+            /** Syntactic sugar for std::make_shared<T>.
+             * @tparam T The type of the endpoint to create, which must be derived from `endpoint`.
+             * A syntactic convenience wrapper around `std::make_shared<T>`. Provided solely for readability
+             * and consistency when constructing endpoints; no additional logic or validation is performed.
+             * */
+            template <class T, typename... Args>
+            requires std::derived_from<T, endpoint>
+            static shared make(Args &&...args) {
+                return std::make_shared<T>(std::forward<Args>(args)...);
+            }
+
             /** Type-trait to check if a type is derived from endpoint.
              * */
             template <typename T>
@@ -520,7 +531,7 @@ namespace vidre {
 
             /** Endpoint linkage.
              * */
-            struct VIDRE_CORE_VISIBILITY linkage {
+            struct VIDRE_CORE_VISIBILITY xfer {
                 shared data[2]{};  ///< Connected endpoints (0 for source, 1 for sink).
 
                 /** Access connected endpoints by index.
@@ -632,8 +643,7 @@ namespace vidre {
 
             stats stats_{};  ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
 
-            cap cap_{};        ///< Matched endpoint capabilities.
-            shared parent_{};  ///< Parent endpoint (if applicable).
+            cap cap_{};  ///< Assigned endpoint capabilities.
 
         public:
             /** Check if the endpoint is valid (ie. usable).
@@ -656,13 +666,16 @@ namespace vidre {
                 return stream_;
             }
 
-            /** Get endpoint capabilities.
+            /** Get capabilities of the endpoint.
+             * @note This method returns the capabilities of the /unconnected/ endpoint. The 
+             *       actual capabilities are or can be modified when endpoints are connected.
              * */
             virtual cap getcap() const noexcept = 0;
 
             /** Check sink capabilities.
              * @param bit The capability bit to check (default: any).
              * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
+             * @note If `bit` is not specified, this method checks if the endpoint is a sink.
              * */
             bool issink(cap::flag_type bit = cap::any) const noexcept {
                 return !!static_cast<bool>(cap_.flags[endpoint::sink] & bit);
@@ -671,6 +684,7 @@ namespace vidre {
             /** Check if object provides a source interface.
              * @param bit The capability bit to check (default: any).
              * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
+             * @note If `bit` is not specified, this method checks if the endpoint is a source.
              * */
             bool issource(cap::flag_type bit = cap::any) const noexcept {
                 return !!static_cast<bool>(cap_.flags[endpoint::source] & bit);
@@ -698,6 +712,9 @@ namespace vidre {
             /** Get endpoint setup.
              * @returns JSON configuration object for this endpoint.
              * @todo need to define a standard format...
+             * 
+             * @todo - describe, that this method is also used by, e.g., the device class
+             * @todo - standardize the format
              * */
             virtual settings::json setup() const {
                 return {};
@@ -705,18 +722,25 @@ namespace vidre {
 
             /** Setup endpoint.
              * @param config JSON configuration object for this endpoint.
+             * 
+             * @see `setup() const`
              * */
             virtual void setup(const settings::json &config) {}
 
             /** Get packet header.
-             * FIXME
+             * @returns Pointer to the packet header, or @c nullptr if not applicable.
+             *
+             * This method returns the packet header specifically associated with this endpoint 
+             * (or `nullptr` if not applicable). 
+             *
+             * @see `io::packet::basic` for the standard packet header format.
              * */
             virtual packet::basic *header() noexcept {
                 return nullptr;
             }
 
             /** Find all essential sources.
-             *  */
+             * */
             virtual std::vector<endpoint *> sources() noexcept;
 
         protected:

@@ -78,7 +78,8 @@ settings::json endpoint::cap::setup() const {
     return retval;
 }
 std::vector<endpoint *> endpoint::sources() noexcept {
-    if (parent_.get())
-        return parent_->sources();
+    // FIXME
+    // if (parent_.get())
+    //     return parent_->sources();
     return {};
 }

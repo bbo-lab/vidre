@@ -511,6 +511,13 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY file::sink : public virtual io::sink {
         public:
+            /** Syntax sugar... */
+            template <typename... Args>
+            static shared make(Args &&...args) {
+                return endpoint::make<file::sink>(std::forward<Args>(args)...);
+            }
+
+        public:
             /** Open mode.
              * */
             enum openmode_type : uint32_t {
@@ -617,6 +624,13 @@ namespace vidre {
          *
          * */
         class VIDRE_CORE_VISIBILITY file::source : public virtual io::source {
+        public:
+            /** Syntax sugar... */
+            template <typename... Args>
+            static shared make(Args &&...args) {
+                return endpoint::make<file::source>(std::forward<Args>(args)...);
+            }
+
         public:
             source() = default;
 

@@ -28,21 +28,7 @@ route::route(endpoint::shared src, endpoint::shared snk, std::string tag) : tag_
     if (not io::endpoint::match(src, snk))
         throw exception::logic() << "incompatible source and sink";
 
-    // check, what we need to do
-
-
-    // book keeping
-    snk->parent_ = src;
-
-    // if (src->tag().empty())
-    //     src->tag("source");
-    // items_.emplace(src->tag().c_str(), item{src, nullptr});
-
-    // if (snk->tag().empty())
-    //     snk->tag("sink");
-    // items_.emplace(snk->tag().c_str(), item{snk, nullptr});
-
-
+    // FIXME
 }
 
 void route::execute() {

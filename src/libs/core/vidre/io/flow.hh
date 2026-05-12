@@ -30,17 +30,28 @@
  * @details
  * @fileinfo
  *
- * Data transmision can be packet (see @ref api-core-io-packet) or chunk based (e.g., a video
- * stream is only packet based, while an audio device would be able to handle both modes).
- * For packet based I/O the data is either passed using event mechanisms (i.e. either the
- * source or the sink wait for the other to signal the availability of data or readiness to
- * receive data) or by direct calls (i.e. the source directly calls the sink's put method,
- * or the sink directly calls the source's get method). For chunk based I/O only the latter
- * is available.
+ * ## Overview
+ * 
+ * VidRe provides to major types of flow control: chunk-based and packet-based. The former is a simple stream 
+ * of data, while the latter is a sequence of discrete packets, each with its own header and payload. The flow 
+ * control API provides mechanisms for both types of data flow, allowing for flexible and efficient data 
+ * transmission between sources, channels (which includes filters, mergers and arbiters) and sinks.
+ * 
+ * For graphical description, we will use the following symbols:
+ *
+ * @image html design/io-flow-symbols.svg
+ *
+ * The **source** can be, for example, a simple file (only providing chunk-based flow, i.e., a stream of bytes;
+ * in contrast to `storage::raw`, which provides packet-based data flow only), or a camera (providing packet-based 
+ * flow, i.e., discrete frames with headers). The **sink** can be, for example, a file (again the distinction 
+ * between a simple, chunk-based file or packet-based raw storage) or a video display (requiring packet-based flow). 
+ *
+ * **Channel**'s, on the other hand, can be, for example, a filter (which processes the data in some way), a merger 
+ * (which combines multiple sources into one) or an arbiter (which channels the data to multiple sinks).
  *
  * ## Chunk-based data flow
  *
- *
+ * Chunk-based data flow is generally only linear (compared to graph-based packet flow).
  *
  * ## Packet-based data flow
  *
