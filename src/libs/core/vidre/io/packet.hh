@@ -281,6 +281,10 @@ namespace vidre {
                 }
             };
 
+            /** Syntactic sugar for shared packets.
+             * */
+            using shared = std::shared_ptr<basic>;
+
             ///@}
 
         }  // namespace packet

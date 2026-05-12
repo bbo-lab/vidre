@@ -30,6 +30,34 @@
  * @details
  * @fileinfo
  *
+ * ## Packet-based data flow
+ *
+ * As mentioned above, packet-based data flow is graph-based, meaning that data can be routed through multiple channels:
+ * 
+ * @image html design/io-packet-complex.png
+ * 
+ * 1. The *camera* (source) captures frames, running in a task, only _notifies_ the receiver when a new frame is available. 
+ *    The implementation does not guarantee that all frames are transmitted, only that the cameras internal ring buffer
+ *    stores a certain amount of frames (at least 1 sec).
+ * 
+ *    The associated *arbiter* polls the camera for video packets, which is always only the latest camera frame. It's 
+ *    storage behavior matches that of the source, here, the camera, meaning that it only stores the latest frame and
+ *    drops all previous frames. 
+ *
+ * 2. The *logger* (also a source) on the other hand _pushes_ log messages to the next endpoint.
+ *    
+ *    The associated *arbiter* then _queues_ the log messages.
+ * 
+ * 3. The *arbiters* are connected to where the output behavior depends on the sink type:
+ *    a) The *pixel format* transcoder requires messages to be _pushed_ through, while the
+ *       the arbiter waits for the transcoder (note, which includes the transfer to the *display*)
+ *       is finished.
+ *    b) a *merger* for file storage and 
+ *    c) a log message *sender*.
+ * */
+
+/*FIXME put back to @details
+ *
  * ## Overview
  * 
  * VidRe provides to major types of flow control: chunk-based and packet-based. The former is a simple stream 
@@ -39,7 +67,7 @@
  * 
  * For graphical description, we will use the following symbols:
  *
- * @image html design/io-flow-symbols.svg
+ * @image html design/io-flow-symbols.png
  *
  * The **source** can be, for example, a simple file (only providing chunk-based flow, i.e., a stream of bytes;
  * in contrast to `storage::raw`, which provides packet-based data flow only), or a camera (providing packet-based 
@@ -53,11 +81,20 @@
  *
  * Chunk-based data flow is generally only linear (compared to graph-based packet flow).
  *
- * ## Packet-based data flow
- *
- *
- *
- * */
+ * The most simple path is either a source pushing data to a sink,
+ * @image html design/io-chunk-push.png
+ * or a sink pulling data from a source. In both cases, the data is transmitted as a stream of bytes, 
+ * @image html design/io-chunk-pull.png
+ * without any discrete packets or headers. This is suitable for simple file I/O or streaming 
+ * applications where the data can be processed sequentially.
+ * 
+ * Chunked data can still be filtered (such as character encoding conversion), 
+ * @image html design/io-chunk-filter.png
+ * for exmample to convert between different character encodings (e.g., UTF-8 to UTF-16) or to apply compression.
+ * However, chunk-based data flow is purely linear, meaning that it does not support branching or merging of data streams.
+ * As well, tasked background operation is not supported. The data transmission is synchronous with a single "driver" (either 
+ * the source pushes or the next endpoint pulls).
+*/
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>

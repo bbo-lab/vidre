@@ -25,7 +25,7 @@
 using namespace vidre;
 using namespace vidre::io;
 
-result sink::put(const packet::basic *p) {
+result sink::put(packet::shared p) {
     result retval = p->put(*this);
 
     // update stats

@@ -101,7 +101,7 @@ namespace vidre {
                     return io::invalid<io::offset_type>;
                 }
 
-                const io::packet::basic *get() override;
+                io::packet::shared get() override;
 
                 bool connect() override;
 

@@ -132,7 +132,7 @@ namespace vidre {
              * @throw exception::logic if source is packet based
              * @throw exception::runtime for other errors
              * */
-            virtual const packet::basic *get() {
+            virtual packet::shared get() {
                 throw exception::logic();
             }
 

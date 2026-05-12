@@ -22,6 +22,7 @@
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_SINK_HH
 #define VIDRE_CORE_IO_TYPES_SINK_HH
+#include <memory>
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -141,7 +142,7 @@ namespace vidre {
              * @param p Pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual result put(const packet::basic *p);
+            virtual result put(packet::shared p);
 
             /** Wait for sink ready signal.
              * @returns True if the sink is ready, false if the wait was interrupted.

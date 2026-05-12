@@ -41,8 +41,8 @@
  *
  * @{
  * @namespace vidre::io             In-/output related functionality.
- * @defgroup api-core-io-types      Streaming fundamentals
- * @defgroup api-core-io-flow       Data flow control
+ * @defgroup api-core-io-types      Basic types
+ * @defgroup api-core-io-flow       Data flow 
  * @defgroup api-core-io-packet     Packet based I/O
  * @defgroup api-core-io-file       File and memory I/O
  * @defgroup api-core-io-monitor    Monitoring

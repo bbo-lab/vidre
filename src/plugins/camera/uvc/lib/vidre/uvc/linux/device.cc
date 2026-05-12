@@ -21,6 +21,7 @@
  */
 #include "../device.hh"
 #include "uvc.hh"
+#include "vidre/io/packet.hh"
 
 using namespace vidre;
 using namespace vidre::video;
@@ -34,9 +35,9 @@ io::offset_type uvc::camera::read(memory::area) {
     return io::invalid<io::offset_type>;
 }
 
-const io::packet::basic *uvc::camera::get() {
-    // FIXME
-    return nullptr;
+io::packet::shared uvc::camera::get() {
+    // FIXME use std::shared_ptr<packet>(ptr, io::foreign)...
+    return {};
 }
 
 bool uvc::camera::connect() {

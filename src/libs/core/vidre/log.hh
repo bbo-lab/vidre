@@ -181,7 +181,7 @@ namespace vidre {
          * @note In contrast to other packets, the log packet is not "groupable",
          *       instead, the minor packet type indicates the log level.
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet : public virtual io::packet::basic {
+        struct VIDRE_CORE_VISIBILITY packet : public virtual io::packet::basic {
             chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
                                                                      /// @see chrono::reference
             std::string message{};                                   ///< Log message (variable length).

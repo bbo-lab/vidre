@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="190mm"
+   height="44mm"
+   viewBox="0 0 190 43.999998"
    version="1.1"
    id="svg1"
    inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
@@ -24,20 +24,20 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="mm"
      showgrid="true"
-     inkscape:zoom="0.73008676"
-     inkscape:cx="430.08587"
-     inkscape:cy="302.0189"
-     inkscape:window-width="1920"
-     inkscape:window-height="1130"
+     inkscape:zoom="1.4601735"
+     inkscape:cx="317.42803"
+     inkscape:cy="177.7186"
+     inkscape:window-width="2560"
+     inkscape:window-height="1368"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1">
+     inkscape:current-layer="layer2">
     <inkscape:grid
        id="grid1"
        units="mm"
-       originx="0"
-       originy="0"
+       originx="-9"
+       originy="-6"
        spacingx="0.99999998"
        spacingy="1"
        empcolor="#0099e5"
@@ -49,11 +49,72 @@
        visible="true" />
   </sodipodi:namedview>
   <defs
-     id="defs1" />
+     id="defs1">
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path11" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow-7"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path11-3" />
+    </marker>
+  </defs>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="BG"
+     transform="translate(0.89999962,0.22853278)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1"
+       id="rect1"
+       width="190"
+       height="44"
+       x="-0.89999962"
+       y="-0.22853278" />
+    <path
+       style="fill:#00ffc1;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linejoin:bevel;marker-end:url(#RoundedArrow)"
+       d="m 18.94983,32.517327 h 9.499999"
+       id="path5" />
+    <path
+       style="fill:#00ffc1;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linejoin:bevel;marker-start:url(#RoundedArrow-7)"
+       d="m 20.1,27.847872 h 9.093559"
+       id="path5-2" />
+  </g>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-9.0000004,-6)">
     <path
        style="fill:#ff00e3;fill-opacity:1;stroke:none;stroke-width:0.2;stroke-linejoin:bevel;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        d="M 175,19.999999 178,25 l -3,5 z"
@@ -63,7 +124,7 @@
        d="m 105,9.9999992 h 3 v 9.9999998 h -3 l 3,-5 z"
        id="path22" />
     <path
-       style="fill:#ff00e3;fill-opacity:1;stroke:none;stroke-width:0.2;stroke-linejoin:bevel;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="fill:#00ffc1;fill-opacity:1;stroke:none;stroke-width:0.2;stroke-linejoin:bevel;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        d="M 35.000001,10 H 40 c 0,0 0,19.999999 0,19.999999 H 35.000001 L 40,19.999998 Z"
        id="path21" />
     <path
@@ -130,7 +191,9 @@
        id="text11"><tspan
          sodipodi:role="line"
          id="tspan11"
-         style="stroke-width:0.2" /></text>
+         style="stroke-width:0.2"
+         x="10"
+         y="10" /></text>
     <text
        xml:space="preserve"
        style="font-size:3.49999px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans';text-align:center;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.2;stroke-linejoin:bevel;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"

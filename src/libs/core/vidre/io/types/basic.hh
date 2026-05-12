@@ -159,8 +159,10 @@ namespace vidre {
         }  // namespace detail
 
         namespace packet {
-            struct basic;  // forward declaration
-        }
+            struct basic;                           // forward declaration
+            using header = basic;                   // alias for packet header
+            using shared = std::shared_ptr<basic>;  // alias for shared pointer to basic packet
+        }  // namespace packet
 
         class sink;     // forward declaration
         class source;   // forward declaration
@@ -203,6 +205,17 @@ namespace vidre {
         template <class T = offset_type>
         requires std::is_integral_v<T>
         inline constexpr T invalid = static_cast<T>(-1);
+
+        /** Deleter for "foreign" objects.
+         * This is a no-op deleter intended for use with `std::shared_ptr` when managing
+         * objects that should not be deleted by the `shared_ptr`. This is, for example,
+         * the case when a device uses a ring buffer for data acquisition and passes
+         * self-managed packet pointers to an endpoint.
+         * */
+        template <class T>
+        struct foreign {
+            void operator()(T *p) const {}
+        };
 
         /** IO task (thread).
          *
@@ -667,7 +680,7 @@ namespace vidre {
             }
 
             /** Get capabilities of the endpoint.
-             * @note This method returns the capabilities of the /unconnected/ endpoint. The 
+             * @note This method returns the capabilities of the /unconnected/ endpoint. The
              *       actual capabilities are or can be modified when endpoints are connected.
              * */
             virtual cap getcap() const noexcept = 0;
@@ -712,7 +725,7 @@ namespace vidre {
             /** Get endpoint setup.
              * @returns JSON configuration object for this endpoint.
              * @todo need to define a standard format...
-             * 
+             *
              * @todo - describe, that this method is also used by, e.g., the device class
              * @todo - standardize the format
              * */
@@ -722,7 +735,7 @@ namespace vidre {
 
             /** Setup endpoint.
              * @param config JSON configuration object for this endpoint.
-             * 
+             *
              * @see `setup() const`
              * */
             virtual void setup(const settings::json &config) {}
@@ -730,12 +743,12 @@ namespace vidre {
             /** Get packet header.
              * @returns Pointer to the packet header, or @c nullptr if not applicable.
              *
-             * This method returns the packet header specifically associated with this endpoint 
-             * (or `nullptr` if not applicable). 
+             * This method returns the packet header specifically associated with this endpoint
+             * (or `nullptr` if not applicable).
              *
              * @see `io::packet::basic` for the standard packet header format.
              * */
-            virtual packet::basic *header() noexcept {
+            virtual packet::header *header() noexcept {
                 return nullptr;
             }
 
@@ -744,7 +757,7 @@ namespace vidre {
             virtual std::vector<endpoint *> sources() noexcept;
 
         protected:
-            virtual bool push(shared) {
+            virtual bool push(endpoint::shared) {
                 throw exception::logic() << "endpoint does not support push transmission";
             }
             virtual bool pull() {
