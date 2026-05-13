@@ -49,11 +49,11 @@
  *    The associated *arbiter* then _queues_ the log messages.
  * 
  * 3. The *arbiters* are connected to where the output behavior depends on the sink type:
- *    a) The *pixel format* transcoder requires messages to be _pushed_ through, while the
- *       the arbiter waits for the transcoder (note, which includes the transfer to the *display*)
+ *    a) The *transcoder*, converting video formats, requires messages to be _pushed_ through, while the
+ *       the arbiter _waits_ for the transcoder (note, which includes the transfer to the *display*)
  *       is finished.
- *    b) a *merger* for file storage and 
- *    c) a log message *sender*.
+ *    b) a *merger* for file storage and messages from the *logger*
+ *    c) a log message *sender*, which, for example, sends the log messages to a remote server.
  * */
 
 /*FIXME put back to @details

@@ -27,11 +27,11 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="mm"
      showgrid="true"
-     inkscape:zoom="1.0324986"
-     inkscape:cx="179.66126"
-     inkscape:cy="76.997683"
-     inkscape:window-width="2560"
-     inkscape:window-height="1368"
+     inkscape:zoom="1.8639431"
+     inkscape:cx="246.78865"
+     inkscape:cy="76.450831"
+     inkscape:window-width="1920"
+     inkscape:window-height="1130"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -340,7 +340,7 @@
          id="tspan13-6"
          style="fill:#808080;fill-opacity:1;stroke-width:0.2"
          x="107.90984"
-         y="18.888527">pixel format</tspan></text>
+         y="18.888527">transcoder</tspan></text>
     <path
        style="fill:none;fill-opacity:1;stroke:#808080;stroke-width:0.2;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#RoundedArrow-7)"
        d="m 40.906438,30.000003 h 9.093561"
