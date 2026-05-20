@@ -8,6 +8,7 @@
 #include <config.h>
 #include <core/header/header.hpp>
 #include <core/runtime/shared_frame_header.hpp>
+#include <core/storage/disk_writer.hpp>
 
 #include <variant>
 
@@ -59,6 +60,6 @@ namespace vidre {
         std::string _headerFormat = "ccv";
         
         std::unique_ptr<IHeader> _header;
-        std::unique_ptr<FILE, decltype(&fclose)> output_file;
+        DiskWriter output_file;
     };
 }  // namespace vidre

@@ -10,8 +10,7 @@
 
 namespace vidre {
 
-    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name) 
-    : output_file(fopen(output_file_name.c_str(), "wb"), fclose)
+    Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name)
     {
         _config = config; 
 
@@ -22,6 +21,9 @@ namespace vidre {
         }
 
         _outputFileName = output_file_name;
+        if (!output_file.open(_outputFileName)) {
+             std::cerr << "Failed to open file!\n";
+        }
     }     
 
     void Storage::setConfig(const Config& config) {
@@ -79,11 +81,13 @@ namespace vidre {
 
         _outputFileName = newPath.string();
         try {
-            output_file.reset();
+            output_file.close();
             std::filesystem::rename(old_name, _outputFileName);
-            output_file.reset(fopen(_outputFileName.c_str(), "wb"));
-            // allocating header
-            _header->initiateHeader(output_file.get());
+            if (!output_file.open(_outputFileName)) {
+                std::cerr << "Error: unable to open output file: " << _outputFileName << "\n";
+                return;
+            }
+            _header->initiateHeader(output_file);
         } 
         catch (const std::filesystem::filesystem_error& e) {
             std::cerr << "Error: " << e.what() << "\n";
