@@ -50,7 +50,7 @@ CameraInfosDock::CameraInfosDock(QWidget *parent)
     scrollArea_->setFrameShape(QFrame::NoFrame);
     scrollArea_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    setMinimumWidth(360);
+    setMinimumWidth(300);
     setWidget(scrollArea_);
     
     // Set up timer for periodic updates
