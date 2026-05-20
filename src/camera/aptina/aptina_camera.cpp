@@ -1,13 +1,36 @@
 // #include "aptina_api_loader.hpp"
 #include <camera/aptina/aptina_camera.hpp>
 
+#include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <iostream>
 
 
 // TODO: check whether if(ap_F) is needed
 
 namespace vidre {
-    AptinaCamera::AptinaCamera() : running(false), armed(false) , _handle(nullptr) {}
+    namespace {
+        std::string ToLower(std::string value) {
+            std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
+                return static_cast<char>(std::tolower(c));
+            });
+            return value;
+        }
+
+        bool IsAptinaSuccess(int result) {
+            return result == AP_CAMERA_SUCCESS || result == AP_INI_SUCCESS;
+        }
+    }  // namespace
+
+    AptinaCamera::AptinaCamera() :
+        running(false),
+        armed(false),
+        _handle(nullptr),
+        _exposurePreferredSymbols({"coarse_integration_time", "integration_time", "exposure", "xstdat"}),
+        _exposureContainsTokens({"coarse_integration", "integration", "exposure", "xstdat", "shutter"}),
+        _gainPreferredSymbols({"analog_gain", "global_gain", "gain", "analoggain"}),
+        _gainContainsTokens({"analog_gain", "global_gain", "gain"}) {}
     AptinaCamera::~AptinaCamera() {
         if (ap_Finalize) ap_Finalize();
     }
@@ -163,19 +186,140 @@ namespace vidre {
 
     void AptinaCamera::SetFrameRate(double newFrameRate) {
     }
-    
-    void AptinaCamera::SetExposure(double newExposure) { 
-        int result = ap_SetSensorRegister(_handle, "xstdat", nullptr, newExposure, nullptr); // Might be casted to uint
-        if (result != AP_INI_SUCCESS) {
-            std::cout << "Failed to set sensor register\n";
+
+    std::optional<std::string> AptinaCamera::FindRegisterSymbol(const std::vector<std::string>& preferredSymbols,
+                                                                const std::vector<std::string>& containsTokens) {
+        std::string cacheKey = preferredSymbols.empty() ? "fallback" : preferredSymbols.front();
+        auto cacheMatch = _resolvedRegisterSymbols.find(cacheKey);
+        if (cacheMatch != _resolvedRegisterSymbols.end()) {
+            return cacheMatch->second;
         }
+
+        if (_handle == nullptr || !ap_NumRegisters || !ap_Register || !ap_RegisterSymbol || !ap_DestroyRegister) {
+            return std::nullopt;
+        }
+
+        std::vector<std::pair<std::string, std::string>> registerSymbols;
+        const int registerCount = ap_NumRegisters(_handle, nullptr);
+        registerSymbols.reserve(registerCount);
+
+        for (int i = 0; i < registerCount; ++i) {
+            AP_HANDLE hReg = ap_Register(_handle, nullptr, i);
+            if (hReg == nullptr) {
+                continue;
+            }
+
+            const char* symbolRaw = ap_RegisterSymbol(hReg);
+            if (symbolRaw != nullptr && symbolRaw[0] != '\0') {
+                std::string symbol(symbolRaw);
+                registerSymbols.emplace_back(symbol, ToLower(symbol));
+            }
+            ap_DestroyRegister(hReg);
+        }
+
+        for (const auto& preferred : preferredSymbols) {
+            const std::string preferredLower = ToLower(preferred);
+            for (const auto& [symbol, symbolLower] : registerSymbols) {
+                if (symbolLower == preferredLower) {
+                    _resolvedRegisterSymbols[cacheKey] = symbol;
+                    return symbol;
+                }
+            }
+        }
+
+        for (const auto& preferred : preferredSymbols) {
+            const std::string preferredLower = ToLower(preferred);
+            for (const auto& [symbol, symbolLower] : registerSymbols) {
+                if (symbolLower.find(preferredLower) != std::string::npos) {
+                    _resolvedRegisterSymbols[cacheKey] = symbol;
+                    return symbol;
+                }
+            }
+        }
+
+        for (const auto& token : containsTokens) {
+            const std::string tokenLower = ToLower(token);
+            for (const auto& [symbol, symbolLower] : registerSymbols) {
+                if (symbolLower.find(tokenLower) != std::string::npos) {
+                    _resolvedRegisterSymbols[cacheKey] = symbol;
+                    return symbol;
+                }
+            }
+        }
+
+        return std::nullopt;
     }
 
-    void AptinaCamera::SetGain(double newGain) { // TODO
-        int result = ap_SetSensorRegister(_handle, "xstdat", nullptr, newGain, nullptr); // ANALOG_GAIN/global // Might be casted to uint
-        if (result != AP_INI_SUCCESS) {
-            std::cout << "Failed to set sensor register\n";
+    double AptinaCamera::GetRegisterValue(const std::vector<std::string>& preferredSymbols,
+                                          const std::vector<std::string>& containsTokens) {
+        if (_handle == nullptr || !ap_GetSensorRegister) {
+            return 0.0;
         }
+
+        auto regSymbol = FindRegisterSymbol(preferredSymbols, containsTokens);
+        if (!regSymbol.has_value()) {
+            return 0.0;
+        }
+
+        ap_u32 value = 0;
+        const int result = ap_GetSensorRegister(_handle, regSymbol->c_str(), nullptr, &value, false);
+        if (!IsAptinaSuccess(result)) {
+            std::cout << "Failed to get sensor register: " << *regSymbol << std::endl;
+            return 0.0;
+        }
+
+        return static_cast<double>(value);
+    }
+
+    bool AptinaCamera::SetRegisterValue(const std::vector<std::string>& preferredSymbols,
+                                        const std::vector<std::string>& containsTokens,
+                                        double value,
+                                        const char* valueLabel) {
+        if (_handle == nullptr || !ap_SetSensorRegister) {
+            return false;
+        }
+
+        auto regSymbol = FindRegisterSymbol(preferredSymbols, containsTokens);
+        if (!regSymbol.has_value()) {
+            std::cout << "Could not resolve " << valueLabel << " register symbol" << std::endl;
+            return false;
+        }
+
+        ap_u32 oldValue = 0;
+        ap_u32 sideEffects = 0;
+        ap_u32 newValue = static_cast<ap_u32>(max(0.0, std::round(value)));
+
+        if (ap_TestSetSensorRegister) {
+            sideEffects = ap_TestSetSensorRegister(_handle, regSymbol->c_str(), newValue, 0, &oldValue);
+        }
+
+        const int result = ap_SetSensorRegister(_handle, regSymbol->c_str(), nullptr, newValue, nullptr);
+        if (!IsAptinaSuccess(result)) {
+            std::cout << "Failed to set " << valueLabel << " register: " << *regSymbol << std::endl;
+            return false;
+        }
+
+        if (sideEffects & AP_FLAG_REALLOC) {
+            std::cout << "Warning: " << valueLabel << " register write requested frame reallocation side-effects" << std::endl;
+        }
+
+        return true;
+    }
+
+    double AptinaCamera::GetExposure() {
+        return GetRegisterValue(_exposurePreferredSymbols, _exposureContainsTokens);
+    }
+
+    double AptinaCamera::GetGain() {
+        return GetRegisterValue(_gainPreferredSymbols, _gainContainsTokens);
+    }
+    
+    void AptinaCamera::SetExposure(double newExposure) { 
+        SetRegisterValue(_exposurePreferredSymbols, _exposureContainsTokens, newExposure, "exposure");
+    }
+
+    void AptinaCamera::SetGain(double newGain) {
+        SetRegisterValue(_gainPreferredSymbols, _gainContainsTokens, newGain, "gain");
     }
     
     void AptinaCamera::SetTriggerIn(unsigned int line) {

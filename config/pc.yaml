@@ -1,3 +1,9 @@
+libraries:
+  aptina: "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_aptina.dll"
+  pylon: "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_pylon.dll"
+  aptina_base: "C:/Aptina Imaging/bin/apbase.dll"
+  pylon_base: "C:/Program Files/Basler/pylon 8/Runtime/x64/PylonBase_v9.dll"
+
 cam1:
   type: camera
   vendor: pylon

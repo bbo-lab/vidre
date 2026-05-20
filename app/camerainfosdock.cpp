@@ -2,29 +2,56 @@
 #include <QVBoxLayout>
 #include <QDateTime>
 #include <QString>
+#include <QFormLayout>
+
+namespace {
+    QString groupStyleSheet() {
+        return
+            "QGroupBox {"
+            "    background-color: #252526;"
+            "    color: #d4d4d4;"
+            "    border: 1px solid #555555;"
+            "    border-radius: 4px;"
+            "    margin-top: 8px;"
+            "    font-weight: bold;"
+            "}"
+            "QGroupBox::title {"
+            "    subcontrol-origin: margin;"
+            "    left: 8px;"
+            "    padding: 0 4px;"
+            "}";
+    }
+}
 
 CameraInfosDock::CameraInfosDock(QWidget *parent)
     : QDockWidget("Active Camera Info", parent)
+    , contentWidget_(new QWidget(this))
+    , scrollArea_(new QScrollArea(this))
+    , camerasLayout_(new QVBoxLayout())
+    , emptyLabel_(new QLabel("No active cameras", this))
     , updateTimer_(new QTimer(this))
 {
     setObjectName("CameraInfosDock");
-    
-    infoTextEdit_ = new QTextEdit(this);
-    infoTextEdit_->setReadOnly(true);
-    infoTextEdit_->setFont(QFont("Consolas", 9));
-    infoTextEdit_->setWordWrapMode(QTextOption::WordWrap);
-    infoTextEdit_->setStyleSheet(
-        "QTextEdit {"
-        "    background-color: #1e1e1e;"
-        "    color: #d4d4d4;"
-        "    border: 1px solid #555555;"
-        "    font-family: 'Consolas', 'Monaco', monospace;"
-        "    font-size: 9pt;"
-        "    padding: 5px;"
-        "}"
-    );
-    
-    setWidget(infoTextEdit_);
+
+    camerasLayout_->setContentsMargins(8, 8, 8, 8);
+    camerasLayout_->setSpacing(8);
+    camerasLayout_->setAlignment(Qt::AlignTop);
+
+    emptyLabel_->setStyleSheet("color: #999999; padding: 8px;");
+    emptyLabel_->setAlignment(Qt::AlignCenter);
+    camerasLayout_->addWidget(emptyLabel_);
+    camerasLayout_->addStretch();
+
+    contentWidget_->setLayout(camerasLayout_);
+    contentWidget_->setStyleSheet("background-color: #1e1e1e;");
+
+    scrollArea_->setWidgetResizable(true);
+    scrollArea_->setWidget(contentWidget_);
+    scrollArea_->setFrameShape(QFrame::NoFrame);
+    scrollArea_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    setMinimumWidth(300);
+    setWidget(scrollArea_);
     
     // Set up timer for periodic updates
     connect(updateTimer_, &QTimer::timeout, this, &CameraInfosDock::updateAllCamerasInfo);
@@ -42,18 +69,42 @@ void CameraInfosDock::addCamera(const QString& cameraName, vidre::RuntimeInstanc
     if (!runtimeInstance) {
         return;
     }
-    
+
+    auto existing = cameras_.find(cameraName.toStdString());
+    if (existing != cameras_.end()) {
+        existing->second.runtimeInstance = runtimeInstance;
+        return;
+    }
+
     CameraData data;
     data.runtimeInstance = runtimeInstance;
     data.lastInfo = "";
-    
+    data.groupBox = nullptr;
+    data.infoLabel = nullptr;
+    data.exposureSpin = nullptr;
+    data.gainSpin = nullptr;
+    data.applyButton = nullptr;
+    data.controlsInitialized = false;
+
     cameras_[cameraName.toStdString()] = data;
+    CameraData& storedData = cameras_[cameraName.toStdString()];
+    storedData.groupBox = createCameraGroup(cameraName, storedData);
+
+    camerasLayout_->insertWidget(camerasLayout_->count() - 1, storedData.groupBox);
+
+    updateCameraInfo(cameraName);
     refreshDisplay();
 }
 
 void CameraInfosDock::removeCamera(const QString& cameraName)
 {
-    cameras_.erase(cameraName.toStdString());
+    auto it = cameras_.find(cameraName.toStdString());
+    if (it != cameras_.end()) {
+        if (it->second.groupBox) {
+            it->second.groupBox->deleteLater();
+        }
+        cameras_.erase(it);
+    }
     refreshDisplay();
 }
 
@@ -62,13 +113,21 @@ void CameraInfosDock::updateCameraInfo(const QString& cameraName)
     auto it = cameras_.find(cameraName.toStdString());
     if (it != cameras_.end()) {
         it->second.lastInfo = generateCameraInfo(cameraName, it->second.runtimeInstance);
+        if (it->second.infoLabel) {
+            it->second.infoLabel->setText(it->second.lastInfo);
+        }
     }
 }
 
 void CameraInfosDock::clearAllCameras()
 {
+    for (auto& [_, cameraData] : cameras_) {
+        if (cameraData.groupBox) {
+            cameraData.groupBox->deleteLater();
+        }
+    }
     cameras_.clear();
-    infoTextEdit_->clear();
+    refreshDisplay();
 }
 
 void CameraInfosDock::updateAllCamerasInfo()
@@ -81,7 +140,17 @@ void CameraInfosDock::updateAllCamerasInfo()
         
         if (newInfo != cameraData.lastInfo) {
             cameraData.lastInfo = newInfo;
+            if (cameraData.infoLabel) {
+                cameraData.infoLabel->setText(newInfo);
+            }
             changed = true;
+        }
+
+        vidre::ICamera* camera = cameraData.runtimeInstance ? cameraData.runtimeInstance->getCamera() : nullptr;
+        if (camera && !cameraData.controlsInitialized) {
+            cameraData.exposureSpin->setValue(camera->GetExposure());
+            cameraData.gainSpin->setValue(camera->GetGain());
+            cameraData.controlsInitialized = true;
         }
     }
     
@@ -92,20 +161,7 @@ void CameraInfosDock::updateAllCamerasInfo()
 
 void CameraInfosDock::refreshDisplay()
 {
-    QString displayText;
-    
-    if (cameras_.empty()) {
-        displayText = "No active cameras";
-        infoTextEdit_->setText(displayText);
-        return;
-    }
-    
-    for (const auto& [cameraNameStr, cameraData] : cameras_) {
-        displayText += cameraData.lastInfo;
-        displayText += "\n" + QString(60, '=') + "\n\n";
-    }
-    
-    infoTextEdit_->setPlainText(displayText);
+    emptyLabel_->setVisible(cameras_.empty());
 }
 
 QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance)
@@ -154,6 +210,8 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
         info += "Acquisition Settings:\n";
         info += QString("  Frame Rate: %1 fps\n")
             .arg(camera->GetFrameRate(), 0, 'f', 2);
+        info += QString("  Exposure: %1\n").arg(camera->GetExposure(), 0, 'f', 2);
+        info += QString("  Gain: %1\n").arg(camera->GetGain(), 0, 'f', 2);
         
         info += "\n";
         
@@ -190,4 +248,120 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
         .arg(QDateTime::currentDateTime().toString("hh:mm:ss"));
     
     return info;
+}
+
+QGroupBox* CameraInfosDock::createCameraGroup(const QString& cameraName, CameraData& data)
+{
+    QGroupBox* group = new QGroupBox(QString("%1 Controls").arg(cameraName), contentWidget_);
+    group->setStyleSheet(groupStyleSheet());
+
+    QVBoxLayout* groupLayout = new QVBoxLayout(group);
+    groupLayout->setContentsMargins(8, 8, 8, 8);
+    groupLayout->setSpacing(6);
+
+    data.infoLabel = new QLabel(group);
+    data.infoLabel->setWordWrap(true);
+    data.infoLabel->setStyleSheet(
+        "QLabel {"
+        "    background-color: #1e1e1e;"
+        "    color: #d4d4d4;"
+        "    border: 1px solid #555555;"
+        "    border-radius: 3px;"
+        "    padding: 6px;"
+        "    font-family: 'Consolas', 'Monaco', monospace;"
+        "    font-size: 9pt;"
+        "}"
+    );
+
+    QWidget* controlsWidget = new QWidget(group);
+    QFormLayout* controlsLayout = new QFormLayout(controlsWidget);
+    controlsLayout->setContentsMargins(0, 0, 0, 0);
+    controlsLayout->setSpacing(6);
+
+    data.exposureSpin = new QDoubleSpinBox(controlsWidget);
+    data.exposureSpin->setDecimals(2);
+    data.exposureSpin->setRange(0.0, 1000000.0);
+    data.exposureSpin->setSingleStep(10.0);
+    data.exposureSpin->setValue(0.0);
+    data.exposureSpin->setSuffix(" us");
+    data.exposureSpin->setStyleSheet(
+        "QDoubleSpinBox {"
+        "    color: #d4d4d4;"
+        "}"
+        "QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {"
+        "    color: #d4d4d4;"
+        "}"
+    );
+
+    data.gainSpin = new QDoubleSpinBox(controlsWidget);
+    data.gainSpin->setDecimals(2);
+    data.gainSpin->setRange(0.0, 1024.0);
+    data.gainSpin->setSingleStep(0.25);
+    data.gainSpin->setValue(0.0);
+    data.gainSpin->setStyleSheet(
+        "QDoubleSpinBox {"
+        "    color: #d4d4d4;"
+        "}"
+        "QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {"
+        "    color: #d4d4d4;"
+        "}"
+    );
+
+    controlsLayout->addRow("Exposure", data.exposureSpin);
+    controlsLayout->addRow("Gain", data.gainSpin);
+
+    data.applyButton = new QPushButton("Apply", controlsWidget);
+    data.applyButton->setStyleSheet(
+        "QPushButton {"
+        "    color: #d4d4d4;"
+        "}"
+    );
+    controlsLayout->addRow("", data.applyButton);
+
+    connect(data.applyButton, &QPushButton::clicked, this, [this, cameraName]() {
+        applyCameraSettings(cameraName);
+    });
+    connect(data.exposureSpin, &QDoubleSpinBox::editingFinished, this, [this, cameraName]() {
+        applyCameraSettings(cameraName);
+    });
+    connect(data.gainSpin, &QDoubleSpinBox::editingFinished, this, [this, cameraName]() {
+        applyCameraSettings(cameraName);
+    });
+
+    controlsWidget->setStyleSheet(
+        "QLabel {"
+        "    color: #d4d4d4;"
+        "}"
+    );
+
+    groupLayout->addWidget(data.infoLabel);
+    groupLayout->addWidget(controlsWidget);
+
+    return group;
+}
+
+void CameraInfosDock::applyCameraSettings(const QString& cameraName)
+{
+    auto it = cameras_.find(cameraName.toStdString());
+    if (it == cameras_.end()) {
+        return;
+    }
+
+    CameraData& cameraData = it->second;
+    if (!cameraData.runtimeInstance || !cameraData.exposureSpin || !cameraData.gainSpin) {
+        return;
+    }
+
+    vidre::ICamera* camera = cameraData.runtimeInstance->getCamera();
+    if (!camera) {
+        return;
+    }
+
+    camera->SetExposure(cameraData.exposureSpin->value());
+    camera->SetGain(cameraData.gainSpin->value());
+
+    cameraData.lastInfo = generateCameraInfo(cameraName, cameraData.runtimeInstance);
+    if (cameraData.infoLabel) {
+        cameraData.infoLabel->setText(cameraData.lastInfo);
+    }
 }

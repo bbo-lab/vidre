@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <boost/program_options.hpp>
 
@@ -21,6 +22,16 @@ namespace po = boost::program_options;
 // std::string systemConfigFilepath = "C:/Projects/vidre/config/setupExample.yaml";
 std::string systemConfigFilepath = "C:/Users/Almukhamedov_la/Desktop/work/testing2/vidre/config/setupExample.yaml";
 
+std::string aptinaBaseLibraryPath;
+std::string pylonBaseLibraryPath;
+std::string aptinaPluginLibraryPath;
+std::string pylonPluginLibraryPath;
+
+bool aptinaBaseLibraryPathCliOverride = false;
+bool pylonBaseLibraryPathCliOverride = false;
+bool aptinaPluginLibraryPathCliOverride = false;
+bool pylonPluginLibraryPathCliOverride = false;
+
 static std::vector<std::string> split(const char *str, char c = ' ') {
     std::vector<std::string> result;
 
@@ -38,19 +49,20 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
 
 
 std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
-
-    // TODO : FROM CLI/ USUER INPUT 
-    std::string ap_base_str = "C:/Aptina Imaging/bin/apbase.dll"; 
-    std::string pylon_base_str = "C:/Program Files/Basler/pylon 8/Runtime/x64/PylonBase_v9.dll";
-    vidre::APTINA_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_aptina.dll";
-    vidre::PYLON_LIBRARY_PATH = "C:/Users/bbo_admin/Desktop/far/build/lib/Release/vidre_pylon.dll";
+    vidre::APTINA_LIBRARY_PATH = aptinaPluginLibraryPath;
+    vidre::PYLON_LIBRARY_PATH = pylonPluginLibraryPath;
 
     if (!cameraNode["vendor"])
         return nullptr;
 
     // Vendor is specified
     std::unique_ptr<vidre::ICamera> camera;
-    if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0 && vidre::util::IsLibraryAvailable(pylon_base_str)) {
+    if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0
+        && (pylonBaseLibraryPath.empty() || vidre::util::IsLibraryAvailable(pylonBaseLibraryPath))) {
+        if (vidre::PYLON_LIBRARY_PATH.empty()) {
+            std::cout << "Pylon plugin library path is empty. Set it in config or via --pylon-library." << std::endl;
+            return nullptr;
+        }
         using camera_ref_t = vidre::ICamera*();
         using destroy_ref_t = void(vidre::ICamera*);
         auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::PYLON_LIBRARY_PATH, "create_pylon_camera");
@@ -60,7 +72,12 @@ std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
         }
         camera = std::unique_ptr<vidre::ICamera>(create());
     }
-    else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0 && vidre::util::IsLibraryAvailable(ap_base_str)) {
+    else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0
+             && (aptinaBaseLibraryPath.empty() || vidre::util::IsLibraryAvailable(aptinaBaseLibraryPath))) {
+        if (vidre::APTINA_LIBRARY_PATH.empty()) {
+            std::cout << "Aptina plugin library path is empty. Set it in config or via --aptina-library." << std::endl;
+            return nullptr;
+        }
         using camera_ref_t = vidre::ICamera*();
         using destroy_ref_t = void(vidre::ICamera*);
         auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::APTINA_LIBRARY_PATH, "create_aptina_camera");
@@ -112,6 +129,74 @@ std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSys
         return cameras;
 
     YAML::Node config = YAML::LoadFile(setupFilepath);
+
+    auto readStringByKeys = [](const YAML::Node& node, const std::vector<std::string>& keys) -> std::string {
+        if (!node || !node.IsMap()) {
+            return "";
+        }
+        for (const auto& key : keys) {
+            if (node[key] && node[key].IsScalar()) {
+                return node[key].as<std::string>();
+            }
+        }
+        return "";
+    };
+
+    auto applyPath = [](const std::string& value, std::string& destination, bool cliOverride, const char* label) {
+        if (!value.empty() && !cliOverride) {
+            destination = value;
+            std::cout << "Config library path (" << label << "): " << value << std::endl;
+        }
+    };
+
+    YAML::Node libraryConfig;
+    if (config["libraries"] && config["libraries"].IsMap()) {
+        libraryConfig = config["libraries"];
+    } else if (config["library_paths"] && config["library_paths"].IsMap()) {
+        libraryConfig = config["library_paths"];
+    }
+
+    applyPath(
+        readStringByKeys(libraryConfig, {"aptina", "aptina_library", "aptina_library_path"}),
+        aptinaPluginLibraryPath,
+        aptinaPluginLibraryPathCliOverride,
+        "aptina plugin");
+    applyPath(
+        readStringByKeys(libraryConfig, {"pylon", "pylon_library", "pylon_library_path"}),
+        pylonPluginLibraryPath,
+        pylonPluginLibraryPathCliOverride,
+        "pylon plugin");
+    applyPath(
+        readStringByKeys(libraryConfig, {"aptina_base", "aptina_base_library", "aptina_base_library_path"}),
+        aptinaBaseLibraryPath,
+        aptinaBaseLibraryPathCliOverride,
+        "aptina base");
+    applyPath(
+        readStringByKeys(libraryConfig, {"pylon_base", "pylon_base_library", "pylon_base_library_path"}),
+        pylonBaseLibraryPath,
+        pylonBaseLibraryPathCliOverride,
+        "pylon base");
+
+    applyPath(
+        readStringByKeys(config, {"aptina_library_path", "aptina_library"}),
+        aptinaPluginLibraryPath,
+        aptinaPluginLibraryPathCliOverride,
+        "aptina plugin");
+    applyPath(
+        readStringByKeys(config, {"pylon_library_path", "pylon_library"}),
+        pylonPluginLibraryPath,
+        pylonPluginLibraryPathCliOverride,
+        "pylon plugin");
+    applyPath(
+        readStringByKeys(config, {"aptina_base_library_path", "aptina_base_library"}),
+        aptinaBaseLibraryPath,
+        aptinaBaseLibraryPathCliOverride,
+        "aptina base");
+    applyPath(
+        readStringByKeys(config, {"pylon_base_library_path", "pylon_base_library"}),
+        pylonBaseLibraryPath,
+        pylonBaseLibraryPathCliOverride,
+        "pylon base");
 
     for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
         if (!it->second.IsMap())
@@ -166,8 +251,13 @@ int main(int argc, const char *argv[]) {
 
     // Parse arguments and set relevant variables.
     po::options_description desc("Allowed options");
-    desc.add_options()("help", "Print this help message")("config", po::value<std::string>(),
-                                                          "File path to system configuration file");
+    desc.add_options()
+        ("help", "Print this help message")
+        ("config", po::value<std::string>(), "File path to system configuration file")
+        ("aptina-library", po::value<std::string>(), "Path to vidre Aptina camera plugin library")
+        ("pylon-library", po::value<std::string>(), "Path to vidre Pylon camera plugin library")
+        ("aptina-base-library", po::value<std::string>(), "Path to Aptina base runtime library")
+        ("pylon-base-library", po::value<std::string>(), "Path to Pylon base runtime library");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -179,6 +269,22 @@ int main(int argc, const char *argv[]) {
     }
     if (vm.count("config")) {
         systemConfigFilepath = vm["config"].as<std::string>();
+    }
+    if (vm.count("aptina-library")) {
+        aptinaPluginLibraryPath = vm["aptina-library"].as<std::string>();
+        aptinaPluginLibraryPathCliOverride = true;
+    }
+    if (vm.count("pylon-library")) {
+        pylonPluginLibraryPath = vm["pylon-library"].as<std::string>();
+        pylonPluginLibraryPathCliOverride = true;
+    }
+    if (vm.count("aptina-base-library")) {
+        aptinaBaseLibraryPath = vm["aptina-base-library"].as<std::string>();
+        aptinaBaseLibraryPathCliOverride = true;
+    }
+    if (vm.count("pylon-base-library")) {
+        pylonBaseLibraryPath = vm["pylon-base-library"].as<std::string>();
+        pylonBaseLibraryPathCliOverride = true;
     }
 
     // Create system from YAML and check constructed cameras.
