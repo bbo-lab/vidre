@@ -284,17 +284,38 @@ QGroupBox* CameraInfosDock::createCameraGroup(const QString& cameraName, CameraD
     data.exposureSpin->setSingleStep(10.0);
     data.exposureSpin->setValue(0.0);
     data.exposureSpin->setSuffix(" us");
+    data.exposureSpin->setStyleSheet(
+        "QDoubleSpinBox {"
+        "    color: #d4d4d4;"
+        "}"
+        "QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {"
+        "    color: #d4d4d4;"
+        "}"
+    );
 
     data.gainSpin = new QDoubleSpinBox(controlsWidget);
     data.gainSpin->setDecimals(2);
     data.gainSpin->setRange(0.0, 1024.0);
     data.gainSpin->setSingleStep(0.25);
     data.gainSpin->setValue(0.0);
+    data.gainSpin->setStyleSheet(
+        "QDoubleSpinBox {"
+        "    color: #d4d4d4;"
+        "}"
+        "QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {"
+        "    color: #d4d4d4;"
+        "}"
+    );
 
     controlsLayout->addRow("Exposure", data.exposureSpin);
     controlsLayout->addRow("Gain", data.gainSpin);
 
     data.applyButton = new QPushButton("Apply", controlsWidget);
+    data.applyButton->setStyleSheet(
+        "QPushButton {"
+        "    color: #d4d4d4;"
+        "}"
+    );
     controlsLayout->addRow("", data.applyButton);
 
     connect(data.applyButton, &QPushButton::clicked, this, [this, cameraName]() {
@@ -306,6 +327,12 @@ QGroupBox* CameraInfosDock::createCameraGroup(const QString& cameraName, CameraD
     connect(data.gainSpin, &QDoubleSpinBox::editingFinished, this, [this, cameraName]() {
         applyCameraSettings(cameraName);
     });
+
+    controlsWidget->setStyleSheet(
+        "QLabel {"
+        "    color: #d4d4d4;"
+        "}"
+    );
 
     groupLayout->addWidget(data.infoLabel);
     groupLayout->addWidget(controlsWidget);
