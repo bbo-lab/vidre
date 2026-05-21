@@ -599,48 +599,6 @@ namespace vidre {
                 friend class monitor;
             };
 
-        protected:
-            /** Match capabilities between two endpoint types.
-             * @param from The source endpoint type.
-             * @param to The sink endpoint type.
-             * @returns @c true if the capabilities are compatible, @c false otherwise.
-             * */
-            static bool match(cap::flag_type &from, cap::flag_type &to) noexcept;
-
-        public:
-            /** Match capabilities between two endpoint types.
-             * @tparam From The source endpoint type.
-             * @tparam To The sink endpoint type.
-             * @param from The source endpoint instance.
-             * @param to The sink endpoint instance.
-             * @returns @c true if the capabilities are compatible, @c false otherwise.
-             * */
-            template <class From, class To>
-            requires (isa_v<From> && isa_v<To>)
-            static bool match(From *from, To *to) {
-                if (not from || not to)
-                    throw exception::logic() << "invalid endpoint(s)";
-
-                // reset cap_ before matching
-                from->cap_[endpoint::source] = from->getcap()[endpoint::source];
-                to->cap_[endpoint::sink] = to->getcap()[endpoint::sink];
-
-                return match(from->cap_[endpoint::source], to->cap_[endpoint::sink]);
-            }
-
-            /** Match capabilities between two endpoint types.
-             * @tparam From The source endpoint type.
-             * @tparam To The sink endpoint type.
-             * @param from The source endpoint instance.
-             * @param to The sink endpoint instance.
-             * @returns @c true if the capabilities are compatible, @c false otherwise.
-             * */
-            template <class From, class To>
-            requires (isa_v<From> && isa_v<To>)
-            static bool match(std::shared_ptr<From> from, std::shared_ptr<To> to) {
-                return match(from.get(), to.get());
-            }
-
         public:
             endpoint() = default;
             endpoint(const endpoint &) = delete;
@@ -740,6 +698,25 @@ namespace vidre {
              * */
             virtual void setup(const settings::json &config) {}
 
+            /** Store a packet.
+             * @param p The packet to store.
+             * @returns Number of bytes actually written (@c invalid for write failure).
+             * @throw exception::logic if not a sink or not packet based
+             * @throw exception::runtime for other errors
+             * */
+            virtual result put(packet::shared p) {
+                throw exception::logic() << "endpoint is not sink nor does it support packet mode";
+            }
+
+            /** Retrieve a packet from the source.
+             * @returns The packet.
+             * @throw exception::logic if not a source or not packet based
+             * @throw exception::runtime for other errors
+             * */
+            virtual packet::shared get() {
+                throw exception::logic() << "endpoint is not source nor does it support packet mode";
+            }
+
             /** Get packet header.
              * @returns Pointer to the packet header, or @c nullptr if not applicable.
              *
@@ -752,7 +729,7 @@ namespace vidre {
                 return nullptr;
             }
 
-            /** Find all essential sources.
+            /** Find all packet-based sources.
              * */
             virtual std::vector<endpoint *> sources() noexcept;
 

@@ -20,17 +20,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sink.hh"
-#include "../packet.hh"
+// #include "../packet.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
-result sink::put(packet::shared p) {
-    result retval = p->put(*this);
+// result sink::put(packet::shared p) {
+//     result retval = p->put(*this);
 
-    // update stats
-    if (retval) 
-        stats_.packets.transmitted++;
+//     // update stats
+//     if (retval) {
+//         stats_.packets.transmitted++;
+//         stats_.bytes.transmitted += retval.count;
+//     }
 
-    return retval;
-}
+//     return retval;
+// }

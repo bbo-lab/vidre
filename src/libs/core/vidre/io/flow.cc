@@ -24,8 +24,36 @@
 using namespace vidre;
 using namespace vidre::io;
 
+
+// bool vidre::io::endpoint::match(endpoint::cap::flag_type &from, endpoint::cap::flag_type &to) noexcept {
+//     auto common = from & to;
+
+//     if ((common & endpoint::cap::both) == endpoint::cap::none)
+//         return false;
+
+//     // select stream/packet mode
+//     if (!!((common & endpoint::cap::both) & endpoint::cap::packet))
+//         common = endpoint::cap::packet;  // packet mode
+//     else
+//         common = endpoint::cap::chunk;  // stream mode
+
+//     from &= ~endpoint::cap::both;
+//     from |= common;
+//     to &= ~endpoint::cap::both;
+//     to |= common;
+
+//     // push/pull mode
+//     if (!!(from & endpoint::cap::push))
+//         to &= ~endpoint::cap::pull;
+//     else if (!!(to & endpoint::cap::pull))
+//         from &= ~endpoint::cap::push;
+
+//     return true;
+// }
+
+
 route::route(endpoint::shared src, endpoint::shared snk, std::string tag) : tag_(std::move(tag)) {
-    if (not io::endpoint::match(src, snk))
+    // if (not io::endpoint::match(src, snk))
         throw exception::logic() << "incompatible source and sink";
 
     // FIXME

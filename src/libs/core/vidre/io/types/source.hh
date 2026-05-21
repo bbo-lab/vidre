@@ -86,13 +86,6 @@ namespace vidre {
             // FIXME
 
         public:
-            /** Configure source.
-             * @param config JSON configuration object.
-             * @throw exception::logic if the configuration is invalid for this source.
-             * @note The configuration format is source-specific and may be ignored by some sources.
-             * */
-            virtual void setup(const settings::json &config) {}
-
             /** Retrieve data from the source.
              * @param v Memory area to store the retrieved data.
              * @throw exception::logic if source is packet based.
@@ -127,13 +120,8 @@ namespace vidre {
                 return avail_.wait(timeout);
             }
 
-            /** Retrieve a packet from the source.
-             * @returns Pointer to the retrieved packet, or nullptr if no packet is available.
-             * @throw exception::logic if source is packet based
-             * @throw exception::runtime for other errors
-             * */
-            virtual packet::shared get() {
-                throw exception::logic();
+            packet::shared get() override {
+                throw exception::logic() << "source is not packet based";
             }
 
         private:

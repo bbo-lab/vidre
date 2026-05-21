@@ -50,8 +50,8 @@ struct files {
         if (not dst->valid())
             throw exception::runtime() << error::system();
 
-        if (not io::endpoint::match(src, dst))
-            throw exception::logic() << "incompatible source and sink";
+        // if (not io::endpoint::match(src, dst))
+        //     throw exception::logic() << "incompatible source and sink";
 
         return {src, dst};
     }

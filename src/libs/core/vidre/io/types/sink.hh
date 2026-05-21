@@ -105,13 +105,6 @@ namespace vidre {
             }
 
         public:
-            /** Configure sink.
-             * @param config JSON configuration object.
-             * @throw exception::logic_error if the configuration is invalid for this sink.
-             * @note The configuration format is sink-specific and may be ignored by some sinks.
-             * */
-            virtual void setup(const settings::json &config) {}
-
             /** Transfer data from a memory view.
              * @param v Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
@@ -138,11 +131,9 @@ namespace vidre {
                 return put({sizeof(T), reinterpret_cast<const memory::const_pointer>(&v)});
             }
 
-            /** Write a packet.
-             * @param p Pointer to the packet to write.
-             * @returns Number of bytes actually written (@c invalid for write failure).
-             * */
-            virtual result put(packet::shared p);
+            result put(packet::shared p) override {
+                throw exception::logic() << "sink is not packet based";
+            }
 
             /** Wait for sink ready signal.
              * @returns True if the sink is ready, false if the wait was interrupted.
