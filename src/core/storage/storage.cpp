@@ -48,11 +48,11 @@ namespace vidre {
     }
 
     void Storage::updateHeader(int frames) {
-        _header->updateHeader(output_file.get(), frames);
+        _header->updateHeader(output_file, frames);
     }
 
     void Storage::appendFrame(const void* buffer) {
-        _header->writeFrame(buffer, output_file.get());
+        _header->writeFrame(buffer, output_file);
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
@@ -66,7 +66,7 @@ namespace vidre {
                 tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
             }
             
-            _header->writeTail<CamCommandoHeader>(output_file.get(), tail);
+            _header->writeTail<CamCommandoHeader>(output_file, tail);
         }
     }
 

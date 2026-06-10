@@ -47,8 +47,7 @@ namespace vidre {
         void writeTail(FILE* out_file, const CCVFrameTail& tail);
     
     private:
-        void writeHeader(FILE* outFile);
-        template <typename T> void writeField(FILE* outFile, const T& value);
+        std::vector<uint8_t> serializeHeader();
 
 #if CCV_HEADER_VERSION >= 120
         uint32_t headerSize = 93;

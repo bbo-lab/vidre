@@ -26,7 +26,6 @@ namespace vidre {
 
         bool open(const std::string& filename) {
 #ifdef _WIN32
-            // 1. Query the disk sector size dynamically
             DWORD sectorsPerCluster = 0, bytesPerSector = 0, freeClusters = 0, totalClusters = 0;
             std::string rootPath = "C:\\";
             if (filename.length() >= 3 && filename[1] == ':' && filename[2] == '\\') {
@@ -38,7 +37,6 @@ namespace vidre {
                 sectorSize = 4096; // Standard fallback
             }
 
-            // 2. Open file with direct unbuffered I/O
             hFile = CreateFileA(
                 filename.c_str(),
                 GENERIC_READ | GENERIC_WRITE, // Read access needed to update header later
@@ -50,7 +48,6 @@ namespace vidre {
 
             if (hFile == INVALID_HANDLE_VALUE) return false;
 
-            // 3. Allocate a sector-aligned software block cache
             bufferCapacity = 2 * 1024 * 1024; // 2 MB blocks
             alignedBuffer = static_cast<uint8_t*>(_aligned_malloc(bufferCapacity, sectorSize));
             bufferOffset = 0;
@@ -80,7 +77,6 @@ namespace vidre {
 #endif
         }
 
-        // Accepts unaligned sizes and addresses, absorbing them safely into our cache
         void write(const void* data, size_t size) {
 #ifdef _WIN32
             const uint8_t* src = static_cast<const uint8_t*>(data);
@@ -104,29 +100,23 @@ namespace vidre {
 #endif
         }
 
-        // Handles the tricky "rewind and update frame count" rule safely for Direct I/O
         void finalizeHeader(const void* updated_header, size_t header_size) {
 #ifdef _WIN32
-            flushBuffer(); // Push all final frames to disk first
+            flushBuffer();
 
-            // Seek back to position 0
             LARGE_INTEGER liZero = {0};
             SetFilePointerEx(hFile, liZero, nullptr, FILE_BEGIN);
 
-            // Direct I/O requires us to read the whole first sector, modify it, and write it back
             DWORD bytesRead = 0;
             if (!ReadFile(hFile, alignedBuffer, sectorSize, &bytesRead, nullptr)) {
                 std::cerr << "Direct I/O Error: Header read failed. GLE: " << GetLastError() << "\n";
                 return;
             }
 
-            // Overwrite the header memory within the sector block
             std::memcpy(alignedBuffer, updated_header, header_size);
 
-            // Seek to 0 again
             SetFilePointerEx(hFile, liZero, nullptr, FILE_BEGIN);
 
-            // Write the full aligned sector block back
             DWORD bytesWritten = 0;
             if (!WriteFile(hFile, alignedBuffer, sectorSize, &bytesWritten, nullptr)) {
                 std::cerr << "Direct I/O Error: Header rewrite failed. GLE: " << GetLastError() << "\n";
@@ -142,7 +132,6 @@ namespace vidre {
             size_t writeSize = bufferOffset;
             size_t remainder = writeSize % sectorSize;
             
-            // If finishing the file, pad remaining space in the sector with zeros
             if (remainder != 0) {
                 size_t padding = sectorSize - remainder;
                 std::memset(alignedBuffer + bufferOffset, 0, padding);
