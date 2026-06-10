@@ -3,10 +3,12 @@
 #include <config.h>
 
 #include <core/header/header.hpp>
+#include <vector>
 
 
 namespace vidre {
     struct Config;
+    class DiskWriter;
 
     struct GreenbergString {
         uint32_t length; 
@@ -41,10 +43,10 @@ namespace vidre {
     public:
         CamCommandoHeader() = delete;
         CamCommandoHeader(Config config);
-        virtual void initiateHeader(FILE* out_file) override;
-        virtual void updateHeader(FILE* out_file, int frames) override;
-        virtual void writeFrame(const void* buffer, FILE* out_file) override;        
-        void writeTail(FILE* out_file, const CCVFrameTail& tail);
+        virtual void initiateHeader(DiskWriter& out_file) override;
+        virtual void updateHeader(DiskWriter& out_file, int frames) override;
+        virtual void writeFrame(const void* buffer, DiskWriter& out_file) override;        
+        void writeTail(DiskWriter& out_file, const CCVFrameTail& tail);
     
     private:
         std::vector<uint8_t> serializeHeader();

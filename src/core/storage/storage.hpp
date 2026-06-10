@@ -42,7 +42,7 @@ namespace vidre {
 
     class Storage {
     public:
-        Storage() : output_file(nullptr, fclose) {}
+        Storage() = default;
         Storage(const Config& config, const std::string& header_format = "ccv", const std::string& output_file_name = "some.ccv");
         ~Storage() {};
 

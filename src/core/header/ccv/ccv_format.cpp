@@ -11,7 +11,7 @@ namespace vidre {
         size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
         buffersize_out_in_samples = (size_t) floor(((double) buffersize_out) * 0.8);
         nsamples = nbytes_in / 2; //rounds down
-        size_t n = std::min(nsamples, buffersize_out_in_samples);
+        size_t n = min(nsamples, buffersize_out_in_samples);
         
         size_t nblocks = n / 4; //rounds down
         
@@ -119,12 +119,12 @@ namespace vidre {
         return buffer;
     }
 
-    void vidre::CamCommandoHeader::initiateHeader(FILE* out_file) {
+    void vidre::CamCommandoHeader::initiateHeader(DiskWriter& out_file) {
         std::vector<uint8_t> headerData = serializeHeader();
         out_file.write(headerData.data(), headerData.size());
     }
 
-    void vidre::CamCommandoHeader::updateHeader(FILE* out_file, int frames) {
+    void vidre::CamCommandoHeader::updateHeader(DiskWriter& out_file, int frames) {
         frameCount = frames;
         
         // Update with actual Aptina Buffer size ()
@@ -138,7 +138,7 @@ namespace vidre {
         out_file.finalizeHeader(headerData.data(), headerData.size());
     }
 
-    void vidre::CamCommandoHeader::writeFrame(const void* buffer, FILE* out_file) {
+    void vidre::CamCommandoHeader::writeFrame(const void* buffer, DiskWriter& out_file) {
 #if CCV_HEADER_VERSION >= 120
         if (cameraType.data == "aptina" && packed) {
             // aptina packing and saving
@@ -154,7 +154,7 @@ namespace vidre {
         out_file.write(buffer, frameBytesOnDisk - 21);
     }
 
-    void vidre::CamCommandoHeader::writeTail(FILE* out_file, const CCVFrameTail& tail) {
+    void vidre::CamCommandoHeader::writeTail(DiskWriter& out_file, const CCVFrameTail& tail) {
         out_file.write(&tail.frameIndex, sizeof(tail.frameIndex));
         out_file.write(&tail.timeStamp, sizeof(tail.timeStamp));
         out_file.write(tail.padding, sizeof(tail.padding));
