@@ -3,6 +3,10 @@
 #include <QApplication>
 #include <QCommandLineParser>
 
+#include <iostream>
+
+#include <utils/config_loader/config_loader.hpp>
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -45,9 +49,72 @@ int main(int argc, char *argv[])
         "Path to Pylon base runtime library (for vendor availability checks).",
         "file");
     parser.addOption(pylonBaseLibraryOption);
+
+    QCommandLineOption storageModeOption(
+        QStringList() << "storage-mode",
+        "Storage transport mode for camera microservices (local or remote).",
+        "mode");
+    parser.addOption(storageModeOption);
+
+    QCommandLineOption storageEndpointOption(
+        QStringList() << "storage-endpoint",
+        "Endpoint for the storage microservice in host:port form.",
+        "endpoint");
+    parser.addOption(storageEndpointOption);
+
+    QCommandLineOption headlessOption(
+        QStringList() << "headless",
+        "Run cameras without creating the Qt GUI window.");
+    parser.addOption(headlessOption);
     
     parser.process(app);
     
+    if (parser.isSet(headlessOption)) {
+        if (!parser.isSet(configOption)) {
+            std::cerr << "--headless requires --config" << std::endl;
+            return 1;
+        }
+
+        vidre::LoaderOptions loaderOptions;
+        loaderOptions.aptinaLibraryPath = parser.isSet(aptinaLibraryOption) ? parser.value(aptinaLibraryOption).toStdString() : std::string();
+        loaderOptions.pylonLibraryPath = parser.isSet(pylonLibraryOption) ? parser.value(pylonLibraryOption).toStdString() : std::string();
+        loaderOptions.aptinaBaseLibraryPath = parser.isSet(aptinaBaseLibraryOption) ? parser.value(aptinaBaseLibraryOption).toStdString() : std::string();
+        loaderOptions.pylonBaseLibraryPath = parser.isSet(pylonBaseLibraryOption) ? parser.value(pylonBaseLibraryOption).toStdString() : std::string();
+        loaderOptions.aptinaLibraryPathCliOverride = parser.isSet(aptinaLibraryOption);
+        loaderOptions.pylonLibraryPathCliOverride = parser.isSet(pylonLibraryOption);
+        loaderOptions.aptinaBaseLibraryPathCliOverride = parser.isSet(aptinaBaseLibraryOption);
+        loaderOptions.pylonBaseLibraryPathCliOverride = parser.isSet(pylonBaseLibraryOption);
+
+        if (parser.isSet(storageModeOption)) {
+            const auto storageMode = parser.value(storageModeOption).toLower();
+            if (storageMode == "remote") {
+                loaderOptions.transportMode = vidre::TransportMode::RemoteStorage;
+            }
+        }
+        if (parser.isSet(storageEndpointOption)) {
+            loaderOptions.storageEndpoint = parser.value(storageEndpointOption).toStdString();
+        }
+
+        auto cameras = vidre::LoadSystemSetup(
+            parser.value(configOption).toStdString(),
+            loaderOptions,
+            [](const std::string& message) { std::cout << message << std::endl; });
+
+        if (cameras.empty()) {
+            std::cerr << "No cameras were loaded." << std::endl;
+            return 1;
+        }
+
+        for (auto& camera : cameras) {
+            if (camera.second && !camera.second->isRunning()) {
+                camera.second->run();
+                std::cout << "Started camera backend: " << camera.first << std::endl;
+            }
+        }
+
+        return app.exec();
+    }
+
     MainWindow window;
     window.setLibraryPathsFromCommandLine(
         parser.isSet(aptinaLibraryOption) ? parser.value(aptinaLibraryOption) : QString(),
@@ -55,10 +122,10 @@ int main(int argc, char *argv[])
         parser.isSet(aptinaBaseLibraryOption) ? parser.value(aptinaBaseLibraryOption) : QString(),
         parser.isSet(pylonBaseLibraryOption) ? parser.value(pylonBaseLibraryOption) : QString());
     window.show();
-    
+
     if (parser.isSet(configOption)) {
         window.loadConfigFile(parser.value(configOption));
     }
-    
+
     return app.exec();
 }

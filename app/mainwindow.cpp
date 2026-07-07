@@ -17,7 +17,9 @@
 #include <vector>
 #include "yaml-cpp/yaml.h"
 
+#include <utils/config_loader/config_loader.hpp>
 #include <utils/dynamic_loader/dynamic_library_loader.hpp>
+#include <core/transport/transport.hpp>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -209,7 +211,20 @@ void MainWindow::loadConfigFile(const QString& filename)
     }
     
     // Load new configuration
-    cameras_ = loadSystemSetup(filename.toStdString());
+    vidre::LoaderOptions loaderOptions;
+    loaderOptions.aptinaLibraryPath = aptinaLibraryPath_;
+    loaderOptions.pylonLibraryPath = pylonLibraryPath_;
+    loaderOptions.aptinaBaseLibraryPath = aptinaBaseLibraryPath_;
+    loaderOptions.pylonBaseLibraryPath = pylonBaseLibraryPath_;
+    loaderOptions.aptinaLibraryPathCliOverride = aptinaLibraryPathCliOverride_;
+    loaderOptions.pylonLibraryPathCliOverride = pylonLibraryPathCliOverride_;
+    loaderOptions.aptinaBaseLibraryPathCliOverride = aptinaBaseLibraryPathCliOverride_;
+    loaderOptions.pylonBaseLibraryPathCliOverride = pylonBaseLibraryPathCliOverride_;
+
+    cameras_ = vidre::LoadSystemSetup(
+        filename.toStdString(),
+        loaderOptions,
+        [this](const std::string& message) { logMessage(QString::fromStdString(message)); });
     
     if (cameras_.empty()) {
         logMessage("ERROR: Failed to load configuration or no cameras found.");
@@ -451,218 +466,3 @@ void MainWindow::logMessage(const QString& message)
     logTextEdit_->append(logEntry);
 }
 
-std::unique_ptr<vidre::ICamera> MainWindow::loadCamera(const std::string& cameraName, void* nodePtr)
-{
-    YAML::Node cameraNode = *static_cast<YAML::Node*>(nodePtr);
-
-    const std::string ap_base_str = aptinaBaseLibraryPath_;
-    const std::string pylon_base_str = pylonBaseLibraryPath_;
-    vidre::APTINA_LIBRARY_PATH = aptinaLibraryPath_;
-    vidre::PYLON_LIBRARY_PATH = pylonLibraryPath_;
-    
-    if (!cameraNode["vendor"]) {
-        logMessage(QString("ERROR: No vendor specified for camera %1").arg(QString::fromStdString(cameraName)));
-        return nullptr;
-    }
-    
-    std::unique_ptr<vidre::ICamera> camera;
-    std::string vendor = cameraNode["vendor"].as<std::string>();
-    
-    if (vendor == "pylon" && (pylon_base_str.empty() || vidre::util::IsLibraryAvailable(pylon_base_str))) {
-        if (vidre::PYLON_LIBRARY_PATH.empty()) {
-            logMessage("ERROR: Pylon plugin library path is empty. Set it in config or via --pylon-library.");
-            return nullptr;
-        }
-        using camera_ref_t = vidre::ICamera*();
-        using destroy_ref_t = void(vidre::ICamera*);
-        auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::PYLON_LIBRARY_PATH, "create_pylon_camera");
-        auto destroy = vidre::util::GetFunction<destroy_ref_t*>(vidre::PYLON_LIBRARY_PATH, "destroy_pylon_camera");
-        
-        if (create == nullptr || destroy == nullptr) {
-            logMessage("ERROR: Failed to load Pylon camera functions");
-            return nullptr;
-        }
-        camera = std::unique_ptr<vidre::ICamera>(create());
-        logMessage(QString("Created Pylon camera: %1").arg(QString::fromStdString(cameraName)));
-    }
-    else if (vendor == "aptina" && (ap_base_str.empty() || vidre::util::IsLibraryAvailable(ap_base_str))) {
-        if (vidre::APTINA_LIBRARY_PATH.empty()) {
-            logMessage("ERROR: Aptina plugin library path is empty. Set it in config or via --aptina-library.");
-            return nullptr;
-        }
-        using camera_ref_t = vidre::ICamera*();
-        using destroy_ref_t = void(vidre::ICamera*);
-        auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::APTINA_LIBRARY_PATH, "create_aptina_camera");
-        auto destroy = vidre::util::GetFunction<destroy_ref_t*>(vidre::APTINA_LIBRARY_PATH, "destroy_aptina_camera");
-        
-        if (create == nullptr || destroy == nullptr) {
-            logMessage("ERROR: Failed to load Aptina camera functions");
-            return nullptr;
-        }
-        camera = std::unique_ptr<vidre::ICamera>(create());
-        logMessage(QString("Created Aptina camera: %1").arg(QString::fromStdString(cameraName)));
-    }
-    else {
-        logMessage(QString("ERROR: Unsupported or unavailable vendor: %1").arg(QString::fromStdString(vendor)));
-        return nullptr;
-    }
-    
-    // Initialize camera with serial number
-    if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
-        logMessage(QString("ERROR: Could not initialize camera with serial: %1")
-            .arg(QString::fromStdString(cameraNode["serial"].as<std::string>())));
-        return nullptr;
-    }
-    
-    // Load configuration file
-    if (cameraNode["config_file"]) {
-        if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
-            logMessage("ERROR: Could not load config file (check path)");
-            return nullptr;
-        }
-    }
-    
-    // Set trigger settings
-    if (cameraNode["trigger_in"]) {
-        camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
-    }
-    if (cameraNode["trigger_out"]) {
-        camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
-    }
-    
-    return camera;
-}
-
-std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> 
-MainWindow::loadSystemSetup(const std::string& setupFilepath)
-{
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
-    
-    if (!std::filesystem::exists(setupFilepath)) {
-        logMessage(QString("ERROR: Configuration file %1 does not exist")
-            .arg(QString::fromStdString(setupFilepath)));
-        return cameras;
-    }
-    
-    try {
-        YAML::Node config = YAML::LoadFile(setupFilepath);
-
-        auto readStringByKeys = [](const YAML::Node& node,
-                                   const std::vector<std::string>& keys) -> std::string {
-            if (!node || !node.IsMap()) {
-                return "";
-            }
-            for (const auto& key : keys) {
-                if (node[key] && node[key].IsScalar()) {
-                    return node[key].as<std::string>();
-                }
-            }
-            return "";
-        };
-
-        auto applyPath = [this](const std::string& value,
-                                std::string& destination,
-                                bool cliOverride,
-                                const char* label) {
-            if (!value.empty() && !cliOverride) {
-                destination = value;
-                logMessage(QString("Config library path (%1): %2")
-                    .arg(label)
-                    .arg(QString::fromStdString(value)));
-            }
-        };
-
-        YAML::Node libraryConfig;
-        if (config["libraries"] && config["libraries"].IsMap()) {
-            libraryConfig = config["libraries"];
-        } else if (config["library_paths"] && config["library_paths"].IsMap()) {
-            libraryConfig = config["library_paths"];
-        }
-
-        applyPath(
-            readStringByKeys(libraryConfig, {"aptina", "aptina_library", "aptina_library_path"}),
-            aptinaLibraryPath_,
-            aptinaLibraryPathCliOverride_,
-            "aptina plugin");
-        applyPath(
-            readStringByKeys(libraryConfig, {"pylon", "pylon_library", "pylon_library_path"}),
-            pylonLibraryPath_,
-            pylonLibraryPathCliOverride_,
-            "pylon plugin");
-        applyPath(
-            readStringByKeys(libraryConfig, {"aptina_base", "aptina_base_library", "aptina_base_library_path"}),
-            aptinaBaseLibraryPath_,
-            aptinaBaseLibraryPathCliOverride_,
-            "aptina base");
-        applyPath(
-            readStringByKeys(libraryConfig, {"pylon_base", "pylon_base_library", "pylon_base_library_path"}),
-            pylonBaseLibraryPath_,
-            pylonBaseLibraryPathCliOverride_,
-            "pylon base");
-
-        applyPath(
-            readStringByKeys(config, {"aptina_library_path", "aptina_library"}),
-            aptinaLibraryPath_,
-            aptinaLibraryPathCliOverride_,
-            "aptina plugin");
-        applyPath(
-            readStringByKeys(config, {"pylon_library_path", "pylon_library"}),
-            pylonLibraryPath_,
-            pylonLibraryPathCliOverride_,
-            "pylon plugin");
-        applyPath(
-            readStringByKeys(config, {"aptina_base_library_path", "aptina_base_library"}),
-            aptinaBaseLibraryPath_,
-            aptinaBaseLibraryPathCliOverride_,
-            "aptina base");
-        applyPath(
-            readStringByKeys(config, {"pylon_base_library_path", "pylon_base_library"}),
-            pylonBaseLibraryPath_,
-            pylonBaseLibraryPathCliOverride_,
-            "pylon base");
-        
-        for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
-            if (!it->second.IsMap())
-                continue;
-            if (!it->second["type"])
-                continue;
-            
-            // Create camera from file-defined details if the node is a camera node
-            if (it->second["type"].as<std::string>() == "camera") {
-                std::string cameraName = it->first.as<std::string>();
-                cameras[cameraName] = std::make_unique<vidre::RuntimeInstance>();
-                
-                YAML::Node cameraNode = it->second;
-                cameras[cameraName]->setCamera(loadCamera(cameraName, &cameraNode));
-                
-                if (!cameras[cameraName]->checkCamera()) {
-                    logMessage(QString("WARNING: Camera %1 was not constructed properly")
-                        .arg(QString::fromStdString(cameraName)));
-                    continue;
-                }
-                
-                // Setup storage
-                if (it->second["storage"]) {
-                    auto storage_config = it->second["storage"];
-                    auto output_file = storage_config["output_file"].as<std::string>();
-                    auto header_format = storage_config["header"].as<std::string>();
-                    auto bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
-                    auto packed = storage_config["packed"].as<uint8_t>();
-                    
-                    cameras[cameraName]->createStorage(output_file, header_format, bits_per_pixel, packed);
-                    logMessage(QString("Configured storage for %1: %2")
-                        .arg(QString::fromStdString(cameraName))
-                        .arg(QString::fromStdString(output_file)));
-                }
-            }
-        }
-    }
-    catch (const YAML::Exception& e) {
-        logMessage(QString("YAML Error: %1").arg(e.what()));
-    }
-    catch (const std::exception& e) {
-        logMessage(QString("Error loading configuration: %1").arg(e.what()));
-    }
-    
-    return cameras;
-}

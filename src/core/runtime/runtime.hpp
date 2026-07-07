@@ -3,10 +3,12 @@
 #include <thread>
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include <core/storage/storage.hpp>
 #include <core/buffer/buffer.hpp>
 #include <camera/camera.hpp>
+#include <core/transport/transport.hpp>
 
 namespace vidre {
     struct Config;
@@ -32,6 +34,10 @@ namespace vidre {
         void stop();
 
         void setCamera(std::unique_ptr<ICamera> camera);
+        void setCameraName(std::string cameraName);
+        void setTransportMode(TransportMode transportMode);
+        void setStorageEndpoint(std::string storageEndpoint);
+        void setFrameSink(std::unique_ptr<IFrameSink> frameSink);
         void createStorage(std::string output_file_name = "some.ccv", std::string header_format = "ccv", uint64_t bits_per_pixel = 8, uint8_t packed = 0);
 
         bool checkCamera();
@@ -67,6 +73,10 @@ namespace vidre {
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;
         std::unique_ptr<Buffer> _buffer;
+        std::unique_ptr<IFrameSink> _frameSink;
+        std::string _cameraName;
+        std::string _storageEndpoint;
+        TransportMode _transportMode = TransportMode::LocalStorage;
         bool _saveTIFF = false;
         bool _presentFrame = false;
         uint8_t* _latestFrameData = nullptr;

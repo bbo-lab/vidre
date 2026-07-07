@@ -51,6 +51,22 @@ namespace vidre
         _camera = std::move(camera);
     }
 
+    void RuntimeInstance::setCameraName(std::string cameraName) {
+        _cameraName = std::move(cameraName);
+    }
+
+    void RuntimeInstance::setTransportMode(TransportMode transportMode) {
+        _transportMode = transportMode;
+    }
+
+    void RuntimeInstance::setStorageEndpoint(std::string storageEndpoint) {
+        _storageEndpoint = std::move(storageEndpoint);
+    }
+
+    void RuntimeInstance::setFrameSink(std::unique_ptr<IFrameSink> frameSink) {
+        _frameSink = std::move(frameSink);
+    }
+
     void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format, uint64_t bits_per_pixel, uint8_t packed) {
         if (_camera == nullptr) {
             std::cout << "Camera is not set \n";
@@ -81,6 +97,19 @@ namespace vidre
 
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
 
+        if (_transportMode == TransportMode::RemoteStorage && !_storageEndpoint.empty()) {
+            FrameEnvelope baseEnvelope;
+            baseEnvelope.cameraName = _cameraName;
+            baseEnvelope.serialNumber = _camera->GetSerialNumber();
+            baseEnvelope.vendorName = _camera->GetVendorName();
+            baseEnvelope.width = cameraConfig.width;
+            baseEnvelope.height = cameraConfig.height;
+            baseEnvelope.bitsPerPixel = bits_per_pixel;
+            _frameSink = std::make_unique<RemoteStorageSink>(_storageEndpoint, std::move(baseEnvelope));
+        } else if (!_frameSink) {
+            _frameSink = std::make_unique<LocalStorageSink>(*_storage);
+        }
+
         _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
@@ -110,16 +139,19 @@ namespace vidre
 
             _latestFrameData = static_cast<uint8_t*>(result);
             _currentFrame++;
-           
-            _storage->appendFrame(static_cast<const void *>(result));
-            _storage->appendTail(header->frameID, header->timeStamp, header->computerTimeStamp);
+
+            if (_frameSink) {
+                _frameSink->publishFrame(*header, static_cast<const uint8_t*>(result), _camera->GetFrameBytes());
+            }
 
             if (_saveTIFF) {
                 _storage->save(static_cast<const void *>(result), header->frameID);
             }
         }
 
-        _storage->updateHeader(_buffer->getSavedFramesNumber());
+        if (_frameSink) {
+            _frameSink->finish(_buffer->getSavedFramesNumber());
+        }
 
         std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
     }
@@ -157,7 +189,9 @@ namespace vidre
 
         _camera->Arm();
         
-        _storage->initiateHeader();
+        if (_frameSink) {
+            _frameSink->begin();
+        }
         
         _camera->Start();
         

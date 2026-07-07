@@ -73,9 +73,7 @@ private:
     bool pylonLibraryPathCliOverride_ = false;
     bool aptinaBaseLibraryPathCliOverride_ = false;
     bool pylonBaseLibraryPathCliOverride_ = false;
-    
-    std::unique_ptr<vidre::ICamera> loadCamera(const std::string& cameraName, void* cameraNode);
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> loadSystemSetup(const std::string& setupFilepath);
+
     void setupUI();
     void createToolBar();
     void createDockWidgets();
