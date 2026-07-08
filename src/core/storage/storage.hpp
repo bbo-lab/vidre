@@ -54,6 +54,10 @@ namespace vidre {
         void appendFrame(const void* buffer);
         void appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp);
         void initiateHeader();
+
+        std::string getOutputFileName() {
+            return _outputFileName;
+        }
     private:
         Config _config;
         std::string _outputFileName = "some.ccv";

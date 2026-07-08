@@ -49,14 +49,14 @@ std::vector<Resolution> parseResolutions(const std::string& text) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
-    std::string outputFile = "highload.ccv";
+    std::string outputFile = "I:/testing/out.ccv";
     std::string headerFormat = "ccv";
     std::string resolutionsText = "640x480,1280x720,1920x1080";
     unsigned int width = 1280;
     unsigned int height = 720;
     unsigned int buffers = 500;
     double frameRate = 0.0;
-    int durationSeconds = 10;
+    int durationSeconds = 60;
 
     po::options_description options("Allowed options");
     options.add_options()
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 
         const std::filesystem::path requestedOutputPath(outputFile);
         const auto resolutionPrefix = std::to_string(resolution.width) + "x" + std::to_string(resolution.height) + "_";
-        const std::filesystem::path runOutputPath = requestedOutputPath.parent_path() /
+        std::filesystem::path runOutputPath = requestedOutputPath.parent_path() /
             (resolutionPrefix + requestedOutputPath.filename().string());
         vidre::RuntimeInstance runtime;
         runtime.setCamera(std::move(camera));
@@ -112,10 +112,10 @@ int main(int argc, char* argv[]) {
 
         const auto startTime = std::chrono::steady_clock::now();
         runtime.run();
+        runOutputPath = std::filesystem::path(runtime.getOutputFileName());
         std::this_thread::sleep_for(std::chrono::seconds(durationSeconds));
         runtime.stop();
         const auto endTime = std::chrono::steady_clock::now();
-
         const auto elapsedSeconds = std::chrono::duration<double>(endTime - startTime).count();
         if (!std::filesystem::exists(runOutputPath)) {
             std::cout << "Finished " << resolution.width << "x" << resolution.height
