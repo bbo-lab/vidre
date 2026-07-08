@@ -46,34 +46,6 @@ std::vector<Resolution> parseResolutions(const std::string& text) {
     return resolutions;
 }
 
-std::filesystem::path findNewestMatchingFile(const std::filesystem::path& directory,
-                                             const std::string& suffix) {
-    std::filesystem::path newestPath;
-    std::filesystem::file_time_type newestTime = std::filesystem::file_time_type::min();
-
-    if (!std::filesystem::exists(directory)) {
-        return newestPath;
-    }
-
-    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
-        if (!entry.is_regular_file()) {
-            continue;
-        }
-
-        const auto filename = entry.path().filename().string();
-        if (filename.size() < suffix.size() || filename.compare(filename.size() - suffix.size(), suffix.size(), suffix) != 0) {
-            continue;
-        }
-
-        const auto currentTime = std::filesystem::last_write_time(entry.path());
-        if (newestPath.empty() || currentTime > newestTime) {
-            newestTime = currentTime;
-            newestPath = entry.path();
-        }
-    }
-
-    return newestPath;
-}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -126,10 +98,6 @@ int main(int argc, char* argv[]) {
         const auto resolutionPrefix = std::to_string(resolution.width) + "x" + std::to_string(resolution.height) + "_";
         const std::filesystem::path runOutputPath = requestedOutputPath.parent_path() /
             (resolutionPrefix + requestedOutputPath.filename().string());
-        const auto outputDirectory = runOutputPath.parent_path().empty()
-            ? std::filesystem::current_path()
-            : runOutputPath.parent_path();
-
         vidre::RuntimeInstance runtime;
         runtime.setCamera(std::move(camera));
         runtime.createStorage(runOutputPath.string(), headerFormat, 8, 0);
@@ -149,20 +117,17 @@ int main(int argc, char* argv[]) {
         const auto endTime = std::chrono::steady_clock::now();
 
         const auto elapsedSeconds = std::chrono::duration<double>(endTime - startTime).count();
-        const auto outputSuffix = runOutputPath.filename().string();
-        const auto savedFile = findNewestMatchingFile(outputDirectory, outputSuffix);
-
-        if (savedFile.empty()) {
+        if (!std::filesystem::exists(runOutputPath)) {
             std::cout << "Finished " << resolution.width << "x" << resolution.height
-                      << ", but no output file was found" << '\n';
+                      << ", but no output file was found at " << runOutputPath.string() << '\n';
             continue;
         }
 
-        const auto fileBytes = std::filesystem::file_size(savedFile);
+        const auto fileBytes = std::filesystem::file_size(runOutputPath);
         const double mebibytes = static_cast<double>(fileBytes) / (1024.0 * 1024.0);
         const double speed = mebibytes / elapsedSeconds;
 
-        std::cout << "Saved " << savedFile.filename().string()
+        std::cout << "Saved " << runOutputPath.filename().string()
                   << " (" << fileBytes << " bytes, " << mebibytes << " MiB)"
                   << ", average write speed: " << speed << " MiB/s" << '\n';
     }
