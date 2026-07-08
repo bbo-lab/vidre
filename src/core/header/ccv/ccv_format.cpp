@@ -1,5 +1,6 @@
 #include <core/header/ccv/ccv_format.hpp>
 #include <core/storage/storage.hpp>
+#include <core/storage/disk_writer.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -10,7 +11,7 @@ namespace vidre {
         size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
         buffersize_out_in_samples = (size_t) floor(((double) buffersize_out) * 0.8);
         nsamples = nbytes_in / 2; //rounds down
-        size_t n = std::min(nsamples, buffersize_out_in_samples);
+        size_t n = min(nsamples, buffersize_out_in_samples);
         
         size_t nblocks = n / 4; //rounds down
         
@@ -76,11 +77,54 @@ namespace vidre {
         frameCount = 0;
     }
 
-    void vidre::CamCommandoHeader::initiateHeader(FILE* out_file) {
-        writeHeader(out_file);
+    std::vector<uint8_t> CamCommandoHeader::serializeHeader() {
+        std::vector<uint8_t> buffer;
+        buffer.reserve(headerSize); // Pre-allocate for performance
+
+        // Helper lambdas to pack bytes into the vector
+        auto writeField = [&buffer](const auto& value) {
+            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&value);
+            buffer.insert(buffer.end(), ptr, ptr + sizeof(value));
+        };
+        auto writeString = [&buffer](const std::string& value) {
+            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(value.c_str());
+            buffer.insert(buffer.end(), ptr, ptr + value.length() + 1); // +1 for null terminator
+        };
+
+        writeField(headerSize);
+        writeField(cameraType.length);
+        writeString(cameraType.data);
+        writeField(headerVersion);
+        writeField(imageType.length);
+        writeString(imageType.data);
+
+        writeField(bytesPerPixel);
+        writeField(bitsPerPixel);
+        writeField(frameBytesOnDisk);
+
+        writeField(width);
+        writeField(height);
+        writeField(frameRate);
+#if CCV_HEADER_VERSION >= 120
+        writeField(packed);
+#endif
+        writeField(frameCount);
+#if CCV_HEADER_VERSION >= 120
+        writeField(sensor.offset);
+        writeField(sensor.size);
+        writeField(sensor.clock);
+        writeField(sensor.exposure);
+        writeField(sensor.gain);
+#endif
+        return buffer;
     }
 
-    void vidre::CamCommandoHeader::updateHeader(FILE* out_file, int frames) {
+    void vidre::CamCommandoHeader::initiateHeader(DiskWriter& out_file) {
+        std::vector<uint8_t> headerData = serializeHeader();
+        out_file.write(headerData.data(), headerData.size());
+    }
+
+    void vidre::CamCommandoHeader::updateHeader(DiskWriter& out_file, int frames) {
         frameCount = frames;
         
         // Update with actual Aptina Buffer size ()
@@ -90,69 +134,29 @@ namespace vidre {
         }
 #endif
 
-        rewind(out_file);
-        writeHeader(out_file);
+        std::vector<uint8_t> headerData = serializeHeader();
+        out_file.finalizeHeader(headerData.data(), headerData.size());
     }
 
-    void vidre::CamCommandoHeader::writeFrame(const void* buffer, FILE* out_file) {
+    void vidre::CamCommandoHeader::writeFrame(const void* buffer, DiskWriter& out_file) {
 #if CCV_HEADER_VERSION >= 120
         if (cameraType.data == "aptina" && packed) {
             // aptina packing and saving
             uint8_t* packed_buffer = new uint8_t[frameBytesOnDisk - 21];
             // std::cout << "CCV: " << frameBytesOnDisk - 21 << " " << aptinaBuffer << std::endl;
             pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packed_buffer, aptinaBuffer);
-            fwrite(reinterpret_cast<const char*>(packed_buffer), 1, aptinaBuffer, out_file);
+            out_file.write(packed_buffer, aptinaBuffer);
             delete[] packed_buffer;
 
             return;
         }
 #endif        
-        fwrite(reinterpret_cast<const char *>(buffer), 1, frameBytesOnDisk - 21, out_file);
+        out_file.write(buffer, frameBytesOnDisk - 21);
     }
 
-    void vidre::CamCommandoHeader::writeTail(FILE* out_file, const CCVFrameTail& tail) {
-        writeField(out_file, tail.frameIndex);
-        writeField(out_file, tail.timeStamp);
-        writeField(out_file, tail.padding);
-    }
-
-    template <typename T>
-    void vidre::CamCommandoHeader::writeField(FILE* outFile, const T& value) {
-        fwrite(reinterpret_cast<const char *>(&value), 1, sizeof(T), outFile);
-        // outFile.write(reinterpret_cast<const char*>(&value), sizeof(T));
-    }
-
-    template <>
-    void vidre::CamCommandoHeader::writeField<std::string>(FILE* outFile, const std::string& value) {
-        fwrite(value.c_str(), 1, value.length() + 1, outFile);
-        // outFile.write(value.c_str(), value.length() + 1);
-    }
-
-    void vidre::CamCommandoHeader::writeHeader(FILE* outFile) {
-        writeField(outFile, headerSize);
-        writeField(outFile, cameraType.length);
-        writeField<std::string>(outFile, cameraType.data);
-        writeField(outFile, headerVersion);
-        writeField(outFile, imageType.length);
-        writeField<std::string>(outFile, imageType.data);
-
-        writeField(outFile, bytesPerPixel);
-        writeField(outFile, bitsPerPixel);
-        writeField(outFile, frameBytesOnDisk);
-
-        writeField(outFile, width);
-        writeField(outFile, height);
-        writeField(outFile, frameRate);
-#if CCV_HEADER_VERSION >= 120
-        writeField(outFile, packed);
-#endif
-        writeField(outFile, frameCount);
-#if CCV_HEADER_VERSION >= 120
-        writeField(outFile, sensor.offset);
-        writeField(outFile, sensor.size);
-        writeField(outFile, sensor.clock);
-        writeField(outFile, sensor.exposure);
-        writeField(outFile, sensor.gain);
-#endif
+    void vidre::CamCommandoHeader::writeTail(DiskWriter& out_file, const CCVFrameTail& tail) {
+        out_file.write(&tail.frameIndex, sizeof(tail.frameIndex));
+        out_file.write(&tail.timeStamp, sizeof(tail.timeStamp));
+        out_file.write(tail.padding, sizeof(tail.padding));
     }
 }

@@ -8,6 +8,7 @@
 #include <config.h>
 #include <core/header/header.hpp>
 #include <core/runtime/shared_frame_header.hpp>
+#include <core/storage/disk_writer.hpp>
 
 #include <variant>
 
@@ -41,7 +42,7 @@ namespace vidre {
 
     class Storage {
     public:
-        Storage() : output_file(nullptr, fclose) {}
+        Storage() = default;
         Storage(const Config& config, const std::string& header_format = "ccv", const std::string& output_file_name = "some.ccv");
         ~Storage() {};
 
@@ -53,12 +54,16 @@ namespace vidre {
         void appendFrame(const void* buffer);
         void appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp);
         void initiateHeader();
+
+        std::string getOutputFileName() {
+            return _outputFileName;
+        }
     private:
         Config _config;
         std::string _outputFileName = "some.ccv";
         std::string _headerFormat = "ccv";
         
         std::unique_ptr<IHeader> _header;
-        std::unique_ptr<FILE, decltype(&fclose)> output_file;
+        DiskWriter output_file;
     };
 }  // namespace vidre

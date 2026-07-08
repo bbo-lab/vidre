@@ -61,6 +61,10 @@ namespace vidre {
             return _storageBitsPerPixel;
         }
 
+        std::string getOutputFileName() {
+            return _storage->getOutputFileName();
+        }
+
         private:
         int _currentFrame = 0;
         std::thread _thread;

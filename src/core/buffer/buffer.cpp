@@ -36,7 +36,7 @@ namespace vidre {
         }
         
         if (result->frameID > _previouslyPopedFrame + 1) {
-            std::cout << " WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
+            std::cerr << " WARNING: RETRIEVED FRAME BIGGER THAN BUFFER + 1\n";
         }
         
         _previouslyPopedFrame = result->frameID;

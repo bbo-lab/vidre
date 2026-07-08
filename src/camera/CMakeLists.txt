@@ -3,5 +3,6 @@ target_sources(vidre PRIVATE
     # dynamic_load.hpp
 )
 
+add_subdirectory(dummy)
 add_subdirectory(pylon)
 add_subdirectory(aptina)
