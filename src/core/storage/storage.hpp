@@ -37,7 +37,6 @@ namespace vidre {
         uint64_t bitsPerPixel;
         bool packed;
         std::string cameraVendor;
-        std::string imageType;
     };
 
     class Storage {
@@ -48,11 +47,10 @@ namespace vidre {
 
         void setConfig(const Config& config);
         Config getConfig();
-        void save(const void* buffer, uint32_t frameID);
 
         void updateHeader(int frames);
         void appendFrame(const void* buffer);
-        void appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp);
+        void appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp);
         void initiateHeader();
 
         std::string getOutputFileName() {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <thread>
 #include <string>
 #include <iostream>
@@ -24,7 +25,7 @@ namespace vidre {
         RuntimeInstance() = default;
         RuntimeInstance(std::string configuration, std::string header_format = "ccv");
         ~RuntimeInstance() = default;
-        
+
         void retrieveFramesWithSave();
         void showFrames();
         void run();
@@ -37,24 +38,32 @@ namespace vidre {
         bool checkCamera();
 
         bool isRunning();
-        
-        RecordingStatus getRecordingStatus();
-        
-        // Get camera pointer for direct access (e.g., for live preview)
+
+        RecordingStatus getRecordingStatus() {
+            return _recordingStatus.load(std::memory_order_relaxed);
+        }
+
         ICamera* getCamera() { return _camera.get(); }
-        
-        // Get camera configuration
+
         unsigned int getFrameWidth() { return _camera ? _camera->GetFrameWidth() : 0; }
         unsigned int getFrameHeight() { return _camera ? _camera->GetFrameHeight() : 0; }
         unsigned int getFrameBytes() { return _camera ? _camera->GetFrameBytes() : 0; }
-        
+
         std::tuple<const uint8_t*, int, int, int> getLatestFrame() {
+            if (!_camera) {
+                return {nullptr, 0, 0, 0};
+            }
+            auto* data = _latestFrameData.load(std::memory_order_relaxed);
+            auto frame = _currentFrame.load(std::memory_order_relaxed);
+            if (!data) {
+                return {nullptr, 0, 0, 0};
+            }
             if (_camera->GetVendorName() == "aptina") {
                 uint32_t rgbWidth, rgbHeight, rgbBitDepth;
-                unsigned char *pRGB = _camera->RGBFrame(_latestFrameData, &rgbWidth, &rgbHeight, &rgbBitDepth);
-                return {pRGB, rgbWidth, rgbHeight, _currentFrame};
+                unsigned char *pRGB = _camera->RGBFrame(data, &rgbWidth, &rgbHeight, &rgbBitDepth);
+                return {pRGB, rgbWidth, rgbHeight, frame};
             }
-            return {_latestFrameData, getFrameWidth(), getFrameHeight(), _currentFrame}; 
+            return {data, getFrameWidth(), getFrameHeight(), frame};
         }
 
         uint64_t getBitsPerPixel() {
@@ -66,17 +75,15 @@ namespace vidre {
         }
 
         private:
-        int _currentFrame = 0;
+        std::atomic<int> _currentFrame{0};
         std::thread _thread;
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;
         std::unique_ptr<Buffer> _buffer;
-        bool _saveTIFF = false;
         bool _presentFrame = false;
-        uint8_t* _latestFrameData = nullptr;
-        RecordingStatus _recordingStatus = RecordingStatus::Stopped;
+        std::atomic<uint8_t*> _latestFrameData{nullptr};
+        std::atomic<RecordingStatus> _recordingStatus{RecordingStatus::Stopped};
 
-        // Stored parameters for recreating storage/buffer on subsequent runs
         std::string _storageOutputFileName;
         std::string _storageHeaderFormat;
         uint64_t _storageBitsPerPixel = 8;

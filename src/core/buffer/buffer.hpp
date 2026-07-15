@@ -6,6 +6,7 @@
 #include <config.h>
 
 #include <memory>
+#include <semaphore>
 #include <vector>
 
 namespace vidre {
@@ -24,16 +25,22 @@ namespace vidre {
         boost::interprocess::managed_shared_memory* getSharedMemory() {
             return _sharedMemory.get();
         }
-        
+
+        std::counting_semaphore<>* getSemaphore() {
+            return _frameSemaphore.get();
+        }
+
         int getSavedFramesNumber();
         void reset();
-        
+
         std::pair<void*, SharedFrameHeader*> pop();
     private:
-        int _nextFrameToPop;
-        int _bufferSize;
-        int _previouslyPopedFrame;
+        int _nextFrameToPop = 0;
+        int _bufferSize = 0;
+        int64_t _lastConsumedFrameID = 0;
+        int _consumedFrames = 0;
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         std::unique_ptr<std::vector<void *>> _sharedMemoryPtrs;
+        std::unique_ptr<std::counting_semaphore<>> _frameSemaphore;
     };
 }  // namespace vidre

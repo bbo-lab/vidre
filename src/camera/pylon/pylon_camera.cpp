@@ -26,28 +26,35 @@ namespace vidre {
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        while (running.load()) 
+        while (running.load())
         {
             Pylon::CGrabResultPtr currentPtrGrabResult;
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
-            } 
+            }
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime).count();
 
             retrievedFramesNumber++;
-            
+
             SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 
-            result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
             result->computerTimeStamp = computerTimeStamp;
+            result->frameID.store(currentPtrGrabResult->GetImageNumber(), std::memory_order_release);
+
+            latestFrame.store(result, std::memory_order_release);
+
+            if (frameSemaphore) {
+                frameSemaphore->release();
+            }
         }
 
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
-        
+
         camera.StopGrabbing();
+        running.store(false);
     }
 
     void PylonCamera::Init() {
@@ -97,11 +104,11 @@ namespace vidre {
         armed.store(true);
     }
     void PylonCamera::Disarm() {
-        // Free Shared Memory Buffers
         armed.store(false);
         shrBufferFactory.Reset();
         retrievedFramesNumber = 0;
-        // camera.Open();
+        frameSemaphore = nullptr;
+        latestFrame.store(nullptr, std::memory_order_release);
     }
     void PylonCamera::Start() {
         if (!armed.load())
@@ -123,7 +130,7 @@ namespace vidre {
         return armed.load();
     }
     bool PylonCamera::IsRunning() {
-        return grabber.joinable();
+        return running.load();
     }
 
     /// --------------------------
@@ -356,9 +363,10 @@ namespace vidre {
         return true;
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name, std::counting_semaphore<>* semaphore)
     {
         shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
+        frameSemaphore = semaphore;
     }
 
     uint8_t* PylonCamera::RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) {

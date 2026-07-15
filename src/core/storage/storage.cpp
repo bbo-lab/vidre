@@ -34,19 +34,6 @@ namespace vidre {
         return _config;
     }
 
-    void Storage::save(const void* buffer, uint32_t frameID) { // TODO: ? 
-        // Pylon::CPylonImage pylonImage;
-
-        // Pylon::CImageFormatConverter formatConverter;
-        // formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        // formatConverter.Convert(pylonImage, buffer, _config.width * _config.height, _config.pixelType, _config.width, _config.height,
-        //                         _config.paddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
-
-        // std::string fileName = std::to_string(frameID) + ".tiff";
-        // Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
-        return;
-    }
-
     void Storage::updateHeader(int frames) {
         _header->updateHeader(output_file, frames);
     }
@@ -55,15 +42,15 @@ namespace vidre {
         _header->writeFrame(buffer, output_file);
     }
 
-    void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
+    void Storage::appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp) {
         if (_headerFormat == "ccv") {
-            vidre::CCVFrameTail tail;
-            tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
+            vidre::CCVFrameTail tail{};
+            tail.frameIndex = frame_idx;
             tail.timeStamp = time_stamp;
             tail.timeStamp /= 1e9;
 
-            for (int i = 0; i < sizeof(long) && i < 9; i++) {
-                tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
+            for (size_t i = 0; i < sizeof(int64_t) && i < sizeof(tail.padding); i++) {
+                tail.padding[i] = static_cast<uint8_t>((computer_time_stamp >> (i * 8)) & 0xFF);
             }
             
             _header->writeTail<CamCommandoHeader>(output_file, tail);

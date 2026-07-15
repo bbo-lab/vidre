@@ -82,6 +82,7 @@ namespace vidre {
 
 #if CCV_HEADER_VERSION >= 120
         SensorInfo sensor;
+        std::vector<uint8_t> packedBuffer;
 #endif
     };
 }  // namespace vidre

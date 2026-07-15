@@ -1,6 +1,8 @@
 #include <core/runtime/runtime.hpp>
 #include <core/runtime/shared_frame_header.hpp>
 
+#include <chrono>
+
 
 namespace vidre
 {
@@ -81,7 +83,7 @@ namespace vidre
 
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
 
-        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber, _buffer->getSemaphore());
     }
 
 
@@ -91,32 +93,63 @@ namespace vidre
         }
 
         _recordingStatus = RecordingStatus::RecordingFine;
-        uint32_t expectedFrameID = 0;
+        int64_t expectedFrameID = 0;
         bool firstFrame = true;
 
+        auto* semaphore = _buffer->getSemaphore();
+
         while (_camera->IsRunning()) {
+            if (!semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
+                continue;
+            }
+
             const auto [result, header] = _buffer->pop();
             if (result == nullptr) {
                 continue;
             }
-            
+
+            const int64_t frameID = header->frameID.load(std::memory_order_relaxed);
+
             if (firstFrame) {
-                expectedFrameID = header->frameID;
+                expectedFrameID = frameID;
                 firstFrame = false;
-            } else if (header->frameID > expectedFrameID) {
+            } else if (frameID > expectedFrameID) {
                 _recordingStatus = RecordingStatus::RecordingDroppedFrames;
             }
-            expectedFrameID = header->frameID + 1;
+            expectedFrameID = frameID + 1;
 
             _latestFrameData = static_cast<uint8_t*>(result);
             _currentFrame++;
-           
-            _storage->appendFrame(static_cast<const void *>(result));
-            _storage->appendTail(header->frameID, header->timeStamp, header->computerTimeStamp);
 
-            if (_saveTIFF) {
-                _storage->save(static_cast<const void *>(result), header->frameID);
+            _storage->appendFrame(static_cast<const void *>(result));
+            _storage->appendTail(static_cast<uint32_t>(frameID), header->timeStamp, header->computerTimeStamp);
+        }
+
+        while (semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
+            const auto [result, header] = _buffer->pop();
+            if (result == nullptr) {
+                continue;
             }
+
+            const int64_t frameID = header->frameID.load(std::memory_order_relaxed);
+
+            if (firstFrame) {
+                expectedFrameID = frameID;
+                firstFrame = false;
+            } else if (frameID > expectedFrameID) {
+                _recordingStatus = RecordingStatus::RecordingDroppedFrames;
+            }
+            expectedFrameID = frameID + 1;
+
+            _latestFrameData = static_cast<uint8_t*>(result);
+            _currentFrame++;
+
+            _storage->appendFrame(static_cast<const void *>(result));
+            _storage->appendTail(static_cast<uint32_t>(frameID), header->timeStamp, header->computerTimeStamp);
+        }
+
+        if (_camera->HadError()) {
+            _recordingStatus = RecordingStatus::RecordingError;
         }
 
         _storage->updateHeader(_buffer->getSavedFramesNumber());
@@ -124,20 +157,39 @@ namespace vidre
         std::cout << "SAVED : " << _buffer->getSavedFramesNumber() << std::endl;
     }
 
-    void RuntimeInstance::showFrames() { // showing is implemented in app, otherwise -> run + ccv_tools
+    void RuntimeInstance::showFrames() {
         while (!_camera->IsRunning()) {
             std::this_thread::yield();
         }
 
         _recordingStatus = RecordingStatus::Streaming;
 
+        auto* semaphore = _buffer->getSemaphore();
+
         while (_camera->IsRunning()) {
+            if (!semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
+                continue;
+            }
+
             const auto [result, header] = _buffer->pop();
             if (result == nullptr) {
                 continue;
             }
             _currentFrame++;
             _latestFrameData = static_cast<uint8_t*>(result);
+        }
+
+        while (semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
+            const auto [result, header] = _buffer->pop();
+            if (result == nullptr) {
+                continue;
+            }
+            _currentFrame++;
+            _latestFrameData = static_cast<uint8_t*>(result);
+        }
+
+        if (_camera->HadError()) {
+            _recordingStatus = RecordingStatus::RecordingError;
         }
     }
 
@@ -195,7 +247,9 @@ namespace vidre
         }
         
         _camera->Disarm();
-        _recordingStatus = RecordingStatus::Stopped;
+        if (_recordingStatus != RecordingStatus::RecordingError) {
+            _recordingStatus = RecordingStatus::Stopped;
+        }
 
         resetForNextRun();
     }
@@ -223,10 +277,6 @@ namespace vidre
     }
     bool RuntimeInstance::isRunning() {
         return _camera && _camera->IsRunning();
-    }
-
-    RecordingStatus RuntimeInstance::getRecordingStatus() {
-        return _recordingStatus;
     }
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <semaphore>
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <core/storage/storage.hpp>
@@ -39,7 +40,7 @@ namespace vidre {
         virtual bool IsArmed() = 0;
         virtual bool IsRunning() = 0;
 
-        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name) = 0;
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name, std::counting_semaphore<>* frameSemaphore) = 0;
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
         // Idea: Custom functions for different filetypes.
@@ -72,5 +73,7 @@ namespace vidre {
         virtual void SetTriggerOut(unsigned int line) = 0;
 
         virtual uint8_t* RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) = 0;
+
+        virtual bool HadError() { return false; }
     };
 }  // namespace vidre
