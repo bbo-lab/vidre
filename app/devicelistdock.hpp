@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QTreeWidget>
 #include <QVBoxLayout>
+#include <QMenu>
+#include <QAction>
 #include <unordered_map>
 #include <memory>
 
@@ -22,13 +24,27 @@ public:
 
 signals:
     void deviceDoubleClicked(const QString& deviceName);
+    void deviceRecordRequested(const QString& deviceName);
+    void deviceShowRequested(const QString& deviceName);
+    void deviceStopRequested(const QString& deviceName);
 
 private slots:
     void onItemDoubleClicked(QTreeWidgetItem* item, int column);
+    void onContextMenu(const QPoint& pos);
+    void onRecordAction();
+    void onShowAction();
+    void onStopAction();
 
 private:
     QTreeWidget *treeWidget_;
+    QMenu *contextMenu_;
+    QAction *recordAction_;
+    QAction *showAction_;
+    QAction *stopAction_;
+    QString contextMenuItemName_;
     void setupUI();
+    static QString statusToString(vidre::RecordingStatus status);
+    static QColor statusToColor(vidre::RecordingStatus status);
 };
 
 #endif // DEVICELISTDOCK_HPP

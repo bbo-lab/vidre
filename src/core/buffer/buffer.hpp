@@ -31,6 +31,7 @@ namespace vidre {
         }
 
         int getSavedFramesNumber();
+        int getDroppedFrames() { return _droppedFrames; }
         void reset();
 
         std::pair<void*, SharedFrameHeader*> pop();
@@ -39,6 +40,7 @@ namespace vidre {
         int _bufferSize = 0;
         int64_t _lastConsumedFrameID = 0;
         int _consumedFrames = 0;
+        int _droppedFrames = 0;
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         std::unique_ptr<std::vector<void *>> _sharedMemoryPtrs;
         std::unique_ptr<std::counting_semaphore<>> _frameSemaphore;

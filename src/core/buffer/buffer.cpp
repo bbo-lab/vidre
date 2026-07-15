@@ -38,7 +38,9 @@ namespace vidre {
         }
 
         if (frameID > _lastConsumedFrameID + 1) {
-            std::cerr << " WARNING: dropped " << (frameID - _lastConsumedFrameID - 1)
+            int dropped = static_cast<int>(frameID - _lastConsumedFrameID - 1);
+            _droppedFrames += dropped;
+            std::cerr << " WARNING: dropped " << dropped
                       << " frame(s) before frame " << frameID << "\n";
         }
 
@@ -56,6 +58,7 @@ namespace vidre {
         _nextFrameToPop = 0;
         _lastConsumedFrameID = 0;
         _consumedFrames = 0;
+        _droppedFrames = 0;
 
         if (_sharedMemoryPtrs) {
             std::fill(_sharedMemoryPtrs->begin(), _sharedMemoryPtrs->end(), nullptr);

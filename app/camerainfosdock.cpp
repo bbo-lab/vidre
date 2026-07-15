@@ -242,6 +242,16 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
         
         info += QString("  Armed: %1\n").arg(camera->IsArmed() ? "Yes" : "No");
         info += QString("  Running: %1\n").arg(camera->IsRunning() ? "Yes" : "No");
+        
+        info += "\n";
+        
+        info += "Recording Stats:\n";
+        int saved = runtimeInstance->getSavedFramesNumber();
+        int dropped = runtimeInstance->getDroppedFrames();
+        info += QString("  Saved Frames: %1\n").arg(saved);
+        info += QString("  Dropped Frames: %1\n").arg(dropped);
+    } else {
+        info += "Camera: Not available\n";
     }
     
     info += QString("  Last Update: %1\n")

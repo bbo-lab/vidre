@@ -11,6 +11,8 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <streambuf>
+#include <mutex>
 
 #include <core/runtime/runtime.hpp>
 
@@ -21,6 +23,21 @@ QT_END_NAMESPACE
 class DeviceListDock;
 class CameraWidget;
 class CameraInfosDock;
+
+class LogStreamBuffer : public std::streambuf {
+public:
+    explicit LogStreamBuffer(QTextEdit* textEdit);
+    ~LogStreamBuffer();
+protected:
+    std::streambuf::int_type overflow(std::streambuf::int_type ch) override;
+    int sync() override;
+private:
+    QTextEdit* textEdit_;
+    std::string buffer_;
+    std::mutex mutex_;
+    std::streambuf* oldCout_;
+    std::streambuf* oldCerr_;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -45,6 +62,9 @@ private slots:
     void onStopAllClicked();
     void onRefreshDevicesClicked();
     void onDeviceDoubleClicked(const QString& deviceName);
+    void onDeviceRecordRequested(const QString& deviceName);
+    void onDeviceShowRequested(const QString& deviceName);
+    void onDeviceStopRequested(const QString& deviceName);
     void onCameraWindowClosed(const QString& cameraName);
     void onCameraWindowActivated(const QString& cameraName);
     void updateCameraStatus();
@@ -60,7 +80,8 @@ private:
     QTextEdit *logTextEdit_;
     QLabel *statusIndicator_;
     CameraInfosDock *cameraInfosDock_;
-    
+    LogStreamBuffer *logStreamBuffer_;
+
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras_;
     std::unordered_map<QString, CameraWidget*> cameraWidgets_;
     QTimer *statusTimer_;

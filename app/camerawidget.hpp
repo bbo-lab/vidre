@@ -41,12 +41,12 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
     void onStartClicked();
     void onStopClicked();
     void onShowClicked();
-    void onSingleGrabClicked();
     void onToggleDockClicked();
     void updateFrame();
 
@@ -58,7 +58,6 @@ private:
     QPushButton *startButton_;
     QPushButton *stopButton_;
     QPushButton *showButton_;
-    QPushButton *singleGrabButton_;
     QPushButton *undockButton_;
     QLabel *statusLabel_;
     QLabel *imageLabel_;

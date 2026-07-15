@@ -70,8 +70,16 @@ namespace vidre {
             return _storageBitsPerPixel;
         }
 
+        int getDroppedFrames() {
+            return _buffer ? _buffer->getDroppedFrames() : 0;
+        }
+
+        int getSavedFramesNumber() {
+            return _buffer ? _buffer->getSavedFramesNumber() : 0;
+        }
+
         std::string getOutputFileName() {
-            return _storage->getOutputFileName();
+            return _storage ? _storage->getOutputFileName() : "";
         }
 
         private:
