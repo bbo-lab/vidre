@@ -35,7 +35,9 @@ public:
     void setLibraryPathsFromCommandLine(const QString& aptinaLibraryPath,
                                         const QString& pylonLibraryPath,
                                         const QString& aptinaBaseLibraryPath,
-                                        const QString& pylonBaseLibraryPath);
+                                        const QString& pylonBaseLibraryPath,
+                                        const QString& storageMode,
+                                        const QString& storageEndpoint);
 
 private slots:
     void onLoadConfigClicked();
@@ -69,6 +71,8 @@ private:
     std::string pylonLibraryPath_;
     std::string aptinaBaseLibraryPath_;
     std::string pylonBaseLibraryPath_;
+    vidre::TransportMode transportMode_ = vidre::TransportMode::LocalStorage;
+    std::string storageEndpoint_;
     bool aptinaLibraryPathCliOverride_ = false;
     bool pylonLibraryPathCliOverride_ = false;
     bool aptinaBaseLibraryPathCliOverride_ = false;

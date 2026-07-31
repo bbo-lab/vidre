@@ -67,20 +67,8 @@ namespace vidre
         _frameSink = std::move(frameSink);
     }
 
-    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format, uint64_t bits_per_pixel, uint8_t packed) {
-        if (_camera == nullptr) {
-            std::cout << "Camera is not set \n";
-            return;
-        }
-
-        // Store params for recreating on subsequent runs
-        _storageOutputFileName = output_file_name;
-        _storageHeaderFormat = header_format;
-        _storageBitsPerPixel = bits_per_pixel;
-        _storagePacked = packed;
-        _storageConfigured = true;
-        
-        vidre::Config cameraConfig{};
+    Config RuntimeInstance::buildCameraConfig(uint64_t bits_per_pixel, uint8_t packed) const {
+        Config cameraConfig{};
         cameraConfig.paddingX = _camera->GetFrameOffsetX();
         cameraConfig.width = _camera->GetFrameWidth();
         cameraConfig.height = _camera->GetFrameHeight();
@@ -92,8 +80,31 @@ namespace vidre
         cameraConfig.cameraVendor = _camera->GetVendorName();
         cameraConfig.bitsPerPixel = bits_per_pixel;
         cameraConfig.packed = packed;
+        return cameraConfig;
+    }
 
-        _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
+    void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format, uint64_t bits_per_pixel, uint8_t packed) {
+        if (_camera == nullptr) {
+            std::cout << "Camera is not set \n";
+            return;
+        }
+
+        // Store params for recreating on subsequent runs
+        _storageOutputFileName = output_file_name;
+        _storageHeaderFormat = header_format;
+        _storageBitsPerPixel = bits_per_pixel;
+        _storagePacked = packed;
+        _runtimeConfigured = true;
+        _localStorageEnabled = !_storageOutputFileName.empty();
+        
+        const auto cameraConfig = buildCameraConfig(bits_per_pixel, packed);
+
+        _storage.reset();
+        _buffer.reset();
+
+        if (_localStorageEnabled) {
+            _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format, output_file_name);
+        }
 
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
 
@@ -106,11 +117,13 @@ namespace vidre
             baseEnvelope.height = cameraConfig.height;
             baseEnvelope.bitsPerPixel = bits_per_pixel;
             _frameSink = std::make_unique<RemoteStorageSink>(_storageEndpoint, std::move(baseEnvelope));
-        } else if (!_frameSink) {
+        } else if (_localStorageEnabled && _storage) {
             _frameSink = std::make_unique<LocalStorageSink>(*_storage);
+        } else {
+            _frameSink.reset();
         }
 
-        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), cameraConfig.serialNumber);
     }
 
 
@@ -179,11 +192,11 @@ namespace vidre
         }
 
         // Recreate storage and buffer if they were cleaned up from a previous run
-        if (!_storage || !_buffer) {
+        if (!_buffer) {
             recreateStorageAndBuffer();
         }
 
-        if (_storage == nullptr || _buffer == nullptr) {
+        if (_buffer == nullptr) {
             return;
         }
 
@@ -202,11 +215,11 @@ namespace vidre
             return;
         }
 
-        if (!_storage || !_buffer) {
+        if (!_buffer) {
             recreateStorageAndBuffer();
         }
 
-        if (_storage == nullptr || _buffer == nullptr) {
+        if (_buffer == nullptr) {
             return;
         }
 
@@ -244,12 +257,12 @@ namespace vidre
     }
 
     void RuntimeInstance::recreateStorageAndBuffer() {
-        if (!_storageConfigured || !_camera) {
+        if (!_runtimeConfigured || !_camera) {
             return;
         }
 
         // Recreate storage and buffer fresh for the new run
-        createStorage(_storageOutputFileName, _storageHeaderFormat, _storageBitsPerPixel, _storagePacked);
+        createStorage(_localStorageEnabled ? _storageOutputFileName : std::string(), _storageHeaderFormat, _storageBitsPerPixel, _storagePacked);
     }
 
     bool RuntimeInstance::checkCamera() {

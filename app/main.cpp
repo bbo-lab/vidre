@@ -68,6 +68,9 @@ int main(int argc, char *argv[])
     parser.addOption(headlessOption);
     
     parser.process(app);
+
+    const QString storageModeValue = parser.isSet(storageModeOption) ? parser.value(storageModeOption) : QString();
+    const QString storageEndpointValue = parser.isSet(storageEndpointOption) ? parser.value(storageEndpointOption) : QString();
     
     if (parser.isSet(headlessOption)) {
         if (!parser.isSet(configOption)) {
@@ -85,14 +88,14 @@ int main(int argc, char *argv[])
         loaderOptions.aptinaBaseLibraryPathCliOverride = parser.isSet(aptinaBaseLibraryOption);
         loaderOptions.pylonBaseLibraryPathCliOverride = parser.isSet(pylonBaseLibraryOption);
 
-        if (parser.isSet(storageModeOption)) {
-            const auto storageMode = parser.value(storageModeOption).toLower();
+        if (!storageModeValue.isEmpty()) {
+            const auto storageMode = storageModeValue.toLower();
             if (storageMode == "remote") {
                 loaderOptions.transportMode = vidre::TransportMode::RemoteStorage;
             }
         }
-        if (parser.isSet(storageEndpointOption)) {
-            loaderOptions.storageEndpoint = parser.value(storageEndpointOption).toStdString();
+        if (!storageEndpointValue.isEmpty()) {
+            loaderOptions.storageEndpoint = storageEndpointValue.toStdString();
         }
 
         auto cameras = vidre::LoadSystemSetup(
@@ -120,7 +123,9 @@ int main(int argc, char *argv[])
         parser.isSet(aptinaLibraryOption) ? parser.value(aptinaLibraryOption) : QString(),
         parser.isSet(pylonLibraryOption) ? parser.value(pylonLibraryOption) : QString(),
         parser.isSet(aptinaBaseLibraryOption) ? parser.value(aptinaBaseLibraryOption) : QString(),
-        parser.isSet(pylonBaseLibraryOption) ? parser.value(pylonBaseLibraryOption) : QString());
+        parser.isSet(pylonBaseLibraryOption) ? parser.value(pylonBaseLibraryOption) : QString(),
+        storageModeValue,
+        storageEndpointValue);
     window.show();
 
     if (parser.isSet(configOption)) {

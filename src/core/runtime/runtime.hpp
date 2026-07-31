@@ -81,15 +81,17 @@ namespace vidre {
         bool _presentFrame = false;
         uint8_t* _latestFrameData = nullptr;
         RecordingStatus _recordingStatus = RecordingStatus::Stopped;
+        bool _runtimeConfigured = false;
+        bool _localStorageEnabled = false;
 
         // Stored parameters for recreating storage/buffer on subsequent runs
         std::string _storageOutputFileName;
         std::string _storageHeaderFormat;
         uint64_t _storageBitsPerPixel = 8;
         uint8_t _storagePacked = 0;
-        bool _storageConfigured = false;
 
         void resetForNextRun();
         void recreateStorageAndBuffer();
+        Config buildCameraConfig(uint64_t bits_per_pixel, uint8_t packed) const;
     };
 }  // namespace vidre

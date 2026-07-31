@@ -207,15 +207,32 @@ std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSys
 					continue;
 				}
 
-				if (it->second["storage"]) {
-					auto storage_config = it->second["storage"];
-					auto output_file = storage_config["output_file"].as<std::string>();
-					auto header_format = storage_config["header"].as<std::string>();
-					auto bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
-					auto packed = storage_config["packed"].as<uint8_t>();
+				std::string output_file;
+				std::string header_format = "ccv";
+				uint64_t bits_per_pixel = 8;
+				uint8_t packed = 0;
 
-					cameras[cameraName]->createStorage(output_file, header_format, bits_per_pixel, packed);
+				if (it->second["storage"] && it->second["storage"].IsMap()) {
+					auto storage_config = it->second["storage"];
+					if (storage_config["output_file"] && storage_config["output_file"].IsScalar()) {
+						output_file = storage_config["output_file"].as<std::string>();
+					}
+					if (storage_config["header"] && storage_config["header"].IsScalar()) {
+						header_format = storage_config["header"].as<std::string>();
+					}
+					if (storage_config["bits_per_pixel"] && storage_config["bits_per_pixel"].IsScalar()) {
+						bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
+					}
+					if (storage_config["packed"] && storage_config["packed"].IsScalar()) {
+						packed = storage_config["packed"].as<uint8_t>();
+					}
+				}
+
+				cameras[cameraName]->createStorage(output_file, header_format, bits_per_pixel, packed);
+				if (!output_file.empty()) {
 					logOrIgnore(logMessage, "Configured storage for " + cameraName + ": " + output_file);
+				} else if (options.transportMode == TransportMode::RemoteStorage) {
+					logOrIgnore(logMessage, "Configured remote frame transport for " + cameraName);
 				}
 			}
 		}

@@ -51,7 +51,9 @@ MainWindow::~MainWindow()
 void MainWindow::setLibraryPathsFromCommandLine(const QString& aptinaLibraryPath,
                                                 const QString& pylonLibraryPath,
                                                 const QString& aptinaBaseLibraryPath,
-                                                const QString& pylonBaseLibraryPath)
+                                                const QString& pylonBaseLibraryPath,
+                                                const QString& storageMode,
+                                                const QString& storageEndpoint)
 {
     if (!aptinaLibraryPath.isEmpty()) {
         aptinaLibraryPath_ = aptinaLibraryPath.toStdString();
@@ -72,6 +74,17 @@ void MainWindow::setLibraryPathsFromCommandLine(const QString& aptinaLibraryPath
         pylonBaseLibraryPath_ = pylonBaseLibraryPath.toStdString();
         pylonBaseLibraryPathCliOverride_ = true;
         logMessage(QString("CLI override: pylon base library path = %1").arg(pylonBaseLibraryPath));
+    }
+
+    if (!storageMode.isEmpty()) {
+        const auto mode = storageMode.toLower();
+        transportMode_ = (mode == "remote") ? vidre::TransportMode::RemoteStorage : vidre::TransportMode::LocalStorage;
+        logMessage(QString("CLI override: storage mode = %1").arg(storageMode));
+    }
+
+    if (!storageEndpoint.isEmpty()) {
+        storageEndpoint_ = storageEndpoint.toStdString();
+        logMessage(QString("CLI override: storage endpoint = %1").arg(storageEndpoint));
     }
 }
 
@@ -220,6 +233,8 @@ void MainWindow::loadConfigFile(const QString& filename)
     loaderOptions.pylonLibraryPathCliOverride = pylonLibraryPathCliOverride_;
     loaderOptions.aptinaBaseLibraryPathCliOverride = aptinaBaseLibraryPathCliOverride_;
     loaderOptions.pylonBaseLibraryPathCliOverride = pylonBaseLibraryPathCliOverride_;
+    loaderOptions.transportMode = transportMode_;
+    loaderOptions.storageEndpoint = storageEndpoint_;
 
     cameras_ = vidre::LoadSystemSetup(
         filename.toStdString(),
