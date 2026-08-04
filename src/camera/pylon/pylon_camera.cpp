@@ -45,10 +45,6 @@ namespace vidre {
             result->frameID.store(currentPtrGrabResult->GetImageNumber(), std::memory_order_release);
 
             latestFrame.store(result, std::memory_order_release);
-
-            if (frameSemaphore) {
-                frameSemaphore->release();
-            }
         }
 
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
@@ -107,7 +103,6 @@ namespace vidre {
         armed.store(false);
         shrBufferFactory.Reset();
         retrievedFramesNumber = 0;
-        frameSemaphore = nullptr;
         latestFrame.store(nullptr, std::memory_order_release);
     }
     void PylonCamera::Start() {
@@ -363,10 +358,9 @@ namespace vidre {
         return true;
     }
 
-    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name, std::counting_semaphore<>* semaphore)
+    void PylonCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
         shrBufferFactory.SetSharedMemory(sharedMemory, ptrs, memory_name);
-        frameSemaphore = semaphore;
     }
 
     uint8_t* PylonCamera::RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) {

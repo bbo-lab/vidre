@@ -1,9 +1,12 @@
 #pragma once
 
 #include <atomic>
-#include <thread>
+#include <cstdint>
+#include <functional>
 #include <string>
-#include <iostream>
+#include <thread>
+#include <tuple>
+#include <vector>
 
 #include <core/storage/storage.hpp>
 #include <core/buffer/buffer.hpp>
@@ -23,7 +26,6 @@ namespace vidre {
     class RuntimeInstance {
     public:
         RuntimeInstance() = default;
-        RuntimeInstance(std::string configuration, std::string header_format = "ccv");
         ~RuntimeInstance() = default;
 
         void retrieveFramesWithSave();
@@ -39,15 +41,19 @@ namespace vidre {
 
         bool isRunning();
 
+        void setPreviewRequested(bool requested) {
+            _previewRequested.store(requested, std::memory_order_relaxed);
+        }
+
         RecordingStatus getRecordingStatus() {
             return _recordingStatus.load(std::memory_order_relaxed);
         }
 
         ICamera* getCamera() { return _camera.get(); }
 
-        unsigned int getFrameWidth() { return _camera ? _camera->GetFrameWidth() : 0; }
-        unsigned int getFrameHeight() { return _camera ? _camera->GetFrameHeight() : 0; }
-        unsigned int getFrameBytes() { return _camera ? _camera->GetFrameBytes() : 0; }
+        unsigned int getFrameWidth() { return _frameWidth ? _frameWidth : (_camera ? _camera->GetFrameWidth() : 0); }
+        unsigned int getFrameHeight() { return _frameHeight ? _frameHeight : (_camera ? _camera->GetFrameHeight() : 0); }
+        unsigned int getFrameBytes() { return _frameBytes ? _frameBytes : (_camera ? _camera->GetFrameBytes() : 0); }
 
         std::tuple<const uint8_t*, int, int, int> getLatestFrame() {
             if (!_camera) {
@@ -58,7 +64,7 @@ namespace vidre {
             if (!data) {
                 return {nullptr, 0, 0, 0};
             }
-            if (_camera->GetVendorName() == "aptina") {
+            if (_isAptinaVendor) {
                 uint32_t rgbWidth, rgbHeight, rgbBitDepth;
                 unsigned char *pRGB = _camera->RGBFrame(data, &rgbWidth, &rgbHeight, &rgbBitDepth);
                 return {pRGB, rgbWidth, rgbHeight, frame};
@@ -88,9 +94,9 @@ namespace vidre {
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;
         std::unique_ptr<Buffer> _buffer;
-        bool _presentFrame = false;
         std::atomic<uint8_t*> _latestFrameData{nullptr};
         std::atomic<RecordingStatus> _recordingStatus{RecordingStatus::Stopped};
+        std::atomic<bool> _previewRequested{false};
 
         std::string _storageOutputFileName;
         std::string _storageHeaderFormat;
@@ -98,6 +104,18 @@ namespace vidre {
         uint8_t _storagePacked = 0;
         bool _storageConfigured = false;
 
+        unsigned int _frameWidth = 0;
+        unsigned int _frameHeight = 0;
+        unsigned int _frameBytes = 0;
+        unsigned int _slotBytes = 0;
+        bool _isAptinaVendor = false;
+
+        std::vector<uint8_t> _previewBuffer;
+        uint8_t* _previewData = nullptr;
+
+        void processFrame(void* result, const SharedFrameHeader* header);
+        void consumeFrames(const std::function<void(void*, const SharedFrameHeader*)>& onFrame);
+        void publishFrame(void* result);
         void resetForNextRun();
         void recreateStorageAndBuffer();
     };

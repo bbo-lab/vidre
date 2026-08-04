@@ -1,7 +1,6 @@
 #include <core/buffer/buffer.hpp>
 #include <core/storage/storage.hpp>
 
-#include <limits>
 #include <iostream>
 
 namespace vidre {
@@ -17,8 +16,6 @@ namespace vidre {
             boost::interprocess::create_only, config.serialNumber.c_str(), capacity);
 
         _sharedMemoryPtrs = std::make_unique<std::vector<void *>>(_bufferSize, nullptr);
-
-        _frameSemaphore = std::make_unique<std::counting_semaphore<>>(0);
     }
 
     std::pair<void*, SharedFrameHeader*> Buffer::pop() {
@@ -48,10 +45,6 @@ namespace vidre {
         _consumedFrames++;
 
         return {static_cast<uint8_t*>(buffer_ptr) + sizeof(SharedFrameHeader), header};
-    }
-
-    int Buffer::getSavedFramesNumber() {
-        return _consumedFrames;
     }
 
     void Buffer::reset() {

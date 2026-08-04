@@ -156,6 +156,7 @@ namespace vidre {
     void vidre::CamCommandoHeader::writeTail(DiskWriter& out_file, const CCVFrameTail& tail) {
         out_file.write(&tail.frameIndex, sizeof(tail.frameIndex));
         out_file.write(&tail.timeStamp, sizeof(tail.timeStamp));
-        out_file.write(tail.padding, sizeof(tail.padding));
+        out_file.write(&tail.computerTimeStamp, sizeof(tail.computerTimeStamp));
+        out_file.write(tail.reserved, sizeof(tail.reserved));
     }
 }

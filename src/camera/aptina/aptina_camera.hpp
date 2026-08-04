@@ -25,7 +25,7 @@ namespace vidre {
         virtual bool IsArmed() override;
         virtual bool IsRunning() override;
 
-        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name, std::counting_semaphore<>* frameSemaphore) override;
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name) override;
         virtual const SharedFrameHeader *RetrieveLatestFrame() override;
 
         virtual bool SaveConfiguration(std::string filepath) override;
@@ -70,8 +70,6 @@ namespace vidre {
         std::atomic<bool> _hadError{false};
 
         std::atomic<SharedFrameHeader *> latestFrame;
-
-        std::counting_semaphore<>* frameSemaphore = nullptr;
 
         int64_t retrievedFramesNumber = 0;
 

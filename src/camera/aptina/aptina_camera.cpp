@@ -63,10 +63,6 @@ namespace vidre {
             header->frameID.store(retrievedFramesNumber, std::memory_order_release);
 
             latestFrame.store(header, std::memory_order_release);
-
-            if (frameSemaphore) {
-                frameSemaphore->release();
-            }
         }
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
         running.store(false);
@@ -114,7 +110,6 @@ namespace vidre {
     void AptinaCamera::Disarm() {
         _buffer.Reset();
         retrievedFramesNumber = 0;
-        frameSemaphore = nullptr;
         latestFrame.store(nullptr, std::memory_order_release);
     }
     void AptinaCamera::Start() {
@@ -386,10 +381,9 @@ namespace vidre {
         return true;
     }
 
-    void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name, std::counting_semaphore<>* semaphore)
+    void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
         _buffer.SetSharedMemory(sharedMemory, ptrs, memory_name);
-        frameSemaphore = semaphore;
 
         for (int i = 0; i < _buffer_num; ++i) {
             _buffer.AllocateBuffer(_buffer_size_min);

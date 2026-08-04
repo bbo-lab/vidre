@@ -1,4 +1,5 @@
 #include "devicelistdock.hpp"
+#include "status_mapping.hpp"
 #include <QHeaderView>
 #include <QIcon>
 
@@ -72,30 +73,6 @@ void DeviceListDock::setupUI()
     setLayout(layout);
 }
 
-QString DeviceListDock::statusToString(vidre::RecordingStatus status)
-{
-    switch (status) {
-        case vidre::RecordingStatus::RecordingFine:           return "Recording";
-        case vidre::RecordingStatus::RecordingDroppedFrames:  return "Rec (Dropped)";
-        case vidre::RecordingStatus::RecordingError:          return "Rec (Error)";
-        case vidre::RecordingStatus::Streaming:               return "Streaming";
-        case vidre::RecordingStatus::Stopped:                 return "Stopped";
-        default:                                              return "Unknown";
-    }
-}
-
-QColor DeviceListDock::statusToColor(vidre::RecordingStatus status)
-{
-    switch (status) {
-        case vidre::RecordingStatus::RecordingFine:           return QColor(0, 200, 0);
-        case vidre::RecordingStatus::RecordingDroppedFrames:  return QColor(220, 180, 0);
-        case vidre::RecordingStatus::RecordingError:          return QColor(220, 40, 40);
-        case vidre::RecordingStatus::Streaming:               return QColor(60, 140, 220);
-        case vidre::RecordingStatus::Stopped:                 return QColor(200, 100, 0);
-        default:                                              return QColor(150, 150, 150);
-    }
-}
-
 void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras)
 {
     treeWidget_->clear();
@@ -109,8 +86,8 @@ void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std:
         item->setText(0, QString::fromStdString(cam.first));
         
         auto status = cam.second->getRecordingStatus();
-        item->setText(1, statusToString(status));
-        item->setForeground(1, QBrush(statusToColor(status)));
+        item->setText(1, status_mapping::toString(status));
+        item->setForeground(1, QBrush(status_mapping::toColor(status)));
         
         QString vendor = "Unknown";
         QString camVendorName = QString::fromStdString(cam.second->getCamera()->GetVendorName()).toLower();
@@ -136,8 +113,8 @@ void DeviceListDock::updateDeviceStatus(const std::unordered_map<std::string, st
         auto it = cameras.find(deviceName.toStdString());
         if (it != cameras.end() && it->second) {
             auto status = it->second->getRecordingStatus();
-            item->setText(1, statusToString(status));
-            item->setForeground(1, QBrush(statusToColor(status)));
+            item->setText(1, status_mapping::toString(status));
+            item->setForeground(1, QBrush(status_mapping::toColor(status)));
         }
     }
 }

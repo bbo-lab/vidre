@@ -1,2 +1,2 @@
-# add_subdirectory(config_loader)
+add_subdirectory(config_loader)
 add_subdirectory(dynamic_loader)

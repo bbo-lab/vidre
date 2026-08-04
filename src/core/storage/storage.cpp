@@ -14,9 +14,14 @@ namespace vidre {
     {
         _config = config; 
 
-        // todo: enum
-        _headerFormat = header_format;
-        if (_headerFormat == "ccv") {
+        if (header_format == "ccv") {
+            _headerFormat = HeaderFormat::CCV;
+            _header = std::make_unique<CamCommandoHeader>(config);
+        }
+
+        if (!_header) {
+            std::cerr << "Unknown header format: " << header_format << ", falling back to ccv\n";
+            _headerFormat = HeaderFormat::CCV;
             _header = std::make_unique<CamCommandoHeader>(config);
         }
 
@@ -43,18 +48,13 @@ namespace vidre {
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp) {
-        if (_headerFormat == "ccv") {
-            vidre::CCVFrameTail tail{};
-            tail.frameIndex = frame_idx;
-            tail.timeStamp = time_stamp;
-            tail.timeStamp /= 1e9;
+        CCVFrameTail tail{};
+        tail.frameIndex = frame_idx;
+        tail.timeStamp = time_stamp;
+        tail.timeStamp /= (_config.cameraVendor == "basler") ? 1e9 : 1e3;
+        tail.computerTimeStamp = computer_time_stamp;
 
-            for (size_t i = 0; i < sizeof(int64_t) && i < sizeof(tail.padding); i++) {
-                tail.padding[i] = static_cast<uint8_t>((computer_time_stamp >> (i * 8)) & 0xFF);
-            }
-            
-            _header->writeTail<CamCommandoHeader>(output_file, tail);
-        }
+        _header->writeTail(output_file, tail);
     }
 
     void Storage::initiateHeader() { // todo -> start all unified time  for all cameras

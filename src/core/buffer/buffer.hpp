@@ -5,8 +5,8 @@
 #include <core/runtime/shared_frame_header.hpp>
 #include <config.h>
 
+#include <atomic>
 #include <memory>
-#include <semaphore>
 #include <vector>
 
 namespace vidre {
@@ -26,12 +26,18 @@ namespace vidre {
             return _sharedMemory.get();
         }
 
-        std::counting_semaphore<>* getSemaphore() {
-            return _frameSemaphore.get();
+        int getSavedFramesNumber() {
+            return _consumedFrames.load(std::memory_order_relaxed);
         }
 
-        int getSavedFramesNumber();
-        int getDroppedFrames() { return _droppedFrames; }
+        int getDroppedFrames() {
+            return _droppedFrames.load(std::memory_order_relaxed);
+        }
+
+        int numSlots() {
+            return _bufferSize;
+        }
+
         void reset();
 
         std::pair<void*, SharedFrameHeader*> pop();
@@ -39,10 +45,9 @@ namespace vidre {
         int _nextFrameToPop = 0;
         int _bufferSize = 0;
         int64_t _lastConsumedFrameID = 0;
-        int _consumedFrames = 0;
-        int _droppedFrames = 0;
+        std::atomic<int> _consumedFrames{0};
+        std::atomic<int> _droppedFrames{0};
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         std::unique_ptr<std::vector<void *>> _sharedMemoryPtrs;
-        std::unique_ptr<std::counting_semaphore<>> _frameSemaphore;
     };
 }  // namespace vidre

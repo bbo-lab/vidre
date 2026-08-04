@@ -43,8 +43,6 @@ private:
     QAction *stopAction_;
     QString contextMenuItemName_;
     void setupUI();
-    static QString statusToString(vidre::RecordingStatus status);
-    static QColor statusToColor(vidre::RecordingStatus status);
 };
 
 #endif // DEVICELISTDOCK_HPP

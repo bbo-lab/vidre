@@ -36,7 +36,8 @@ namespace vidre {
     struct CCVFrameTail {
         uint32_t frameIndex;
         double timeStamp;
-        uint8_t padding[9]; //   use part of 9 bytes to add computer timestamp;
+        int64_t computerTimeStamp;
+        uint8_t reserved[1];
     };
 
     class CamCommandoHeader : public IHeader {
@@ -46,7 +47,7 @@ namespace vidre {
         virtual void initiateHeader(DiskWriter& out_file) override;
         virtual void updateHeader(DiskWriter& out_file, int frames) override;
         virtual void writeFrame(const void* buffer, DiskWriter& out_file) override;        
-        void writeTail(DiskWriter& out_file, const CCVFrameTail& tail);
+        void writeTail(DiskWriter& out_file, const CCVFrameTail& tail) override;
     
     private:
         std::vector<uint8_t> serializeHeader();

@@ -22,7 +22,8 @@ target_include_directories(vidre PUBLIC ${CMAKE_BINARY_DIR})
 target_link_libraries(vidre PUBLIC Boost::headers)
 target_link_libraries(vidre PUBLIC Boost::program_options)
 target_link_libraries(vidre PUBLIC Boost::filesystem)
-# target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
+find_package(yaml-cpp REQUIRED)
+target_link_libraries(vidre PUBLIC yaml-cpp::yaml-cpp)
 
 
 

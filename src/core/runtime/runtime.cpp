@@ -2,43 +2,13 @@
 #include <core/runtime/shared_frame_header.hpp>
 
 #include <chrono>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
 
 
 namespace vidre
 {
-    // RuntimeInstance::~RuntimeInstance() {
-    // }
-
-    // RuntimeInstance::RuntimeInstance(std::string configuration, std::string header_format) {
-    //     _camera = std::make_unique<vidre::PylonCamera>();
-
-    //     // Initialize and start the camera
-    //     _camera->Init();
-
-    //     if (!_camera->LoadConfiguration(configuration.c_str())) {
-    //         std::cout << "Could not load configuration file \"" << configuration << "\" \n";
-    //     }
-
-
-        
-    //     vidre::Config cameraConfig{};
-    //     cameraConfig.pixelType = Pylon::EPixelType::PixelType_Mono8;
-    //     cameraConfig.paddingX = _camera->GetFrameOffsetX();
-    //     cameraConfig.width = _camera->GetFrameWidth();
-    //     cameraConfig.height = _camera->GetFrameHeight();
-    //     cameraConfig.maxNumBuffer = _camera->GetMaxNumBuffer();
-    //     cameraConfig.frameRate =  _camera->GetFrameRate();
-    //     cameraConfig.serialNumber = _camera->GetSerialNumber();
-    //     cameraConfig.frameBytesActual = _camera->GetFrameBytes();
-    //     cameraConfig.frameBytesBuffer = _camera->GetBufferSize();
-
-    //     _storage = std::make_unique<vidre::Storage>(cameraConfig, header_format);
-
-    //     _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
-
-    //     _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
-    // }
-
     void RuntimeInstance::setCamera(std::unique_ptr<ICamera> camera) {
         if (_camera != nullptr) {
             std::cout << "Camera is set already \n";
@@ -51,6 +21,12 @@ namespace vidre
         }
 
         _camera = std::move(camera);
+
+        _frameWidth = _camera->GetFrameWidth();
+        _frameHeight = _camera->GetFrameHeight();
+        _frameBytes = _camera->GetFrameBytes();
+        _slotBytes = _camera->GetBufferSize();
+        _isAptinaVendor = (_camera->GetVendorName() == "aptina");
     }
 
     void RuntimeInstance::createStorage(std::string output_file_name, std::string header_format, uint64_t bits_per_pixel, uint8_t packed) {
@@ -83,9 +59,56 @@ namespace vidre
 
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
 
-        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber, _buffer->getSemaphore());
+        _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), _storage->getConfig().serialNumber);
     }
 
+    void RuntimeInstance::publishFrame(void* result) {
+        if (!_previewRequested.load(std::memory_order_relaxed) || _frameBytes == 0) {
+            _latestFrameData = nullptr;
+            return;
+        }
+
+        const size_t copyBytes = std::min<size_t>(_frameBytes, _slotBytes);
+        if (_previewBuffer.size() < copyBytes) {
+            _previewBuffer.resize(copyBytes);
+            _previewData = _previewBuffer.data();
+        }
+
+        std::memcpy(_previewData, result, copyBytes);
+        _latestFrameData = _previewData;
+    }
+
+    void RuntimeInstance::processFrame(void* result, const SharedFrameHeader* header) {
+        publishFrame(result);
+        _currentFrame++;
+
+        _storage->appendFrame(result);
+        _storage->appendTail(static_cast<uint32_t>(header->frameID.load(std::memory_order_relaxed)),
+                             header->timeStamp, header->computerTimeStamp);
+    }
+
+    void RuntimeInstance::consumeFrames(const std::function<void(void*, const SharedFrameHeader*)>& onFrame) {
+        while (_camera->IsRunning()) {
+            const auto [result, header] = _buffer->pop();
+            if (result == nullptr) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            }
+            onFrame(result, header);
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+        // Walk the whole ring once to drain every frame still physically present.
+        const int numSlots = _buffer->numSlots();
+        for (int i = 0; i < numSlots; ++i) {
+            const auto [result, header] = _buffer->pop();
+            if (result == nullptr) {
+                continue;
+            }
+            onFrame(result, header);
+        }
+    }
 
     void RuntimeInstance::retrieveFramesWithSave() {
         while (!_camera->IsRunning()) {
@@ -93,63 +116,15 @@ namespace vidre
         }
 
         _recordingStatus = RecordingStatus::RecordingFine;
-        int64_t expectedFrameID = 0;
-        bool firstFrame = true;
 
-        auto* semaphore = _buffer->getSemaphore();
-
-        while (_camera->IsRunning()) {
-            if (!semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
-                continue;
-            }
-
-            const auto [result, header] = _buffer->pop();
-            if (result == nullptr) {
-                continue;
-            }
-
-            const int64_t frameID = header->frameID.load(std::memory_order_relaxed);
-
-            if (firstFrame) {
-                expectedFrameID = frameID;
-                firstFrame = false;
-            } else if (frameID > expectedFrameID) {
-                _recordingStatus = RecordingStatus::RecordingDroppedFrames;
-            }
-            expectedFrameID = frameID + 1;
-
-            _latestFrameData = static_cast<uint8_t*>(result);
-            _currentFrame++;
-
-            _storage->appendFrame(static_cast<const void *>(result));
-            _storage->appendTail(static_cast<uint32_t>(frameID), header->timeStamp, header->computerTimeStamp);
-        }
-
-        while (semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
-            const auto [result, header] = _buffer->pop();
-            if (result == nullptr) {
-                continue;
-            }
-
-            const int64_t frameID = header->frameID.load(std::memory_order_relaxed);
-
-            if (firstFrame) {
-                expectedFrameID = frameID;
-                firstFrame = false;
-            } else if (frameID > expectedFrameID) {
-                _recordingStatus = RecordingStatus::RecordingDroppedFrames;
-            }
-            expectedFrameID = frameID + 1;
-
-            _latestFrameData = static_cast<uint8_t*>(result);
-            _currentFrame++;
-
-            _storage->appendFrame(static_cast<const void *>(result));
-            _storage->appendTail(static_cast<uint32_t>(frameID), header->timeStamp, header->computerTimeStamp);
-        }
+        consumeFrames([this](void* result, const SharedFrameHeader* header) {
+            processFrame(result, header);
+        });
 
         if (_camera->HadError()) {
             _recordingStatus = RecordingStatus::RecordingError;
+        } else if (_buffer->getDroppedFrames() > 0) {
+            _recordingStatus = RecordingStatus::RecordingDroppedFrames;
         }
 
         _storage->updateHeader(_buffer->getSavedFramesNumber());
@@ -164,29 +139,10 @@ namespace vidre
 
         _recordingStatus = RecordingStatus::Streaming;
 
-        auto* semaphore = _buffer->getSemaphore();
-
-        while (_camera->IsRunning()) {
-            if (!semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
-                continue;
-            }
-
-            const auto [result, header] = _buffer->pop();
-            if (result == nullptr) {
-                continue;
-            }
+        consumeFrames([this](void* result, const SharedFrameHeader*) {
+            publishFrame(result);
             _currentFrame++;
-            _latestFrameData = static_cast<uint8_t*>(result);
-        }
-
-        while (semaphore->try_acquire_for(std::chrono::milliseconds(100))) {
-            const auto [result, header] = _buffer->pop();
-            if (result == nullptr) {
-                continue;
-            }
-            _currentFrame++;
-            _latestFrameData = static_cast<uint8_t*>(result);
-        }
+        });
 
         if (_camera->HadError()) {
             _recordingStatus = RecordingStatus::RecordingError;

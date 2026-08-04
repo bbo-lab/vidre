@@ -1,5 +1,6 @@
 #include "camerawidget.hpp"
 #include "ui_camerawidget.h"
+#include "status_mapping.hpp"
 #include <QCloseEvent>
 #include <QKeyEvent>
 #include <QDateTime>
@@ -232,28 +233,7 @@ void CameraWidget::updateInfoDisplay()
     QString info = QString("Camera: %1\n").arg(cameraName_);
     
     vidre::RecordingStatus status = runtimeInstance_->getRecordingStatus();
-    QString statusStr;
-    switch (status) {
-        case vidre::RecordingStatus::Stopped:
-            statusStr = "Stopped";
-            break;
-        case vidre::RecordingStatus::Streaming:
-            statusStr = "Streaming";
-            break;
-        case vidre::RecordingStatus::RecordingFine:
-            statusStr = "Recording";
-            break;
-        case vidre::RecordingStatus::RecordingDroppedFrames:
-            statusStr = "Recording (Dropped Frames)";
-            break;
-        case vidre::RecordingStatus::RecordingError:
-            statusStr = "Recording (Error)";
-            break;
-        default:
-            statusStr = "Unknown";
-    }
-    
-    info += QString("Status: %1\n").arg(statusStr);
+    info += QString("Status: %1\n").arg(status_mapping::toString(status));
     
     bool isActive = (status != vidre::RecordingStatus::Stopped);
     if (isActive) {

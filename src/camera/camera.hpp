@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <semaphore>
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <core/storage/storage.hpp>
@@ -24,7 +23,7 @@ namespace vidre {
 
     class ICamera {
     public:
-        // virtual ~ICamera() = default;
+        virtual ~ICamera() = default;
 
         // -------------------
         // Runtime controls
@@ -40,7 +39,7 @@ namespace vidre {
         virtual bool IsArmed() = 0;
         virtual bool IsRunning() = 0;
 
-        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name, std::counting_semaphore<>* frameSemaphore) = 0;
+        virtual void SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name) = 0;
         virtual const SharedFrameHeader *RetrieveLatestFrame() = 0;
 
         // Idea: Custom functions for different filetypes.
