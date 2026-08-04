@@ -23,7 +23,7 @@ public:
     explicit CameraInfosDock(QWidget *parent = nullptr);
     ~CameraInfosDock();
 
-    void addCamera(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance);
+    void addCamera(const QString& cameraName, vidre::IRuntimeInstance* runtimeInstance);
     void removeCamera(const QString& cameraName);
     void updateCameraInfo(const QString& cameraName);
     void clearAllCameras();
@@ -39,7 +39,7 @@ private:
     QTimer *updateTimer_;
     
     struct CameraData {
-        vidre::RuntimeInstance* runtimeInstance;
+        vidre::IRuntimeInstance* runtimeInstance;
         QString lastInfo;
         QGroupBox* groupBox;
         QLabel* infoLabel;
@@ -52,7 +52,7 @@ private:
     std::unordered_map<std::string, CameraData> cameras_;
     
     void refreshDisplay();
-    QString generateCameraInfo(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance);
+    QString generateCameraInfo(const QString& cameraName, vidre::IRuntimeInstance* runtimeInstance);
     QGroupBox* createCameraGroup(const QString& cameraName, CameraData& data);
     void applyCameraSettings(const QString& cameraName);
 };

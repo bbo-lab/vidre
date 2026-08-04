@@ -1,10 +1,11 @@
 #pragma once
 
-#include <thread>
+#include <atomic>
 #include <string>
-#include <iostream>
+#include <thread>
 #include <memory>
 
+#include <core/runtime/iruntime_instance.hpp>
 #include <core/storage/storage.hpp>
 #include <core/buffer/buffer.hpp>
 #include <camera/camera.hpp>
@@ -13,15 +14,7 @@
 namespace vidre {
     struct Config;
 
-    enum class RecordingStatus {
-        Stopped,
-        Streaming,
-        RecordingFine,
-        RecordingDroppedFrames,
-        RecordingError
-    };
-
-    class RuntimeInstance {
+    class RuntimeInstance : public IRuntimeInstance {
     public:
         RuntimeInstance() = default;
         RuntimeInstance(std::string configuration, std::string header_format = "ccv");
@@ -29,9 +22,9 @@ namespace vidre {
         
         void retrieveFramesWithSave();
         void showFrames();
-        void run();
-        void show();
-        void stop();
+        void run() override;
+        void show() override;
+        void stop() override;
 
         void setCamera(std::unique_ptr<ICamera> camera);
         void setCameraName(std::string cameraName);
@@ -40,21 +33,22 @@ namespace vidre {
         void setFrameSink(std::unique_ptr<IFrameSink> frameSink);
         void createStorage(std::string output_file_name = "some.ccv", std::string header_format = "ccv", uint64_t bits_per_pixel = 8, uint8_t packed = 0);
 
-        bool checkCamera();
+        bool checkCamera() override;
 
-        bool isRunning();
+        bool isRunning() override;
         
-        RecordingStatus getRecordingStatus();
+        RecordingStatus getRecordingStatus() override;
         
-        // Get camera pointer for direct access (e.g., for live preview)
-        ICamera* getCamera() { return _camera.get(); }
+        ICamera* getCamera() override { return _camera.get(); }
         
-        // Get camera configuration
-        unsigned int getFrameWidth() { return _camera ? _camera->GetFrameWidth() : 0; }
-        unsigned int getFrameHeight() { return _camera ? _camera->GetFrameHeight() : 0; }
-        unsigned int getFrameBytes() { return _camera ? _camera->GetFrameBytes() : 0; }
+        unsigned int getFrameWidth() override { return _camera ? _camera->GetFrameWidth() : 0; }
+        unsigned int getFrameHeight() override { return _camera ? _camera->GetFrameHeight() : 0; }
+        unsigned int getFrameBytes() override { return _camera ? _camera->GetFrameBytes() : 0; }
         
-        std::tuple<const uint8_t*, int, int, int> getLatestFrame() {
+        std::tuple<const uint8_t*, int, int, int> getLatestFrame() override {
+            if (_latestFrameData == nullptr) {
+                return {nullptr, 0, 0, 0};
+            }
             if (_camera->GetVendorName() == "aptina") {
                 uint32_t rgbWidth, rgbHeight, rgbBitDepth;
                 unsigned char *pRGB = _camera->RGBFrame(_latestFrameData, &rgbWidth, &rgbHeight, &rgbBitDepth);
@@ -63,12 +57,25 @@ namespace vidre {
             return {_latestFrameData, getFrameWidth(), getFrameHeight(), _currentFrame}; 
         }
 
-        uint64_t getBitsPerPixel() {
+        uint64_t getBitsPerPixel() override {
             return _storageBitsPerPixel;
+        }
+
+        int getDroppedFrames() override;
+        int getSavedFramesNumber() override;
+        std::string getOutputFileName() override;
+
+        void setPreviewRequested(bool requested) override {
+            _previewRequested.store(requested, std::memory_order_relaxed);
+        }
+
+        bool previewRequested() const {
+            return _previewRequested.load(std::memory_order_relaxed);
         }
 
         private:
         int _currentFrame = 0;
+        int _droppedFrames = 0;
         std::thread _thread;
         std::unique_ptr<ICamera> _camera;
         std::unique_ptr<Storage> _storage;
@@ -81,6 +88,7 @@ namespace vidre {
         bool _presentFrame = false;
         uint8_t* _latestFrameData = nullptr;
         RecordingStatus _recordingStatus = RecordingStatus::Stopped;
+        std::atomic<bool> _previewRequested{false};
         bool _runtimeConfigured = false;
         bool _localStorageEnabled = false;
 

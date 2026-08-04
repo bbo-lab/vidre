@@ -1,8 +1,7 @@
 #include <utils/config_loader/config_loader.hpp>
 
 #include <camera/camera.hpp>
-#include <camera/pylon/pylon_camera.hpp>
-#include <camera/aptina/aptina_camera.hpp>
+#include <camera/dummy/dummy_camera.hpp>
 
 #include <core/runtime/runtime.hpp>
 #include <utils/dynamic_loader/dynamic_library_loader.hpp>
@@ -72,6 +71,23 @@ std::unique_ptr<vidre::ICamera> loadCamera(const std::string& cameraName,
 		}
 		camera = std::unique_ptr<vidre::ICamera>(create());
 		logOrIgnore(logMessage, "Created Aptina camera: " + cameraName);
+	}
+	else if (vendor == "dummy") {
+		auto dummy = std::make_unique<vidre::DummyCamera>();
+		if (cameraNode["width"] && cameraNode["width"].IsScalar()) {
+			dummy->SetFrameWidth(cameraNode["width"].as<unsigned int>());
+		}
+		if (cameraNode["height"] && cameraNode["height"].IsScalar()) {
+			dummy->SetFrameHeight(cameraNode["height"].as<unsigned int>());
+		}
+		if (cameraNode["frame_rate"] && cameraNode["frame_rate"].IsScalar()) {
+			dummy->SetFrameRate(cameraNode["frame_rate"].as<double>());
+		}
+		if (cameraNode["buffers"] && cameraNode["buffers"].IsScalar()) {
+			dummy->SetMaxNumBuffer(cameraNode["buffers"].as<unsigned int>());
+		}
+		camera = std::move(dummy);
+		logOrIgnore(logMessage, "Created Dummy camera: " + cameraName);
 	}
 	else {
 		logOrIgnore(logMessage, "ERROR: Unsupported or unavailable vendor: " + vendor);

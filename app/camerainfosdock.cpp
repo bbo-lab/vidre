@@ -64,7 +64,7 @@ CameraInfosDock::~CameraInfosDock()
     updateTimer_->stop();
 }
 
-void CameraInfosDock::addCamera(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance)
+void CameraInfosDock::addCamera(const QString& cameraName, vidre::IRuntimeInstance* runtimeInstance)
 {
     if (!runtimeInstance) {
         return;
@@ -164,7 +164,7 @@ void CameraInfosDock::refreshDisplay()
     emptyLabel_->setVisible(cameras_.empty());
 }
 
-QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance)
+QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::IRuntimeInstance* runtimeInstance)
 {
     if (!runtimeInstance) {
         return QString("Error: Invalid camera instance");

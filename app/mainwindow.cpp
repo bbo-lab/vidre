@@ -17,6 +17,9 @@
 #include <vector>
 #include "yaml-cpp/yaml.h"
 
+#include <core/runtime/remote_runtime.hpp>
+#include <core/transport/control_client.hpp>
+#include <core/transport/preview_client.hpp>
 #include <utils/config_loader/config_loader.hpp>
 #include <utils/dynamic_loader/dynamic_library_loader.hpp>
 #include <core/transport/transport.hpp>
@@ -86,6 +89,67 @@ void MainWindow::setLibraryPathsFromCommandLine(const QString& aptinaLibraryPath
         storageEndpoint_ = storageEndpoint.toStdString();
         logMessage(QString("CLI override: storage endpoint = %1").arg(storageEndpoint));
     }
+}
+
+void MainWindow::setConnectEndpoint(const QString& endpoint)
+{
+    if (endpoint.isEmpty()) {
+        return;
+    }
+    remoteMode_ = true;
+    connectEndpoint_ = endpoint.toStdString();
+
+    const auto separator = connectEndpoint_.rfind(':');
+    if (separator != std::string::npos && separator + 1 < connectEndpoint_.size()) {
+        cameraHost_ = connectEndpoint_.substr(0, separator);
+        cameraControlPort_ = static_cast<uint16_t>(std::stoi(connectEndpoint_.substr(separator + 1)));
+        cameraPreviewPort_ = cameraControlPort_ + 1;
+    } else {
+        cameraHost_ = connectEndpoint_;
+    }
+
+    logMessage(QString("Remote mode: camera service at %1 (preview port %2)")
+        .arg(QString::fromStdString(connectEndpoint_))
+        .arg(cameraPreviewPort_));
+}
+
+void MainWindow::loadRemoteSetup()
+{
+    logMessage(QString("Connecting to camera service: %1").arg(QString::fromStdString(connectEndpoint_)));
+
+    auto control = std::make_shared<vidre::ControlClient>(connectEndpoint_);
+    std::vector<vidre::transport::CameraInfo> cameraInfos;
+    if (!control->connect() || !control->listCameras(cameraInfos)) {
+        logMessage("ERROR: Could not connect to the camera service.");
+        QMessageBox::warning(this, "Connection Error",
+            "Could not connect to the camera service at " + QString::fromStdString(connectEndpoint_));
+        return;
+    }
+
+    mdiArea_->closeAllSubWindows();
+    cameraWidgets_.clear();
+
+    for (auto& cam : cameras_) {
+        if (cam.second && cam.second->isRunning()) {
+            cam.second->stop();
+        }
+    }
+    cameras_.clear();
+
+    for (const auto& info : cameraInfos) {
+        auto preview = std::make_shared<vidre::PreviewClient>(cameraHost_, cameraPreviewPort_, info.cameraName);
+        preview->start();
+        cameras_[info.cameraName] = std::make_unique<vidre::RemoteRuntimeInstance>(
+            info.cameraName, control, preview, info);
+        logMessage(QString("Connected camera: %1 (%2)")
+            .arg(QString::fromStdString(info.cameraName))
+            .arg(QString::fromStdString(info.vendorName)));
+    }
+
+    logMessage(QString("Connected %1 remote camera(s)").arg(cameras_.size()));
+    deviceListDock_->updateDeviceList(cameras_);
+    updateCameraStatus();
+    statusBar()->showMessage(QString("%1 remote camera(s)").arg(cameras_.size()), 3000);
 }
 
 void MainWindow::setupUI()
@@ -190,7 +254,12 @@ void MainWindow::createDockWidgets()
 }
 
 void MainWindow::onLoadConfigClicked()
-{   
+{
+    if (remoteMode_) {
+        loadRemoteSetup();
+        return;
+    }
+
     QString filename = QFileDialog::getOpenFileName(this,
         tr("Open Configuration File"), "",
         tr("YAML Files (*.yaml *.yml);;All Files (*)"));
@@ -204,6 +273,11 @@ void MainWindow::onLoadConfigClicked()
 
 void MainWindow::loadConfigFile(const QString& filename)
 {
+    if (remoteMode_) {
+        loadRemoteSetup();
+        return;
+    }
+
     logMessage("Loading configuration from: " + filename);
     
     // Close all MDI windows and dock widgets
@@ -361,6 +435,7 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     // Create new camera widget window
     auto it = cameras_.find(deviceName.toStdString());
     if (it != cameras_.end()) {
+        it->second->setPreviewRequested(true);
         CameraWidget *cameraWidget = new CameraWidget(deviceName, it->second.get(), this);
         cameraWidgets_[deviceName] = cameraWidget;
         
@@ -392,6 +467,10 @@ void MainWindow::onCameraWindowClosed(const QString& cameraName)
 {
     cameraWidgets_.erase(cameraName);
     cameraInfosDock_->removeCamera(cameraName);
+    auto it = cameras_.find(cameraName.toStdString());
+    if (it != cameras_.end()) {
+        it->second->setPreviewRequested(false);
+    }
     logMessage(QString("Closed window for: %1").arg(cameraName));
 }
 
@@ -427,7 +506,8 @@ void MainWindow::updateCameraStatus()
     bool anyError = false;
 
     for (const auto& cam : cameras_) {
-        if (cam.second) { //TODO fix logic
+        if (cam.second) {
+            cam.second->refresh();
             vidre::RecordingStatus status = cam.second->getRecordingStatus();
             if (status != vidre::RecordingStatus::Stopped) {
                 anyRunning = true;

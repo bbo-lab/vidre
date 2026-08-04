@@ -1,6 +1,6 @@
 target_sources(vidre PRIVATE
     camera.hpp
-    # dynamic_load.hpp
+    remote_camera.cpp remote_camera.hpp
 )
 
 add_subdirectory(dummy)

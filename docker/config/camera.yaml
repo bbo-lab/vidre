@@ -1,0 +1,17 @@
+libraries:
+  aptina: ""
+  pylon: ""
+
+cam1:
+  type: camera
+  vendor: dummy
+  serial: dummy-1
+  width: 1280
+  height: 720
+  frame_rate: 30
+  buffers: 200
+  storage:
+    output_file: cam1.ccv
+    header: ccv
+    bits_per_pixel: 8
+    packed: 0

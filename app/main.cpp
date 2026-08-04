@@ -5,6 +5,9 @@
 
 #include <iostream>
 
+#include <core/transport/camera_backend.hpp>
+#include <core/transport/control_server.hpp>
+#include <core/transport/preview_server.hpp>
 #include <utils/config_loader/config_loader.hpp>
 
 int main(int argc, char *argv[])
@@ -66,6 +69,24 @@ int main(int argc, char *argv[])
         QStringList() << "headless",
         "Run cameras without creating the Qt GUI window.");
     parser.addOption(headlessOption);
+
+    QCommandLineOption connectOption(
+        QStringList() << "connect",
+        "Camera service endpoint in host:port form (remote mode).",
+        "endpoint");
+    parser.addOption(connectOption);
+
+    QCommandLineOption controlPortOption(
+        QStringList() << "control-port",
+        "Port for the control server in headless mode (default 50051).",
+        "port");
+    parser.addOption(controlPortOption);
+
+    QCommandLineOption previewPortOption(
+        QStringList() << "preview-port",
+        "Port for the preview server in headless mode (default 50052).",
+        "port");
+    parser.addOption(previewPortOption);
     
     parser.process(app);
 
@@ -108,11 +129,27 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        for (auto& camera : cameras) {
-            if (camera.second && !camera.second->isRunning()) {
-                camera.second->run();
-                std::cout << "Started camera backend: " << camera.first << std::endl;
-            }
+        vidre::CameraBackend backend;
+        backend.setRuntimes(std::move(cameras));
+
+        const std::string controlAddress = "0.0.0.0:" + (parser.isSet(controlPortOption) ? parser.value(controlPortOption).toStdString() : std::string("50051"));
+        const std::string previewAddress = "0.0.0.0:" + (parser.isSet(previewPortOption) ? parser.value(previewPortOption).toStdString() : std::string("50052"));
+
+        vidre::ControlServer controlServer(&backend, controlAddress,
+            [](const std::string& message) { std::cout << message << std::endl; });
+        controlServer.start();
+
+        vidre::PreviewServer previewServer(&backend, previewAddress,
+            [](const std::string& message) { std::cout << message << std::endl; });
+        previewServer.start();
+
+        std::cout << "Headless camera service: control on " << controlAddress
+                  << ", preview on " << previewAddress << std::endl;
+
+        for (const auto& info : backend.listCameras()) {
+            const auto response = backend.start(info.cameraName);
+            std::cout << (response.ok ? "Started camera backend: " : "Failed to start: ")
+                      << info.cameraName << (response.ok ? "" : " - " + response.message) << std::endl;
         }
 
         return app.exec();
@@ -126,9 +163,14 @@ int main(int argc, char *argv[])
         parser.isSet(pylonBaseLibraryOption) ? parser.value(pylonBaseLibraryOption) : QString(),
         storageModeValue,
         storageEndpointValue);
+    if (parser.isSet(connectOption)) {
+        window.setConnectEndpoint(parser.value(connectOption));
+    }
     window.show();
 
-    if (parser.isSet(configOption)) {
+    if (parser.isSet(connectOption)) {
+        window.loadRemoteSetup();
+    } else if (parser.isSet(configOption)) {
         window.loadConfigFile(parser.value(configOption));
     }
 

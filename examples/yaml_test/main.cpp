@@ -6,15 +6,8 @@
 #include <boost/program_options.hpp>
 
 #include <core/runtime/runtime.hpp>
-#include <utils/dynamic_loader/dynamic_library_loader.hpp>
+#include <utils/config_loader/config_loader.hpp>
 
-#include <boost/filesystem.hpp>
-
-
-
-
-#include <unordered_map>
-#include "yaml-cpp/yaml.h"
 #include <filesystem>
 namespace po = boost::program_options;
 
@@ -47,181 +40,6 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
     return result;
 }
 
-
-std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
-    vidre::APTINA_LIBRARY_PATH = aptinaPluginLibraryPath;
-    vidre::PYLON_LIBRARY_PATH = pylonPluginLibraryPath;
-
-    if (!cameraNode["vendor"])
-        return nullptr;
-
-    // Vendor is specified
-    std::unique_ptr<vidre::ICamera> camera;
-    if (cameraNode["vendor"].as<std::string>().compare("pylon") == 0
-        && (pylonBaseLibraryPath.empty() || vidre::util::IsLibraryAvailable(pylonBaseLibraryPath))) {
-        if (vidre::PYLON_LIBRARY_PATH.empty()) {
-            std::cout << "Pylon plugin library path is empty. Set it in config or via --pylon-library." << std::endl;
-            return nullptr;
-        }
-        using camera_ref_t = vidre::ICamera*();
-        using destroy_ref_t = void(vidre::ICamera*);
-        auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::PYLON_LIBRARY_PATH, "create_pylon_camera");
-        auto destroy = vidre::util::GetFunction<destroy_ref_t*>(vidre::PYLON_LIBRARY_PATH, "destroy_pylon_camera");
-        if (create == nullptr || destroy == nullptr) {
-            return nullptr;
-        }
-        camera = std::unique_ptr<vidre::ICamera>(create());
-    }
-    else if (cameraNode["vendor"].as<std::string>().compare("aptina") == 0
-             && (aptinaBaseLibraryPath.empty() || vidre::util::IsLibraryAvailable(aptinaBaseLibraryPath))) {
-        if (vidre::APTINA_LIBRARY_PATH.empty()) {
-            std::cout << "Aptina plugin library path is empty. Set it in config or via --aptina-library." << std::endl;
-            return nullptr;
-        }
-        using camera_ref_t = vidre::ICamera*();
-        using destroy_ref_t = void(vidre::ICamera*);
-        auto create = vidre::util::GetFunction<camera_ref_t*>(vidre::APTINA_LIBRARY_PATH, "create_aptina_camera");
-        auto destroy = vidre::util::GetFunction<destroy_ref_t*>(vidre::APTINA_LIBRARY_PATH, "destroy_aptina_camera");
-        if (create == nullptr || destroy == nullptr) {
-            return nullptr;
-        }
-        camera = std::unique_ptr<vidre::ICamera>(create());
-    }
-    else {
-        return nullptr;
-    }
-    
-    if (cameraNode["serial"] && !camera->Init(cameraNode["serial"].as<std::string>())) {
-        std::cout << "Could not initialize with serial number " << cameraNode["serial"].as<std::string>() << std::endl;
-        return nullptr;
-    }
-    std::cout << "CREATED CAM\n";
-    if (!camera->LoadConfiguration(cameraNode["config_file"].as<std::string>().c_str())) {
-        std::cout << "Could not load config file (perhaps wrong path?)." << std::endl;
-        return nullptr;
-    }  // TODO: Delegate to Factory
-
-    // camera->SaveConfiguration("./" + cameraNode["serial"].as<std::string>());
-    if (cameraNode["trigger_in"]) {
-        camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
-    }
-    if (cameraNode["trigger_out"]) {
-        camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
-    }
-
-    return camera;
-}
-
-std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSystemSetup(std::string setupFilepath) {
-    // Idea for future: Create packages of commands per module from YAML. Afterwards properly distribute
-    // over network. Currently just execute those packages locally and just have multiple cameras
-    // be able to be started.
-    // Example:
-    // YAML File has cam1 of type camera:
-    // - prepare command with attributes from the YAML file (e.g. what config file to use)
-    // YAML File has storage1 of type storage:
-    // - ...
-    // YAML File has a pipe between cam1 and storage1. Both are on the same node:
-    // - (prepare command that tightly couples them (e.g. if two buffers can be replaced by one))
-
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras;
-    if (!boost::filesystem::exists(setupFilepath))
-        return cameras;
-
-    YAML::Node config = YAML::LoadFile(setupFilepath);
-
-    auto readStringByKeys = [](const YAML::Node& node, const std::vector<std::string>& keys) -> std::string {
-        if (!node || !node.IsMap()) {
-            return "";
-        }
-        for (const auto& key : keys) {
-            if (node[key] && node[key].IsScalar()) {
-                return node[key].as<std::string>();
-            }
-        }
-        return "";
-    };
-
-    auto applyPath = [](const std::string& value, std::string& destination, bool cliOverride, const char* label) {
-        if (!value.empty() && !cliOverride) {
-            destination = value;
-            std::cout << "Config library path (" << label << "): " << value << std::endl;
-        }
-    };
-
-    YAML::Node libraryConfig;
-    if (config["libraries"] && config["libraries"].IsMap()) {
-        libraryConfig = config["libraries"];
-    } else if (config["library_paths"] && config["library_paths"].IsMap()) {
-        libraryConfig = config["library_paths"];
-    }
-
-    applyPath(
-        readStringByKeys(libraryConfig, {"aptina", "aptina_library", "aptina_library_path"}),
-        aptinaPluginLibraryPath,
-        aptinaPluginLibraryPathCliOverride,
-        "aptina plugin");
-    applyPath(
-        readStringByKeys(libraryConfig, {"pylon", "pylon_library", "pylon_library_path"}),
-        pylonPluginLibraryPath,
-        pylonPluginLibraryPathCliOverride,
-        "pylon plugin");
-    applyPath(
-        readStringByKeys(libraryConfig, {"aptina_base", "aptina_base_library", "aptina_base_library_path"}),
-        aptinaBaseLibraryPath,
-        aptinaBaseLibraryPathCliOverride,
-        "aptina base");
-    applyPath(
-        readStringByKeys(libraryConfig, {"pylon_base", "pylon_base_library", "pylon_base_library_path"}),
-        pylonBaseLibraryPath,
-        pylonBaseLibraryPathCliOverride,
-        "pylon base");
-
-    applyPath(
-        readStringByKeys(config, {"aptina_library_path", "aptina_library"}),
-        aptinaPluginLibraryPath,
-        aptinaPluginLibraryPathCliOverride,
-        "aptina plugin");
-    applyPath(
-        readStringByKeys(config, {"pylon_library_path", "pylon_library"}),
-        pylonPluginLibraryPath,
-        pylonPluginLibraryPathCliOverride,
-        "pylon plugin");
-    applyPath(
-        readStringByKeys(config, {"aptina_base_library_path", "aptina_base_library"}),
-        aptinaBaseLibraryPath,
-        aptinaBaseLibraryPathCliOverride,
-        "aptina base");
-    applyPath(
-        readStringByKeys(config, {"pylon_base_library_path", "pylon_base_library"}),
-        pylonBaseLibraryPath,
-        pylonBaseLibraryPathCliOverride,
-        "pylon base");
-
-    for (YAML::const_iterator it = config.begin(); it != config.end(); ++it) {
-        if (!it->second.IsMap())
-            continue;
-        if (!it->second["type"])
-            continue;
-            
-        // Create camera from file-defined details if the node is a camera node.
-        if (!it->second["type"].as<std::string>().compare("camera") != 0) {
-            cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
-            
-            cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));
-            
-            auto storage_config = it->second["storage"];
-            auto output_file = storage_config["output_file"].as<std::string>();
-            auto header_format = storage_config["header"].as<std::string>();
-            auto bits_per_pixel = storage_config["bits_per_pixel"].as<uint64_t>();
-            auto packed = storage_config["packed"].as<uint8_t>();
-
-            cameras[it->first.as<std::string>()]->createStorage(output_file, header_format, bits_per_pixel, packed);  
-        }
-    }
-
-    return cameras;
-}
 
 int main(int argc, const char *argv[]) {
     // TODO: Separate Record System option/button
@@ -288,7 +106,20 @@ int main(int argc, const char *argv[]) {
     }
 
     // Create system from YAML and check constructed cameras.
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras = LoadSystemSetup(systemConfigFilepath);
+    vidre::LoaderOptions loaderOptions;
+    loaderOptions.aptinaLibraryPath = aptinaPluginLibraryPath;
+    loaderOptions.pylonLibraryPath = pylonPluginLibraryPath;
+    loaderOptions.aptinaBaseLibraryPath = aptinaBaseLibraryPath;
+    loaderOptions.pylonBaseLibraryPath = pylonBaseLibraryPath;
+    loaderOptions.aptinaLibraryPathCliOverride = aptinaPluginLibraryPathCliOverride;
+    loaderOptions.pylonLibraryPathCliOverride = pylonPluginLibraryPathCliOverride;
+    loaderOptions.aptinaBaseLibraryPathCliOverride = aptinaBaseLibraryPathCliOverride;
+    loaderOptions.pylonBaseLibraryPathCliOverride = pylonPluginLibraryPathCliOverride;
+
+    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras = vidre::LoadSystemSetup(
+        systemConfigFilepath,
+        loaderOptions,
+        [](const std::string& message) { std::cout << message << std::endl; });
     if (cameras.size() == 0) {
         std::cout << "Error in loading system config file." << std::endl;
         return 1;

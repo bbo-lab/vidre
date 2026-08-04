@@ -38,6 +38,8 @@ public:
                                         const QString& pylonBaseLibraryPath,
                                         const QString& storageMode,
                                         const QString& storageEndpoint);
+    void setConnectEndpoint(const QString& endpoint);
+    void loadRemoteSetup();
 
 private slots:
     void onLoadConfigClicked();
@@ -63,7 +65,7 @@ private:
     QLabel *statusIndicator_;
     CameraInfosDock *cameraInfosDock_;
     
-    std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras_;
+    std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>> cameras_;
     std::unordered_map<QString, CameraWidget*> cameraWidgets_;
     QTimer *statusTimer_;
 
@@ -77,6 +79,12 @@ private:
     bool pylonLibraryPathCliOverride_ = false;
     bool aptinaBaseLibraryPathCliOverride_ = false;
     bool pylonBaseLibraryPathCliOverride_ = false;
+
+    bool remoteMode_ = false;
+    std::string connectEndpoint_;
+    std::string cameraHost_;
+    uint16_t cameraControlPort_ = 50051;
+    uint16_t cameraPreviewPort_ = 50052;
 
     void setupUI();
     void createToolBar();

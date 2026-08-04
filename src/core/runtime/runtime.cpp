@@ -95,7 +95,7 @@ namespace vidre
         _storageBitsPerPixel = bits_per_pixel;
         _storagePacked = packed;
         _runtimeConfigured = true;
-        _localStorageEnabled = !_storageOutputFileName.empty();
+        _localStorageEnabled = !_storageOutputFileName.empty() && _transportMode != TransportMode::RemoteStorage;
         
         const auto cameraConfig = buildCameraConfig(bits_per_pixel, packed);
 
@@ -109,6 +109,21 @@ namespace vidre
         _buffer = std::make_unique<vidre::Buffer>(cameraConfig);
 
         if (_transportMode == TransportMode::RemoteStorage && !_storageEndpoint.empty()) {
+            SessionSpec sessionSpec;
+            sessionSpec.cameraName = _cameraName;
+            sessionSpec.serialNumber = _camera->GetSerialNumber();
+            sessionSpec.vendorName = _camera->GetVendorName();
+            sessionSpec.width = cameraConfig.width;
+            sessionSpec.height = cameraConfig.height;
+            sessionSpec.bitsPerPixel = bits_per_pixel;
+            sessionSpec.packed = packed != 0;
+            sessionSpec.frameBytesActual = cameraConfig.frameBytesActual;
+            sessionSpec.frameBytesBuffer = cameraConfig.frameBytesBuffer;
+            sessionSpec.maxNumBuffer = cameraConfig.maxNumBuffer;
+            sessionSpec.frameRate = cameraConfig.frameRate;
+            sessionSpec.outputFile = output_file_name;
+            sessionSpec.headerFormat = header_format;
+
             FrameEnvelope baseEnvelope;
             baseEnvelope.cameraName = _cameraName;
             baseEnvelope.serialNumber = _camera->GetSerialNumber();
@@ -116,7 +131,7 @@ namespace vidre
             baseEnvelope.width = cameraConfig.width;
             baseEnvelope.height = cameraConfig.height;
             baseEnvelope.bitsPerPixel = bits_per_pixel;
-            _frameSink = std::make_unique<RemoteStorageSink>(_storageEndpoint, std::move(baseEnvelope));
+            _frameSink = std::make_unique<RemoteStorageSink>(_storageEndpoint, std::move(baseEnvelope), std::move(sessionSpec));
         } else if (_localStorageEnabled && _storage) {
             _frameSink = std::make_unique<LocalStorageSink>(*_storage);
         } else {
@@ -147,6 +162,7 @@ namespace vidre
                 firstFrame = false;
             } else if (header->frameID > expectedFrameID) {
                 _recordingStatus = RecordingStatus::RecordingDroppedFrames;
+                _droppedFrames += static_cast<int>(header->frameID - expectedFrameID);
             }
             expectedFrameID = header->frameID + 1;
 
@@ -249,6 +265,7 @@ namespace vidre
 
     void RuntimeInstance::resetForNextRun() {
         _currentFrame = 0;
+        _droppedFrames = 0;
         _latestFrameData = nullptr;
 
         // Release old storage and buffer so they can be recreated on the next run
@@ -274,6 +291,18 @@ namespace vidre
 
     RecordingStatus RuntimeInstance::getRecordingStatus() {
         return _recordingStatus;
+    }
+
+    int RuntimeInstance::getDroppedFrames() {
+        return _droppedFrames;
+    }
+
+    int RuntimeInstance::getSavedFramesNumber() {
+        return _buffer ? _buffer->getSavedFramesNumber() : 0;
+    }
+
+    std::string RuntimeInstance::getOutputFileName() {
+        return _storage ? _storage->getOutputFileName() : "";
     }
 
 }

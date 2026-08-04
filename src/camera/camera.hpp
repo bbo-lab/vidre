@@ -23,7 +23,7 @@ namespace vidre {
 
     class ICamera {
     public:
-        // virtual ~ICamera() = default;
+        virtual ~ICamera() = default;
 
         // -------------------
         // Runtime controls
@@ -72,5 +72,7 @@ namespace vidre {
         virtual void SetTriggerOut(unsigned int line) = 0;
 
         virtual uint8_t* RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) = 0;
+
+        virtual bool HadError() { return false; }
     };
 }  // namespace vidre

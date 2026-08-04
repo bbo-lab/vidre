@@ -26,7 +26,7 @@ class CameraWidget : public QWidget
 
 public:
     explicit CameraWidget(const QString& cameraName, 
-                         vidre::RuntimeInstance* runtimeInstance,
+                         vidre::IRuntimeInstance* runtimeInstance,
                          QWidget *parent = nullptr);
     ~CameraWidget();
 
@@ -53,7 +53,7 @@ private slots:
 private:
     Ui::CameraWidget *ui;
     QString cameraName_;
-    vidre::RuntimeInstance* runtimeInstance_;
+    vidre::IRuntimeInstance* runtimeInstance_;
     
     QPushButton *startButton_;
     QPushButton *stopButton_;

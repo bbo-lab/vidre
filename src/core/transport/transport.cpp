@@ -1,99 +1,15 @@
 #include <core/transport/transport.hpp>
+#include <core/transport/wire_protocol.hpp>
 
-#include <algorithm>
-#include <cstddef>
+#include <chrono>
 #include <cstring>
 #include <iostream>
-#include <sstream>
-#include <array>
 
 #include <boost/asio.hpp>
 
 #include <core/storage/storage.hpp>
 
 namespace vidre {
-
-namespace {
-
-void appendVarint(std::vector<uint8_t>& buffer, uint64_t value)
-{
-    while (value >= 0x80) {
-        buffer.push_back(static_cast<uint8_t>(value) | 0x80U);
-        value >>= 7U;
-    }
-    buffer.push_back(static_cast<uint8_t>(value));
-}
-
-uint64_t zigZagEncode64(int64_t value)
-{
-    return (static_cast<uint64_t>(value) << 1U) ^ static_cast<uint64_t>(value >> 63U);
-}
-
-void appendTag(std::vector<uint8_t>& buffer, uint32_t fieldNumber, uint32_t wireType)
-{
-    appendVarint(buffer, (static_cast<uint64_t>(fieldNumber) << 3U) | wireType);
-}
-
-void appendLengthDelimited(std::vector<uint8_t>& buffer, uint32_t fieldNumber, const std::string& value)
-{
-    appendTag(buffer, fieldNumber, 2U);
-    appendVarint(buffer, value.size());
-    buffer.insert(buffer.end(), value.begin(), value.end());
-}
-
-void appendLengthDelimited(std::vector<uint8_t>& buffer, uint32_t fieldNumber, const std::vector<uint8_t>& value)
-{
-    appendTag(buffer, fieldNumber, 2U);
-    appendVarint(buffer, value.size());
-    buffer.insert(buffer.end(), value.begin(), value.end());
-}
-
-void appendVarintField(std::vector<uint8_t>& buffer, uint32_t fieldNumber, uint64_t value)
-{
-    appendTag(buffer, fieldNumber, 0U);
-    appendVarint(buffer, value);
-}
-
-std::vector<uint8_t> encodeFrameEnvelope(const FrameEnvelope& envelope)
-{
-    std::vector<uint8_t> buffer;
-    buffer.reserve(envelope.payload.size() + 128);
-
-    appendLengthDelimited(buffer, 1U, envelope.cameraName);
-    appendLengthDelimited(buffer, 2U, envelope.serialNumber);
-    appendLengthDelimited(buffer, 3U, envelope.vendorName);
-    appendVarintField(buffer, 4U, envelope.width);
-    appendVarintField(buffer, 5U, envelope.height);
-    appendVarintField(buffer, 6U, envelope.bitsPerPixel);
-    appendVarintField(buffer, 7U, envelope.frameId);
-    appendVarintField(buffer, 8U, envelope.frameTimestamp);
-    appendVarintField(buffer, 9U, zigZagEncode64(envelope.computerTimeStamp));
-    appendLengthDelimited(buffer, 10U, envelope.payload);
-
-    return buffer;
-}
-
-std::pair<std::string, uint16_t> splitEndpoint(const std::string& endpoint)
-{
-    const auto separator = endpoint.rfind(':');
-    if (separator == std::string::npos || separator == 0 || separator + 1 >= endpoint.size()) {
-        return {endpoint, 50051U};
-    }
-
-    return {endpoint.substr(0, separator), static_cast<uint16_t>(std::stoi(endpoint.substr(separator + 1)))};
-}
-
-std::array<uint8_t, 4> toBigEndian32(uint32_t value)
-{
-    return {
-        static_cast<uint8_t>((value >> 24U) & 0xFFU),
-        static_cast<uint8_t>((value >> 16U) & 0xFFU),
-        static_cast<uint8_t>((value >> 8U) & 0xFFU),
-        static_cast<uint8_t>(value & 0xFFU)
-    };
-}
-
-}  // namespace
 
     LocalStorageSink::LocalStorageSink(Storage& storage)
         : _storage(storage)
@@ -114,38 +30,40 @@ std::array<uint8_t, 4> toBigEndian32(uint32_t value)
         _storage.updateHeader(frameCount);
     }
 
-    RemoteStorageSink::RemoteStorageSink(std::string endpoint, FrameEnvelope baseEnvelope)
+    RemoteStorageSink::RemoteStorageSink(std::string endpoint, FrameEnvelope baseEnvelope, SessionSpec sessionSpec)
         : _endpoint(std::move(endpoint))
         , _baseEnvelope(std::move(baseEnvelope))
+        , _sessionSpec(std::move(sessionSpec))
     {
+        _running.store(true);
+        _thread = std::thread(&RemoteStorageSink::workerLoop, this);
+    }
+
+    RemoteStorageSink::~RemoteStorageSink() {
+        _running.store(false);
+        _cv.notify_all();
+        if (_thread.joinable()) {
+            _thread.join();
+        }
     }
 
     void RemoteStorageSink::begin()
     {
+        transport::StorageCommand command;
+        command.type = transport::StorageCommandType::BeginSession;
+        command.beginSession = _sessionSpec;
+        enqueue(transport::EncodeStorageCommand(command));
     }
 
-    void RemoteStorageSink::sendEnvelope(const FrameEnvelope& envelope)
+    void RemoteStorageSink::enqueue(std::vector<uint8_t> command)
     {
-        try {
-            const auto payload = encodeFrameEnvelope(envelope);
-            const uint32_t payloadSize = static_cast<uint32_t>(payload.size());
-
-            const auto [host, port] = splitEndpoint(_endpoint);
-            boost::asio::io_context ioContext;
-            boost::asio::ip::tcp::resolver resolver(ioContext);
-            boost::asio::ip::tcp::socket socket(ioContext);
-
-            auto endpoints = resolver.resolve(host, std::to_string(port));
-            boost::asio::connect(socket, endpoints);
-
-            const auto networkLength = toBigEndian32(payloadSize);
-            std::vector<boost::asio::const_buffer> buffers;
-            buffers.emplace_back(boost::asio::buffer(networkLength));
-            buffers.emplace_back(boost::asio::buffer(payload));
-            boost::asio::write(socket, buffers);
-        } catch (const std::exception& e) {
-            std::cerr << "Remote storage sink write failed: " << e.what() << "\n";
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_queue.size() >= _maxQueue) {
+            _dropped.fetch_add(1, std::memory_order_relaxed);
+            return;
         }
+        _queue.push_back(std::move(command));
+        _cv.notify_one();
     }
 
     void RemoteStorageSink::publishFrame(const SharedFrameHeader& header, const uint8_t* payload, size_t payloadSize)
@@ -156,12 +74,82 @@ std::array<uint8_t, 4> toBigEndian32(uint32_t value)
         envelope.computerTimeStamp = header.computerTimeStamp;
         envelope.payload.assign(payload, payload + payloadSize);
 
-        sendEnvelope(envelope);
+        transport::StorageCommand command;
+        command.type = transport::StorageCommandType::Frame;
+        command.frame = std::move(envelope);
+        enqueue(transport::EncodeStorageCommand(command));
     }
 
     void RemoteStorageSink::finish(int frameCount)
     {
-        (void)frameCount;
+        transport::StorageCommand command;
+        command.type = transport::StorageCommandType::FinishSession;
+        command.finishFrameCount = static_cast<uint32_t>(frameCount);
+        enqueue(transport::EncodeStorageCommand(command));
+
+        std::unique_lock<std::mutex> lock(_mutex);
+        _cv.wait(lock, [this] { return _queue.empty() && !_busy.load(std::memory_order_relaxed); });
+    }
+
+    bool RemoteStorageSink::connectAndSend(boost::asio::ip::tcp::socket& socket, const std::string& host, uint16_t port)
+    {
+        try {
+            boost::asio::ip::tcp::resolver resolver(socket.get_executor().context());
+            auto endpoints = resolver.resolve(host, std::to_string(port));
+            boost::asio::connect(socket, endpoints);
+            return true;
+        } catch (const std::exception& e) {
+            std::cerr << "Remote storage connect failed: " << e.what() << "\n";
+            return false;
+        }
+    }
+
+    void RemoteStorageSink::workerLoop()
+    {
+        const auto [host, port] = transport::SplitEndpoint(_endpoint);
+        boost::asio::io_context ioContext;
+        boost::asio::ip::tcp::socket socket(ioContext);
+        bool connected = false;
+
+        while (_running.load(std::memory_order_relaxed)) {
+            std::vector<uint8_t> command;
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                _cv.wait_for(lock, std::chrono::milliseconds(100), [this] {
+                    return !_queue.empty() || !_running.load(std::memory_order_relaxed);
+                });
+                if (_queue.empty()) {
+                    continue;
+                }
+                command = std::move(_queue.front());
+                _queue.pop_front();
+            }
+
+            if (!connected) {
+                connected = connectAndSend(socket, host, port);
+                if (!connected) {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    _dropped.fetch_add(1, std::memory_order_relaxed);
+                    continue;
+                }
+            }
+
+            _busy.store(true, std::memory_order_relaxed);
+            const bool ok = transport::WriteFramed(socket, command);
+            _busy.store(false, std::memory_order_relaxed);
+            _cv.notify_all();
+
+            if (ok) {
+                _sent.fetch_add(1, std::memory_order_relaxed);
+            } else {
+                connected = false;
+                try {
+                    socket.close();
+                } catch (...) {
+                }
+                _dropped.fetch_add(1, std::memory_order_relaxed);
+            }
+        }
     }
 
 }  // namespace vidre

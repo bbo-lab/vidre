@@ -1,0 +1,30 @@
+services:
+  storage:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    entrypoint: ["/usr/local/bin/vidre_storage_service"]
+    command: ["--listen-address", "0.0.0.0:50053", "--output-dir", "/data"]
+    volumes:
+      - ./data:/data
+
+  camera:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    entrypoint: ["/usr/local/bin/vidre_camera_service"]
+    command:
+      [
+        "--config", "/config/camera.yaml",
+        "--control-address", "0.0.0.0:50051",
+        "--preview-address", "0.0.0.0:50052",
+        "--storage-endpoint", "storage:50053",
+        "--autostart",
+      ]
+    volumes:
+      - ./config:/config
+    depends_on:
+      - storage
+    ports:
+      - "50051:50051"
+      - "50052:50052"

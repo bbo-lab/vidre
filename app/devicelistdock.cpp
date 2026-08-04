@@ -56,7 +56,7 @@ void DeviceListDock::setupUI()
     setLayout(layout);
 }
 
-void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras)
+void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>>& cameras)
 {
     treeWidget_->clear();
     
@@ -85,7 +85,7 @@ void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std:
     }
 }
 
-void DeviceListDock::updateDeviceStatus(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras)
+void DeviceListDock::updateDeviceStatus(const std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>>& cameras)
 {
     for (int i = 0; i < treeWidget_->topLevelItemCount(); ++i) {
         QTreeWidgetItem *item = treeWidget_->topLevelItem(i);

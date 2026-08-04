@@ -12,7 +12,7 @@
 #include <core/runtime/shared_frame_header.hpp>
 
 CameraWidget::CameraWidget(const QString& cameraName, 
-                           vidre::RuntimeInstance* runtimeInstance,
+                           vidre::IRuntimeInstance* runtimeInstance,
                            QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::CameraWidget)

@@ -125,7 +125,7 @@ find_package(Boost CONFIG REQUIRED COMPONENTS ALL)
 list(APPEND CMAKE_PREFIX_PATH ${PYLON_ROOT})
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.10.1/msvc2022_64")
 list(APPEND CMAKE_PREFIX_PATH ${PYLON_DEV_DIR})
-find_package(pylon 8.0.0 REQUIRED)
+find_package(pylon 8.0.0 QUIET)
 
 if(pylon_FOUND)
     set(PYLON_ENABLED ${pylon_FOUND})

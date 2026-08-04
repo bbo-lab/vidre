@@ -17,8 +17,8 @@ public:
     explicit DeviceListDock(QWidget *parent = nullptr);
     ~DeviceListDock();
 
-    void updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras);
-    void updateDeviceStatus(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras);
+    void updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>>& cameras);
+    void updateDeviceStatus(const std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>>& cameras);
 
 signals:
     void deviceDoubleClicked(const QString& deviceName);
