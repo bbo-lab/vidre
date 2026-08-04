@@ -52,7 +52,10 @@ namespace vidre {
         tail.frameIndex = frame_idx;
         tail.timeStamp = time_stamp;
         tail.timeStamp /= (_config.cameraVendor == "basler") ? 1e9 : 1e3;
-        tail.computerTimeStamp = computer_time_stamp;
+
+        for (size_t i = 0; i < sizeof(int64_t) && i < sizeof(tail.padding); i++) {
+            tail.padding[i] = static_cast<uint8_t>((computer_time_stamp >> (i * 8)) & 0xFF);
+        }
 
         _header->writeTail(output_file, tail);
     }
