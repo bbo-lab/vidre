@@ -42,6 +42,7 @@ namespace vidre {
         uint64_t getBitsPerPixel() override { return _info.bitsPerPixel; }
         int getDroppedFrames() override { return static_cast<int>(_stats.droppedFrames); }
         int getSavedFramesNumber() override { return static_cast<int>(_stats.savedFrames); }
+        int64_t getSentFrames() override { return static_cast<int64_t>(_stats.sentFrames); }
         std::string getOutputFileName() override { return ""; }
 
         void setPreviewRequested(bool requested) override;

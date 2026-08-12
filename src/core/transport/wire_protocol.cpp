@@ -507,7 +507,6 @@ namespace {
         while (decoder.NextField(field, wireType)) {
             switch (field) {
                 case 1: {
-                    Decoder sub(decoder);
                     std::vector<uint8_t> raw;
                     if (!decoder.ReadLengthDelimited(raw)) {
                         return false;
@@ -920,7 +919,6 @@ namespace {
         uint32_t wireType = 0;
         while (decoder.NextField(field, wireType)) {
             std::vector<uint8_t> raw;
-            Decoder sub(decoder);
             switch (field) {
                 case 1:
                     if (!decoder.ReadLengthDelimited(raw)) {
@@ -1278,7 +1276,12 @@ namespace {
         if (separator == std::string::npos || separator == 0 || separator + 1 >= endpoint.size()) {
             return {endpoint, 50051U};
         }
-        return {endpoint.substr(0, separator), static_cast<uint16_t>(std::stoi(endpoint.substr(separator + 1)))};
+        try {
+            return {endpoint.substr(0, separator), static_cast<uint16_t>(std::stoi(endpoint.substr(separator + 1)))};
+        } catch (const std::exception&) {
+            std::cerr << "Invalid port in endpoint '" << endpoint << "'\n";
+            return {endpoint.substr(0, separator), 0U};
+        }
     }
 
     bool WriteAll(boost::asio::ip::tcp::socket& socket, const void* data, size_t size)

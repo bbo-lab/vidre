@@ -2,13 +2,37 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QTimer>
 
+#include <atomic>
+#include <csignal>
 #include <iostream>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include <core/transport/camera_backend.hpp>
 #include <core/transport/control_server.hpp>
 #include <core/transport/preview_server.hpp>
 #include <utils/config_loader/config_loader.hpp>
+
+namespace {
+
+    std::atomic<bool> g_quitRequested{false};
+
+#ifdef _WIN32
+    BOOL WINAPI ConsoleCtrlHandler(DWORD /*type*/) {
+        g_quitRequested = true;
+        return TRUE;
+    }
+#else
+    void HandleSignal(int /*signal*/) {
+        g_quitRequested = true;
+    }
+#endif
+
+}  // namespace
 
 int main(int argc, char *argv[])
 {
@@ -87,6 +111,11 @@ int main(int argc, char *argv[])
         "Port for the preview server in headless mode (default 50052).",
         "port");
     parser.addOption(previewPortOption);
+
+    QCommandLineOption autostartOption(
+        QStringList() << "autostart",
+        "Automatically start recording for all cameras in headless mode.");
+    parser.addOption(autostartOption);
     
     parser.process(app);
 
@@ -146,11 +175,38 @@ int main(int argc, char *argv[])
         std::cout << "Headless camera service: control on " << controlAddress
                   << ", preview on " << previewAddress << std::endl;
 
-        for (const auto& info : backend.listCameras()) {
-            const auto response = backend.start(info.cameraName);
-            std::cout << (response.ok ? "Started camera backend: " : "Failed to start: ")
-                      << info.cameraName << (response.ok ? "" : " - " + response.message) << std::endl;
+        if (parser.isSet(autostartOption)) {
+            for (const auto& info : backend.listCameras()) {
+                const auto response = backend.start(info.cameraName);
+                std::cout << (response.ok ? "Started camera backend: " : "Failed to start: ")
+                          << info.cameraName << (response.ok ? "" : " - " + response.message) << std::endl;
+            }
+        } else {
+            std::cout << "Cameras loaded but not started (use --autostart to record immediately)." << std::endl;
         }
+
+#ifdef _WIN32
+        SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+#else
+        std::signal(SIGINT, HandleSignal);
+        std::signal(SIGTERM, HandleSignal);
+#endif
+
+        QTimer quitPollTimer;
+        quitPollTimer.setInterval(200);
+        QObject::connect(&quitPollTimer, &QTimer::timeout, &app, [&app]() {
+            if (g_quitRequested.load(std::memory_order_relaxed)) {
+                app.quit();
+            }
+        });
+        quitPollTimer.start();
+
+        QObject::connect(&app, &QCoreApplication::aboutToQuit, &app, [&backend, &controlServer, &previewServer]() {
+            std::cout << "Shutting down headless camera service..." << std::endl;
+            backend.stopAll();
+            controlServer.stop();
+            previewServer.stop();
+        });
 
         return app.exec();
     }

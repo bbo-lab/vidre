@@ -79,6 +79,7 @@ namespace vidre {
 
         void write(const void* data, size_t size) {
 #ifdef _WIN32
+            if (hFile == INVALID_HANDLE_VALUE) return;
             const uint8_t* src = static_cast<const uint8_t*>(data);
             size_t remaining = size;
 
@@ -96,6 +97,7 @@ namespace vidre {
                 }
             }
 #else
+            if (!hFile) return;
             std::fwrite(data, 1, size, hFile);
 #endif
         }

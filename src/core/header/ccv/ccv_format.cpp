@@ -139,18 +139,18 @@ namespace vidre {
         out_file.finalizeHeader(headerData.data(), headerData.size());
     }
 
-    void vidre::CamCommandoHeader::writeFrame(const void* buffer, DiskWriter& out_file) {
+    void vidre::CamCommandoHeader::writeFrame(const void* buffer, size_t payloadSize, DiskWriter& out_file) {
 #if CCV_HEADER_VERSION >= 120
         if (cameraType.data == "aptina" && packed) {
             if (packedBuffer.size() < aptinaBuffer) {
                 packedBuffer.resize(aptinaBuffer);
             }
-            pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packedBuffer.data(), aptinaBuffer);
+            pack_bits_16_10(static_cast<const uint8_t*>(buffer), payloadSize, packedBuffer.data(), aptinaBuffer);
             out_file.write(packedBuffer.data(), aptinaBuffer);
             return;
         }
 #endif        
-        out_file.write(buffer, frameBytesOnDisk - 21);
+        out_file.write(buffer, payloadSize);
     }
 
     void vidre::CamCommandoHeader::writeTail(DiskWriter& out_file, const CCVFrameTail& tail) {

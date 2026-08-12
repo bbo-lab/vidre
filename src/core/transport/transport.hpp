@@ -18,6 +18,10 @@ namespace vidre {
 
     class Storage;
 
+    namespace transport {
+        struct StorageCommand;
+    }
+
     enum class TransportMode {
         LocalStorage,
         RemoteStorage
@@ -85,7 +89,7 @@ namespace vidre {
         int64_t droppedFrames() const { return _dropped.load(std::memory_order_relaxed); }
 
     private:
-        void enqueue(std::vector<uint8_t> command);
+        void enqueue(transport::StorageCommand command);
         void workerLoop();
         bool connectAndSend(boost::asio::ip::tcp::socket& socket, const std::string& host, uint16_t port);
 
@@ -96,6 +100,7 @@ namespace vidre {
         std::mutex _mutex;
         std::condition_variable _cv;
         std::deque<std::vector<uint8_t>> _queue;
+        std::deque<bool> _lifecycleMarkers;
         size_t _maxQueue = 64;
 
         std::atomic<bool> _running{false};

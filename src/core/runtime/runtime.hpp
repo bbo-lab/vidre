@@ -77,6 +77,7 @@ namespace vidre {
         int getDroppedFrames() override;
         int getSavedFramesNumber() override;
         std::string getOutputFileName() override;
+        int64_t getSentFrames() override;
 
         bool previewRequested() const {
             return _previewRequested.load(std::memory_order_relaxed);

@@ -59,6 +59,9 @@ namespace vidre {
     {
         try {
             const auto [host, port] = transport::SplitEndpoint(_address);
+            if (port == 0) {
+                throw std::runtime_error("invalid port in address '" + _address + "'");
+            }
             boost::asio::ip::tcp::resolver resolver(_io);
             const auto endpoints = resolver.resolve(host, std::to_string(port));
             _acceptor = std::make_unique<boost::asio::ip::tcp::acceptor>(_io, *endpoints.begin());

@@ -150,7 +150,16 @@ void MainWindow::setConnectEndpoint(const QString& endpoint)
     const auto separator = connectEndpoint_.rfind(':');
     if (separator != std::string::npos && separator + 1 < connectEndpoint_.size()) {
         cameraHost_ = connectEndpoint_.substr(0, separator);
-        cameraControlPort_ = static_cast<uint16_t>(std::stoi(connectEndpoint_.substr(separator + 1)));
+        try {
+            const auto port = std::stoi(connectEndpoint_.substr(separator + 1));
+            if (port < 1 || port > 65534) {
+                throw std::out_of_range("port out of range");
+            }
+            cameraControlPort_ = static_cast<uint16_t>(port);
+        } catch (const std::exception&) {
+            logMessage(QString("WARNING: Invalid port, using default 50051"));
+            cameraControlPort_ = 50051;
+        }
         cameraPreviewPort_ = cameraControlPort_ + 1;
     } else {
         cameraHost_ = connectEndpoint_;
@@ -364,10 +373,14 @@ void MainWindow::loadConfigFile(const QString& filename)
     loaderOptions.transportMode = transportMode_;
     loaderOptions.storageEndpoint = storageEndpoint_;
 
-    cameras_ = vidre::LoadSystemSetup(
+    auto loaded = vidre::LoadSystemSetup(
         filename.toStdString(),
         loaderOptions,
         [this](const std::string& message) { logMessage(QString::fromStdString(message)); });
+    cameras_.clear();
+    for (auto& [name, camera] : loaded) {
+        cameras_.emplace(name, std::move(camera));
+    }
     
     if (cameras_.empty()) {
         logMessage("ERROR: Failed to load configuration or no cameras found.");

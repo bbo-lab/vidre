@@ -43,8 +43,8 @@ namespace vidre {
         _header->updateHeader(output_file, frames);
     }
 
-    void Storage::appendFrame(const void* buffer) {
-        _header->writeFrame(buffer, output_file);
+    void Storage::appendFrame(const void* buffer, size_t payloadSize) {
+        _header->writeFrame(buffer, payloadSize, output_file);
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp) {

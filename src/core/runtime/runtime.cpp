@@ -114,6 +114,13 @@ namespace vidre
             _frameSink = std::make_unique<LocalStorageSink>(*_storage);
         } else {
             _frameSink.reset();
+            if (_transportMode == TransportMode::RemoteStorage) {
+                std::cerr << "WARNING: Remote storage mode but no storage endpoint set for camera '"
+                          << _cameraName << "'; frames will be discarded\n";
+            } else if (!_localStorageEnabled) {
+                std::cerr << "WARNING: No output file configured for camera '"
+                          << _cameraName << "'; frames will not be saved\n";
+            }
         }
 
         _camera->SetSharedMemory(_buffer->getSharedMemory(), _buffer->getSharedMemoryPtrs(), cameraConfig.serialNumber);
@@ -282,7 +289,7 @@ namespace vidre
         }
 
         // Recreate storage and buffer fresh for the new run
-        createStorage(_localStorageEnabled ? _storageOutputFileName : std::string(), _storageHeaderFormat, _storageBitsPerPixel, _storagePacked);
+        createStorage(_storageOutputFileName, _storageHeaderFormat, _storageBitsPerPixel, _storagePacked);
     }
 
     bool RuntimeInstance::checkCamera() {
@@ -306,6 +313,11 @@ namespace vidre
 
     std::string RuntimeInstance::getOutputFileName() {
         return _storage ? _storage->getOutputFileName() : "";
+    }
+
+    int64_t RuntimeInstance::getSentFrames() {
+        auto* remoteSink = dynamic_cast<RemoteStorageSink*>(_frameSink.get());
+        return remoteSink ? remoteSink->sentFrames() : 0;
     }
 
 }

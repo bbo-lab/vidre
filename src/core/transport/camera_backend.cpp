@@ -165,6 +165,7 @@ namespace vidre {
         }
         result.savedFrames = runtime->getSavedFramesNumber();
         result.droppedFrames = runtime->getDroppedFrames();
+        result.sentFrames = runtime->getSentFrames();
         return result;
     }
 

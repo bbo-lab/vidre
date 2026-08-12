@@ -46,7 +46,7 @@ namespace vidre {
         Config getConfig();
 
         void updateHeader(int frames);
-        void appendFrame(const void* buffer);
+        void appendFrame(const void* buffer, size_t payloadSize);
         void appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp);
         void initiateHeader();
 

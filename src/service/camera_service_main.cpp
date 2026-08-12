@@ -5,6 +5,10 @@
 #include <string>
 #include <thread>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <CLI/CLI.hpp>
 
 #include <core/transport/camera_backend.hpp>

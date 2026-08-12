@@ -1,8 +1,9 @@
 FROM ubuntu:22.04 AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential cmake git python3 python3-pip pkg-config \
-    && pip3 install --break-system-packages conan \
+    build-essential git python3 python3-pip pkg-config \
+    && pip3 install --no-cache-dir --upgrade pip \
+    && pip3 install --no-cache-dir conan cmake ninja \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
@@ -13,6 +14,7 @@ RUN conan profile detect --force \
     && cmake -S . -B build/cmake \
         -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
+        -DVIDRE_BUILD_APP=OFF \
     && cmake --build build/cmake --target vidre_camera_service vidre_storage_service -j"$(nproc)"
 
 FROM ubuntu:22.04

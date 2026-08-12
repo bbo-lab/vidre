@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -33,8 +34,8 @@ namespace vidre {
         std::thread _thread;
         mutable std::mutex _mutex;
         FrameEnvelope _latest;
-        std::atomic<int64_t> _frameId{0};
         boost::asio::io_context _io;
+        std::unique_ptr<boost::asio::ip::tcp::socket> _socket;
     };
 
 }  // namespace vidre

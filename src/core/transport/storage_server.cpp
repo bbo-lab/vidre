@@ -59,6 +59,9 @@ namespace vidre {
     {
         try {
             const auto [host, port] = transport::SplitEndpoint(_address);
+            if (port == 0) {
+                throw std::runtime_error("invalid port in address '" + _address + "'");
+            }
             boost::asio::ip::tcp::resolver resolver(_io);
             const auto endpoints = resolver.resolve(host, std::to_string(port));
             _acceptor = std::make_unique<boost::asio::ip::tcp::acceptor>(_io, *endpoints.begin());
@@ -132,7 +135,10 @@ namespace vidre {
                     config.paddingX = 0;
 
                     std::string outputFile = spec.outputFile;
-                    if (!outputFile.empty() && outputFile.find('/') == std::string::npos
+                    if (outputFile.empty()) {
+                        outputFile = spec.cameraName.empty() ? "out.ccv" : (spec.cameraName + ".ccv");
+                    }
+                    if (outputFile.find('/') == std::string::npos
                         && outputFile.find('\\') == std::string::npos && !_outputDir.empty()) {
                         outputFile = (std::filesystem::path(_outputDir) / outputFile).string();
                     }
@@ -157,7 +163,7 @@ namespace vidre {
                         }
                         lastFrameID = static_cast<int64_t>(envelope.frameId);
                     }
-                    storage->appendFrame(envelope.payload.data());
+                    storage->appendFrame(envelope.payload.data(), envelope.payload.size());
                     storage->appendTail(static_cast<uint32_t>(envelope.frameId),
                                         static_cast<double>(envelope.frameTimestamp),
                                         envelope.computerTimeStamp);
@@ -165,7 +171,7 @@ namespace vidre {
                     break;
                 }
                 case transport::StorageCommandType::FinishSession:
-                    finishSession(static_cast<int>(command.finishFrameCount));
+                    finishSession(static_cast<int>(receivedFrames));
                     return;
             }
         }

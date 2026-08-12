@@ -39,6 +39,7 @@ namespace vidre {
         virtual int getDroppedFrames() = 0;
         virtual int getSavedFramesNumber() = 0;
         virtual std::string getOutputFileName() = 0;
+        virtual int64_t getSentFrames() { return 0; }
 
         virtual void setPreviewRequested(bool requested) = 0;
 

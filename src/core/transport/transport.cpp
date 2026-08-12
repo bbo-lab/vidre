@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
+#include <boost/asio/detail/socket_option.hpp>
 
 #include <core/storage/storage.hpp>
 
@@ -21,8 +22,7 @@ namespace vidre {
     }
 
     void LocalStorageSink::publishFrame(const SharedFrameHeader& header, const uint8_t* payload, size_t payloadSize) {
-        (void)payloadSize;
-        _storage.appendFrame(static_cast<const void*>(payload));
+        _storage.appendFrame(static_cast<const void*>(payload), payloadSize);
         _storage.appendTail(static_cast<uint32_t>(header.frameID), header.timeStamp, header.computerTimeStamp);
     }
 
@@ -35,6 +35,10 @@ namespace vidre {
         , _baseEnvelope(std::move(baseEnvelope))
         , _sessionSpec(std::move(sessionSpec))
     {
+        if (_endpoint.find(':') == std::string::npos) {
+            std::cerr << "Remote storage: endpoint '" << _endpoint
+                      << "' has no port (storage service default is 50053)\n";
+        }
         _running.store(true);
         _thread = std::thread(&RemoteStorageSink::workerLoop, this);
     }
@@ -52,17 +56,36 @@ namespace vidre {
         transport::StorageCommand command;
         command.type = transport::StorageCommandType::BeginSession;
         command.beginSession = _sessionSpec;
-        enqueue(transport::EncodeStorageCommand(command));
+        enqueue(std::move(command));
     }
 
-    void RemoteStorageSink::enqueue(std::vector<uint8_t> command)
+    void RemoteStorageSink::enqueue(transport::StorageCommand command)
     {
+        const bool lifecycle = command.type != transport::StorageCommandType::Frame;
         std::lock_guard<std::mutex> lock(_mutex);
         if (_queue.size() >= _maxQueue) {
+            if (!lifecycle) {
+                _dropped.fetch_add(1, std::memory_order_relaxed);
+                return;
+            }
+            // Never drop lifecycle commands: evict the last ordinary frame from the back instead.
+            auto markerIt = _lifecycleMarkers.end();
+            while (markerIt != _lifecycleMarkers.begin()) {
+                --markerIt;
+                if (!*markerIt) {
+                    break;
+                }
+            }
+            if (markerIt == _lifecycleMarkers.begin() && *markerIt) {
+                _dropped.fetch_add(1, std::memory_order_relaxed);
+                return;
+            }
+            _queue.erase(_queue.begin() + std::distance(_lifecycleMarkers.begin(), markerIt));
+            _lifecycleMarkers.erase(markerIt);
             _dropped.fetch_add(1, std::memory_order_relaxed);
-            return;
         }
-        _queue.push_back(std::move(command));
+        _queue.push_back(transport::EncodeStorageCommand(std::move(command)));
+        _lifecycleMarkers.push_back(lifecycle);
         _cv.notify_one();
     }
 
@@ -77,7 +100,7 @@ namespace vidre {
         transport::StorageCommand command;
         command.type = transport::StorageCommandType::Frame;
         command.frame = std::move(envelope);
-        enqueue(transport::EncodeStorageCommand(command));
+        enqueue(std::move(command));
     }
 
     void RemoteStorageSink::finish(int frameCount)
@@ -85,10 +108,14 @@ namespace vidre {
         transport::StorageCommand command;
         command.type = transport::StorageCommandType::FinishSession;
         command.finishFrameCount = static_cast<uint32_t>(frameCount);
-        enqueue(transport::EncodeStorageCommand(command));
+        enqueue(std::move(command));
 
         std::unique_lock<std::mutex> lock(_mutex);
-        _cv.wait(lock, [this] { return _queue.empty() && !_busy.load(std::memory_order_relaxed); });
+        if (!_cv.wait_for(lock, std::chrono::seconds(5), [this] {
+                return _queue.empty() && !_busy.load(std::memory_order_relaxed);
+            })) {
+            std::cerr << "Remote storage: finish timed out waiting for the queue to drain\n";
+        }
     }
 
     bool RemoteStorageSink::connectAndSend(boost::asio::ip::tcp::socket& socket, const std::string& host, uint16_t port)
@@ -97,6 +124,11 @@ namespace vidre {
             boost::asio::ip::tcp::resolver resolver(socket.get_executor().context());
             auto endpoints = resolver.resolve(host, std::to_string(port));
             boost::asio::connect(socket, endpoints);
+#ifdef _WIN32
+            // Bound blocking writes; on Windows the timeout value is in milliseconds.
+            boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_SNDTIMEO> timeout{10000};
+            socket.set_option(timeout);
+#endif
             return true;
         } catch (const std::exception& e) {
             std::cerr << "Remote storage connect failed: " << e.what() << "\n";
@@ -113,6 +145,7 @@ namespace vidre {
 
         while (_running.load(std::memory_order_relaxed)) {
             std::vector<uint8_t> command;
+            bool lifecycle = false;
             {
                 std::unique_lock<std::mutex> lock(_mutex);
                 _cv.wait_for(lock, std::chrono::milliseconds(100), [this] {
@@ -121,33 +154,55 @@ namespace vidre {
                 if (_queue.empty()) {
                     continue;
                 }
+                _busy.store(true, std::memory_order_relaxed);
                 command = std::move(_queue.front());
                 _queue.pop_front();
+                lifecycle = _lifecycleMarkers.front();
+                _lifecycleMarkers.pop_front();
             }
 
             if (!connected) {
                 connected = connectAndSend(socket, host, port);
                 if (!connected) {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                    _dropped.fetch_add(1, std::memory_order_relaxed);
+                    {
+                        std::lock_guard<std::mutex> lock(_mutex);
+                        if (lifecycle) {
+                            // A session begin/finish must not be lost: retry it on reconnect.
+                            _queue.push_front(std::move(command));
+                            _lifecycleMarkers.push_front(true);
+                        } else {
+                            _dropped.fetch_add(1, std::memory_order_relaxed);
+                        }
+                        _busy.store(false, std::memory_order_relaxed);
+                        _cv.notify_all();
+                    }
                     continue;
                 }
             }
 
-            _busy.store(true, std::memory_order_relaxed);
             const bool ok = transport::WriteFramed(socket, command);
-            _busy.store(false, std::memory_order_relaxed);
-            _cv.notify_all();
-
             if (ok) {
                 _sent.fetch_add(1, std::memory_order_relaxed);
+                _busy.store(false, std::memory_order_relaxed);
+                _cv.notify_all();
             } else {
                 connected = false;
                 try {
                     socket.close();
                 } catch (...) {
                 }
-                _dropped.fetch_add(1, std::memory_order_relaxed);
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    if (lifecycle) {
+                        _queue.push_front(std::move(command));
+                        _lifecycleMarkers.push_front(true);
+                    } else {
+                        _dropped.fetch_add(1, std::memory_order_relaxed);
+                    }
+                    _busy.store(false, std::memory_order_relaxed);
+                    _cv.notify_all();
+                }
             }
         }
     }

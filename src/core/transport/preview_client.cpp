@@ -33,6 +33,13 @@ namespace vidre {
             return;
         }
         _running.store(false);
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_socket) {
+                boost::system::error_code ec;
+                _socket->close(ec);
+            }
+        }
         if (_thread.joinable()) {
             _thread.join();
         }
@@ -57,14 +64,24 @@ namespace vidre {
                 boost::asio::ip::tcp::socket socket(_io);
                 boost::asio::connect(socket, endpoints);
 
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    if (!_running.load(std::memory_order_relaxed)) {
+                        socket.close();
+                        _socket.reset();
+                        break;
+                    }
+                    _socket = std::make_unique<boost::asio::ip::tcp::socket>(std::move(socket));
+                }
+
                 const std::vector<uint8_t> name(_cameraName.begin(), _cameraName.end());
-                if (!transport::WriteFramed(socket, name)) {
-                    continue;
+                if (!transport::WriteFramed(*_socket, name)) {
+                    break;
                 }
 
                 while (_running.load(std::memory_order_relaxed)) {
                     std::vector<uint8_t> raw;
-                    if (!transport::ReadFramed(socket, raw)) {
+                    if (!transport::ReadFramed(*_socket, raw)) {
                         break;
                     }
                     FrameEnvelope envelope;
@@ -74,8 +91,12 @@ namespace vidre {
                     {
                         std::lock_guard<std::mutex> lock(_mutex);
                         _latest = std::move(envelope);
-                        _frameId.store(static_cast<int64_t>(_latest.frameId), std::memory_order_relaxed);
                     }
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    _socket.reset();
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Preview client error (" << _cameraName << "): " << e.what() << "\n";
