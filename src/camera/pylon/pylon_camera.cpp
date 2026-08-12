@@ -26,28 +26,31 @@ namespace vidre {
 
         camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        while (running.load()) 
+        while (running.load())
         {
             Pylon::CGrabResultPtr currentPtrGrabResult;
             if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
                 std::this_thread::yield();
                 continue;
-            } 
+            }
             auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now() - vidre::StartTime).count();
 
             retrievedFramesNumber++;
-            
+
             SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
 
-            result->frameID = currentPtrGrabResult->GetImageNumber();
             result->timeStamp = currentPtrGrabResult->GetTimeStamp();
             result->computerTimeStamp = computerTimeStamp;
+            result->frameID.store(currentPtrGrabResult->GetImageNumber(), std::memory_order_release);
+
+            latestFrame.store(result, std::memory_order_release);
         }
 
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
-        
+
         camera.StopGrabbing();
+        running.store(false);
     }
 
     void PylonCamera::Init() {
@@ -97,11 +100,10 @@ namespace vidre {
         armed.store(true);
     }
     void PylonCamera::Disarm() {
-        // Free Shared Memory Buffers
         armed.store(false);
         shrBufferFactory.Reset();
         retrievedFramesNumber = 0;
-        // camera.Open();
+        latestFrame.store(nullptr, std::memory_order_release);
     }
     void PylonCamera::Start() {
         if (!armed.load())
@@ -123,7 +125,7 @@ namespace vidre {
         return armed.load();
     }
     bool PylonCamera::IsRunning() {
-        return grabber.joinable();
+        return running.load();
     }
 
     /// --------------------------

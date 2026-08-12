@@ -5,6 +5,7 @@
 #include <core/runtime/shared_frame_header.hpp>
 #include <config.h>
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -24,15 +25,28 @@ namespace vidre {
         boost::interprocess::managed_shared_memory* getSharedMemory() {
             return _sharedMemory.get();
         }
-        
-        int getSavedFramesNumber();
+
+        int getSavedFramesNumber() {
+            return _consumedFrames.load(std::memory_order_relaxed);
+        }
+
+        int getDroppedFrames() {
+            return _droppedFrames.load(std::memory_order_relaxed);
+        }
+
+        int numSlots() {
+            return _bufferSize;
+        }
+
         void reset();
-        
+
         std::pair<void*, SharedFrameHeader*> pop();
     private:
-        int _nextFrameToPop;
-        int _bufferSize;
-        int _previouslyPopedFrame;
+        int _nextFrameToPop = 0;
+        int _bufferSize = 0;
+        int64_t _lastConsumedFrameID = 0;
+        std::atomic<int> _consumedFrames{0};
+        std::atomic<int> _droppedFrames{0};
         std::unique_ptr<boost::interprocess::managed_shared_memory> _sharedMemory;
         std::unique_ptr<std::vector<void *>> _sharedMemoryPtrs;
     };

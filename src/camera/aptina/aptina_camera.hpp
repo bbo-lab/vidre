@@ -56,6 +56,7 @@ namespace vidre {
         virtual void SetTriggerIn(unsigned int line) override;
         virtual void SetTriggerOut(unsigned int line) override;
         virtual uint8_t* RGBFrame(uint8_t* data, uint32_t* w, uint32_t* h, uint32_t* d) override;
+        virtual bool HadError() override { return _hadError.load(std::memory_order_relaxed); }
     private:
         AP_HANDLE _handle;
         
@@ -65,6 +66,8 @@ namespace vidre {
         std::atomic<bool> running;
 
         std::atomic<bool> armed;
+
+        std::atomic<bool> _hadError{false};
 
         std::atomic<SharedFrameHeader *> latestFrame;
 

@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstring>
 #include <iostream>
+#include <new>
 #include <utility>
 
 namespace vidre {
@@ -52,13 +53,10 @@ namespace vidre {
         allocatedBuffers.reserve(maxNumBuffer);
         for (unsigned int index = 0; index < maxNumBuffer; ++index) {
             void* allocatedMemory = sharedMemory->allocate(bufferBytes);
+            new (allocatedMemory) SharedFrameHeader{};
+
             auto* frameBytesPtr = static_cast<uint8_t*>(allocatedMemory) + sizeof(SharedFrameHeader);
             std::fill(frameBytesPtr, frameBytesPtr + frameBytes, 0);
-
-            auto* header = static_cast<SharedFrameHeader*>(allocatedMemory);
-            header->frameID = 0;
-            header->timeStamp = 0;
-            header->computerTimeStamp = 0;
 
             sharedMemoryPtrs->at(index) = allocatedMemory;
             allocatedBuffers.push_back(allocatedMemory);
@@ -113,14 +111,13 @@ namespace vidre {
             std::fill(pixels, pixels + frameBytes, value);
 
             const auto now = std::chrono::system_clock::now();
-            const auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(now - StartTime).count();
-            const auto timeStamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now - StartTime).count();
+            const auto timeSinceStart = std::chrono::duration_cast<std::chrono::milliseconds>(now - StartTime).count();
 
-            header->frameID = static_cast<int64_t>(frameCounter + 1);
-            header->timeStamp = static_cast<uint64_t>(timeStamp);
-            header->computerTimeStamp = static_cast<long>(computerTimeStamp);
+            header->timeStamp = static_cast<uint64_t>(timeSinceStart);
+            header->computerTimeStamp = static_cast<int64_t>(timeSinceStart);
+            header->frameID.store(static_cast<int64_t>(frameCounter + 1), std::memory_order_release);
 
-            latestFrame.store(header);
+            latestFrame.store(header, std::memory_order_release);
             ++frameCounter;
 
             if (frameRate > 0.0) {
@@ -129,6 +126,8 @@ namespace vidre {
                 std::this_thread::yield();
             }
         }
+
+        running.store(false);
     }
 
     void DummyCamera::Start() {
@@ -154,7 +153,7 @@ namespace vidre {
     }
 
     bool DummyCamera::IsRunning() {
-        return grabber.joinable();
+        return running.load();
     }
 
     void DummyCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* memory,

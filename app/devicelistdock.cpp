@@ -1,10 +1,12 @@
 #include "devicelistdock.hpp"
+#include "status_mapping.hpp"
 #include <QHeaderView>
 #include <QIcon>
 
 DeviceListDock::DeviceListDock(QWidget *parent)
     : QWidget(parent)
     , treeWidget_(new QTreeWidget(this))
+    , contextMenu_(new QMenu(this))
 {
     setupUI();
 }
@@ -25,6 +27,7 @@ void DeviceListDock::setupUI()
     treeWidget_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
     treeWidget_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     treeWidget_->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    treeWidget_->setContextMenuPolicy(Qt::CustomContextMenu);
     
     // Dark theme styling
     treeWidget_->setStyleSheet(
@@ -51,6 +54,20 @@ void DeviceListDock::setupUI()
     
     connect(treeWidget_, &QTreeWidget::itemDoubleClicked, 
             this, &DeviceListDock::onItemDoubleClicked);
+    connect(treeWidget_, &QWidget::customContextMenuRequested,
+            this, &DeviceListDock::onContextMenu);
+    
+    // Context menu actions
+    recordAction_ = new QAction("Record", this);
+    showAction_ = new QAction("Show", this);
+    stopAction_ = new QAction("Stop", this);
+    contextMenu_->addAction(recordAction_);
+    contextMenu_->addAction(showAction_);
+    contextMenu_->addAction(stopAction_);
+    
+    connect(recordAction_, &QAction::triggered, this, &DeviceListDock::onRecordAction);
+    connect(showAction_, &QAction::triggered, this, &DeviceListDock::onShowAction);
+    connect(stopAction_, &QAction::triggered, this, &DeviceListDock::onStopAction);
     
     layout->addWidget(treeWidget_);
     setLayout(layout);
@@ -61,25 +78,27 @@ void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std:
     treeWidget_->clear();
     
     for (const auto& cam : cameras) {
+        if (!cam.second || !cam.second->getCamera()) {
+            continue;
+        }
+        
         QTreeWidgetItem *item = new QTreeWidgetItem(treeWidget_);
         item->setText(0, QString::fromStdString(cam.first));
-        item->setText(1, cam.second->isRunning() ? "Running" : "Stopped");
         
-        QString vendor = "Unknown"; //
+        auto status = cam.second->getRecordingStatus();
+        item->setText(1, status_mapping::toString(status));
+        item->setForeground(1, QBrush(status_mapping::toColor(status)));
+        
+        QString vendor = "Unknown";
         QString camVendorName = QString::fromStdString(cam.second->getCamera()->GetVendorName()).toLower();
         if (camVendorName.contains("pylon") || camVendorName.contains("basler")) {
             vendor = "Pylon";
         } else if (camVendorName.contains("aptina")) {
             vendor = "Aptina";
+        } else if (camVendorName.contains("dummy")) {
+            vendor = "Dummy";
         }
         item->setText(2, vendor);
-        
-        // Color code status
-        if (cam.second->isRunning()) {
-            item->setForeground(1, QBrush(QColor(0, 200, 0)));
-        } else {
-            item->setForeground(1, QBrush(QColor(200, 100, 0)));
-        }
         
         treeWidget_->addTopLevelItem(item);
     }
@@ -92,14 +111,10 @@ void DeviceListDock::updateDeviceStatus(const std::unordered_map<std::string, st
         QString deviceName = item->text(0);
         
         auto it = cameras.find(deviceName.toStdString());
-        if (it != cameras.end()) {
-            item->setText(1, it->second->isRunning() ? "Running" : "Stopped");
-            
-            if (it->second->isRunning()) {
-                item->setForeground(1, QBrush(QColor(0, 200, 0)));
-            } else {
-                item->setForeground(1, QBrush(QColor(200, 100, 0)));
-            }
+        if (it != cameras.end() && it->second) {
+            auto status = it->second->getRecordingStatus();
+            item->setText(1, status_mapping::toString(status));
+            item->setForeground(1, QBrush(status_mapping::toColor(status)));
         }
     }
 }
@@ -109,4 +124,30 @@ void DeviceListDock::onItemDoubleClicked(QTreeWidgetItem* item, int column)
     if (item) {
         emit deviceDoubleClicked(item->text(0));
     }
+}
+
+void DeviceListDock::onContextMenu(const QPoint& pos)
+{
+    QTreeWidgetItem *item = treeWidget_->itemAt(pos);
+    if (!item) {
+        return;
+    }
+    
+    contextMenuItemName_ = item->text(0);
+    contextMenu_->exec(treeWidget_->viewport()->mapToGlobal(pos));
+}
+
+void DeviceListDock::onRecordAction()
+{
+    emit deviceRecordRequested(contextMenuItemName_);
+}
+
+void DeviceListDock::onShowAction()
+{
+    emit deviceShowRequested(contextMenuItemName_);
+}
+
+void DeviceListDock::onStopAction()
+{
+    emit deviceStopRequested(contextMenuItemName_);
 }

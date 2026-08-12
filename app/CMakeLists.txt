@@ -34,6 +34,7 @@ set(SOURCES
     camerainfosdock.hpp
     devicelistdock.cpp
     devicelistdock.hpp
+    status_mapping.hpp
     camerawidget.ui
     mainwindow.ui
 )

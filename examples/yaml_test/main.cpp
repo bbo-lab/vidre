@@ -40,32 +40,11 @@ static std::vector<std::string> split(const char *str, char c = ' ') {
     return result;
 }
 
-
 int main(int argc, const char *argv[]) {
     // TODO: Separate Record System option/button
     // TODO: automatically detect master/triggered cam
     // TODO: first start all triggered cams, first finish master cam 
     std::cout << std::filesystem::current_path() << std::endl;
-    // Load dynamic libraries for camera APIs before using any camera
-    // const char* aptinaLibPath = "C:/Aptina Imaging/lib/apbase.lib"; //
-
-    
-
-    //const char* pylonLibPath = "libpylon.so"; // 
-    // if (!load_aptina_library(aptinaLibPath)) {
-    //    std::cerr << "Failed to load Aptina dynamic library: " << aptinaLibPath << std::endl;
-    //     return -1;
-    // }
-    // else{
-    //     std::cout << "LOADED APTINA\n";
-    // }
-    //if (!load_pylon_library(pylonLibPath)) {
-    //    std::cerr << "Failed to load Pylon dynamic library: " << pylonLibPath << std::endl;
-    //}
-
-    
-
-
 
     // Parse arguments and set relevant variables.
     po::options_description desc("Allowed options");

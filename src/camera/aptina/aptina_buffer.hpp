@@ -6,6 +6,7 @@
 
 #include <core/runtime/shared_frame_header.hpp>
 #include <iostream>
+#include <new>
 
 namespace vidre {
     class AptinaBuffer {
@@ -31,10 +32,8 @@ namespace vidre {
         void AllocateBuffer(size_t bufferSize) {
             ++m_lastBufferContext;
             try {
-                // std::cout << bufferSize << std::endl;
             void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
-           
-            auto* header = static_cast<vidre::SharedFrameHeader*>(allocatedMemory);
+            new (allocatedMemory) vidre::SharedFrameHeader{};
 
             auto *buffer_data = static_cast<uint8_t*>(allocatedMemory) + sizeof(vidre::SharedFrameHeader);
             for (size_t i = 0; i < bufferSize; ++i) {
@@ -42,7 +41,7 @@ namespace vidre {
             }
 
             shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
-            } catch 
+            } catch
                 (const boost::interprocess::interprocess_exception& ex) {
                     std::cerr << "Interprocess exception: " << ex.what() << std::endl;
             }

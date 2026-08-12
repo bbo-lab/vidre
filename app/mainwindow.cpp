@@ -12,10 +12,9 @@
 #include <QTextEdit>
 #include <QToolButton>
 #include <QIcon>
+#include <QMetaObject>
 
 #include <iostream>
-#include <vector>
-#include "yaml-cpp/yaml.h"
 
 #include <core/runtime/remote_runtime.hpp>
 #include <core/transport/control_client.hpp>
@@ -23,6 +22,52 @@
 #include <utils/config_loader/config_loader.hpp>
 #include <utils/dynamic_loader/dynamic_library_loader.hpp>
 #include <core/transport/transport.hpp>
+
+LogStreamBuffer::LogStreamBuffer(QTextEdit* textEdit)
+    : textEdit_(textEdit)
+    , oldCout_(std::cout.rdbuf())
+    , oldCerr_(std::cerr.rdbuf())
+{
+    std::cout.rdbuf(this);
+    std::cerr.rdbuf(this);
+}
+
+LogStreamBuffer::~LogStreamBuffer()
+{
+    std::cout.rdbuf(oldCout_);
+    std::cerr.rdbuf(oldCerr_);
+    sync();
+}
+
+std::streambuf::int_type LogStreamBuffer::overflow(std::streambuf::int_type ch)
+{
+    if (ch == traits_type::eof()) {
+        return traits_type::not_eof(ch);
+    }
+    char c = static_cast<char>(ch);
+    if (c == '\n') {
+        sync();
+    } else {
+        buffer_ += c;
+    }
+    return ch;
+}
+
+int LogStreamBuffer::sync()
+{
+    std::string line;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        line = buffer_;
+        buffer_.clear();
+    }
+    if (!line.empty()) {
+        QString text = QString::fromStdString(line);
+        QMetaObject::invokeMethod(textEdit_, "append", Qt::QueuedConnection,
+                                  Q_ARG(QString, text));
+    }
+    return 0;
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -32,6 +77,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setupUI();
+    
+    logStreamBuffer_ = new LogStreamBuffer(logTextEdit_);
     
     // Setup auto-refresh timer (every 2 seconds)
     connect(statusTimer_, &QTimer::timeout, this, &MainWindow::updateCameraStatus);
@@ -48,6 +95,7 @@ MainWindow::~MainWindow()
             cam.second->stop();
         }
     }
+    delete logStreamBuffer_;
     delete ui;
 }
 
@@ -231,6 +279,12 @@ void MainWindow::createDockWidgets()
     
     connect(deviceListDock_, &DeviceListDock::deviceDoubleClicked, 
             this, &MainWindow::onDeviceDoubleClicked);
+    connect(deviceListDock_, &DeviceListDock::deviceRecordRequested,
+            this, &MainWindow::onDeviceRecordRequested);
+    connect(deviceListDock_, &DeviceListDock::deviceShowRequested,
+            this, &MainWindow::onDeviceShowRequested);
+    connect(deviceListDock_, &DeviceListDock::deviceStopRequested,
+            this, &MainWindow::onDeviceStopRequested);
     connect(ui->actionDeviceList, &QAction::toggled, deviceDock, &QDockWidget::setVisible);
     connect(deviceDock, &QDockWidget::visibilityChanged, ui->actionDeviceList, &QAction::setChecked);
     
@@ -463,6 +517,36 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
     }
 }
 
+void MainWindow::onDeviceRecordRequested(const QString& deviceName)
+{
+    auto it = cameras_.find(deviceName.toStdString());
+    if (it != cameras_.end() && it->second && !it->second->isRunning()) {
+        it->second->run();
+        logMessage(QString("Recording: %1").arg(deviceName));
+        updateCameraStatus();
+    }
+}
+
+void MainWindow::onDeviceShowRequested(const QString& deviceName)
+{
+    auto it = cameras_.find(deviceName.toStdString());
+    if (it != cameras_.end() && it->second && !it->second->isRunning()) {
+        it->second->show();
+        logMessage(QString("Showing: %1").arg(deviceName));
+        updateCameraStatus();
+    }
+}
+
+void MainWindow::onDeviceStopRequested(const QString& deviceName)
+{
+    auto it = cameras_.find(deviceName.toStdString());
+    if (it != cameras_.end() && it->second && it->second->isRunning()) {
+        it->second->stop();
+        logMessage(QString("Stopped: %1").arg(deviceName));
+        updateCameraStatus();
+    }
+}
+
 void MainWindow::onCameraWindowClosed(const QString& cameraName)
 {
     cameraWidgets_.erase(cameraName);
@@ -506,7 +590,7 @@ void MainWindow::updateCameraStatus()
     bool anyError = false;
 
     for (const auto& cam : cameras_) {
-        if (cam.second) {
+        if (cam.second && cam.second->checkCamera()) {
             cam.second->refresh();
             vidre::RecordingStatus status = cam.second->getRecordingStatus();
             if (status != vidre::RecordingStatus::Stopped) {

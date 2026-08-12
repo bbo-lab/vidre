@@ -39,20 +39,34 @@ private:
     QTimer *updateTimer_;
     
     struct CameraData {
-        vidre::IRuntimeInstance* runtimeInstance;
+        vidre::IRuntimeInstance* runtimeInstance = nullptr;
         QString lastInfo;
-        QGroupBox* groupBox;
-        QLabel* infoLabel;
-        QDoubleSpinBox* exposureSpin;
-        QDoubleSpinBox* gainSpin;
-        QPushButton* applyButton;
-        bool controlsInitialized;
+        QGroupBox* groupBox = nullptr;
+        QLabel* infoLabel = nullptr;
+        QDoubleSpinBox* exposureSpin = nullptr;
+        QDoubleSpinBox* gainSpin = nullptr;
+        QPushButton* applyButton = nullptr;
+        bool controlsInitialized = false;
+
+        QString serial;
+        QString vendor;
+        unsigned int width = 0;
+        unsigned int height = 0;
+        unsigned int offsetX = 0;
+        unsigned int offsetY = 0;
+        unsigned int frameBytes = 0;
+        unsigned int bufferSize = 0;
+        unsigned int maxNumBuffers = 0;
+        double frameRate = 0.0;
+        double exposure = 0.0;
+        double gain = 0.0;
     };
     
     std::unordered_map<std::string, CameraData> cameras_;
     
     void refreshDisplay();
-    QString generateCameraInfo(const QString& cameraName, vidre::IRuntimeInstance* runtimeInstance);
+    void snapshotCameraParams(const QString& cameraName, CameraData& data);
+    QString generateCameraInfo(const QString& cameraName, const CameraData& data);
     QGroupBox* createCameraGroup(const QString& cameraName, CameraData& data);
     void applyCameraSettings(const QString& cameraName);
 };

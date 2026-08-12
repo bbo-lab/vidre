@@ -1,6 +1,8 @@
 #include "camerawidget.hpp"
 #include "ui_camerawidget.h"
+#include "status_mapping.hpp"
 #include <QCloseEvent>
+#include <QKeyEvent>
 #include <QDateTime>
 #include <QMdiArea>
 #include <QMdiSubWindow>
@@ -70,7 +72,6 @@ void CameraWidget::setupUI()
     startButton_ = new QPushButton("Record", this);
     stopButton_ = new QPushButton("Stop", this);
     showButton_ = new QPushButton("Show", this);
-    singleGrabButton_ = new QPushButton("Single Frame", this);
     undockButton_ = new QPushButton("Undock", this);
     
     QString buttonStyle = 
@@ -102,13 +103,11 @@ void CameraWidget::setupUI()
     stopButton_->setMaximumHeight(24);
     showButton_->setMaximumHeight(24);
     undockButton_->setMaximumHeight(24);
-    // singleGrabButton_->setStyleSheet(buttonStyle);
     
     controlLayout->addWidget(startButton_, 0, 0);
     controlLayout->addWidget(showButton_, 0, 1);
     controlLayout->addWidget(stopButton_, 0, 2);
     controlLayout->addWidget(undockButton_, 0, 3);
-    // controlLayout->addWidget(singleGrabButton_, 1, 0, 1, 2);
     
     // Status label
     statusLabel_ = new QLabel("Status: Stopped", this);
@@ -146,7 +145,7 @@ void CameraWidget::setupUI()
     
     // Info label
     infoLabel_ = new QLabel("Camera Information", this);
-    infoLabel_->setMaximumHeight(70);
+    infoLabel_->setMaximumHeight(90);
     infoLabel_->setStyleSheet(
         "QLabel {"
         "    background-color: #1e1e1e;"
@@ -171,7 +170,6 @@ void CameraWidget::setupUI()
     connect(stopButton_, &QPushButton::clicked, this, &CameraWidget::onStopClicked);
     connect(showButton_, &QPushButton::clicked, this, &CameraWidget::onShowClicked);
     connect(undockButton_, &QPushButton::clicked, this, &CameraWidget::onToggleDockClicked);
-    // connect(singleGrabButton_, &QPushButton::clicked, this, &CameraWidget::onSingleGrabClicked);
     
     // Set dark background
     setStyleSheet("CameraWidget { background-color: #2b2b2b; }");
@@ -206,7 +204,6 @@ void CameraWidget::updateStatus()
             lastFrameID_ = -1;
             frameCount_ = 0;
         }
-        // singleGrabButton_->setEnabled(false);
     } else {
         statusLabel_->setText("Status: Stopped");
         statusLabel_->setStyleSheet(
@@ -226,7 +223,6 @@ void CameraWidget::updateStatus()
         if (frameTimer_->isActive()) {
             frameTimer_->stop();
         }
-        // singleGrabButton_->setEnabled(true);
     }
     
     updateInfoDisplay();
@@ -237,33 +233,17 @@ void CameraWidget::updateInfoDisplay()
     QString info = QString("Camera: %1\n").arg(cameraName_);
     
     vidre::RecordingStatus status = runtimeInstance_->getRecordingStatus();
-    QString statusStr;
-    switch (status) {
-        case vidre::RecordingStatus::Stopped:
-            statusStr = "Stopped";
-            break;
-        case vidre::RecordingStatus::Streaming:
-            statusStr = "Streaming";
-            break;
-        case vidre::RecordingStatus::RecordingFine:
-            statusStr = "Recording";
-            break;
-        case vidre::RecordingStatus::RecordingDroppedFrames:
-            statusStr = "Recording (Dropped Frames)";
-            break;
-        case vidre::RecordingStatus::RecordingError:
-            statusStr = "Recording (Error)";
-            break;
-        default:
-            statusStr = "Unknown";
-    }
-    
-    info += QString("Status: %1\n").arg(statusStr);
+    info += QString("Status: %1\n").arg(status_mapping::toString(status));
     
     bool isActive = (status != vidre::RecordingStatus::Stopped);
     if (isActive) {
         info += QString("Frames Displayed: %1\n").arg(frameCount_);
         info += QString("Last Frame ID: %1\n").arg(lastFrameID_);
+        
+        int saved = runtimeInstance_->getSavedFramesNumber();
+        int dropped = runtimeInstance_->getDroppedFrames();
+        
+        info += QString("Saved: %1 | Dropped: %2\n").arg(saved).arg(dropped);
         
         unsigned int width = runtimeInstance_->getFrameWidth();
         unsigned int height = runtimeInstance_->getFrameHeight();
@@ -310,10 +290,6 @@ void CameraWidget::onStopClicked()
     }
 }
 
-void CameraWidget::onSingleGrabClicked()
-{
-}
-
 void CameraWidget::updateFrame()
 {
     if (!runtimeInstance_) {
@@ -357,32 +333,62 @@ void CameraWidget::updateFrame()
 
 void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes)
 {
-    if (!imageData || width <= 0 || height <= 0) {
+    if (!imageData || width == 0 || height == 0) {
         return;
     }
     
-    QImage::Format format;
     QImage image;
-    uint8_t* unpacked_buffer = nullptr;
 
     if (bitsPerPixel == 8) {
-        format = QImage::Format_Grayscale8;
-        image = QImage(imageData, width, height, format);
+        image = QImage(imageData, width, height, width, QImage::Format_Grayscale8);
     } else if (bitsPerPixel == 10) {
-        image = QImage(imageData, width, height, QImage::Format_RGB32);
+        // 10-bit packed: 4 pixels per 5 bytes. Unpack to 16-bit grayscale for display.
+        // Each pixel is 10 bits; 4 pixels fit in 5 bytes (32 bits / 4 px).
+        // We unpack to Format_Grayscale16, scaling 10-bit to 16-bit.
+        const size_t numPixels = width * height;
+        QImage unpacked(numPixels > 0 ? static_cast<int>(width) : 0,
+                        static_cast<int>(height),
+                        QImage::Format_Grayscale16);
+        if (unpacked.isNull()) {
+            return;
+        }
+        // 10-bit packed format: 4 pixels in 5 bytes (little-endian).
+        // Byte layout for 4 pixels: [b0 b1 b2 b3 b4]
+        // p0 = b0 | ((b1 & 0x03) << 8)   (10 bits)
+        // p1 = (b1 >> 2) | ((b2 & 0x0F) << 6)
+        // p2 = (b2 >> 4) | ((b3 & 0x3F) << 4)
+        // p3 = (b3 >> 6) | (b4 << 2)
+        const uint8_t* src = imageData;
+        uint16_t* dst = reinterpret_cast<uint16_t*>(unpacked.bits());
+        const size_t numGroups = numPixels / 4;
+        const uint16_t scale10to16 = 65535 / 1023; // scale 10-bit (0-1023) to 16-bit (0-65535)
+        for (size_t i = 0; i < numGroups; ++i) {
+            uint8_t b0 = src[0], b1 = src[1], b2 = src[2], b3 = src[3], b4 = src[4];
+            dst[0] = static_cast<uint16_t>((b0 | ((b1 & 0x03) << 8)) * scale10to16);
+            dst[1] = static_cast<uint16_t>(((b1 >> 2) | ((b2 & 0x0F) << 6)) * scale10to16);
+            dst[2] = static_cast<uint16_t>(((b2 >> 4) | ((b3 & 0x3F) << 4)) * scale10to16);
+            dst[3] = static_cast<uint16_t>(((b3 >> 6) | (b4 << 2)) * scale10to16);
+            src += 5;
+            dst += 4;
+        }
+        // Handle remaining pixels (if numPixels % 4 != 0)
+        size_t remaining = numPixels % 4;
+        if (remaining > 0 && src + 4 < imageData + frameBytes) {
+            uint8_t b0 = src[0], b1 = src[1], b2 = src[2], b3 = src[3], b4 = (src + 4 < imageData + frameBytes) ? src[4] : 0;
+            if (remaining > 0) dst[0] = static_cast<uint16_t>((b0 | ((b1 & 0x03) << 8)) * scale10to16);
+            if (remaining > 1) dst[1] = static_cast<uint16_t>(((b1 >> 2) | ((b2 & 0x0F) << 6)) * scale10to16);
+            if (remaining > 2) dst[2] = static_cast<uint16_t>(((b2 >> 4) | ((b3 & 0x3F) << 4)) * scale10to16);
+            if (remaining > 3) dst[3] = static_cast<uint16_t>(((b3 >> 6) | (b4 << 2)) * scale10to16);
+        }
+        image = unpacked;
     } else {
-        return; // Unsupported format
+        return;
     }
     
-    // Scale to fit the label while maintaining aspect ratio
     QPixmap pixmap = QPixmap::fromImage(image);
-    QPixmap scaled = pixmap.scaled(imageLabel_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QPixmap scaled = pixmap.scaled(imageLabel_->size(), Qt::KeepAspectRatio, Qt::FastTransformation);
     
     imageLabel_->setPixmap(scaled);
-    
-    if (unpacked_buffer) {
-        delete[] unpacked_buffer;
-    }
     
     frameCount_++;
 }
@@ -474,4 +480,27 @@ void CameraWidget::focusInEvent(QFocusEvent *event)
 {
     QWidget::focusInEvent(event);
     emit windowActivated(cameraName_);
+}
+
+void CameraWidget::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key()) {
+        case Qt::Key_Space:
+            if (runtimeInstance_) {
+                if (runtimeInstance_->isRunning()) {
+                    onStopClicked();
+                } else {
+                    onStartClicked();
+                }
+            }
+            event->accept();
+            break;
+        case Qt::Key_Escape:
+            close();
+            event->accept();
+            break;
+        default:
+            QWidget::keyPressEvent(event);
+            break;
+    }
 }

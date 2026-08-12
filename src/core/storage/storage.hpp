@@ -1,8 +1,5 @@
 #pragma once
 
-// #include <pylon/PylonIncludes.h>
-// #include <pylon/ImagePersistence.h>
-
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include <config.h>
@@ -10,17 +7,17 @@
 #include <core/runtime/shared_frame_header.hpp>
 #include <core/storage/disk_writer.hpp>
 
-#include <variant>
-
-
+#include <memory>
+#include <string>
 
 namespace vidre {
     struct CCVFrameTail;
 
+    enum class HeaderFormat {
+        CCV
+    };
+
     struct Config {
-        // todo: rm
-        //Pylon::EPixelType pixelType;
-        
         // frame
         uint32_t width;
         uint32_t height;
@@ -37,7 +34,6 @@ namespace vidre {
         uint64_t bitsPerPixel;
         bool packed;
         std::string cameraVendor;
-        std::string imageType;
     };
 
     class Storage {
@@ -48,11 +44,10 @@ namespace vidre {
 
         void setConfig(const Config& config);
         Config getConfig();
-        void save(const void* buffer, uint32_t frameID);
 
         void updateHeader(int frames);
         void appendFrame(const void* buffer);
-        void appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp);
+        void appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp);
         void initiateHeader();
 
         std::string getOutputFileName() {
@@ -61,7 +56,7 @@ namespace vidre {
     private:
         Config _config;
         std::string _outputFileName = "some.ccv";
-        std::string _headerFormat = "ccv";
+        HeaderFormat _headerFormat = HeaderFormat::CCV;
         
         std::unique_ptr<IHeader> _header;
         DiskWriter output_file;
