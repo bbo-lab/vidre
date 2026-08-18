@@ -153,7 +153,6 @@
 #include <vidre/storage.hh>
 
 #include <string_view>
-#include <string>
 #include <array>
 #include <bit>
 #include <cstring>

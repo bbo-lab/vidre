@@ -52,7 +52,6 @@
 #endif
 
 #include <string>
-#include <array>
 
 namespace vidre {
 
