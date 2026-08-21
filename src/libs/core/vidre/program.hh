@@ -296,10 +296,10 @@ namespace vidre {
             options(const options &) = delete;
 
             /** Constructor.
-             * @param brief         Short, brief program description.
-             * @param copyright     Copyright information (may be nullptr).
-             * @param description   Long program description.
-             * @param options       Program options.
+             * @param brief_        Short, brief program description.
+             * @param copyright_    Copyright information (may be nullptr).
+             * @param description_  Long program description.
+             * @param args_         Program options.
              */
             consteval options(const char *brief_, const char *copyright_, const char *description_,
                               std::initializer_list<argument> args_)
