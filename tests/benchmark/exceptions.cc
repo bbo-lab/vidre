@@ -1,25 +1,28 @@
-#include "benchmark.hh"
-
 #include <vidre/exception.hh>
+#include <vidre/util/chrono.hh>
+
+using namespace vidre;
+
+#include <iostream>
 
 #define REPEAT (10000000UL)
 
 volatile int good = 10;
 volatile int bad = -1;
 
-__attribute__((noinline)) void error_handler(int ec [[maybe_unused]]) {
+__vidre_noinline__ void error_handler(int ec [[maybe_unused]]) {
     //
 }
 
-__attribute__((noinline)) int good_value() {
+__vidre_noinline__ int good_value() {
     return good;
 }
 
-__attribute__((noinline)) int bad_value() {
+__vidre_noinline__ int bad_value() {
     return bad;
 }
 
-__attribute__((noinline)) int exception_value() {
+__vidre_noinline__ int exception_value() {
     throw bad;
     return good;
 }
@@ -33,7 +36,7 @@ int main(int argc, const char **argv) {
     }
 
     // error-handler call
-    benchmark::timer t_eh;
+    chrono::timer t_eh;
     {
         t_eh.start();
         for (size_t i = 0; i < REPEAT; ++i) {
@@ -41,11 +44,11 @@ int main(int argc, const char **argv) {
         }
         t_eh.stop();
 
-        std::cout << t_eh.duration<benchmark::nanoseconds>() / REPEAT << " ns" << std::endl;
+        std::cout << t_eh.duration<chrono::timer::nanoseconds>() / REPEAT << " ns" << std::endl;
     }
 
     // good call
-    benchmark::timer t_gc;
+    chrono::timer t_gc;
     {
         t_gc.start();
         for (size_t i = 0; i < REPEAT; ++i) {
@@ -55,11 +58,11 @@ int main(int argc, const char **argv) {
         }
         t_gc.stop();
 
-        std::cout << t_gc.duration<benchmark::nanoseconds>() / REPEAT << " ns" << std::endl;
+        std::cout << t_gc.duration<chrono::timer::nanoseconds>() / REPEAT << " ns" << std::endl;
     }
 
     // bad call
-    benchmark::timer t_bc;
+    chrono::timer t_bc;
     {
         t_bc.start();
         for (size_t i = 0; i < REPEAT; ++i) {
@@ -69,11 +72,11 @@ int main(int argc, const char **argv) {
         }
         t_bc.stop();
 
-        std::cout << t_bc.duration<benchmark::nanoseconds>() / REPEAT << " ns" << std::endl;
+        std::cout << t_bc.duration<chrono::timer::nanoseconds>() / REPEAT << " ns" << std::endl;
     }
 
     // exception
-    benchmark::timer t_ex;
+    chrono::timer t_ex;
     {
         t_ex.start();
         for (size_t i = 0; i < REPEAT; ++i) {
@@ -85,7 +88,7 @@ int main(int argc, const char **argv) {
         }
         t_ex.stop();
 
-        std::cout << t_ex.duration<benchmark::nanoseconds>() / REPEAT << " ns" << std::endl;
+        std::cout << t_ex.duration<chrono::timer::nanoseconds>() / REPEAT << " ns" << std::endl;
     }
 
     return 0;

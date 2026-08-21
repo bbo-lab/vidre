@@ -24,7 +24,7 @@
 #define VIDRE_CORE_UTIL_BIT_HH
 #pragma once
 
-/**@defgroup api-core-util-bit Bit-twiddling utilities
+/**@defgroup api-core-util-bit Bit-packing and -twiddling utilities
  * @ingroup api-core-util
  * @details
  * @fileinfo
@@ -35,6 +35,7 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/memory/base.hh>
 
 #include <bit>
 
@@ -46,13 +47,47 @@ namespace vidre {
          * */
         ///@{
 
-        template <std::size_t N>
-        class field {
-        public:
-            field() = default;
+        // template <std::size_t N>
+        // class field {
+        // public:
+        //     field() = default;
 
-        protected:
-        };
+        // protected:
+        // };
+
+
+        /** Get output size fo pack (or unpack).
+         * @tparam From     The input bit-width.
+         * @tparam To       The output bit-width.
+         */
+        template <std::size_t From, std::size_t To>
+        constexpr inline memory::size_type pack_size(memory::size_type bytes_in) {
+            if constexpr (From <= To)
+                return (bytes_in * To) / From;
+            else
+                return (bytes_in * To + From - 1) / From;
+        }
+
+        /** Pack (or unpack) data.
+         * @tparam From     The input bit-width.
+         * @tparam To       The output bit-width.
+         * @tparam ByteSwap Flag, if bytes have to be swapped (such as with non-native endianness).
+         */
+        template <std::size_t From, std::size_t To, bool ByteSwap = false>
+        memory::size_type pack(const memory::view &input, memory::area output);
+
+        template <>
+        memory::size_type pack<16, 10, false>(const memory::view &input, memory::area output);
+
+        template <>
+        memory::size_type pack<10, 16, false>(const memory::view &input, memory::area output);
+
+        template <>
+        memory::size_type pack<16, 12, false>(const memory::view &input, memory::area output);
+
+        template <>
+        memory::size_type pack<12, 16, false>(const memory::view &input, memory::area output);
+
 
         ///@}
 

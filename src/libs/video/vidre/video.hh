@@ -24,7 +24,7 @@
 #define VIDRE_CORE_VIDEO_HH
 #pragma once
 
-/**@addtogroup api-core-video
+/**@addtogroup api-video
  * @details
  * @fileinfo
  *
@@ -33,13 +33,13 @@
  *
  * @{
  * @namespace vidre::video Video encoding
- * @defgroup api-core-video-format Video formats
- * @defgroup api-core-video-frame  Frame handling
- * @defgroup api-core-video-details Implementation details
+ * @defgroup api-video-format Video formats
+ * @defgroup api-video-frame  Frame handling
+ * @defgroup api-video-details Implementation details
  * @}
  * */
 
- /**@addtogroup api-core-video-details
+ /**@addtogroup api-video-details
   * @{
   * @namespace vidre::video::detail Implementation details.
   * @}

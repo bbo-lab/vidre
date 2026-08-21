@@ -20,7 +20,9 @@
  * @defgroup api-core-script        Scripting
  * @defgroup api-core-settings      Settings
  * @defgroup api-core-io            In-/output
+ * @defgroup api-core-storage       Storage
  * @defgroup api-core-plugin        Plugins
+ * @defgroup api-core-thread        Thread support
  * @defgroup api-core-program       Program invocation and tools
  * @defgroup api-core-details       Implementation details
  * @}

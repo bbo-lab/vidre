@@ -25,15 +25,6 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "benchmark.raw",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/benchmark.raw",
-            "args": [],
-            "environment": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
             "name": "example.core.log",
             "type": "cppdbg",
             "request": "launch",
@@ -92,6 +83,15 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/example.core.raw",
+            "args": [  ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "example.core.io",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.io",
             "args": [  ],
             "environment": [],
             "cwd": "${workspaceFolder}"

@@ -9,7 +9,7 @@
 include(vidre/deps/libuuid)
 if(NOT VIDRE_HAVE_LIBUUID)
     set(BOOST_COMPONENT_UUID uuid)
-    set(UUIDLIB Boost::system) # uuid is header-only but needs system for linking
+    set(UUIDLIB Boost::uuid) # uuid is header-only but needs system for linking
 endif()
 
 set(BOOST_VERSION 1.83.0)
@@ -21,14 +21,15 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(BOOST_INCLUDE_LIBRARIES
             exception
             system
-            iostreams)
+            iostreams
+            ${BOOST_COMPONENT_UUID}
+            )
 
 if(VIDRE_DEPS_CHECK_ONLY)
     find_package(Boost QUIET
         ${BOOST_VERSION}
         COMPONENTS
             ${BOOST_INCLUDE_LIBRARIES}
-            ${BOOST_COMPONENT_UUID}
         CONFIG
     )
     vidre_deps_set(Boost ${Boost_FOUND} REQUIRED)
@@ -44,11 +45,14 @@ else()
         FIND_PACKAGE_ARGS
             ${BOOST_VERSION}
             COMPONENTS
-            exception
                 ${BOOST_INCLUDE_LIBRARIES}
                 ${BOOST_COMPONENT_UUID}
             CONFIG
     )
+
+    #set(Boost_USE_STATIC_LIBS OFF) 
+    set(Boost_USE_MULTITHREADED ON)  
+    #set(Boost_USE_STATIC_RUNTIME OFF) 
 
     FetchContent_MakeAvailable(Boost)
 endif()

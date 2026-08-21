@@ -47,3 +47,9 @@ patches/
 
 # benchmarks
 *.tmp
+
+# vi
+*.swp
+
+# clangd
+.cache/

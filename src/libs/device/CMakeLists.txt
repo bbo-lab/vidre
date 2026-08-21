@@ -1,4 +1,4 @@
-vidre_library(vidredevice SHARED
+vidre_library(vidredev SHARED
     ALIAS Vidre::Device
     EXPORT VidreTargets-${Vidre_RELEASE}
     VERSION ${Vidre_VERSION}

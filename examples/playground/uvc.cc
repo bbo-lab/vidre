@@ -1,22 +1,14 @@
-#include <vidre/device/camera.hh>
+#include <vidre/uvc/device.hh>
 #include <vidre/log.hh>
 #include <vidre/program.hh>
-#include <vidre/storage/io.hh>
 
 #include <iostream>
 #include <string>
 #include <filesystem>
-
-#if VIDRE_HOST_LINUX
-#include "uvc/linux/uvc.hh"
-#include "uvc/linux/uvc.cc"
-#elif VIDRE_HOST_WINDOWS
-// FIXME
-#elif VIDRE_HOST_MACOS
-// FIXME
-#endif
+#include <sstream>
 
 using namespace vidre;
+using namespace vidre::video;
 
 // ============================================================================
 
@@ -37,17 +29,28 @@ void log_level(program::argument::parser &, variant value) {
 }
 
 void list(program::argument::parser &, variant) {
-    // list cameras
-    uvc::enumerator enumerator;
+    uvc::camera::enumerator enumerator;
     auto cameras = enumerator.find();
+
     int i = 0;
-    for (const auto &camera : cameras) {
+    for (const auto &dev : cameras) {
+        uvc::camera *camera = dynamic_cast<uvc::camera *>(dev.get());
+
         std::cout << std::format(("[{:>2}] Name: {}\n       ID: {}\n"), ++i, camera->name(), camera->id());
 
+        //
         if (log::io::stream::threshold(0) >= log::level::info) {
-            std::cout << std::format("       Info:\n{}\n", camera->info().dump(4));
+            std::cout << "     Info:\n";
+            
+            std::string info = camera->meta().dump(4);
+            std::istringstream info_stream(info);
+            std::string line;
+            while (std::getline(info_stream, line)) {
+                std::cout << "           " << line << '\n';
+            }
         }
     }
+
     std::exit(0);
 }
 
@@ -78,7 +81,7 @@ int main(int argc, const char **argv) {
             std::exit(1);
         }
 
-        if (long(parser.get("list")) > 0L) { // FIXME this is ugly
+        if (long(parser.get("list")) > 0L) {  // FIXME this is ugly
             list(parser, {});
             std::exit(0);
         }

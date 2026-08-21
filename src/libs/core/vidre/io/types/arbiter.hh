@@ -20,44 +20,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_STORAGE_MAPPED_HH
-#define VIDRE_CORE_STORAGE_MAPPED_HH
+#ifndef VIDRE_CORE_IO_TYPES_ARBITER_HH
+#define VIDRE_CORE_IO_TYPES_ARBITER_HH
 #pragma once
 
-/**@addtogroup api-core-storage-mapped
- * @details
- * @fileinfo
- *
- * FIXME
- *
- * */
-
 #include <vidre/core/config.hh>
-#include <vidre/storage/io.hh>
-
-#include <filesystem>
-
-#include <cerrno>
-#include <cstring>
-#include <cassert>
+#include <vidre/io/types/basic.hh>
 
 namespace vidre {
 
-    namespace storage {
+    namespace io {
 
-        namespace file {
+        // @todo implement arbiter
 
-            /**@addtogroup api-core-storage-file
-             * */
-            ///@{
+    } //
 
-
-            ///@}
-
-        }  // namespace file
-
-    }  // namespace storage
-
-}  // namespace vidre
-
-#endif  // VIDRE_CORE_STORAGE_FILE_HH
+} //
+#endif  // VIDRE_CORE_IO_TYPES_ARBITER_HH

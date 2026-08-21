@@ -45,6 +45,7 @@
 #include <vidre/util/shared.hh>
 
 #include <source_location>
+#include <system_error>
 #include <string>
 #include <expected>
 
@@ -57,7 +58,7 @@
 
 namespace vidre {
 
-     namespace error {
+    namespace error {
 
         /** Implementation details namespace.
          * @ingroup api-core-exception-details
@@ -348,6 +349,8 @@ namespace vidre {
     public:
         virtual const char *what() const noexcept;
 
+        exception &operator<<(const char *msg) noexcept;
+
     public:
         class logic;
         class runtime;
@@ -493,54 +496,63 @@ namespace vidre {
             void make(error::string &emsg) noexcept override;
         };
 
-        /** Generic error.
+        /** General error code.
          * */
-        class VIDRE_CORE_VISIBILITY errc : public virtual info {
+        class VIDRE_CORE_VISIBILITY code : public virtual info {
         public:
-            errc(std::errc ec) noexcept : ec_(ec) {}
-            virtual ~errc() {}
+            code(std::error_code ec) noexcept : ec_(ec) {}
+            virtual ~code() {}
 
         protected:
-            std::errc ec_{};
+            std::error_code ec_{};
+
+        public:
+            const char *tag() noexcept override {
+                return "code";
+            }
+
+            /** The message.
+             * */
+            void make(error::string &emsg) noexcept override;
+        };
+
+        /** Generic error.
+         * */
+        class VIDRE_CORE_VISIBILITY errc : public virtual code {
+        public:
+            errc(std::errc ec) noexcept : code(std::make_error_code(ec)) {}
+            virtual ~errc() {}
 
         public:
             const char *tag() noexcept override {
                 return "errc";
             }
-
-            /** The message.
-             * */
-            void make(error::string &emsg) noexcept override;
         };
 
         /** System error.
          * */
-        class VIDRE_CORE_VISIBILITY system : public virtual info {
+        class VIDRE_CORE_VISIBILITY system : public virtual code {
         public:
-#if defined(WIN32_)
-            system() noexcept : ec_(GetLastError()) {}
+#if VEDRE_HOST_WINDOWS
+            system() noexcept : code(std::error_code(GetLastError(), std::system_category())) {}
 #else
-            system() noexcept : ec_(errno) {}
+            system() noexcept : code(std::make_error_code(static_cast<std::errc>(errno))) {}
 #endif
-            system(int ec) noexcept : ec_(ec) {}
             virtual ~system() {}
-
-        protected:
-            int ec_{};
 
         public:
             const char *tag() noexcept override {
                 return "system";
             }
-
-            /** The message.
-             * */
-            void make(error::string &emsg) noexcept override;
         };
 
         ///@}
 
     }  // namespace error
+
+    inline exception &exception::operator<<(const char *msg) noexcept {
+        return *this << error::message(msg);
+    }
 
     inline exception::exception(const std::source_location &src) noexcept {
 #if defined(VIDRE_DEVELOP)

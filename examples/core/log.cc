@@ -68,20 +68,27 @@ void tracing() {
 }
 //! [tracing]
 
+#include <iostream>
+
 int main(int argc, const char **argv) {
-#if not defined(DEBUG)
-    log::notice() << "Tracing is disabled (non-DEBUG build).\n";
-#endif
+// #if not defined(DEBUG)
+//     log::notice() << "Tracing is disabled (non-DEBUG build).\n";
+// #endif
 
-    simple_logging();
-    block_wise();
-    tracing();
+//     simple_logging();
+//     block_wise();
+//     tracing();
 
+    event ev;
+    std::cout << (bool) ev.notify() << std::endl;
+    std::cout << (bool) ev.notify(0) << std::endl;
+    std::cout << ev.wait().count << std::endl;
     return 0;
 }
 
 /**@example examples/core/log.cc
- * @brief This file demonstrates logging.
+ * @details
+ * This file demonstrates logging.
  *
  * This example covers the following topics:
  * - simple log use,

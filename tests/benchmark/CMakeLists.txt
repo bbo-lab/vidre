@@ -18,3 +18,19 @@ vidre_test(lookup EXCLUDE
                 unordered_dense::unordered_dense
 )
 
+vidre_test(chrono EXCLUDE
+    SOURCES chrono.cc
+    BUILD
+        LINK_LIBRARIES 
+            PRIVATE 
+                Vidre::Core
+)
+
+vidre_test(modulo EXCLUDE
+    SOURCES modulo.cc
+    BUILD
+        LINK_LIBRARIES 
+            PRIVATE 
+                Vidre::Core
+)
+

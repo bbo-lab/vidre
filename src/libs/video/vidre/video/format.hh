@@ -24,15 +24,15 @@
 #define VIDRE_CORE_VIDEO_FORMAT_HH
 #pragma once
 
-/**@addtogroup api-core-video-format
- * @ingroup api-core-video
+/**@addtogroup api-video-format
+ * @ingroup api-video
  * @details
  * @fileinfo
  *
  * @{
- * @defgroup api-core-video-format-geometry     Geometry
- * @defgroup api-core-video-format-pixel        Pixel format
- * @defgroup api-core-video-format-color        Color space
+ * @defgroup api-video-format-geometry     Geometry
+ * @defgroup api-video-format-pixel        Pixel format
+ * @defgroup api-video-format-color        Color space
  * @}
  * */
 
@@ -46,11 +46,11 @@ namespace vidre {
     namespace video {
 
         /** Format namespace.
-         * @ingroup api-core-video-format
+         * @ingroup api-video-format
          * */
         namespace format {
 
-            /**@addtogroup api-core-video-format
+            /**@addtogroup api-video-format
              * */
             ///@{
 

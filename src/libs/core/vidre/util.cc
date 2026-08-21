@@ -30,4 +30,5 @@
 #include "util/variant.hh"
 #include "util/version.hh"
 #include "util/bit.hh"
-#include "util/thread.hh"
+#include "util/chrono.hh"
+#include "util/debug.hh"

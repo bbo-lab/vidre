@@ -51,8 +51,8 @@ vidre_library(vidrecore SHARED
             vidre/util/status.hh
             vidre/util/events.hh
             vidre/util/endian.hh
-            vidre/util/bit.hh
-            vidre/util/thread.hh
+            vidre/util/bit.hh vidre/util/bit.cc
+            vidre/util/chrono.hh vidre/util/chrono.cc
         vidre/exception.hh vidre/exception.cc
         vidre/log.hh vidre/log.cc
         vidre/memory.hh vidre/memory.cc
@@ -65,6 +65,21 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/io.hh vidre/io.cc
             vidre/io/types.hh vidre/io/types.cc
+                vidre/io/types/basic.hh vidre/io/types/basic.cc
+                vidre/io/types/sink.hh vidre/io/types/sink.cc
+                vidre/io/types/source.hh vidre/io/types/source.cc
+                vidre/io/types/channel.hh vidre/io/types/channel.cc
+                vidre/io/types/merger.hh vidre/io/types/merger.cc
+                vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
+            vidre/io/monitor.hh vidre/io/monitor.cc
+            vidre/io/file.hh vidre/io/file.cc
+            vidre/io/packet.hh vidre/io/packet.cc
+            vidre/io/flow.hh vidre/io/flow.cc
+        vidre/storage.hh vidre/storage.cc
+            vidre/storage/raw.hh vidre/storage/raw.cc
+        vidre/thread.hh vidre/thread.cc
+            vidre/thread/types.hh 
+            vidre/thread/schedule.hh vidre/thread/schedule.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/types.hh vidre/plugin/types.cc
             vidre/plugin/exception.hh

@@ -13,7 +13,7 @@ set(VIDRE_DEPS
     libyuv
     lua
     terminal
-    units
+    # units
     yaml
     unordered_dense
 
@@ -42,10 +42,10 @@ function(vidre_deps_set PACKAGE FOUND)
         set(msg "  [x] ${PACKAGE}")
     else()
         if(__REQUIRED)
-            set(msg "  [ ] ${PACKAGE} (required)")
+            set(msg "  [+] ${PACKAGE} (required)")
             set(VIDRE_DEPS_UNMET ON CACHE INTERNAL "Unmet dependencies.")
         elseif(__RECOMMENDED)
-            set(msg "  [ ] ${PACKAGE} (recommended)")
+            set(msg "  [-] ${PACKAGE} (recommended)")
         else()
             set(msg "  [ ] ${PACKAGE}")
         endif()

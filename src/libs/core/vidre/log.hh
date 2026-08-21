@@ -54,21 +54,22 @@
  * notice << "A notice.\n";
  * notice << "More information for this notice.\n";
  * @endcode
+ * FIXME note about thread-safety, etc.
  *
  * @note VidRe in general only uses a single newline character ('\\n') to
- *      emit or determine an end-of-line (see also @ref log::endl).
+ *       emit or determine an end-of-line (see also @ref log::endl).
  *
  * The logging interface also allows to stream its output to different locations
  * (see @c log::io::stream) with styling (see @c log::io::style) where each
  * stream may have it's own log threshold (see @c log::threshold).
  *
- * By default, all logging is sent to @c std::clog (id 0).
+ * By default, all logging is sent to @c stderr (id 0).
  *
  * Example (see @ref examples/core/log.cc):
  * @include examples/core/log.cc
  *
  * @{
- * @namespace vider::log
+ * @namespace vidre::log
  * @}
  * */
 /**@defgroup api-core-log-if Interface
@@ -80,7 +81,7 @@
  * log::LEVEL() << "message output" << log::endl;
  * @endcode
  * where @c LEVEL may be any of the existing @ref log::level "log levels" and may
- * be used as if @c std::clog would be used directly.
+ * be used as if @c stderr would be used directly.
  *
  * Special conditions apply to the following levels:
  * - @ref log::fatal terminates the program when the object is destructed.
@@ -92,23 +93,35 @@
 /**@defgroup api-core-log-io Output
  * @ingroup api-core-log
  * @brief Log streaming facilities.
- * 
+ *
  * @{
- * @namespace vider::log::io
+ * @namespace vidre::log::io
  * @}
  * */
 /**@defgroup api-core-log-details Implementation details
  * @ingroup api-core-log
  * @brief Internal implementation details.
+ *
+ * @{
+ * @namespace vidre::log::detail
+ * @}
  * */
 
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
 #include <vidre/cpp/format.hh>
+#include <vidre/io/types.hh>
+#include <vidre/io/packet.hh>
+#include <vidre/util/chrono.hh>
+#include <vidre/util/events.hh>
+#include <vidre/exception.hh>
+
+#include <ankerl/unordered_dense.h>
 
 #include <limits>
-#include <iostream>
 #include <vector>
+#include <string>
+#include <string_view>
 
 #if defined(DEBUG)
 #include <source_location>
@@ -119,6 +132,182 @@
 #include <cassert>
 
 namespace vidre {
+
+    namespace lognew {
+
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
+
+        /** Log levels.
+         * @internal
+         * Internally, log events are passed as "raw" data - so, the log level is
+         * represented in the TLV type as minor number.
+         * @see @ref vidre::storage::raw
+         * @see vidre::storage::raw::version_type
+         * @endinternal
+         * */
+        enum class level : uint16_t {
+            fatal = 0,     ///< System is in an unusable state and the program will terminate.
+            alert = 1,     ///< Immediate user interaction is required, usually when data corruption occurs.
+            critical = 2,  ///< A critical error, such as hardware failure.
+            error = 3,     ///< An application error occurred.
+            warning = 4,   ///< Warning level, which may hint to future failure.
+            user = 5,      ///< A user message (such as an experimental note).
+            notice = 6,    ///< A noteworthy condition occurred.
+            status = 7,    ///< A status message.
+            info = 8,      ///< A purely informational message.
+            debug = 9,     ///< Debugging information.
+            trace = 10     ///< Tracing.
+        };
+
+        ///@internal
+        constexpr static unsigned level_n = 11;                                      ///< Number of discernable log levels.
+        constexpr static unsigned level_min = to_underlying(level::fatal);           ///< Minimum log level (as integer).
+        constexpr static unsigned level_max = std::numeric_limits<uint16_t>::max();  ///< Maximum log level (as integer).
+#if defined(DOXYGEN)
+        constexpr static unsigned level_default = defined_at_compile_time;  ///< Default log level.
+#elif defined(DEBUG)
+        constexpr static unsigned level_default = to_underlying(level::debug);
+#elif defined(NDEBUG)
+        constexpr static unsigned level_default = to_underlying(level::notice);
+#else
+        constexpr static unsigned level_default = to_underlying(level::info);
+#endif
+        ///@endinternal
+
+        /** Log-message packet.
+         * @note In contrast to other packets, the log packet is not "groupable",
+         *       instead, the minor packet type indicates the log level.
+         * */
+        struct VIDRE_CORE_VISIBILITY packet : public virtual io::packet::basic {
+            chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
+                                                                     /// @see chrono::reference
+            std::string message{};                                   ///< Log message (variable length).
+
+            packet() {
+                message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
+                update();
+            }
+            packet(const packet &) = delete;
+            packet &operator=(const packet &) = delete;
+            packet(packet &&) = default;
+            packet &operator=(packet &&) = default;
+            virtual ~packet() = default;
+
+            packet(level lvl, uint16_t stream = 0) noexcept     //
+                : basic(to_underlying(io::packet::major::log),  //
+                        to_underlying(lvl), stream, sizeof(timestamp))
+                , timestamp{chrono::timestamp::now()} {
+                message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
+                update();
+            }
+
+            using shared = std::shared_ptr<packet>;
+
+            template <typename... Args>
+            static shared make(Args &&...args) {
+                return std::make_shared<packet>(std::forward<Args>(args)...);
+            }
+
+            void update() noexcept override {
+                length = sizeof(timestamp) + message.size();
+            }
+
+            io::result put(io::sink &f) const override {
+                return basic::put(f)                                                                 //
+                       + f.put(timestamp)                                                            //
+                       + f.put({message.size(), reinterpret_cast<const uint8_t *>(message.data())})  //
+                       + pad(f);
+            }
+
+            /** Get log level.
+             * @returns The log level of this message.
+             * */
+            template <std::endian E = std::endian::native>
+            lognew::level getlevel() const noexcept {
+                return static_cast<lognew::level>(type.minor);
+            }
+        };
+
+        ///@}
+
+        /**@addtogroup api-core-log-details
+         * */
+        ///@{
+
+        template <typename Stream, typename T>
+        concept functor = requires (Stream &outs, T &&t) {
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
+        };
+
+        /** Log message handler.
+         *
+         * This class handles logging and, as well, is the base class for
+         * the individual implementations (see @c log::fatal, etc.);
+         *
+         * */
+        class VIDRE_CORE_VISIBILITY handler {
+        public:
+            handler() = delete;
+            handler(const handler &) = delete;
+            handler &operator=(const handler &) = delete;
+            handler(handler &&) = default;
+            handler &operator=(handler &&) = default;
+            ~handler() {
+                // FIXME ship packet
+            }
+
+            handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
+
+        protected:
+            packet::shared msg_{};  ///< Log message packet.
+
+        public:
+            handler &operator<<(const std::string_view &msg) noexcept {
+                msg_->message += msg;
+                msg_->update();
+                return *this;
+            }
+
+            template <typename T>
+            requires functor<handler, T>
+            handler &operator<<(T &&fn) noexcept {
+                return fn(*this);
+            }
+
+            template <typename V>
+            requires (not std::is_convertible_v<V, std::string_view> and std::formattable<std::remove_cvref_t<V>, char>)
+            handler &operator<<(const V &value) noexcept {
+                msg_->message += std::format("{}", value);
+                msg_->update();
+                return *this;
+            }
+        };
+
+        ///@}
+
+    }  // namespace lognew
+
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
+    // ============================================================================
 
     namespace log {
 
@@ -150,7 +339,9 @@ namespace vidre {
 
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            { t.operator()(outs) } -> std::same_as<Stream &>;
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
         };
 
         ///@}
@@ -178,10 +369,10 @@ namespace vidre {
         constexpr static unsigned level_n = 10;                            ///< Number of discernable log levels.
         constexpr static int level_min = static_cast<int>(level::fatal);   ///< Minimum log level (as integer).
         constexpr static int level_max = std::numeric_limits<int>::max();  ///< Maximum log level (as integer).
-#if defined(DEBUG)
+#if defined(DEBUG) or defined(DOXYGEN)
         constexpr static int level_default = static_cast<int>(level::debug);  ///< Default log level.
 #elif defined(NDEBUG)
-        constexpr static int level_default = 0;
+        constexpr static int level_default = static_cast<int>(level::notice);
 #else
         constexpr static int level_default = static_cast<int>(level::info);
 #endif
@@ -261,7 +452,7 @@ namespace vidre {
 
             /** Default log stream.
              *
-             * This class implements logging to @c std::clog, but also, serves a
+             * This class implements logging to @c stderr, but also, serves a
              * base class for implementing individual log streamers.
              *
              * Developers wishing to implement their own logic should study
@@ -331,9 +522,7 @@ namespace vidre {
                  *      for styling is handled by the vidre::log::handler class.
                  *
                  * */
-                virtual void put(const message_type &msg) noexcept {
-                    std::clog << msg;
-                }
+                virtual void put(const message_type &msg) noexcept;
 
             private:
                 friend class vidre::log::handler;
@@ -559,10 +748,10 @@ namespace vidre {
 #endif
 
         /** Setup log streams.
-         * 
+         *
          * This command intended for use with command line options.
-         * FIXME
-         * 
+         *
+         * @todo show example
          * */
         void setup(const std::string &def);
 

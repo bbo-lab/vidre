@@ -11,6 +11,9 @@
 /**@defgroup api-core Core library
  * @ingroup api
  */
+/**@defgroup api-video Video library
+ * @ingroup api
+ */
 /**@defgroup api-device Device library
  * @ingroup api
  */

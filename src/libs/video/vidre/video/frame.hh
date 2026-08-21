@@ -24,8 +24,8 @@
 #define VIDRE_CORE_VIDEO_FRAME_HH
 #pragma once
 
-/**@addtogroup api-core-video-frame
- * @ingroup api-core-video
+/**@addtogroup api-video-frame
+ * @ingroup api-video
  * @details
  * @fileinfo
  *
@@ -42,13 +42,13 @@ namespace vidre {
 
     namespace video {
 
-        /**@addtogroup api-core-video-frame
+        /**@addtogroup api-video-frame
          * */
         ///@}
 
         /** Frame index.
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY index {
+        struct __vidre_packed__(8) VIDRE_VIDEO_VISIBILITY index {
             uint64_t count;  ///< Frame index, usually but not necessarily starting from 0.
         };
 
@@ -62,7 +62,7 @@ namespace vidre {
          *
          * @see std::chrono::duration for a more flexible representation of time intervals, if needed.
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY timestamp {
+        struct __vidre_packed__(8) VIDRE_VIDEO_VISIBILITY timestamp {
             static_assert(std::chrono::steady_clock::duration::period::num == 1);
 
             /** The systems default resolution for "steady_clock" */
@@ -90,7 +90,7 @@ namespace vidre {
 #if 0
         /** Video frame.
          * */
-        class VIDRE_CORE_VISIBILITY frame {
+        class VIDRE_VIDEO_VISIBILITY frame {
         public:
             using size_type = std::size_t;
 
@@ -105,7 +105,7 @@ namespace vidre {
              * file fileformat. Mind endianness, though.
              *
              * */
-            struct __vidre_packed__ VIDRE_CORE_VISIBILITY metadata {
+            struct __vidre_packed__ VIDRE_VIDEO_VISIBILITY metadata {
                 uint32_t frame_number{};                             ///< Frame number (if available).
                 timestamp camera{};                                  ///< Timestamp from the camera (if available).
                 timestamp system{};                                  ///< Timestamp from the system clock (steady_clock).)

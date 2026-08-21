@@ -33,6 +33,14 @@ To use it with git, run
 To setup OpenSSH you may follow these steps (note that the author uses different public keys
 for different services):
 
+**OpenSSH Agent**
+
+To use the ssh-agent on Windows, execute
+
+    Get-Service ssh-agent | Set-Service -StartupType Automatic -PassThru | Start-Service 
+
+with admin priviledges.
+
 **Generate a public key**
 
     mkdir ~/.ssh

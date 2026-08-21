@@ -51,7 +51,8 @@ int main(int, const char **) {
 }
 
 /**@example examples/core/settings.cc
- * @brief Using settings.
+ * @details
+ * Using settings.
  *
  * This file demonstrates how to load a configuration file (Lua) and passing
  * options to functions (JSON).

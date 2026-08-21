@@ -19,7 +19,9 @@ vidre_test(develop SOURCES develop.cc)
 vidre_test(os SOURCES os.cc)
 vidre_test(script SOURCES script.cc)
 vidre_test(settings SOURCES settings.cc)
+vidre_test(io SOURCES io.cc)
+
 vidre_test(program EXCLUDE SOURCES program.cc)
-# vidre_test(raw EXCLUDE SOURCES raw.cc)
+vidre_test(raw EXCLUDE SOURCES raw.cc)
 vidre_test(event EXCLUDE SOURCES event.cc)
 

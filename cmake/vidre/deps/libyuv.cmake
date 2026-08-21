@@ -49,7 +49,7 @@ if(VIDRE_DEPS_CHECK_ONLY)
 elseif(NOT DEFINED YUVLIB)
     FetchContent_Declare(libyuv
         GIT_REPOSITORY https://chromium.googlesource.com/libyuv/libyuv/
-		GIT_TAG        stable
+		GIT_TAG        main
         GIT_SHALLOW    TRUE
         GIT_PROGRESS   ON
         FIND_PACKAGE_ARGS

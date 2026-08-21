@@ -1,5 +1,5 @@
 /* VidRe
- * Copyright (C) 2024-2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
+ * Copyright (C) 2026 Max-Planck-Institute f. Neurobiol. of Behavior — caesar, Bonn, Germany
  * Author(s):
  *      Jürgen "George" Sawinski¹
  *
@@ -20,32 +20,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_STORAGE_HH
-#define VIDRE_CORE_STORAGE_HH
+#ifndef VIDRE_CORE_UTIL_THREAD_HH
+#define VIDRE_CORE_UTIL_THREAD_HH
 #pragma once
 
-/**@addtogroup api-core-storage
+/**@addtogroup api-core-thread
  * @details
  * @fileinfo
- *
- * The core library provides a number of fundamental mechanisms for storing data
- * generically. File formats are, however, only supported through plugins.
+ * 
+ * VidRe in general uses the C++ standard library's `std::thread` for threading.
+ * Here, we provide some utilities for working with threads, such as setting
+ * thread scheduling policies and priorities if supported by the underlying platform.
  *
  * @{
- * @namespace vidre::storage Storage related.
- * @defgroup api-core-storage-io In-/output
- * @defgroup api-core-storage-file File handling
- * @defgroup api-core-storage-mapped Memory-mapped file handling
- * @defgroup api-core-storage-bit Bit packing and more
- * @defgroup api-core-storage-raw Raw data file
- * @defgroup api-core-storage-details Implementation details
+ * @defgroup api-core-thread-types Types
+ * @defgroup api-core-thread-schedule Scheduling
+ * @defgroup api-core-thread-details Implementation details
  * @}
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/storage/io.hh>
-#include <vidre/storage/file.hh>
-#include <vidre/storage/bit.hh>
-#include <vidre/storage/raw.hh>
+#include <vidre/thread/types.hh>
+#include <vidre/thread/schedule.hh>
 
-#endif  // VIDRE_CORE_STORAGE_HH
+#endif  //  VIDRE_CORE_UTIL_THREAD_HH

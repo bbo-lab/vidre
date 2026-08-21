@@ -24,6 +24,10 @@ if(Doxygen_FOUND)
         DEPENDS ${doxyfile_in}
         VERBATIM)
 
+    set_target_properties(docs PROPERTIES
+        ADDITIONAL_CLEAN_FILES ${CMAKE_CURRENT_BINARY_DIR}/html
+    )
+
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
         COMPONENT "documentation" # FIXME sub-category html?
         DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)

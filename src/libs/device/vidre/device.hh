@@ -24,24 +24,22 @@
 #define VIDRE_DEVICE_HH
 #pragma once
 
-/**@addtogroup api-device-basics
+/**@addtogroup api-device
  * @details
  * @fileinfo
  *
- * FIXM
- *
+ * FIXME
+ * 
+ * @{
+ * @namespace vidre::device Devices namespace.
+ * @defgroup api-device-basics     Fundamentals
+ * @defgroup api-device-impl       Device implementations
+ * @defgroup api-device-details    Implementation details
+ * @}
  * */
 
 #include <vidre/device/config.hh>
 #include <vidre/device/base.hh>
-
-namespace vidre {
-
-    /** Devices.
-     * @ingroup api-device-basics
-     * */
-    namespace device {}  // namespace device
-
-}  // namespace vidre
+#include <vidre/device/camera.hh>
 
 #endif  // VIDRE_DEVICE_CONFIG_HH

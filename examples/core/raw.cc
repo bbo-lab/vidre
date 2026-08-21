@@ -1,14 +1,14 @@
 #include <vidre/storage/raw.hh>
-#include <vidre/video.hh>
+#include <vidre/util/chrono.hh>
+// #include <vidre/video.hh>
 #include <vidre/log.hh>
 
 #include <format>
 #include <iostream>
 #include <locale>
 
-#include "benchmark/benchmark.hh"
-
 using namespace vidre;
+#if 0
 namespace raw = vidre::storage::raw;
 
 #define REPEAT 10000000
@@ -88,14 +88,17 @@ namespace variable {
     //! [dynamic-elements]
 }  // namespace variable
 
+#endif
+
 int main(int argc, const char **argv) {
     log::io::stream::threshold(0, log::level::trace);
     log::trace::pattern("*");
 
+#if 0
     std::locale::global(std::locale(""));
 
     log::info() << std::format("Running raw storage benchmark with {:L} iterations.", REPEAT) << log::endl << log::endl;
-    benchmark::timer t;
+    vidre::chrono::timer t;
 
     // write fixed elements
     {
@@ -116,11 +119,11 @@ int main(int argc, const char **argv) {
         t.stop();
 
         log::info() << "Fixed elements" << log::endl;
-        log::info() << "         duration: " << std::format("{:.3f} ms", t.duration<benchmark::milliseconds>()) << log::endl;
+        log::info() << "         duration: " << std::format("{:.3f} ms", t.duration<vidre::chrono::timer::milliseconds>()) << log::endl;
         log::info() << "       throughput: "
-                    << std::format("{:.3f}", (REPEAT * sizeof(hdr)) / t.duration<benchmark::seconds>() / (1024.0 * 1024.0))
+                    << std::format("{:.3f}", (REPEAT * sizeof(hdr)) / t.duration<vidre::chrono::timer::seconds>() / (1024.0 * 1024.0))
                     << " MiB/s" << log::endl;
-        log::info() << "    call overhead: " << std::format("{:.3f} ns", t.duration<benchmark::nanoseconds>() / REPEAT)
+        log::info() << "    call overhead: " << std::format("{:.3f} ns", t.duration<vidre::chrono::timer::nanoseconds>(REPEAT))
                     << log::endl;
     }
 
@@ -144,11 +147,11 @@ int main(int argc, const char **argv) {
 
         log::info() << log::endl;
         log::info() << "Dynamic elements" << log::endl;
-        log::info() << "         duration: " << std::format("{:.3f} ms", t.duration<benchmark::milliseconds>()) << log::endl;
+        log::info() << "         duration: " << std::format("{:.3f} ms", t.duration<vidre::chrono::timer::milliseconds>()) << log::endl;
         log::info() << "       throughput: "
-                    << std::format("{:.3f}", (REPEAT * sizeof(hdr)) / t.duration<benchmark::seconds>() / (1024.0 * 1024.0))
+                    << std::format("{:.3f}", (REPEAT * sizeof(hdr)) / t.duration<vidre::chrono::timer::seconds>() / (1024.0 * 1024.0))
                     << " MiB/s" << log::endl;
-        log::info() << "    call overhead: " << std::format("{:.3f} ns", t.duration<benchmark::nanoseconds>() / REPEAT)
+        log::info() << "    call overhead: " << std::format("{:.3f} ns", t.duration<vidre::chrono::timer::nanoseconds>(REPEAT))
                     << log::endl;
     }
 
@@ -183,7 +186,7 @@ int main(int argc, const char **argv) {
 
         log::info() << log::endl;
         log::info() << "Checked " << pos << " bytes ("
-                    << std::format("{:.3f} MiB/s", double(pos) / t.duration<benchmark::seconds>() / (1024.0 * 1024.0))
+                    << std::format("{:.3f} MiB/s", double(pos) / t.duration<vidre::chrono::timer::seconds>() / (1024.0 * 1024.0))
                     << ")." << log::endl;
         log::info() << "Files are consistent." << log::endl;
     }
@@ -191,10 +194,12 @@ int main(int argc, const char **argv) {
     // remove temporary files
     storage::file::remove(PROJECT_BINARY_DIR "/fixed.tmp");
     storage::file::remove(PROJECT_BINARY_DIR "/dynamic.tmp");
+#endif
 
     return 0;
 }
 
 /**@example examples/core/raw.cc
- * @brief Raw storage format usage example.
+ * @details
+ * Raw storage format usage example.
  * */

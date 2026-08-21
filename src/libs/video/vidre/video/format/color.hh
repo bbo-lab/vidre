@@ -24,8 +24,8 @@
 #define VIDRE_CORE_VIDEO_FORMAT_COLOR_HH
 #pragma once
 
-/**@addtogroup api-core-video-format-color
- * @ingroup api-core-video-format
+/**@addtogroup api-video-format-color
+ * @ingroup api-video-format
  * @details
  * @fileinfo
  * */
@@ -39,7 +39,7 @@ namespace vidre {
 
         namespace format {
 
-            /**@addtogroup api-core-video-format-color
+            /**@addtogroup api-video-format-color
              * */
             ///@{
 
@@ -47,11 +47,11 @@ namespace vidre {
              * @note This information is targeted for use with FFmpeg and should be used for viewing purposes only.
              *       Otherwise, as VidRe is intended for scientific use, raw data should be used as far as possible.
              * */
-            class __vidre_packed__(4) VIDRE_CORE_VISIBILITY color {
+            class __vidre_packed__(4) VIDRE_VIDEO_VISIBILITY color {
             public:
                 /** Color primaries.
                  * */
-                class __vidre_packed__(1) VIDRE_CORE_VISIBILITY primary {
+                class __vidre_packed__(1) VIDRE_VIDEO_VISIBILITY primary {
                 public:
                     enum : uint8_t {
                         none = 0,   ///< No or unknown primary.
@@ -81,7 +81,7 @@ namespace vidre {
 
                 /** Colorspace.
                  * */
-                class __vidre_packed__(1) VIDRE_CORE_VISIBILITY space {
+                class __vidre_packed__(1) VIDRE_VIDEO_VISIBILITY space {
                 public:
                     enum : uint8_t {
                         none = 0,   ///< No or unknown color space.
@@ -108,7 +108,7 @@ namespace vidre {
 
                 /** Transfer function.
                  * */
-                class __vidre_packed__(1) VIDRE_CORE_VISIBILITY transfer {
+                class __vidre_packed__(1) VIDRE_VIDEO_VISIBILITY transfer {
                 public:
                     enum : uint8_t {
                         none = 0,      ///< No or unknown transform function.
@@ -141,7 +141,7 @@ namespace vidre {
 
                 /** Quantization.
                  * */
-                class __vidre_packed__(1) VIDRE_CORE_VISIBILITY quantization {
+                class __vidre_packed__(1) VIDRE_VIDEO_VISIBILITY quantization {
                 public:
                     enum : uint8_t {
                         none,  ///< No or unknown quantization range (assume full range).

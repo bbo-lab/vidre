@@ -21,4 +21,14 @@
  */
 #include "camera.hh"
 
-using namespace vidre;
+std::unordered_map<const char *, vidre::device::camera::option> vidre::device::camera::options = {
+    {"exposure", vidre::device::camera::exposure},
+    {"gain", vidre::device::camera::gain},
+    {"geometry", vidre::device::camera::geometry}};
+
+std::array<bool, vidre::device::camera::MAXOPTIONS> vidre::device::camera::online = {
+    false,  // undefined
+    true,   // exposure
+    true,   // gain
+    false   // geometry
+};

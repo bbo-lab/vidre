@@ -24,15 +24,14 @@
 #define VIDRE_CORE_VIDEO_FORMAT_GEOMETRY_HH
 #pragma once
 
-/**@addtogroup api-core-video-format-geometry
- * @ingroup api-core-video-format
+/**@addtogroup api-video-format-geometry
+ * @ingroup api-video-format
  * @details
  * @fileinfo
  *
  * */
 
-#include <vidre/core/config.hh>
-#include <vidre/storage.hh>
+#include <vidre/video/config.hh>
 #include <vidre/exception.hh>
 
 #include <string>
@@ -48,20 +47,20 @@ namespace vidre {
 
         namespace format {
 
-            /**@addtogroup api-core-video-format-geometry
+            /**@addtogroup api-video-format-geometry
              * */
             ///@{
 
             /** Position.
              * */
-            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY position {
+            struct __vidre_packed__(8) VIDRE_VIDEO_VISIBILITY position {
                 uint32_t x;  ///< X coordinate of the top-left corner of the video frame.
                 uint32_t y;  ///< Y coordinate of the top-left corner of the video frame.
             };
 
             /** Size.
              * */
-            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY size {
+            struct __vidre_packed__(8) VIDRE_VIDEO_VISIBILITY size {
                 uint32_t w;  ///< Width of the video frame in pixels.
                 uint32_t h;  ///< Height of the video frame in pixels.
             };
@@ -70,7 +69,7 @@ namespace vidre {
              * @see video::position
              * @see video::size
              * */
-            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY geometry
+            struct __vidre_packed__(8) VIDRE_VIDEO_VISIBILITY geometry
                 : public position
                 , public size {};
 

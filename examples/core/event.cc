@@ -1,9 +1,8 @@
 #include <vidre/util/events.hh>
-#include <vidre/util/thread.hh>
+#include <vidre/util/chrono.hh>
+#include <vidre/thread.hh>
 #include <vidre/log.hh>
 #include <thread>
-
-#include "benchmark/benchmark.hh"
 
 using namespace vidre;
 
@@ -37,11 +36,11 @@ void consumer() {
 
 void producer() {
     uint64_t count = 0;
-    benchmark::timer timer;
+    chrono::timer timer;
 
     timer.start();
     while (true) {
-        if (timer.elapsed() > RUN_FOR_S)
+        if (timer.elapsed<chrono::timer::seconds>() > RUN_FOR_S)
             break;
 
         if (ev.notify(1) != event::state::success) {
@@ -50,8 +49,10 @@ void producer() {
         }
         count++;
     }
+    timer.stop();
 
-    log::notice() << "Producer: sent " << count << " notifications" << log::endl;
+    log::notice() << "Producer: sent " << count << " notifications" << log::endl
+                  << "          (" << std::format("{:.3f} ns/notification", timer.duration<chrono::timer::nanoseconds>(count)) << ")" << log::endl;
     ev.terminate();
 }
 
