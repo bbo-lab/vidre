@@ -116,8 +116,8 @@ namespace vidre {
             /** Plain data types.
              * */
             enum class plain : uint16_t {
-                sequence = 0x0000,  ///< Grouped packet (see @ref FIXME).
-
+                sequence = 0x0000,   ///< Grouped packet (see @ref FIXME).
+                                     // === 0x0001-0x000F reserved
                 nil = 0x0010,        ///< Nil value (no data).
                 boolean = 0x0011,    ///< Boolean value (true/false).
                 integer = 0x0012,    ///< 64-bit signed integer.

@@ -134,6 +134,11 @@
 namespace vidre {
 
     namespace lognew {
+        /* TODO:
+        - the log system needs to be transformed to use the packet system
+        - check, as std::string has the zero-termination, if we need to include it in the packet data
+        - what about color output?        
+        */
 
         /**@addtogroup api-core-log-if
          * */
@@ -185,10 +190,7 @@ namespace vidre {
                                                                      /// @see chrono::reference
             std::string message{};                                   ///< Log message (variable length).
 
-            packet() {
-                message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
-                update();
-            }
+            packet() = delete;
             packet(const packet &) = delete;
             packet &operator=(const packet &) = delete;
             packet(packet &&) = default;
@@ -236,6 +238,10 @@ namespace vidre {
          * */
         ///@{
 
+        /** Log message functor concept.
+         * @tparam Stream The output stream type.
+         * @tparam T The functor type.
+         * */
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
             {
