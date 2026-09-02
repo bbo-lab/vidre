@@ -26,7 +26,7 @@ class CameraWidget : public QWidget
 
 public:
     explicit CameraWidget(const QString& cameraName, 
-                         vidre::RuntimeInstance* runtimeInstance,
+                         vidre::IRuntimeInstance* runtimeInstance,
                          QWidget *parent = nullptr);
     ~CameraWidget();
 
@@ -41,24 +41,23 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
     void onStartClicked();
     void onStopClicked();
     void onShowClicked();
-    void onSingleGrabClicked();
     void onToggleDockClicked();
     void updateFrame();
 
 private:
     Ui::CameraWidget *ui;
     QString cameraName_;
-    vidre::RuntimeInstance* runtimeInstance_;
+    vidre::IRuntimeInstance* runtimeInstance_;
     
     QPushButton *startButton_;
     QPushButton *stopButton_;
     QPushButton *showButton_;
-    QPushButton *singleGrabButton_;
     QPushButton *undockButton_;
     QLabel *statusLabel_;
     QLabel *imageLabel_;

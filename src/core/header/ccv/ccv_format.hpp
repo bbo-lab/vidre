@@ -45,8 +45,8 @@ namespace vidre {
         CamCommandoHeader(Config config);
         virtual void initiateHeader(DiskWriter& out_file) override;
         virtual void updateHeader(DiskWriter& out_file, int frames) override;
-        virtual void writeFrame(const void* buffer, DiskWriter& out_file) override;        
-        void writeTail(DiskWriter& out_file, const CCVFrameTail& tail);
+        virtual void writeFrame(const void* buffer, size_t payloadSize, DiskWriter& out_file) override;        
+        void writeTail(DiskWriter& out_file, const CCVFrameTail& tail) override;
     
     private:
         std::vector<uint8_t> serializeHeader();
@@ -82,6 +82,7 @@ namespace vidre {
 
 #if CCV_HEADER_VERSION >= 120
         SensorInfo sensor;
+        std::vector<uint8_t> packedBuffer;
 #endif
     };
 }  // namespace vidre

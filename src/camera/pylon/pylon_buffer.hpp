@@ -6,6 +6,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include <core/runtime/shared_frame_header.hpp>
+#include <new>
 
 class ShrBufferFactory : public Pylon::IBufferFactory {
 public:
@@ -32,19 +33,19 @@ public:
 
     void AllocateBuffer(size_t bufferSize, void **pCreatedBuffer, intptr_t &bufferContext) override {
         try {
-            // Allocation should be delegated to a seperate object so that the data can be accessed by other resources.
             bufferContext = ++m_lastBufferContext;
 
             void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
+            new (allocatedMemory) vidre::SharedFrameHeader{};
+
             *pCreatedBuffer =
                 (void *)((vidre::SharedFrameHeader *)(allocatedMemory) + 1);
-            
-                // Zero out buffer
+
             byte *bytePointer = (byte *)(*pCreatedBuffer);
             for (size_t i = 0; i < bufferSize; ++i) {
                 bytePointer[i] = 0;
             }
-            
+
             shared_memory_ptrs->at(m_lastBufferContext) = allocatedMemory;
         } catch (const std::exception &) {
             if (*pCreatedBuffer != NULL) {

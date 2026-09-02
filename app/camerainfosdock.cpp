@@ -1,4 +1,5 @@
 #include "camerainfosdock.hpp"
+#include "status_mapping.hpp"
 #include <QVBoxLayout>
 #include <QDateTime>
 #include <QString>
@@ -64,7 +65,7 @@ CameraInfosDock::~CameraInfosDock()
     updateTimer_->stop();
 }
 
-void CameraInfosDock::addCamera(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance)
+void CameraInfosDock::addCamera(const QString& cameraName, vidre::IRuntimeInstance* runtimeInstance)
 {
     if (!runtimeInstance) {
         return;
@@ -78,13 +79,6 @@ void CameraInfosDock::addCamera(const QString& cameraName, vidre::RuntimeInstanc
 
     CameraData data;
     data.runtimeInstance = runtimeInstance;
-    data.lastInfo = "";
-    data.groupBox = nullptr;
-    data.infoLabel = nullptr;
-    data.exposureSpin = nullptr;
-    data.gainSpin = nullptr;
-    data.applyButton = nullptr;
-    data.controlsInitialized = false;
 
     cameras_[cameraName.toStdString()] = data;
     CameraData& storedData = cameras_[cameraName.toStdString()];
@@ -92,6 +86,7 @@ void CameraInfosDock::addCamera(const QString& cameraName, vidre::RuntimeInstanc
 
     camerasLayout_->insertWidget(camerasLayout_->count() - 1, storedData.groupBox);
 
+    snapshotCameraParams(cameraName, storedData);
     updateCameraInfo(cameraName);
     refreshDisplay();
 }
@@ -108,11 +103,39 @@ void CameraInfosDock::removeCamera(const QString& cameraName)
     refreshDisplay();
 }
 
+void CameraInfosDock::snapshotCameraParams(const QString& cameraName, CameraData& data)
+{
+    vidre::ICamera* camera = data.runtimeInstance ? data.runtimeInstance->getCamera() : nullptr;
+    if (!camera) {
+        return;
+    }
+
+    data.serial = QString::fromStdString(camera->GetSerialNumber());
+    data.vendor = QString::fromStdString(camera->GetVendorName());
+    data.width = camera->GetFrameWidth();
+    data.height = camera->GetFrameHeight();
+    data.offsetX = camera->GetFrameOffsetX();
+    data.offsetY = camera->GetFrameOffsetY();
+    data.frameBytes = camera->GetFrameBytes();
+    data.bufferSize = camera->GetBufferSize();
+    data.maxNumBuffers = camera->GetMaxNumBuffer();
+    data.frameRate = camera->GetFrameRate();
+    data.exposure = camera->GetExposure();
+    data.gain = camera->GetGain();
+
+    if (!data.controlsInitialized && data.exposureSpin && data.gainSpin) {
+        data.exposureSpin->setValue(data.exposure);
+        data.gainSpin->setValue(data.gain);
+        data.controlsInitialized = true;
+    }
+}
+
 void CameraInfosDock::updateCameraInfo(const QString& cameraName)
 {
     auto it = cameras_.find(cameraName.toStdString());
     if (it != cameras_.end()) {
-        it->second.lastInfo = generateCameraInfo(cameraName, it->second.runtimeInstance);
+        snapshotCameraParams(cameraName, it->second);
+        it->second.lastInfo = generateCameraInfo(cameraName, it->second);
         if (it->second.infoLabel) {
             it->second.infoLabel->setText(it->second.lastInfo);
         }
@@ -136,7 +159,7 @@ void CameraInfosDock::updateAllCamerasInfo()
     
     for (auto& [cameraNameStr, cameraData] : cameras_) {
         QString cameraName = QString::fromStdString(cameraNameStr);
-        QString newInfo = generateCameraInfo(cameraName, cameraData.runtimeInstance);
+        QString newInfo = generateCameraInfo(cameraName, cameraData);
         
         if (newInfo != cameraData.lastInfo) {
             cameraData.lastInfo = newInfo;
@@ -144,13 +167,6 @@ void CameraInfosDock::updateAllCamerasInfo()
                 cameraData.infoLabel->setText(newInfo);
             }
             changed = true;
-        }
-
-        vidre::ICamera* camera = cameraData.runtimeInstance ? cameraData.runtimeInstance->getCamera() : nullptr;
-        if (camera && !cameraData.controlsInitialized) {
-            cameraData.exposureSpin->setValue(camera->GetExposure());
-            cameraData.gainSpin->setValue(camera->GetGain());
-            cameraData.controlsInitialized = true;
         }
     }
     
@@ -164,84 +180,56 @@ void CameraInfosDock::refreshDisplay()
     emptyLabel_->setVisible(cameras_.empty());
 }
 
-QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::RuntimeInstance* runtimeInstance)
+QString CameraInfosDock::generateCameraInfo(const QString& cameraName, const CameraData& data)
 {
-    if (!runtimeInstance) {
+    if (!data.runtimeInstance) {
         return QString("Error: Invalid camera instance");
     }
     
     QString info;
     
-    
     info += QString("Camera: %1\n").arg(cameraName);
     
-    
-    vidre::ICamera* camera = runtimeInstance->getCamera();
-    
-    if (camera) {
-        
-        std::string serialNumber = camera->GetSerialNumber();
-        std::string vendorName = camera->GetVendorName();
-        
-        info += QString("Serial: %1\n").arg(QString::fromStdString(serialNumber));
-        info += QString("Vendor: %1\n").arg(QString::fromStdString(vendorName));
-        
+    if (!data.vendor.isEmpty()) {
+        info += QString("Serial: %1\n").arg(data.serial);
+        info += QString("Vendor: %1\n").arg(data.vendor);
         
         info += "\n";
         
         info += "Frame Configuration:\n";
-        info += QString("  Resolution: %1 x %2\n")
-            .arg(camera->GetFrameWidth())
-            .arg(camera->GetFrameHeight());
-        
-        info += QString("  Offset: X=%1, Y=%2\n")
-            .arg(camera->GetFrameOffsetX())
-            .arg(camera->GetFrameOffsetY());
-        
-        info += QString("  Frame Bytes: %1\n").arg(camera->GetFrameBytes());
-        
+        info += QString("  Resolution: %1 x %2\n").arg(data.width).arg(data.height);
+        info += QString("  Offset: X=%1, Y=%2\n").arg(data.offsetX).arg(data.offsetY);
+        info += QString("  Frame Bytes: %1\n").arg(data.frameBytes);
         info += QString("  Buffer Size: %1 MB\n")
-            .arg(camera->GetBufferSize() / (1024.0 * 1024.0), 0, 'f', 2);
-        
-        info += QString("  Max Buffers: %1\n").arg(camera->GetMaxNumBuffer());
+            .arg(data.bufferSize / (1024.0 * 1024.0), 0, 'f', 2);
+        info += QString("  Max Buffers: %1\n").arg(data.maxNumBuffers);
         
         info += "\n";
         
         info += "Acquisition Settings:\n";
-        info += QString("  Frame Rate: %1 fps\n")
-            .arg(camera->GetFrameRate(), 0, 'f', 2);
-        info += QString("  Exposure: %1\n").arg(camera->GetExposure(), 0, 'f', 2);
-        info += QString("  Gain: %1\n").arg(camera->GetGain(), 0, 'f', 2);
+        info += QString("  Frame Rate: %1 fps\n").arg(data.frameRate, 0, 'f', 2);
+        info += QString("  Exposure: %1\n").arg(data.exposure, 0, 'f', 2);
+        info += QString("  Gain: %1\n").arg(data.gain, 0, 'f', 2);
         
         info += "\n";
         
         info += "Recording Status:\n";
-        vidre::RecordingStatus status = runtimeInstance->getRecordingStatus();
-        QString statusStr;
-        switch (status) {
-            case vidre::RecordingStatus::Stopped:
-                statusStr = "Stopped";
-                break;
-            case vidre::RecordingStatus::Streaming:
-                statusStr = "Streaming";
-                break;
-            case vidre::RecordingStatus::RecordingFine:
-                statusStr = "Recording (OK)";
-                break;
-            case vidre::RecordingStatus::RecordingDroppedFrames:
-                statusStr = "Recording (Dropped Frames)";
-                break;
-            case vidre::RecordingStatus::RecordingError:
-                statusStr = "Recording (Error)";
-                break;
-            default:
-                statusStr = "Unknown";
+        vidre::RecordingStatus status = data.runtimeInstance->getRecordingStatus();
+        info += QString("  Status: %1\n").arg(status_mapping::toString(status));
+        
+        vidre::ICamera* camera = data.runtimeInstance->getCamera();
+        if (camera) {
+            info += QString("  Armed: %1\n").arg(camera->IsArmed() ? "Yes" : "No");
+            info += QString("  Running: %1\n").arg(camera->IsRunning() ? "Yes" : "No");
         }
         
-        info += QString("  Status: %1\n").arg(statusStr);
+        info += "\n";
         
-        info += QString("  Armed: %1\n").arg(camera->IsArmed() ? "Yes" : "No");
-        info += QString("  Running: %1\n").arg(camera->IsRunning() ? "Yes" : "No");
+        info += "Recording Stats:\n";
+        info += QString("  Saved Frames: %1\n").arg(data.runtimeInstance->getSavedFramesNumber());
+        info += QString("  Dropped Frames: %1\n").arg(data.runtimeInstance->getDroppedFrames());
+    } else {
+        info += "Camera: Not available\n";
     }
     
     info += QString("  Last Update: %1\n")
@@ -360,7 +348,10 @@ void CameraInfosDock::applyCameraSettings(const QString& cameraName)
     camera->SetExposure(cameraData.exposureSpin->value());
     camera->SetGain(cameraData.gainSpin->value());
 
-    cameraData.lastInfo = generateCameraInfo(cameraName, cameraData.runtimeInstance);
+    cameraData.exposure = cameraData.exposureSpin->value();
+    cameraData.gain = cameraData.gainSpin->value();
+
+    cameraData.lastInfo = generateCameraInfo(cameraName, cameraData);
     if (cameraData.infoLabel) {
         cameraData.infoLabel->setText(cameraData.lastInfo);
     }

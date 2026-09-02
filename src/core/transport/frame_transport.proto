@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package vidre.transport;
+
+message Empty {}
+
+message FrameEnvelope {
+  string camera_name = 1;
+  string serial_number = 2;
+  string vendor_name = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint64 bits_per_pixel = 6;
+  uint64 frame_id = 7;
+  uint64 frame_timestamp = 8;
+  sint64 computer_time_stamp = 9;
+  bytes payload = 10;
+}
+
+message SessionSpec {
+  string camera_name = 1;
+  string serial_number = 2;
+  string vendor_name = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint64 bits_per_pixel = 6;
+  bool packed = 7;
+  uint32 frame_bytes_actual = 8;
+  uint32 frame_bytes_buffer = 9;
+  uint32 max_num_buffer = 10;
+  double frame_rate = 11;
+  string output_file = 12;
+  string header_format = 13;
+}
+
+message StorageCommand {
+  oneof command {
+    FrameEnvelope frame = 1;
+    SessionSpec begin_session = 2;
+    uint32 finish_session = 3;
+  }
+}
+
+message CameraRequest {
+  string camera_name = 1;
+}
+
+message SetExposureRequest {
+  string camera_name = 1;
+  double exposure = 2;
+}
+
+message SetGainRequest {
+  string camera_name = 1;
+  double gain = 2;
+}
+
+message PreviewRequest {
+  string camera_name = 1;
+  bool enabled = 2;
+}
+
+message CameraInfo {
+  string camera_name = 1;
+  string serial_number = 2;
+  string vendor_name = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint32 frame_bytes = 6;
+  uint32 buffer_size = 7;
+  uint32 max_num_buffers = 8;
+  double frame_rate = 9;
+  double exposure = 10;
+  double gain = 11;
+  uint64 bits_per_pixel = 12;
+  bool packed = 13;
+}
+
+message CameraInfoList {
+  repeated CameraInfo cameras = 1;
+}
+
+message CameraStatus {
+  int32 recording_status = 1;
+  bool armed = 2;
+  bool running = 3;
+  bool error = 4;
+}
+
+message RecordingStats {
+  int64 saved_frames = 1;
+  int64 dropped_frames = 2;
+  int64 sent_frames = 3;
+}
+
+message StatusResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message ControlCommand {
+  oneof command {
+    Empty list_cameras = 1;
+    CameraRequest camera_info = 2;
+    CameraRequest start_recording = 3;
+    CameraRequest stop_recording = 4;
+    CameraRequest start_streaming = 5;
+    CameraRequest stop_streaming = 6;
+    SetExposureRequest set_exposure = 7;
+    SetGainRequest set_gain = 8;
+    CameraRequest get_status = 9;
+    CameraRequest get_stats = 10;
+    PreviewRequest set_preview = 11;
+  }
+}
+
+message ControlResponse {
+  oneof response {
+    CameraInfoList camera_list = 1;
+    CameraInfo camera_info = 2;
+    StatusResponse status = 3;
+    CameraStatus camera_status = 4;
+    RecordingStats recording_stats = 5;
+  }
+}

@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QTreeWidget>
 #include <QVBoxLayout>
+#include <QMenu>
+#include <QAction>
 #include <unordered_map>
 #include <memory>
 
@@ -17,17 +19,29 @@ public:
     explicit DeviceListDock(QWidget *parent = nullptr);
     ~DeviceListDock();
 
-    void updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras);
-    void updateDeviceStatus(const std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>>& cameras);
+    void updateDeviceList(const std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>>& cameras);
+    void updateDeviceStatus(const std::unordered_map<std::string, std::unique_ptr<vidre::IRuntimeInstance>>& cameras);
 
 signals:
     void deviceDoubleClicked(const QString& deviceName);
+    void deviceRecordRequested(const QString& deviceName);
+    void deviceShowRequested(const QString& deviceName);
+    void deviceStopRequested(const QString& deviceName);
 
 private slots:
     void onItemDoubleClicked(QTreeWidgetItem* item, int column);
+    void onContextMenu(const QPoint& pos);
+    void onRecordAction();
+    void onShowAction();
+    void onStopAction();
 
 private:
     QTreeWidget *treeWidget_;
+    QMenu *contextMenu_;
+    QAction *recordAction_;
+    QAction *showAction_;
+    QAction *stopAction_;
+    QString contextMenuItemName_;
     void setupUI();
 };
 

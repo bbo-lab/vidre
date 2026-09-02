@@ -14,9 +14,14 @@ namespace vidre {
     {
         _config = config; 
 
-        // todo: enum
-        _headerFormat = header_format;
-        if (_headerFormat == "ccv") {
+        if (header_format == "ccv") {
+            _headerFormat = HeaderFormat::CCV;
+            _header = std::make_unique<CamCommandoHeader>(config);
+        }
+
+        if (!_header) {
+            std::cerr << "Unknown header format: " << header_format << ", falling back to ccv\n";
+            _headerFormat = HeaderFormat::CCV;
             _header = std::make_unique<CamCommandoHeader>(config);
         }
 
@@ -34,40 +39,25 @@ namespace vidre {
         return _config;
     }
 
-    void Storage::save(const void* buffer, uint32_t frameID) { // TODO: ? 
-        // Pylon::CPylonImage pylonImage;
-
-        // Pylon::CImageFormatConverter formatConverter;
-        // formatConverter.OutputPixelFormat = Pylon::PixelType_BGR8packed;
-        // formatConverter.Convert(pylonImage, buffer, _config.width * _config.height, _config.pixelType, _config.width, _config.height,
-        //                         _config.paddingX, Pylon::EImageOrientation::ImageOrientation_TopDown);
-
-        // std::string fileName = std::to_string(frameID) + ".tiff";
-        // Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Tiff, fileName.c_str(), pylonImage);
-        return;
-    }
-
     void Storage::updateHeader(int frames) {
         _header->updateHeader(output_file, frames);
     }
 
-    void Storage::appendFrame(const void* buffer) {
-        _header->writeFrame(buffer, output_file);
+    void Storage::appendFrame(const void* buffer, size_t payloadSize) {
+        _header->writeFrame(buffer, payloadSize, output_file);
     }
 
-    void Storage::appendTail(uint32_t frame_idx, double time_stamp, long computer_time_stamp) {
-        if (_headerFormat == "ccv") {
-            vidre::CCVFrameTail tail;
-            tail.frameIndex = frame_idx;  // + result->numSkippedBefore? TODO: think about skipped logic
-            tail.timeStamp = time_stamp;
-            tail.timeStamp /= 1e9;
+    void Storage::appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp) {
+        CCVFrameTail tail{};
+        tail.frameIndex = frame_idx;
+        tail.timeStamp = time_stamp;
+        tail.timeStamp /= (_config.cameraVendor == "basler") ? 1e9 : 1e3;
 
-            for (int i = 0; i < sizeof(long) && i < 9; i++) {
-                tail.padding[i] = (computer_time_stamp >> (i * 8)) & 0xFF;
-            }
-            
-            _header->writeTail<CamCommandoHeader>(output_file, tail);
+        for (size_t i = 0; i < sizeof(int64_t) && i < sizeof(tail.padding); i++) {
+            tail.padding[i] = static_cast<uint8_t>((computer_time_stamp >> (i * 8)) & 0xFF);
         }
+
+        _header->writeTail(output_file, tail);
     }
 
     void Storage::initiateHeader() { // todo -> start all unified time  for all cameras

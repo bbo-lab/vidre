@@ -41,6 +41,8 @@ namespace vidre {
             auto [buffer, header] = _buffer.CurrentBuffer(_buffer_num);
             if (!ap_GrabFrame || !ap_GetLastError) {
                 std::cerr << "Aptina API not loaded!\n";
+                _hadError.store(true, std::memory_order_release);
+                running.store(false);
                 return;
             }
             ap_GrabFrame(_handle, buffer, _buffer_size_min);
@@ -51,21 +53,19 @@ namespace vidre {
             auto success = ap_GetLastError();
             if (success != AP_CAMERA_SUCCESS) {
                 std::cout << "APTINA FAILED TO GRAB\n";
+                _hadError.store(true, std::memory_order_release);
+                running.store(false);
                 return;
             }
 
-            
-            // TODO: 
-            // auto fid = ap_GetFrameData(_handle, "frameNumber");
-            // std::cout << fid << std::endl;
-            // result->frameID = fid;
-
-            header->frameID = retrievedFramesNumber;
-            // header->timeStamp = ap_GetFrameData(_handle, "frameTime");
             header->timeStamp = computerTimeStamp;
             header->computerTimeStamp = computerTimeStamp;
+            header->frameID.store(retrievedFramesNumber, std::memory_order_release);
+
+            latestFrame.store(header, std::memory_order_release);
         }
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
+        running.store(false);
     }
 
     void AptinaCamera::Init() {
@@ -110,8 +110,11 @@ namespace vidre {
     void AptinaCamera::Disarm() {
         _buffer.Reset();
         retrievedFramesNumber = 0;
+        latestFrame.store(nullptr, std::memory_order_release);
     }
     void AptinaCamera::Start() {
+        latestFrame.store(nullptr, std::memory_order_release);
+        _hadError.store(false, std::memory_order_release);
         grabber = std::thread(&AptinaCamera::run, this);
     }
     void AptinaCamera::Stop() {
@@ -121,14 +124,13 @@ namespace vidre {
     }
 
     const SharedFrameHeader* AptinaCamera::RetrieveLatestFrame() {
-        const SharedFrameHeader* a;
-        return a;
+        return latestFrame.load();
     }
     bool AptinaCamera::IsArmed() {
         return armed.load();
     }
     bool AptinaCamera::IsRunning() {
-        return grabber.joinable();
+        return running.load();
     }
 
     unsigned int AptinaCamera::GetFrameWidth() {

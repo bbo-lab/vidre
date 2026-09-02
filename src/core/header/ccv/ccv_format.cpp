@@ -2,6 +2,7 @@
 #include <core/storage/storage.hpp>
 #include <core/storage/disk_writer.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 
@@ -11,7 +12,7 @@ namespace vidre {
         size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
         buffersize_out_in_samples = (size_t) floor(((double) buffersize_out) * 0.8);
         nsamples = nbytes_in / 2; //rounds down
-        size_t n = min(nsamples, buffersize_out_in_samples);
+        size_t n = std::min(nsamples, buffersize_out_in_samples);
         
         size_t nblocks = n / 4; //rounds down
         
@@ -138,20 +139,18 @@ namespace vidre {
         out_file.finalizeHeader(headerData.data(), headerData.size());
     }
 
-    void vidre::CamCommandoHeader::writeFrame(const void* buffer, DiskWriter& out_file) {
+    void vidre::CamCommandoHeader::writeFrame(const void* buffer, size_t payloadSize, DiskWriter& out_file) {
 #if CCV_HEADER_VERSION >= 120
         if (cameraType.data == "aptina" && packed) {
-            // aptina packing and saving
-            uint8_t* packed_buffer = new uint8_t[frameBytesOnDisk - 21];
-            // std::cout << "CCV: " << frameBytesOnDisk - 21 << " " << aptinaBuffer << std::endl;
-            pack_bits_16_10(static_cast<const uint8_t*>(buffer), frameBytesOnDisk - 21, packed_buffer, aptinaBuffer);
-            out_file.write(packed_buffer, aptinaBuffer);
-            delete[] packed_buffer;
-
+            if (packedBuffer.size() < aptinaBuffer) {
+                packedBuffer.resize(aptinaBuffer);
+            }
+            pack_bits_16_10(static_cast<const uint8_t*>(buffer), payloadSize, packedBuffer.data(), aptinaBuffer);
+            out_file.write(packedBuffer.data(), aptinaBuffer);
             return;
         }
 #endif        
-        out_file.write(buffer, frameBytesOnDisk - 21);
+        out_file.write(buffer, payloadSize);
     }
 
     void vidre::CamCommandoHeader::writeTail(DiskWriter& out_file, const CCVFrameTail& tail) {
