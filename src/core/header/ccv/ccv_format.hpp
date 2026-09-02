@@ -26,11 +26,11 @@ namespace vidre {
     };
 
     struct SensorInfo {
-        uint32_t offset[2];
-        uint32_t size[2];
-        int64_t clock;
-        double exposure;
-        double gain;
+        uint32_t offset[2] = {0, 0};
+        uint32_t size[2] = {0, 0};
+        int64_t clock = 0;
+        double exposure = 0.0;
+        double gain = 0.0;
     };
 
     struct CCVFrameTail {
@@ -81,7 +81,7 @@ namespace vidre {
         uint32_t frameCount;
 
 #if CCV_HEADER_VERSION >= 120
-        SensorInfo sensor;
+        SensorInfo sensor{};
         std::vector<uint8_t> packedBuffer;
 #endif
     };

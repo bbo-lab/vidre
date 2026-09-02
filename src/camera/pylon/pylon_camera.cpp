@@ -14,42 +14,61 @@ namespace vidre {
     PylonCamera::PylonCamera() : running(false), armed(false) {}
     PylonCamera::~PylonCamera() {
         Stop();
-        camera.Close();
-        if (camera.IsPylonDeviceAttached())
-            camera.DestroyDevice();
-        // if (PylonTerminate) 
-            Pylon::PylonTerminate();
+        try {
+            camera.Close();
+            if (camera.IsPylonDeviceAttached())
+                camera.DestroyDevice();
+        } catch (const Pylon::GenericException &e) {
+            std::cerr << "Pylon shutdown: " << e.GetDescription() << std::endl;
+        }
     }
 
     void PylonCamera::run() {
-        running.store(true);
+        try {
+            camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
 
-        camera.StartGrabbing(Pylon::GrabStrategy_LatestImageOnly, Pylon::GrabLoop_ProvidedByUser);
+            while (running.load())
+            {
+                Pylon::CGrabResultPtr currentPtrGrabResult;
+                if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
+                    std::this_thread::yield();
+                    continue;
+                }
+                if (!currentPtrGrabResult->GrabSucceeded()) {
+                    std::cerr << "Pylon grab failed: " << currentPtrGrabResult->GetErrorCode() << " "
+                              << currentPtrGrabResult->GetErrorDescription().c_str() << std::endl;
+                    continue;  // incomplete buffer: do not publish it as a frame
+                }
+                auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now() - vidre::StartTime).count();
 
-        while (running.load())
-        {
-            Pylon::CGrabResultPtr currentPtrGrabResult;
-            if (!camera.RetrieveResult(1000, currentPtrGrabResult, Pylon::TimeoutHandling_Return)) {
-                std::this_thread::yield();
-                continue;
+                retrievedFramesNumber++;
+
+                SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
+
+                result->timeStamp = currentPtrGrabResult->GetTimeStamp();
+                result->computerTimeStamp = computerTimeStamp;
+                result->frameID.store(currentPtrGrabResult->GetImageNumber(), std::memory_order_release);
+
+                latestFrame.store(result, std::memory_order_release);
             }
-            auto computerTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now() - vidre::StartTime).count();
-
-            retrievedFramesNumber++;
-
-            SharedFrameHeader *result = (SharedFrameHeader *)(currentPtrGrabResult->GetBuffer()) - 1;
-
-            result->timeStamp = currentPtrGrabResult->GetTimeStamp();
-            result->computerTimeStamp = computerTimeStamp;
-            result->frameID.store(currentPtrGrabResult->GetImageNumber(), std::memory_order_release);
-
-            latestFrame.store(result, std::memory_order_release);
+        } catch (const Pylon::GenericException &e) {
+            std::cerr << "Pylon grab loop aborted: " << e.GetDescription() << std::endl;
+            _hadError.store(true, std::memory_order_release);
+        } catch (const std::exception &e) {
+            std::cerr << "Pylon grab loop aborted: " << e.what() << std::endl;
+            _hadError.store(true, std::memory_order_release);
         }
 
         std::cout << "RETRIEVED : " << retrievedFramesNumber << std::endl;
 
-        camera.StopGrabbing();
+        try {
+            if (camera.IsGrabbing()) {
+                camera.StopGrabbing();
+            }
+        } catch (const Pylon::GenericException &e) {
+            std::cerr << "Pylon StopGrabbing failed: " << e.GetDescription() << std::endl;
+        }
         running.store(false);
     }
 
@@ -108,7 +127,14 @@ namespace vidre {
     void PylonCamera::Start() {
         if (!armed.load())
             return;
+        if (grabber.joinable()) {
+            if (running.load())
+                return;
+            grabber.join();  // previous grabber aborted on its own
+        }
         latestFrame.store(nullptr);
+        _hadError.store(false, std::memory_order_release);
+        running.store(true);
 
         grabber = std::thread(&PylonCamera::run, this);
     }

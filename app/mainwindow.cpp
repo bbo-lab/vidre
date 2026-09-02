@@ -36,7 +36,12 @@ LogStreamBuffer::~LogStreamBuffer()
 {
     std::cout.rdbuf(oldCout_);
     std::cerr.rdbuf(oldCerr_);
-    sync();
+    std::string rest;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        rest.swap(buffer_);
+    }
+    postLine(rest);
 }
 
 std::streambuf::int_type LogStreamBuffer::overflow(std::streambuf::int_type ch)
@@ -44,29 +49,56 @@ std::streambuf::int_type LogStreamBuffer::overflow(std::streambuf::int_type ch)
     if (ch == traits_type::eof()) {
         return traits_type::not_eof(ch);
     }
-    char c = static_cast<char>(ch);
-    if (c == '\n') {
-        sync();
-    } else {
-        buffer_ += c;
+    const char c = static_cast<char>(ch);
+    std::string line;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (c == '\n') {
+            line.swap(buffer_);
+        } else {
+            buffer_ += c;
+            if (buffer_.size() >= kMaxLineLength) {
+                line.swap(buffer_);
+            }
+        }
+    }
+    if (c == '\n' || !line.empty()) {
+        postLine(line);
     }
     return ch;
 }
 
 int LogStreamBuffer::sync()
 {
-    std::string line;
+    return 0;
+}
+
+void LogStreamBuffer::postLine(const std::string& line)
+{
+    if (line.empty()) {
+        return;
+    }
+    const auto now = std::chrono::steady_clock::now();
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        line = buffer_;
-        buffer_.clear();
+        if (now - windowStart_ >= std::chrono::seconds(1)) {
+            if (suppressed_ > 0) {
+                QString note = QString("(%1 log line(s) suppressed)").arg(suppressed_);
+                QMetaObject::invokeMethod(textEdit_, "append", Qt::QueuedConnection, Q_ARG(QString, note));
+            }
+            windowStart_ = now;
+            linesInWindow_ = 0;
+            suppressed_ = 0;
+        }
+        if (linesInWindow_ >= kMaxLinesPerSecond) {
+            ++suppressed_;
+            return;
+        }
+        ++linesInWindow_;
     }
-    if (!line.empty()) {
-        QString text = QString::fromStdString(line);
-        QMetaObject::invokeMethod(textEdit_, "append", Qt::QueuedConnection,
-                                  Q_ARG(QString, text));
-    }
-    return 0;
+    QString text = QString::fromStdString(line);
+    QMetaObject::invokeMethod(textEdit_, "append", Qt::QueuedConnection,
+                              Q_ARG(QString, text));
 }
 
 MainWindow::MainWindow(QWidget *parent)

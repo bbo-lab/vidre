@@ -67,11 +67,11 @@ namespace {
             VarintField(fieldNumber, value ? 1U : 0U);
         }
 
+        
         void MessageField(uint32_t fieldNumber, const std::vector<uint8_t>& message) {
-            if (message.empty()) {
-                return;
-            }
-            BytesField(fieldNumber, message);
+            Tag(fieldNumber, kWireLengthDelimited);
+            Varint(message.size());
+            _buffer.insert(_buffer.end(), message.begin(), message.end());
         }
 
         std::vector<uint8_t> Take() {
@@ -1270,18 +1270,110 @@ namespace {
         return decoder.Ok();
     }
 
-    std::pair<std::string, uint16_t> SplitEndpoint(const std::string& endpoint)
+    std::pair<std::string, uint16_t> SplitEndpoint(const std::string& endpoint, uint16_t defaultPort)
     {
-        const auto separator = endpoint.rfind(':');
-        if (separator == std::string::npos || separator == 0 || separator + 1 >= endpoint.size()) {
-            return {endpoint, 50051U};
+        // Accepted forms: "host", "host:port", "[v6addr]", "[v6addr]:port".
+        std::string host = endpoint;
+        std::string portText;
+        if (!endpoint.empty() && endpoint.front() == '[') {
+            const auto closing = endpoint.find(']');
+            if (closing == std::string::npos) {
+                std::cerr << "Invalid endpoint '" << endpoint << "' (unterminated IPv6 address)\n";
+                return {endpoint, 0U};
+            }
+            host = endpoint.substr(1, closing - 1);
+            if (closing + 1 < endpoint.size()) {
+                if (endpoint[closing + 1] != ':') {
+                    std::cerr << "Invalid endpoint '" << endpoint << "'\n";
+                    return {host, 0U};
+                }
+                portText = endpoint.substr(closing + 2);
+            }
+        } else {
+            const auto separator = endpoint.rfind(':');
+            // A bare IPv6 address without brackets has several ':'; treat it as host only.
+            if (separator != std::string::npos && endpoint.find(':') == separator) {
+                host = endpoint.substr(0, separator);
+                portText = endpoint.substr(separator + 1);
+            }
+        }
+
+        if (portText.empty()) {
+            return {host, defaultPort};
         }
         try {
-            return {endpoint.substr(0, separator), static_cast<uint16_t>(std::stoi(endpoint.substr(separator + 1)))};
+            size_t consumed = 0;
+            const long port = std::stol(portText, &consumed);
+            if (consumed != portText.size() || port < 1 || port > 65535) {
+                throw std::out_of_range("port out of range");
+            }
+            return {host, static_cast<uint16_t>(port)};
         } catch (const std::exception&) {
             std::cerr << "Invalid port in endpoint '" << endpoint << "'\n";
-            return {endpoint.substr(0, separator), 0U};
+            return {host, 0U};
         }
+    }
+
+    void SetSocketTimeouts(boost::asio::ip::tcp::socket& socket, std::chrono::milliseconds timeout)
+    {
+        if (!socket.is_open()) {
+            return;
+        }
+        const auto handle = socket.native_handle();
+#ifdef _WIN32
+        const DWORD ms = static_cast<DWORD>(timeout.count());
+        setsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&ms), sizeof(ms));
+        setsockopt(handle, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&ms), sizeof(ms));
+#else
+        timeval tv{};
+        tv.tv_sec = static_cast<decltype(tv.tv_sec)>(timeout.count() / 1000);
+        tv.tv_usec = static_cast<decltype(tv.tv_usec)>((timeout.count() % 1000) * 1000);
+        setsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        setsockopt(handle, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+#endif
+    }
+
+    bool ConnectWithTimeout(boost::asio::io_context& io, boost::asio::ip::tcp::socket& socket,
+                            const std::string& host, uint16_t port, std::chrono::milliseconds timeout)
+    {
+        boost::system::error_code ec;
+        boost::asio::ip::tcp::resolver resolver(io);
+        const auto endpoints = resolver.resolve(host, std::to_string(port), ec);
+        if (ec) {
+            std::cerr << "Resolve failed for " << host << ":" << port << ": " << ec.message() << "\n";
+            return false;
+        }
+
+        boost::system::error_code result = boost::asio::error::would_block;
+        bool completed = false;
+        io.restart();
+        boost::asio::async_connect(socket, endpoints,
+            [&](const boost::system::error_code& error, const boost::asio::ip::tcp::endpoint&) {
+                result = error;
+                completed = true;
+            });
+        io.run_for(timeout);
+        if (!completed) {
+            // Timed out: cancel the pending connect and let its handler run so nothing dangles.
+            socket.close(ec);
+            io.run();
+            result = boost::asio::error::timed_out;
+        }
+        io.restart();
+        if (result) {
+            std::cerr << "Connect to " << host << ":" << port << " failed: " << result.message() << "\n";
+            socket.close(ec);
+            return false;
+        }
+        return true;
+    }
+
+    void ShutdownAndClose(boost::asio::ip::tcp::socket& socket)
+    {
+        boost::system::error_code ec;
+        // shutdown() is what wakes a thread blocked in a synchronous read/write on POSIX.
+        socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+        socket.close(ec);
     }
 
     bool WriteAll(boost::asio::ip::tcp::socket& socket, const void* data, size_t size)
@@ -1318,14 +1410,15 @@ namespace {
         }
     }
 
-    bool ReadFramed(boost::asio::ip::tcp::socket& socket, std::vector<uint8_t>& payload)
+    bool ReadFramed(boost::asio::ip::tcp::socket& socket, std::vector<uint8_t>& payload, size_t maxLength)
     {
         std::array<uint8_t, 4> header{};
         if (!ReadAll(socket, header.data(), header.size())) {
             return false;
         }
         const uint32_t length = FromBigEndian32(header.data());
-        if (length > 512U * 1024U * 1024U) {
+        if (length > maxLength) {
+            std::cerr << "Framed message of " << length << " bytes exceeds the limit of " << maxLength << "\n";
             return false;
         }
         payload.resize(length);

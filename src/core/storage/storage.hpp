@@ -42,22 +42,31 @@ namespace vidre {
         Storage(const Config& config, const std::string& header_format = "ccv", const std::string& output_file_name = "some.ccv");
         ~Storage() {};
 
+        Storage(const Storage&) = delete;
+        Storage& operator=(const Storage&) = delete;
+
         void setConfig(const Config& config);
         Config getConfig();
 
+        
         void updateHeader(int frames);
         void appendFrame(const void* buffer, size_t payloadSize);
         void appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp);
+        
         void initiateHeader();
+
+        bool hasError() const;
 
         std::string getOutputFileName() {
             return _outputFileName;
         }
     private:
         Config _config;
+        std::string _configuredFileName;
         std::string _outputFileName = "some.ccv";
         HeaderFormat _headerFormat = HeaderFormat::CCV;
-        
+        bool _failed = false;
+
         std::unique_ptr<IHeader> _header;
         DiskWriter output_file;
     };

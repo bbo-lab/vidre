@@ -13,6 +13,7 @@
 #include <string>
 #include <streambuf>
 #include <mutex>
+#include <chrono>
 
 #include <core/runtime/runtime.hpp>
 
@@ -32,11 +33,19 @@ protected:
     std::streambuf::int_type overflow(std::streambuf::int_type ch) override;
     int sync() override;
 private:
+    static constexpr size_t kMaxLineLength = 4096;
+    static constexpr int kMaxLinesPerSecond = 50;
+
+    void postLine(const std::string& line);
+
     QTextEdit* textEdit_;
     std::string buffer_;
     std::mutex mutex_;
     std::streambuf* oldCout_;
     std::streambuf* oldCerr_;
+    std::chrono::steady_clock::time_point windowStart_ = std::chrono::steady_clock::now();
+    int linesInWindow_ = 0;
+    int suppressed_ = 0;
 };
 
 class MainWindow : public QMainWindow

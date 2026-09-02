@@ -3,6 +3,7 @@
 #include <core/storage/disk_writer.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -60,6 +61,10 @@ namespace vidre {
 
         width = config.width;
         height = config.height;
+
+        sensor.offset[0] = static_cast<uint32_t>(config.paddingX);
+        sensor.size[0] = config.width;
+        sensor.size[1] = config.height;
 
         frameBytesOnDisk = config.frameBytesActual; //* bytesPerPixel;
         frameBytesOnDisk += 21; // size of tail

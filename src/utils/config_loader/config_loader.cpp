@@ -210,15 +210,16 @@ std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSys
 
 			if (it->second["type"].as<std::string>() == "camera") {
 				const std::string cameraName = it->first.as<std::string>();
-				cameras[cameraName] = std::make_unique<vidre::RuntimeInstance>();
-				cameras[cameraName]->setCameraName(cameraName);
-				cameras[cameraName]->setTransportMode(options.transportMode);
-				cameras[cameraName]->setStorageEndpoint(options.storageEndpoint);
+				auto runtime = std::make_unique<vidre::RuntimeInstance>();
+				runtime->setCameraName(cameraName);
+				runtime->setTransportMode(options.transportMode);
+				runtime->setStorageEndpoint(options.storageEndpoint);
 
 				YAML::Node cameraNode = it->second;
-				cameras[cameraName]->setCamera(loadCamera(cameraName, cameraNode, options, logMessage));
+				runtime->setCamera(loadCamera(cameraName, cameraNode, options, logMessage));
 
-				if (!cameras[cameraName]->checkCamera()) {
+				
+				if (!runtime->checkCamera()) {
 					logOrIgnore(logMessage, "WARNING: Camera " + cameraName + " was not constructed properly");
 					continue;
 				}
@@ -244,12 +245,19 @@ std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSys
 					}
 				}
 
-				cameras[cameraName]->createStorage(output_file, header_format, bits_per_pixel, packed);
+				try {
+					runtime->createStorage(output_file, header_format, bits_per_pixel, packed);
+				} catch (const std::exception& e) {
+					logOrIgnore(logMessage, "ERROR: Camera " + cameraName + " storage/buffer setup failed: " + e.what());
+					continue;
+				}
 				if (!output_file.empty()) {
 					logOrIgnore(logMessage, "Configured storage for " + cameraName + ": " + output_file);
 				} else if (options.transportMode == TransportMode::RemoteStorage) {
 					logOrIgnore(logMessage, "Configured remote frame transport for " + cameraName);
 				}
+
+				cameras.emplace(cameraName, std::move(runtime));
 			}
 		}
 	}

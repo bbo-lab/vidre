@@ -10,16 +10,16 @@ WORKDIR /src
 COPY . /src
 
 RUN conan profile detect --force \
-    && conan install . -u --build=missing -of=build \
+    && conan install . -u --build=missing -of=build -s build_type=Release \
     && cmake -S . -B build/cmake \
-        -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=build/build/generators/conan_toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
         -DVIDRE_BUILD_APP=OFF \
     && cmake --build build/cmake --target vidre_camera_service vidre_storage_service -j"$(nproc)"
 
 FROM ubuntu:22.04
 
-RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 \
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /src/build/cmake/bin/vidre_camera_service /usr/local/bin/

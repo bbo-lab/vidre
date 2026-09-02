@@ -30,7 +30,14 @@ namespace vidre {
         }
 
         void AllocateBuffer(size_t bufferSize) {
+            if (shared_memory == nullptr || shared_memory_ptrs == nullptr) {
+                return;
+            }
             ++m_lastBufferContext;
+            if (static_cast<size_t>(m_lastBufferContext) >= shared_memory_ptrs->size()) {
+                std::cerr << "Aptina buffer: more buffers requested than ring slots\n";
+                return;
+            }
             try {
             void *allocatedMemory = shared_memory->allocate(bufferSize + sizeof(vidre::SharedFrameHeader));
             new (allocatedMemory) vidre::SharedFrameHeader{};
@@ -48,9 +55,15 @@ namespace vidre {
         }
 
         std::pair<uint8_t*, SharedFrameHeader*> CurrentBuffer(unsigned int buffer_num) {
+            if (shared_memory_ptrs == nullptr || buffer_num == 0 || shared_memory_ptrs->size() < buffer_num) {
+                return {nullptr, nullptr};
+            }
             auto buffer_idx = ptr_counter % buffer_num;
 
             auto* buffer_ptr = shared_memory_ptrs->at(buffer_idx);
+            if (buffer_ptr == nullptr) {
+                return {nullptr, nullptr};  // allocation failed for this slot
+            }
 
             ptr_counter++;
 

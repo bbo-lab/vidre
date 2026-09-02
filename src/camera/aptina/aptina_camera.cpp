@@ -32,15 +32,22 @@ namespace vidre {
         _gainPreferredSymbols({"analog_gain", "global_gain", "gain", "analoggain"}),
         _gainContainsTokens({"analog_gain", "global_gain", "gain"}) {}
     AptinaCamera::~AptinaCamera() {
+        Stop();
         if (ap_Finalize) ap_Finalize();
     }
 
     void AptinaCamera::run() {
-        running.store(true);
+        // `running` is set by Start() before this thread exists (see DummyCamera::run).
         while (running.load()) {
             auto [buffer, header] = _buffer.CurrentBuffer(_buffer_num);
             if (!ap_GrabFrame || !ap_GetLastError) {
                 std::cerr << "Aptina API not loaded!\n";
+                _hadError.store(true, std::memory_order_release);
+                running.store(false);
+                return;
+            }
+            if (buffer == nullptr || header == nullptr) {
+                std::cerr << "Aptina frame buffer not allocated (shared memory too small?)\n";
                 _hadError.store(true, std::memory_order_release);
                 running.store(false);
                 return;
@@ -106,15 +113,24 @@ namespace vidre {
     }
 
     void AptinaCamera::Arm() {
+        armed.store(true);
     }
     void AptinaCamera::Disarm() {
+        armed.store(false);
         _buffer.Reset();
         retrievedFramesNumber = 0;
         latestFrame.store(nullptr, std::memory_order_release);
     }
     void AptinaCamera::Start() {
+        if (grabber.joinable()) {
+            if (running.load()) {
+                return;
+            }
+            grabber.join();  // previous grabber stopped on its own (grab error)
+        }
         latestFrame.store(nullptr, std::memory_order_release);
         _hadError.store(false, std::memory_order_release);
+        running.store(true);
         grabber = std::thread(&AptinaCamera::run, this);
     }
     void AptinaCamera::Stop() {
@@ -383,9 +399,13 @@ namespace vidre {
 
     void AptinaCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* sharedMemory, std::vector<void *>* ptrs, std::string memory_name)
     {
+        if (sharedMemory == nullptr || ptrs == nullptr) {
+            _buffer.Reset();
+            return;
+        }
         _buffer.SetSharedMemory(sharedMemory, ptrs, memory_name);
 
-        for (int i = 0; i < _buffer_num; ++i) {
+        for (unsigned int i = 0; i < _buffer_num; ++i) {
             _buffer.AllocateBuffer(_buffer_size_min);
         }
     }

@@ -2,13 +2,30 @@
 #include <core/runtime/shared_frame_header.hpp>
 #include <core/header/ccv/ccv_format.hpp>
 
-#include <format>
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <iostream>
 
 
 namespace vidre {
+
+    namespace {
+        std::string LocalTimestamp() {
+            const std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            std::tm local{};
+#ifdef _WIN32
+            localtime_s(&local, &now);
+#else
+            localtime_r(&now, &local);
+#endif
+            char buffer[32];
+            if (std::strftime(buffer, sizeof(buffer), "%Y%m%dT%H%M%S", &local) == 0) {
+                return "00000000T000000";
+            }
+            return buffer;
+        }
+    }  // namespace
 
     Storage::Storage(const Config& config, const std::string& header_format, const std::string& output_file_name)
     {
@@ -25,29 +42,43 @@ namespace vidre {
             _header = std::make_unique<CamCommandoHeader>(config);
         }
 
+        
         _outputFileName = output_file_name;
-        if (!output_file.open(_outputFileName)) {
-             std::cerr << "Failed to open file!\n";
-        }
-    }     
+    }
 
     void Storage::setConfig(const Config& config) {
         _config = config;
-    }  
-    
+    }
+
     Config Storage::getConfig() {
         return _config;
     }
 
+    bool Storage::hasError() const {
+        return _failed || output_file.hasError();
+    }
+
     void Storage::updateHeader(int frames) {
+        if (!output_file.isOpen()) {
+            return;
+        }
         _header->updateHeader(output_file, frames);
+        output_file.close();
     }
 
     void Storage::appendFrame(const void* buffer, size_t payloadSize) {
+        if (!output_file.isOpen()) {
+            _failed = true;
+            return;
+        }
         _header->writeFrame(buffer, payloadSize, output_file);
     }
 
     void Storage::appendTail(uint32_t frame_idx, double time_stamp, int64_t computer_time_stamp) {
+        if (!output_file.isOpen()) {
+            _failed = true;
+            return;
+        }
         CCVFrameTail tail{};
         tail.frameIndex = frame_idx;
         tail.timeStamp = time_stamp;
@@ -61,26 +92,32 @@ namespace vidre {
     }
 
     void Storage::initiateHeader() { // todo -> start all unified time  for all cameras
-        // adding ISO format for output file
-        auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
-        std::string timestamp = std::format("{:%Y%m%dT%H%M%S}", time); // seconds
-
-        auto old_name = _outputFileName;
-        std::filesystem::path p(_outputFileName);
-        std::filesystem::path newPath =  p.parent_path() / (timestamp + "_" + p.stem().string() + p.extension().string());
-
-        _outputFileName = newPath.string();
+        _failed = false;
         try {
+            
+            const std::filesystem::path configured(_configuredFileName.empty() ? _outputFileName : _configuredFileName);
+            if (_configuredFileName.empty()) {
+                _configuredFileName = configured.string();
+            }
+            const std::filesystem::path newPath =
+                configured.parent_path() / (LocalTimestamp() + "_" + configured.stem().string() + configured.extension().string());
+
+            if (!configured.parent_path().empty()) {
+                std::filesystem::create_directories(configured.parent_path());
+            }
+
+            _outputFileName = newPath.string();
             output_file.close();
-            std::filesystem::rename(old_name, _outputFileName);
             if (!output_file.open(_outputFileName)) {
                 std::cerr << "Error: unable to open output file: " << _outputFileName << "\n";
+                _failed = true;
                 return;
             }
             _header->initiateHeader(output_file);
-        } 
-        catch (const std::filesystem::filesystem_error& e) {
+        }
+        catch (const std::exception& e) {
             std::cerr << "Error: " << e.what() << "\n";
+            _failed = true;
         }
     }
 }  // namespace vidre

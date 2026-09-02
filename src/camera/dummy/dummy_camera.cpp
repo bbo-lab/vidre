@@ -87,7 +87,6 @@ namespace vidre {
     }
 
     void DummyCamera::run() {
-        running.store(true);
         uint64_t frameCounter = 0;
 
         while (running.load()) {
@@ -134,10 +133,14 @@ namespace vidre {
         if (!armed.load()) {
             return;
         }
-        latestFrame.store(nullptr);
         if (grabber.joinable()) {
-            return;
+            if (running.load()) {
+                return;
+            }
+            grabber.join();  // previous grabber finished on its own
         }
+        latestFrame.store(nullptr);
+        running.store(true);
         grabber = std::thread(&DummyCamera::run, this);
     }
 
@@ -159,6 +162,10 @@ namespace vidre {
     void DummyCamera::SetSharedMemory(boost::interprocess::managed_shared_memory* memory,
                                       std::vector<void *>* ptrs,
                                       std::string) {
+        if (memory != sharedMemory) {
+            // Buffers allocated in a previous segment are gone with it.
+            allocatedBuffers.clear();
+        }
         sharedMemory = memory;
         sharedMemoryPtrs = ptrs;
     }
