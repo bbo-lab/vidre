@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -129,10 +130,23 @@ namespace vidre::transport {
     bool DecodePreviewRequest(const std::vector<uint8_t>& data, ControlRequest& request);
     bool DecodeCameraInfoList(const std::vector<uint8_t>& data, std::vector<CameraInfo>& cameras);
 
-    std::pair<std::string, uint16_t> SplitEndpoint(const std::string& endpoint);
+    inline constexpr uint16_t kDefaultControlPort = 50051;
+    inline constexpr uint16_t kDefaultPreviewPort = 50052;
+    inline constexpr uint16_t kDefaultStoragePort = 50053;
+    inline constexpr size_t kMaxFramedMessage = static_cast<size_t>(512) * 1024 * 1024;
+    inline constexpr size_t kMaxControlMessage = static_cast<size_t>(64) * 1024;
+
+    std::pair<std::string, uint16_t> SplitEndpoint(const std::string& endpoint,
+                                                   uint16_t defaultPort = kDefaultControlPort);
+    void SetSocketTimeouts(boost::asio::ip::tcp::socket& socket, std::chrono::milliseconds timeout);
+    bool ConnectWithTimeout(boost::asio::io_context& io, boost::asio::ip::tcp::socket& socket,
+                            const std::string& host, uint16_t port, std::chrono::milliseconds timeout);
+    void ShutdownAndClose(boost::asio::ip::tcp::socket& socket);
+
     bool WriteAll(boost::asio::ip::tcp::socket& socket, const void* data, size_t size);
     bool ReadAll(boost::asio::ip::tcp::socket& socket, void* data, size_t size);
     bool WriteFramed(boost::asio::ip::tcp::socket& socket, const std::vector<uint8_t>& payload);
-    bool ReadFramed(boost::asio::ip::tcp::socket& socket, std::vector<uint8_t>& payload);
+    bool ReadFramed(boost::asio::ip::tcp::socket& socket, std::vector<uint8_t>& payload,
+                    size_t maxLength = kMaxFramedMessage);
 
 }  // namespace vidre::transport

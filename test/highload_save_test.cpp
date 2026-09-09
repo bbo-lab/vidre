@@ -95,6 +95,10 @@ int main(int argc, char* argv[]) {
         camera->Init("dummy-highload");
 
         const std::filesystem::path requestedOutputPath(outputFile);
+        if (requestedOutputPath.has_parent_path()) {
+            std::error_code ec;
+            std::filesystem::create_directories(requestedOutputPath.parent_path(), ec);
+        }
         const auto resolutionPrefix = std::to_string(resolution.width) + "x" + std::to_string(resolution.height) + "_";
         std::filesystem::path runOutputPath = requestedOutputPath.parent_path() /
             (resolutionPrefix + requestedOutputPath.filename().string());
@@ -118,9 +122,14 @@ int main(int argc, char* argv[]) {
         const auto endTime = std::chrono::steady_clock::now();
         const auto elapsedSeconds = std::chrono::duration<double>(endTime - startTime).count();
         if (!std::filesystem::exists(runOutputPath)) {
-            std::cout << "Finished " << resolution.width << "x" << resolution.height
+            std::cerr << "Finished " << resolution.width << "x" << resolution.height
                       << ", but no output file was found at " << runOutputPath.string() << '\n';
-            continue;
+            return 1;
+        }
+        if (runtime.getSavedFramesNumber() <= 0) {
+            std::cerr << "Finished " << resolution.width << "x" << resolution.height
+                      << ", but no frames were saved\n";
+            return 1;
         }
 
         const auto fileBytes = std::filesystem::file_size(runOutputPath);
@@ -129,7 +138,9 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Saved " << runOutputPath.filename().string()
                   << " (" << fileBytes << " bytes, " << mebibytes << " MiB)"
-                  << ", average write speed: " << speed << " MiB/s" << '\n';
+                  << ", average write speed: " << speed << " MiB/s"
+                  << ", saved " << runtime.getSavedFramesNumber()
+                  << ", dropped " << runtime.getDroppedFrames() << '\n';
     }
 
     std::cout << "Finished multi-resolution high-load storage run" << '\n';

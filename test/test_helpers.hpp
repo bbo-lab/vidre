@@ -8,8 +8,10 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -50,6 +52,10 @@ namespace vidre::test {
             std::filesystem::create_directories(_path);
         }
         ~TempDir() {
+            if (std::getenv("VIDRE_TEST_KEEP_TMP") != nullptr) {
+                std::cerr << "TempDir kept at " << _path.string() << "\n";
+                return;
+            }
             std::error_code ec;
             std::filesystem::remove_all(_path, ec);
         }
@@ -158,6 +164,32 @@ namespace vidre::test {
         return (fileSize - info.headerSize) / info.frameBytesOnDisk;
     }
 
+    inline std::vector<uint32_t> readFrameIndices(const std::filesystem::path& path, const CcvInfo& info,
+                                                  uint64_t maxFrames) {
+        constexpr uint32_t kTailSize = 21;
+        std::vector<uint32_t> indices;
+        if (info.frameBytesOnDisk <= kTailSize) {
+            return indices;
+        }
+        std::ifstream file(path, std::ios::binary);
+        if (!file) {
+            return indices;
+        }
+        for (uint64_t i = 0; i < maxFrames; ++i) {
+            const std::streamoff tail = static_cast<std::streamoff>(info.headerSize) +
+                                        static_cast<std::streamoff>(i) * info.frameBytesOnDisk +
+                                        static_cast<std::streamoff>(info.frameBytesOnDisk - kTailSize);
+            file.seekg(tail);
+            uint32_t frameIndex = 0;
+            file.read(reinterpret_cast<char*>(&frameIndex), sizeof(frameIndex));
+            if (!file) {
+                break;
+            }
+            indices.push_back(frameIndex);
+        }
+        return indices;
+    }
+
     // Verify that the per-frame tails carry sequential frame indices 1..N.
     inline bool checkFrameSequence(const std::filesystem::path& path, const CcvInfo& info, uint64_t expectedFrames) {
         constexpr uint32_t kTailSize = 21;
@@ -166,8 +198,11 @@ namespace vidre::test {
         }
         std::ifstream file(path, std::ios::binary);
         if (!file) {
+            std::cerr << "checkFrameSequence: cannot open " << path.string() << "\n";
             return false;
         }
+        std::error_code ec;
+        const auto sizeOnDisk = std::filesystem::file_size(path, ec);
         file.seekg(info.headerSize);
         const uint32_t payloadSize = info.frameBytesOnDisk - kTailSize;
         for (uint64_t i = 0; i < expectedFrames; ++i) {
@@ -176,9 +211,17 @@ namespace vidre::test {
             uint32_t frameIndex = 0;
             file.read(reinterpret_cast<char*>(&frameIndex), sizeof(frameIndex));
             if (!file || frameIndex != static_cast<uint32_t>(i + 1)) {
+                std::cerr << "checkFrameSequence: frame " << i << " of " << expectedFrames << " in " << path.filename().string()
+                          << ": index=" << frameIndex << " stream(good=" << file.good() << ",eof=" << file.eof()
+                          << ",fail=" << file.fail() << ") fileSize=" << sizeOnDisk << " headerSize=" << info.headerSize
+                          << " frameBytes=" << info.frameBytesOnDisk << "\n";
                 return false;
             }
             file.seekg(8 + 9, std::ios::cur);  // timeStamp + padding
+        }
+        if (!file.good()) {
+            std::cerr << "checkFrameSequence: stream not good after " << expectedFrames << " frames (fileSize=" << sizeOnDisk
+                      << ")\n";
         }
         return file.good();
     }

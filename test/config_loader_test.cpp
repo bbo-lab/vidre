@@ -58,7 +58,8 @@ int main() {
         CHECK(runtime->getBitsPerPixel() == 16);
         CHECK(runtime->getCamera() != nullptr);
         CHECK(runtime->getCamera()->GetSerialNumber() == "dummy-serial-1");
-        CHECK(runtime->getOutputFileName() == outputFile.string());
+        CHECK(std::filesystem::path(runtime->getOutputFileName()).lexically_normal().make_preferred() ==
+              std::filesystem::path(outputFile).lexically_normal().make_preferred());
 
         bool sawCreation = false;
         for (const auto& entry : logs) {

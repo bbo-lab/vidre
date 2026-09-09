@@ -305,7 +305,7 @@ namespace vidre {
 
         ap_u32 oldValue = 0;
         ap_u32 sideEffects = 0;
-        ap_u32 newValue = static_cast<ap_u32>(max(0.0, std::round(value)));
+        ap_u32 newValue = static_cast<ap_u32>(std::max(0.0, std::round(value)));
 
         if (ap_TestSetSensorRegister) {
             sideEffects = ap_TestSetSensorRegister(_handle, regSymbol->c_str(), newValue, 0, &oldValue);

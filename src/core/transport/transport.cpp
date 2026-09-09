@@ -6,7 +6,6 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
-#include <boost/asio/detail/socket_option.hpp>
 
 #include <core/storage/storage.hpp>
 
@@ -118,27 +117,19 @@ namespace vidre {
         }
     }
 
-    bool RemoteStorageSink::connectAndSend(boost::asio::ip::tcp::socket& socket, const std::string& host, uint16_t port)
+    bool RemoteStorageSink::connectAndSend(boost::asio::io_context& io, boost::asio::ip::tcp::socket& socket,
+                                           const std::string& host, uint16_t port)
     {
-        try {
-            boost::asio::ip::tcp::resolver resolver(socket.get_executor().context());
-            auto endpoints = resolver.resolve(host, std::to_string(port));
-            boost::asio::connect(socket, endpoints);
-#ifdef _WIN32
-            // Bound blocking writes; on Windows the timeout value is in milliseconds.
-            boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_SNDTIMEO> timeout{10000};
-            socket.set_option(timeout);
-#endif
-            return true;
-        } catch (const std::exception& e) {
-            std::cerr << "Remote storage connect failed: " << e.what() << "\n";
+        if (!transport::ConnectWithTimeout(io, socket, host, port, std::chrono::seconds(5))) {
             return false;
         }
+        transport::SetSocketTimeouts(socket, std::chrono::seconds(10));
+        return true;
     }
 
     void RemoteStorageSink::workerLoop()
     {
-        const auto [host, port] = transport::SplitEndpoint(_endpoint);
+        const auto [host, port] = transport::SplitEndpoint(_endpoint, transport::kDefaultStoragePort);
         boost::asio::io_context ioContext;
         boost::asio::ip::tcp::socket socket(ioContext);
         bool connected = false;
@@ -162,7 +153,7 @@ namespace vidre {
             }
 
             if (!connected) {
-                connected = connectAndSend(socket, host, port);
+                connected = connectAndSend(ioContext, socket, host, port);
                 if (!connected) {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                     {
@@ -184,14 +175,14 @@ namespace vidre {
             const bool ok = transport::WriteFramed(socket, command);
             if (ok) {
                 _sent.fetch_add(1, std::memory_order_relaxed);
-                _busy.store(false, std::memory_order_relaxed);
-                _cv.notify_all();
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    _busy.store(false, std::memory_order_relaxed);
+                    _cv.notify_all();
+                }
             } else {
                 connected = false;
-                try {
-                    socket.close();
-                } catch (...) {
-                }
+                transport::ShutdownAndClose(socket);
                 {
                     std::lock_guard<std::mutex> lock(_mutex);
                     if (lifecycle) {

@@ -19,6 +19,10 @@ target_include_directories(vidre PUBLIC ${CMAKE_BINARY_DIR})
 
 
 
+if(WIN32)
+    target_compile_definitions(vidre PUBLIC NOMINMAX WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00)
+endif()
+
 target_link_libraries(vidre PUBLIC Boost::headers)
 target_link_libraries(vidre PUBLIC Boost::program_options)
 target_link_libraries(vidre PUBLIC Boost::filesystem)

@@ -1,7 +1,11 @@
 #include <core/transport/wire_protocol.hpp>
 
 #include <array>
+#include <chrono>
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 namespace vidre::transport {
 
@@ -247,6 +251,7 @@ namespace {
 
     bool DecodeFrameEnvelope(const std::vector<uint8_t>& data, FrameEnvelope& envelope)
     {
+        envelope = FrameEnvelope{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -363,6 +368,7 @@ namespace {
 
     bool DecodeSessionSpec(const std::vector<uint8_t>& data, SessionSpec& spec)
     {
+        spec = SessionSpec{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -501,6 +507,7 @@ namespace {
 
     bool DecodeStorageCommand(const std::vector<uint8_t>& data, StorageCommand& command)
     {
+        command = StorageCommand{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -568,6 +575,7 @@ namespace {
 
     bool DecodeCameraInfo(const std::vector<uint8_t>& data, CameraInfo& info)
     {
+        info = CameraInfo{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -699,6 +707,7 @@ namespace {
 
     bool DecodeCameraStatus(const std::vector<uint8_t>& data, CameraStatus& status)
     {
+        status = CameraStatus{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -757,6 +766,7 @@ namespace {
 
     bool DecodeRecordingStats(const std::vector<uint8_t>& data, RecordingStats& stats)
     {
+        stats = RecordingStats{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -806,6 +816,7 @@ namespace {
 
     bool DecodeStatusResponse(const std::vector<uint8_t>& data, StatusResponse& response)
     {
+        response = StatusResponse{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -914,6 +925,7 @@ namespace {
 
     bool DecodeControlRequest(const std::vector<uint8_t>& data, ControlRequest& request)
     {
+        request = ControlRequest{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -1056,6 +1068,7 @@ namespace {
 
     bool DecodeControlResponse(const std::vector<uint8_t>& data, ControlResponse& response)
     {
+        response = ControlResponse{};
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;
@@ -1243,6 +1256,7 @@ namespace {
 
     bool DecodeCameraInfoList(const std::vector<uint8_t>& data, std::vector<CameraInfo>& cameras)
     {
+        cameras.clear();
         Decoder decoder(data);
         uint32_t field = 0;
         uint32_t wireType = 0;

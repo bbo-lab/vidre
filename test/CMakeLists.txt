@@ -12,7 +12,12 @@ target_include_directories(highload_save_test PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-add_test(NAME highload_save_test COMMAND highload_save_test)
+add_test(NAME highload_save_test
+    COMMAND highload_save_test
+        --output ${CMAKE_BINARY_DIR}/test_output/highload.ccv
+        --resolutions 640x480
+        --duration 5)
+set_tests_properties(highload_save_test PROPERTIES TIMEOUT 120)
 
 function(vidre_add_unit_test name)
     add_executable(${name} ${name}.cpp)

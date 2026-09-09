@@ -63,7 +63,8 @@ bool sendCommand(asio::ip::tcp::socket& socket, const vidre::transport::StorageC
     return vidre::transport::WriteFramed(socket, vidre::transport::EncodeStorageCommand(command));
 }
 
-void verifySessionFile(const std::filesystem::path& path, uint64_t expectedFrames) {
+void verifySessionFile(const std::filesystem::path& path, const std::vector<uint32_t>& expectedIndices) {
+    const uint64_t expectedFrames = expectedIndices.size();
     vidre::test::CcvInfo info;
     CHECK(vidre::test::readCcvInfo(path, info));
     CHECK(info.width == kWidth);
@@ -74,7 +75,15 @@ void verifySessionFile(const std::filesystem::path& path, uint64_t expectedFrame
 #else
     CHECK(vidre::test::frameCountFromSize(std::filesystem::file_size(path), info) == expectedFrames);
 #endif
-    CHECK(vidre::test::checkFrameSequence(path, info, expectedFrames));
+    const auto indices = vidre::test::readFrameIndices(path, info, expectedFrames);
+    CHECK(indices == expectedIndices);
+    if (indices != expectedIndices) {
+        std::cerr << "  stored frame indices:";
+        for (const auto index : indices) {
+            std::cerr << " " << index;
+        }
+        std::cerr << "\n";
+    }
 }
 
 }  // namespace
@@ -128,7 +137,7 @@ int main() {
         CHECK(vidre::test::waitForCcvFile(dir.path(), "sess-a", 5, std::chrono::seconds(5)));
         const auto files = vidre::test::findFiles(dir.path(), ".ccv");
         CHECK(files.size() == 1);
-        verifySessionFile(files[0], 5);
+        verifySessionFile(files[0], {1, 2, 3, 4, 5});
     }
 
     // Session B: BeginSession -> frames with a gap -> disconnect without finish.
@@ -172,7 +181,7 @@ int main() {
             return path.filename().string().find("sess-b") != std::string::npos;
         });
         CHECK(fileB != files.end());
-        verifySessionFile(*fileB, 2);
+        verifySessionFile(*fileB, {1, 5});
 
         // The server's own drop accounting shows the gap.
         bool sawGap = false;

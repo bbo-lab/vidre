@@ -44,7 +44,7 @@ int main() {
         runtime.setCameraName("ccvtest");
         runtime.createStorage(requestedFile.string(), "ccv", 8, 0);
         CHECK(runtime.checkCamera());
-        CHECK(std::filesystem::exists(requestedFile));  // opened eagerly by Storage
+        CHECK(!std::filesystem::exists(requestedFile));
 
         runtime.run();
         std::this_thread::sleep_for(std::chrono::milliseconds(600));
@@ -52,11 +52,12 @@ int main() {
         savedFrames = runtime.getSavedFramesNumber();
         CHECK(savedFrames > 0);
 
-        // Storage::initiateHeader renames the file with a timestamp prefix; the
-        // new name is only visible through the runtime before stop() resets it.
         outputFile = runtime.getOutputFileName();
         CHECK(!outputFile.empty());
+        CHECK(outputFile != requestedFile.string());
+        CHECK(std::filesystem::path(outputFile).filename().string().find("roundtrip.ccv") != std::string::npos);
         CHECK(std::filesystem::exists(outputFile));
+        CHECK(!std::filesystem::exists(requestedFile));
 
         runtime.stop();
     }  // runtime destroyed -> DiskWriter flushed on POSIX

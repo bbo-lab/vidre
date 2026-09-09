@@ -1,5 +1,6 @@
 #include <core/transport/wire_protocol.hpp>
 
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -296,38 +297,103 @@ void roundTripControlResponse() {
     CHECK(sameControlResponse(stats, decoded));
 }
 
+std::vector<uint8_t> stringField(uint32_t field, const std::string& value) {
+    std::vector<uint8_t> out;
+    out.push_back(static_cast<uint8_t>((field << 3) | 2));
+    out.push_back(static_cast<uint8_t>(value.size()));
+    out.insert(out.end(), value.begin(), value.end());
+    return out;
+}
+
+std::vector<uint8_t> doubleField(uint32_t field, double value) {
+    std::vector<uint8_t> out;
+    out.push_back(static_cast<uint8_t>((field << 3) | 1));
+    uint64_t bits = 0;
+    static_assert(sizeof(bits) == sizeof(value));
+    std::memcpy(&bits, &value, sizeof(bits));
+    for (int i = 0; i < 8; ++i) {
+        out.push_back(static_cast<uint8_t>(bits >> (8 * i)));
+    }
+    return out;
+}
+
+std::vector<uint8_t> boolField(uint32_t field, bool value) {
+    return {static_cast<uint8_t>(field << 3), static_cast<uint8_t>(value ? 1 : 0)};
+}
+
+std::vector<uint8_t> messageField(uint32_t field, const std::vector<uint8_t>& body) {
+    std::vector<uint8_t> out;
+    out.push_back(static_cast<uint8_t>((field << 3) | 2));
+    size_t length = body.size();
+    while (length >= 0x80) {
+        out.push_back(static_cast<uint8_t>((length & 0x7F) | 0x80));
+        length >>= 7;
+    }
+    out.push_back(static_cast<uint8_t>(length));
+    out.insert(out.end(), body.begin(), body.end());
+    return out;
+}
+
+std::vector<uint8_t> concat(std::vector<uint8_t> a, const std::vector<uint8_t>& b) {
+    a.insert(a.end(), b.begin(), b.end());
+    return a;
+}
+
 void roundTripSpecialDecoders() {
-    // The legacy per-camera decoders are fed by the request sub-messages.
-    wt::ControlRequest request;
-    request.type = wt::ControlRequestType::GetCameraInfo;
-    request.cameraName = "cam-a";
     wt::ControlRequest decoded;
-    CHECK(wt::DecodeCameraRequest(wt::EncodeControlRequest(request), decoded));
+    CHECK(wt::DecodeCameraRequest(stringField(1, "cam-a"), decoded));
     CHECK(decoded.cameraName == "cam-a");
 
-    request.type = wt::ControlRequestType::SetExposure;
-    request.value = 12.5;
-    CHECK(wt::DecodeSetExposureRequest(wt::EncodeControlRequest(request), decoded));
+    decoded = {};
+    CHECK(wt::DecodeSetExposureRequest(concat(stringField(1, "cam-a"), doubleField(2, 12.5)), decoded));
     CHECK(decoded.cameraName == "cam-a" && decoded.value == 12.5);
 
-    request.type = wt::ControlRequestType::SetGain;
-    request.value = -3.25;
-    CHECK(wt::DecodeSetGainRequest(wt::EncodeControlRequest(request), decoded));
+    decoded = {};
+    CHECK(wt::DecodeSetGainRequest(concat(stringField(1, "cam-a"), doubleField(2, -3.25)), decoded));
     CHECK(decoded.cameraName == "cam-a" && decoded.value == -3.25);
 
-    request.type = wt::ControlRequestType::SetPreview;
-    request.flag = true;
-    CHECK(wt::DecodePreviewRequest(wt::EncodeControlRequest(request), decoded));
+    decoded = {};
+    CHECK(wt::DecodePreviewRequest(concat(stringField(1, "cam-a"), boolField(2, true)), decoded));
     CHECK(decoded.cameraName == "cam-a" && decoded.flag);
 
-    // The camera list decoder consumes the CameraList control response.
+    const auto info = makeCameraInfo();
+    auto second = makeCameraInfo();
+    second.cameraName = "cam-b";
+    const auto listBody = concat(messageField(1, wt::EncodeCameraInfo(info)), messageField(1, wt::EncodeCameraInfo(second)));
+    std::vector<wt::CameraInfo> cameras;
+    CHECK(wt::DecodeCameraInfoList(listBody, cameras));
+    CHECK(cameras.size() == 2);
+    if (cameras.size() == 2) {
+        CHECK(sameCameraInfo(cameras[0], info));
+        CHECK(sameCameraInfo(cameras[1], second));
+    }
+
+    CHECK(wt::DecodeCameraInfoList({}, cameras));
+    CHECK(cameras.empty());
+
     wt::ControlResponse cameraList;
     cameraList.type = wt::ControlResponseType::CameraList;
-    cameraList.cameras.push_back(makeCameraInfo());
-    std::vector<wt::CameraInfo> cameras;
-    CHECK(wt::DecodeCameraInfoList(wt::EncodeControlResponse(cameraList), cameras));
-    CHECK(cameras.size() == 1);
-    CHECK(sameCameraInfo(cameras[0], cameraList.cameras[0]));
+    cameraList.cameras = {info, second};
+    wt::ControlResponse decodedResponse;
+    CHECK(wt::DecodeControlResponse(wt::EncodeControlResponse(cameraList), decodedResponse));
+    CHECK(sameControlResponse(cameraList, decodedResponse));
+
+    wt::ControlResponse emptyList;
+    emptyList.type = wt::ControlResponseType::CameraList;
+    CHECK(wt::DecodeControlResponse(wt::EncodeControlResponse(emptyList), decodedResponse));
+    CHECK(decodedResponse.type == wt::ControlResponseType::CameraList);
+    CHECK(decodedResponse.cameras.empty());
+
+    wt::ControlRequest stale;
+    stale.type = wt::ControlRequestType::SetGain;
+    stale.cameraName = "old";
+    stale.value = 99.0;
+    stale.flag = true;
+    wt::ControlRequest list;
+    list.type = wt::ControlRequestType::ListCameras;
+    CHECK(wt::DecodeControlRequest(wt::EncodeControlRequest(list), stale));
+    CHECK(stale.type == wt::ControlRequestType::ListCameras);
+    CHECK(stale.cameraName.empty() && stale.value == 0.0 && !stale.flag);
 }
 
 void splitEndpointEdgeCases() {
@@ -335,16 +401,19 @@ void splitEndpointEdgeCases() {
     CHECK(host1.first == "127.0.0.1" && host1.second == 1234);
 
     const auto noPort = wt::SplitEndpoint("myhost");
-    CHECK(noPort.first == "myhost" && noPort.second == 50051);
+    CHECK(noPort.first == "myhost" && noPort.second == wt::kDefaultControlPort);
+
+    const auto customDefault = wt::SplitEndpoint("myhost", wt::kDefaultStoragePort);
+    CHECK(customDefault.first == "myhost" && customDefault.second == wt::kDefaultStoragePort);
 
     const auto empty = wt::SplitEndpoint("");
-    CHECK(empty.first == "" && empty.second == 50051);
+    CHECK(empty.first == "" && empty.second == wt::kDefaultControlPort);
 
     const auto leadingColon = wt::SplitEndpoint(":1234");
-    CHECK(leadingColon.first == ":1234" && leadingColon.second == 50051);
+    CHECK(leadingColon.first == "" && leadingColon.second == 1234);
 
     const auto trailingColon = wt::SplitEndpoint("myhost:");
-    CHECK(trailingColon.first == "myhost:" && trailingColon.second == 50051);
+    CHECK(trailingColon.first == "myhost" && trailingColon.second == wt::kDefaultControlPort);
 
     const auto garbagePort = wt::SplitEndpoint("myhost:abc");
     CHECK(garbagePort.first == "myhost" && garbagePort.second == 0);
@@ -352,11 +421,23 @@ void splitEndpointEdgeCases() {
     const auto zeroPort = wt::SplitEndpoint("myhost:0");
     CHECK(zeroPort.first == "myhost" && zeroPort.second == 0);
 
-    const auto ipv6 = wt::SplitEndpoint("::1:8080");
-    CHECK(ipv6.first == "::1" && ipv6.second == 8080);
+    const auto tooLargePort = wt::SplitEndpoint("myhost:70000");
+    CHECK(tooLargePort.first == "myhost" && tooLargePort.second == 0);
+
+    const auto bareIpv6 = wt::SplitEndpoint("::1");
+    CHECK(bareIpv6.first == "::1" && bareIpv6.second == wt::kDefaultControlPort);
+
+    const auto bracketIpv6 = wt::SplitEndpoint("[::1]:8080");
+    CHECK(bracketIpv6.first == "::1" && bracketIpv6.second == 8080);
+
+    const auto bracketNoPort = wt::SplitEndpoint("[fe80::1]");
+    CHECK(bracketNoPort.first == "fe80::1" && bracketNoPort.second == wt::kDefaultControlPort);
+
+    const auto unterminated = wt::SplitEndpoint("[::1:8080");
+    CHECK(unterminated.second == 0);
 
     const auto doubleColon = wt::SplitEndpoint("myhost:1234:5678");
-    CHECK(doubleColon.first == "myhost:1234" && doubleColon.second == 5678);
+    CHECK(doubleColon.first == "myhost:1234:5678" && doubleColon.second == wt::kDefaultControlPort);
 }
 
 void corruptAndTruncatedInput() {

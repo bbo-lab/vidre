@@ -91,7 +91,8 @@ namespace vidre {
     private:
         void enqueue(transport::StorageCommand command);
         void workerLoop();
-        bool connectAndSend(boost::asio::ip::tcp::socket& socket, const std::string& host, uint16_t port);
+        bool connectAndSend(boost::asio::io_context& io, boost::asio::ip::tcp::socket& socket,
+                            const std::string& host, uint16_t port);
 
         std::string _endpoint;
         FrameEnvelope _baseEnvelope;
