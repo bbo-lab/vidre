@@ -17,22 +17,59 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sink.hh"
-// #include "../packet.hh"
+#include "source.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
-// result sink::put(packet::shared p) {
-//     result retval = p->put(*this);
+sink::~sink() {
+    terminate();
+}
 
-//     // update stats
-//     if (retval) {
-//         stats_.packets.transmitted++;
-//         stats_.bytes.transmitted += retval.count;
-//     }
+void sink::terminate() {
+    if (source_)
+        source_->terminate();
 
-//     return retval;
-// }
+    if(sink_task_ && sink_task_->isrunning())
+        sink_task_->terminate();
+}
+
+void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
+    task::scope scope(self);
+
+    // wait, until active (ie. started).
+    while (not isactive() and not scope.isterminated()) {
+        std::this_thread::sleep_for(pause);
+    }
+
+    // process loop
+    while (not scope.isterminated()) {
+        auto retval = source_->wait();
+        if (retval == status::bad)
+            continue;
+
+        // FIXME this logic needs to use source_->queue_depth()
+        for (size_type i = 0; i < *retval; ++i)
+            put(source_->get());
+    }
+}
+
+status sink::connect(shared<io::source> other, cap::flag_type cap) {
+    if (source_.get()) // already connected
+        return status::bad;
+
+    cap_[index::sink] = cap;
+    source_ = other;
+
+    if (!(cap & cap::event))
+        return status::ok;
+
+    sink_task_ = task::make([this](shared<task> self) {
+        sink_handler(self);
+    });
+
+    return status::ok;
+}

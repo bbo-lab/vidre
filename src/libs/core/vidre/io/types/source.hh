@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_SOURCE_HH
@@ -25,7 +25,8 @@
 #pragma once
 
 #include <vidre/core/config.hh>
-#include <vidre/io/types/sink.hh>
+#include <vidre/sync/events.hh>
+#include <vidre/io/types/endpoint.hh>
 
 namespace vidre {
 
@@ -38,22 +39,13 @@ namespace vidre {
         /** Data source.
          *
          * Data sources provide data to be read, such as files or filter outputs. They can
-         * be either stream- or packet-based (see @c source::mode).
+         * be either chunk- or packet-based (see @c source::mode).
+         *
+         * Packet based sources implement a task loop that either pushes packets directly
+         * to a sink, or use an event to notify that sink of data availability.
          *
          * */
         class VIDRE_CORE_VISIBILITY source : public virtual endpoint {
-        public:
-            /** Create source as shared pointer.
-             * @tparam T Type of the source to create.
-             * @param args Arguments to forward to the source's constructor.
-             * @returns A shared pointer to the newly created source.
-             * @see source::shared
-             * */
-            template <typename T, typename... Args>
-            static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...);
-            }
-
         public:
             source() = default;
 
@@ -62,19 +54,15 @@ namespace vidre {
             source(source &&) = delete;
             source &operator=(source &&) = delete;
 
-            virtual ~source() {}
+            virtual ~source();
 
         protected:
-            event avail_{};  ///< Event for signaling data availability.
+            shared<io::sink> sink_{};     ///< Connected io::sink.
+            shared<task> source_task_{};  ///< Task handler for event-pull or push method.
+            event source_event_{};        ///< Event for notifying data availability.
 
         protected:
-            /** Notify, that @a n packets are available.
-             * */
-            event::state notify(size_type n = 1) {
-                return avail_.notify(n);
-            }
-
-            /** The low-level read method.
+            /** The low-level read method (if applicable).
              * @param buf Memory area to store the retrieved data.
              * @returns Number of bytes actually read (@c invalid for read failure).
              * */
@@ -82,11 +70,8 @@ namespace vidre {
                 return invalid<offset_type>;
             }
 
-        protected:
-            // FIXME
-
         public:
-            /** Retrieve data from the source.
+            /** Retrieve a chunk of data from the source.
              * @param v Memory area to store the retrieved data.
              * @throw exception::logic if source is packet based.
              * @throw exception::runtime for other errors
@@ -103,30 +88,115 @@ namespace vidre {
                 return retval;
             }
 
-            /** Poll for data availability (waits indefinitely).
-             * @returns True if data is available, false if the wait was interrupted.
-             * @see vidre::event
+            /** Get a packet from the source.
+             * @throw exception::logic if source is not packet based.
+             * @returns Shared pointer to the retrieved packet.
              * */
-            [[nodiscard]] event::result poll() {
-                return avail_.wait();
+            shared<packet> get() override {
+                throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
-            /** Poll for data availability with timeout.
-             * @param timeout The maximum time to wait for data (milliseconds).
-             * @returns True if data is available, false if the wait timed out or was interrupted.
-             * @see vidre::event
-             * */
-            [[nodiscard]] event::result poll(std::chrono::milliseconds timeout) {
-                return avail_.wait(timeout);
+        public:
+            /** Get the queue depth limit for this source.
+             *
+             * @return The maximum number of packets that can be buffered
+             *         before data loss occurs:
+             *         - `0` (default): does not apply (not packet-based)
+             *         - `io::dynamic` (-1): unlimited (only limited by system memory)
+             *         - `> 0`: maximum number of packets that are "safe"
+             *
+             * @rationale{
+             *      Sources—typically tied to devices that generate data—are
+             *      expected to set up their memory needs before acquisition starts,
+             *      for example in the form of a ring buffer. A camera driver, for
+             *      instance, would allocate all memory resources before starting
+             *      acquisition to buffer frames for at least one second.
+             *
+             *      Sinks, on the other hand, are only expected to react to a
+             *      data packet as fast as they can and simply drop packets if they
+             *      cannot keep up. This holds for storing data on disk as much as
+             *      for cases where, for example, a neural network reacts to camera
+             *      observations but at a slower rate than the camera's acquisition
+             *      rate.
+             * }
+             */
+            virtual size_type queue_depth() const noexcept {
+                return 0;
             }
 
-            packet::shared get() override {
-                throw exception::logic() << "source is not packet based";
+            /** Wait indefinitely until a packet is available for pulling. */
+            [[nodiscard]] event::result_type wait() {
+                return source_event_.wait();
             }
+
+            /** Wait until a packet is available for pulling.
+             * @param timeout The maximum time to wait for a packet.
+             * */
+            [[nodiscard]] event::result_type wait(std::chrono::milliseconds timeout) {
+                return source_event_.wait(timeout);
+            }
+
+        protected:
+            /** Terminate source.
+             * This method may be called from connected sinks to terminate the source.
+             * */
+            void terminate() override;
+
+            /** Notify the sink, that a packet is available for pulling.
+             * @param count The number of packets available for pulling.
+             * */
+            auto notify(uint64_t count = 1) {
+                return source_event_.notify(count);
+            }
+
+            /** Event step.
+             * This method is called in a loop by the default thread handler to
+             * process source events. A typical implementation would check for
+             * available data and handle them accordingly, for example:
+             * @code
+             *     if (wait_for_data_available()) {
+             *         // read data and assemble packet
+             *         // ...
+             *
+             *         // store packet in output queue
+             *         output_queue_.push(packet);
+             *
+             *         // notify the sink that a new packet is available
+             *         notify();
+             *     }
+             *     else {
+             *         // handle signals (such as termination) and errors
+             *         // ...
+             *     }
+             * @endcode
+             * @note The implementation has to take into account the source capabilities!
+             * @see endpoint::getcap()
+             * */
+            virtual void source_step() {
+                std::this_thread::yield();
+            }
+
+            /** Default thread handler.
+             * @param pause Pause duration in milliseconds (used, for example, when waiting for the source to become active).
+             * @see endpoint::isactive()
+             * @see source_step()
+             * */
+            virtual void source_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
+
+        protected:
+            /** Connect a sink to this source.
+             * @param other The sink to connect to.
+             * @param cap The capabilities of the connection.
+             *
+             * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
+             *       source and sink capabilities. This connect method then sets up the actual connection. If additional
+             *       connection logic is required, the method can be overridden.
+             * */
+            virtual status connect(shared<io::sink> other, cap::flag_type cap);
 
         private:
-            friend class route;
-            friend class dashboard;
+            friend class sink;
+            friend class endpoint;
         };
 
         ///@}

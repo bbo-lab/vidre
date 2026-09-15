@@ -1,5 +1,5 @@
 #include <vidre/log.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 
 using namespace vidre;
 
@@ -68,21 +68,15 @@ void tracing() {
 }
 //! [tracing]
 
-#include <iostream>
-
 int main(int argc, const char **argv) {
-// #if not defined(DEBUG)
-//     log::notice() << "Tracing is disabled (non-DEBUG build).\n";
-// #endif
+#if not defined(DEBUG)
+    log::notice() << "Tracing is disabled (non-DEBUG build).\n";
+#endif
 
-//     simple_logging();
-//     block_wise();
-//     tracing();
+    simple_logging();
+    block_wise();
+    tracing();
 
-    event ev;
-    std::cout << (bool) ev.notify() << std::endl;
-    std::cout << (bool) ev.notify(0) << std::endl;
-    std::cout << ev.wait().count << std::endl;
     return 0;
 }
 

@@ -17,10 +17,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "paths.hh"
-#include "../log.hh"
+// #include "../log.hh"
 
 using namespace vidre;
 
@@ -105,9 +105,9 @@ static std::filesystem::path config_dir() {
 
         if (not std::filesystem::is_directory(dir)) {
             if (not std::filesystem::create_directory(dir)) {
-                log::error() << "Configuration directory\n\n    "  //
-                             << dir.string()                       //
-                             << "\n\ncould not be created.\n";
+                // log::error() << "Configuration directory\n\n    "  //
+                //              << dir.string()                       //
+                //              << "\n\ncould not be created.\n";
             }
         }
     }
@@ -122,9 +122,9 @@ static std::filesystem::path tmp_dir() {
         dir = "/tmp";
 
         if (not std::filesystem::is_directory(dir)) {
-            log::error() << "Temporary directory\n\n"  //
-                         << dir.string()               //
-                         << "\n\ndoes not exist.\n";
+            // log::error() << "Temporary directory\n\n"  //
+            //              << dir.string()               //
+            //              << "\n\ndoes not exist.\n";
         }
     }
 
@@ -153,9 +153,9 @@ static std::filesystem::path cache_dir() {
 
         if (not std::filesystem::is_directory(dir)) {
             if (not std::filesystem::create_directory(dir)) {
-                log::error() << "Cache directory\n\n    "  //
-                             << dir.string()               //
-                             << "\n\ncould not be created.\n";
+                // log::error() << "Cache directory\n\n    "  //
+                //              << dir.string()               //
+                //              << "\n\ncould not be created.\n";
             }
         }
     }

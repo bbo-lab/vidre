@@ -24,3 +24,10 @@ embedded research setups.
 ## Status
 
 The project is still in **discovery phase**.
+
+## Acknowledgements
+
+Some code and documentation in this project has been developed—unsurprisingly—with 
+the support of AI-assisted tools. The most relevant discussions and reasoning behind 
+key design decisions are preserved as markdown documents in the `docs/ai/` folder. 
+These documents provide additional context and insight into the design process.

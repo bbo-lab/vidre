@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_MEMORY_CHUNK_HH
@@ -38,7 +38,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/memory/base.hh>
-#include <vidre/util/events.hh>
+#include <vidre/sync/events.hh>
 
 #include <bit>
 #include <atomic>
@@ -172,7 +172,6 @@ namespace vidre {
                  * FIXME
                  * */
                 void stop() noexcept {
-                    signal_.terminate();
                 }
 
                 /** Wait for elements.

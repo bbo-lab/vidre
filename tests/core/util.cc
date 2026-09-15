@@ -64,16 +64,16 @@ TEST_CASE("version.hh", "[vidre/util]") {
     REQUIRE(not(version{} == version{}));
 }
 
-#include <vidre/util/events.hh>
+#include <vidre/sync/events.hh> // FIXME needs another place
 TEST_CASE("events.hh", "[vidre/util]") {
     event ev{};
 
-    REQUIRE(ev.notify() == event::success);
-    REQUIRE(ev.wait() == 1ULL);
-    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == event::timed_out);
-    REQUIRE(ev.notify(5) == event::success);
-    REQUIRE(ev.wait() == 5ULL);
-    REQUIRE(ev.wait(std::chrono::milliseconds(100)) == event::timed_out);
+    REQUIRE(ev.notify() == status::ok);
+    REQUIRE(*ev.wait() == 1ULL);
+    REQUIRE(*ev.wait(std::chrono::milliseconds(100)) == 0);
+    REQUIRE(ev.notify(5) == status::ok);
+    REQUIRE(*ev.wait() == 5ULL);
+    REQUIRE(*ev.wait(std::chrono::milliseconds(100)) == 0);
 }
 
 #include <vidre/util/endian.hh>

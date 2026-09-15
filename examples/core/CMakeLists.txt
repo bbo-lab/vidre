@@ -14,12 +14,15 @@ vidre_test(GROUP
 )
 
 vidre_test(uuid SOURCES uuid.cc)
+vidre_test(task SOURCES task.cc)
 vidre_test(log SOURCES log.cc)
 vidre_test(develop SOURCES develop.cc)
 vidre_test(os SOURCES os.cc)
 vidre_test(script SOURCES script.cc)
 vidre_test(settings SOURCES settings.cc)
 vidre_test(io SOURCES io.cc)
+vidre_test(cache SOURCES cache.cc)
+vidre_test(packet SOURCES packet.cc)
 
 vidre_test(program EXCLUDE SOURCES program.cc)
 vidre_test(raw EXCLUDE SOURCES raw.cc)

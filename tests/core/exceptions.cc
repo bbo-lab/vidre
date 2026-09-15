@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators_all.hpp>
 
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 #include <iostream>
 #include <random>
 

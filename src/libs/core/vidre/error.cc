@@ -17,9 +17,9 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "exception.hh"
+#include "error.hh"
 // FIXME #include "storage/file.hh"
 
 #include <iostream>
@@ -120,6 +120,10 @@ const char *exception::what() const noexcept {
 
 const char *exception::logic::what() const noexcept {
     return "logic error";
+}
+
+const char *exception::internal::what() const noexcept {
+    return "internal error";
 }
 
 const char *exception::runtime::what() const noexcept {

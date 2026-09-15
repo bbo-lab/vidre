@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_IO_HH
@@ -31,13 +31,8 @@
  *
  * The I/O abstraction focuses on providing mechanism to retrieve, convert and
  * store data, more specifically data streams of various types (such as video
- * and audio). For that it takes inspiration from streaming libraries, such as
- * gstreamer. That means, for example, that the concept of "source" and "sink" 
- * are used to represent data providers and consumers, respectively. The concept 
- * of "channels" (or filters, respectively) is used to represent data transformers, 
- * such as decoders and encoders. The implementation, in combination with appropriate
- * synchronization primitives, also allows for concurrent data processing, 
- * passing either raw byte-sequences or data packets with metadata.
+ * and audio). 
+ * FIXME
  *
  * @{
  * @namespace vidre::io             In-/output related functionality.
@@ -62,6 +57,6 @@
 #include <vidre/io/types.hh>
 #include <vidre/io/packet.hh>
 #include <vidre/io/file.hh>
-#include <vidre/io/flow.hh>
+// #include <vidre/io/flow.hh>
 
 #endif  // VIDRE_CORE_IO_HH

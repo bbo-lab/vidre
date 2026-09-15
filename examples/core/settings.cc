@@ -1,6 +1,6 @@
 #include <vidre/settings.hh>
 #include <vidre/log.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 
 #include <algorithm>
 

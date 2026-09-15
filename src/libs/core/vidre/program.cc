@@ -17,13 +17,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "program.hh"
-#include "log.hh"
-#include "exception.hh"
-
-#include <iostream>
+// #include "log.hh"
+#include "error.hh"
+#include "cpp/format.hh"
 
 #include <cstring>
 
@@ -108,7 +107,8 @@ void program::argument::parser::handle(const argument &opt) {
             if (opt.type == argument::kind::required) {
                 if (not found) {
                     if ((unparsed_.size() < 2) or (unparsed_[1][0] == '-'))
-                        throw exception::argument() << error::message(std::format("Option '{}' requires an argument.", opt.long_option));
+                        throw exception::argument()
+                            << error::message(std::format("Option '{}' requires an argument.", opt.long_option));
 
                     value = unparsed_[1];
                     unparsed_.erase(unparsed_.begin() + 1);
@@ -208,7 +208,8 @@ void program::argument::parser::parse(int argc, const char **argv) {
 
                     if (not found) {
                         if (cur.size() > 2)
-                            throw exception::argument() << error::message(std::format("In argument '{}', '-{}' is not recognized.", cur, cur[i]));
+                            throw exception::argument()
+                                << error::message(std::format("In argument '{}', '-{}' is not recognized.", cur, cur[i]));
                         else
                             throw exception::argument() << error::message(std::format("Argument '{}' is not recognized.", cur));
                     }
@@ -368,6 +369,7 @@ std::string program::argument::parser::help() {
 }
 
 void program::argument::parser::show() const noexcept {
+#if 0
     log::info info;
     for (auto &item : parsed_) {
         info << item.first << " = ";
@@ -397,4 +399,5 @@ void program::argument::parser::show() const noexcept {
 
         info << log::endl;
     }
+#endif
 }

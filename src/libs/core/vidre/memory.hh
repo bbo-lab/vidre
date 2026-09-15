@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_MEMORY_HH
@@ -41,6 +41,7 @@
  * @defgroup api-core-memory-base       Basic types and utilities
  * @defgroup api-core-memory-view       Memory views
  * @defgroup api-core-memory-chunk      Data chunk handling
+ * @defgroup api-core-memory-shared     Shared objects
  * @defgroup api-core-memory-details    Implementation details
  * @}
  * */

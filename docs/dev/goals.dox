@@ -191,7 +191,7 @@ Document as much as necessary, but not more (in case of doubt, follow
 
 Error handling, depending on context, uses either standard error codes
 (e.g. [''std::errc''](https://en.cppreference.com/w/cpp/error/errc)) or 
-exceptions. See @ref api-core-exception for further information.
+exceptions. See @ref api-core-error for further information.
 
 
 @subsubsection core-logging Logging

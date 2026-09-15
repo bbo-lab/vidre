@@ -17,9 +17,31 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "packet.hh"
+#include "types/sink.hh"
+#include "types/source.hh"
 
 using namespace vidre;
+using namespace vidre::io;
 
+io::result packet::put(io::sink &f) const {
+    result retval = f.put({sizeof(packet), reinterpret_cast<memory::const_pointer>(this)});
+    return retval;
+}
+
+// FIXME should be possibly inline (in sink.hh)
+io::result packet::pad(io::sink &f) const {
+    size_t padding = size() - length;
+    if (padding > 0) {
+        static const uint8_t padbuf[alignment] = {};
+        return f.put({padding, padbuf});
+    }
+    return 0;
+}
+
+// FIXME should be possibly inline (in source.hh)
+io::result packet::get(io::source &s) noexcept {
+    return s.get({sizeof(packet), reinterpret_cast<memory::pointer>(this)});
+}

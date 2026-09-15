@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CONFIG_HH
@@ -91,6 +91,27 @@ namespace vidre {}
 
 /** File extension for dynamically linked libraries.  */
 #define VIDRE_DLL_EXTENSION "<…>"
+
+///@}
+
+/**@defgroup api-config-storage Memory and storage settings.
+ * @ingroup api-config
+ * */
+///@{
+
+/** Default size for storage cache (default: 1 MiB). 
+ * @note At the moment of writing, chunk sizes for writing data efficiently
+ *       to an SSD disk appear to be in the oder of 1 MiB.
+ * */
+#define VIDRE_CACHE_SIZE <…>
+
+/** Default number of cache slots.
+ * */
+#define VIDRE_CACHE_SLOTS <…>
+
+/** Default timeout for caching operations.
+ * */
+#define VIDRE_CACHE_TIMEOUT_MS <…>
 
 ///@}
 

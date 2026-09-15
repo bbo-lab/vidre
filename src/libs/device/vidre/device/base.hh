@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_DEVICE_BASE_HH
@@ -27,7 +27,7 @@
 #include <vidre/device/config.hh>
 #include <vidre/settings/json.hh>
 #include <vidre/cpp/util.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 #include <vidre/log.hh>
 
 #include <cstdint>

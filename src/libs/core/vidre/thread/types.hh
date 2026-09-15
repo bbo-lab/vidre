@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_THREAD_TYPES_HH
@@ -31,8 +31,7 @@
  * */
 
 #include <vidre/core/config.hh>
-#include <vidre/exception.hh>
-#include <vidre/util/status.hh>
+#include <vidre/error.hh>
 #include <vidre/cpp/util.hh>
 
 ///@cond
@@ -49,9 +48,7 @@
 #endif
 ///@endcond
 
-#include <atomic>
 #include <thread>
-#include <utility>
 
 namespace vidre {
 

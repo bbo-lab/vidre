@@ -1,5 +1,5 @@
 #include <vidre/config.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 #include <vidre/ffmpeg.hh>
 
 #include "input/midraw.hh"

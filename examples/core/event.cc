@@ -1,8 +1,7 @@
-#include <vidre/util/events.hh>
+#include <vidre/sync/events.hh>
 #include <vidre/util/chrono.hh>
 #include <vidre/thread.hh>
 #include <vidre/log.hh>
-#include <thread>
 
 using namespace vidre;
 
@@ -14,20 +13,16 @@ void consumer() {
     uint64_t count = 0;
     bool running = true;
     while (running) {
-        event::result res = ev.wait(std::chrono::milliseconds(1));
-        switch (res.status) {
-            case event::state::success:
-                count += res.count;
+        auto res = ev.wait(std::chrono::milliseconds(1));
+        if (res == status::ok) {
+            if (*res > 0)
+                count += *res;
+            else
                 break;
-            case event::state::timed_out:
-                continue;
-            case event::state::terminated:
-                running = false;
-                continue;
-            default:
-                log::error() << "Consumer: failed to wait for event" << log::endl;
-                running = false;
-                continue;
+        }
+        else {
+            log::error() << "Consumer: failed to wait for event (" << std::make_error_code(res.error()).message() << ")\n";
+            break;
         }
     }
 
@@ -43,7 +38,7 @@ void producer() {
         if (timer.elapsed<chrono::timer::seconds>() > RUN_FOR_S)
             break;
 
-        if (ev.notify(1) != event::state::success) {
+        if (ev.notify(1) != status::ok) {
             log::error() << "Producer: failed to notify event" << log::endl;
             break;
         }
@@ -52,11 +47,13 @@ void producer() {
     timer.stop();
 
     log::notice() << "Producer: sent " << count << " notifications" << log::endl
-                  << "          (" << std::format("{:.3f} ns/notification", timer.duration<chrono::timer::nanoseconds>(count)) << ")" << log::endl;
-    ev.terminate();
+                  << "          (" << std::format("{:.3f} ns/notification", timer.duration<chrono::timer::nanoseconds>(count))
+                  << ")" << log::endl;
 }
 
 int main(int, const char **) {
+    log::notice() << "Running for " << RUN_FOR_S << " s...\n";
+
     thread prod(producer);
     thread cons(consumer);
 
@@ -65,3 +62,9 @@ int main(int, const char **) {
 
     return 0;
 }
+
+/**@example examples/core/event.cc
+ * @details
+ * Measures the performance of event notifications between a producer and a consumer thread,
+ * and also demonstrates usage of the `event` class.
+ * */

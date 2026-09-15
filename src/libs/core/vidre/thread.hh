@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_UTIL_THREAD_HH
@@ -35,12 +35,14 @@
  * @{
  * @defgroup api-core-thread-types Types
  * @defgroup api-core-thread-schedule Scheduling
+ * @defgroup api-core-thread-synchronization Synchronization
  * @defgroup api-core-thread-details Implementation details
  * @}
  * */
 
 #include <vidre/core/config.hh>
 #include <vidre/thread/types.hh>
+#include <vidre/thread/task.hh>
 #include <vidre/thread/schedule.hh>
 
 #endif  //  VIDRE_CORE_UTIL_THREAD_HH

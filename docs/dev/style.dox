@@ -20,7 +20,7 @@ Example header and source:
 #pragma once
 
 #include <vidre/module/config.hh> //<-- should define VIDRE_EXAMPLE_VISIBILITY
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 
 #include <string>
 #include <vector>
@@ -29,28 +29,28 @@ namespace vidre {
 
     namespace style {
 
-        class VIDRE_EXAMPLE_VISIBILITY ExampleClass {
+        class VIDRE_EXAMPLE_VISIBILITY class_name {
         public:
-            explicit ExampleClass(const std::string &name) : name_(name) {
+            explicit class_name(const std::string &name) : name_(name) {
                 if (name_.empty()) {
                     throw vidre::exception() << throw_message("Name cannot be empty");
                 }
             }
 
-            void processData(const std::vector<int> &values);
+            void process_data(const std::vector<int> &values);
 
-            std::string getName() const noexcept {
+            std::string getname() const noexcept {
                 return name_;
             }
 
-            bool isValid() const noexcept;
+            bool isvalid() const noexcept;
 
         private:
             std::string name_;              ///< The name.
             std::vector<int> cached_data_;  ///< Internal number cache.
 
-            void validateInternal() const;
-            bool checkCondition(int value) const;
+            void validate_internal() const;
+            bool check_condition(int value) const;
         };
 
         ///@}
@@ -71,9 +71,9 @@ namespace vidre {
 
 using namespace vidre;
 
-style::ExampleClass::ExampleClass(const std::string &name)
+style::class_name::class_name(const std::string &name)
 
-    void style::ExampleClass::processData(const std::vector<int> &values) {
+    void style::class_name::process_data(const std::vector<int> &values) {
     for (const auto &value : values) {
         if (checkCondition(value)) {
             cached_data_.push_back(value);
@@ -86,20 +86,39 @@ style::ExampleClass::ExampleClass(const std::string &name)
     validateInternal();
 }
 
-bool style::ExampleClass::isValid() const noexcept {
+bool style::class_name::isvalid() const noexcept {
     return !name_.empty() && !cached_data_.empty();
 }
 
-void style::ExampleClass::validateInternal() const {
+void style::class_name::validate_internal() const {
     if (cached_data_.empty()) {
         throw std::runtime_error("No valid data to process");
     }
 }
 
-bool style::ExampleClass::checkCondition(int value) const {
+bool style::class_name::check_condition(int value) const {
     return value > 0 && value < 100;
 }
 @endcode
+
+### Naming Conventions
+
+All names—including classes, structs, enums, functions, methods, and variables—are 
+written in **lowercase**.
+
+For clarity and readability, names should be composed of full words separated by 
+underscores (e.g., `on_frame_captured`, `add_sink`). For namespaces, the use of
+single words is preferred.
+
+**Exceptions:**
+
+- Abbreviations are permitted when they are either universally understood or prevent 
+  excessive verbosity (e.g., `cap` for `capabilities`, `stats` for `statistics`).
+- Common prefixes such as `is`, `has`, `get`, and `set` do **not** require an underscore 
+  when the meaning is immediately clear to the reader (e.g., `isrunning`, `hascap`, `getstats`, `setcap`).
+
+**Member variables** follow the same naming rules and, in addition, end with a 
+trailing underscore (e.g., `cap_`, `stats_`, `sinks_`).
 
 ## Lua
 

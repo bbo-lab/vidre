@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_IO_FILE_HH
@@ -223,14 +223,16 @@ namespace vidre {
          * */
         ///@{
 
+        /** File handling.
+         * */
         class VIDRE_CORE_VISIBILITY file {
         public:
             class sink;    // forward declaration
             class source;  // forward declaration
 
-            using descriptor = io::detail::file::descriptor;
-            using size_type = io::detail::file::size_type;
-            using offset_type = io::detail::file::offset_type;
+            using descriptor = io::detail::file::descriptor;    ///< File descriptor type.
+            using size_type = io::detail::file::size_type;      ///< Default size type.
+            using offset_type = io::detail::file::offset_type;  ///< Default offset type.
 
             /** Maximum length of a path.
              * */
@@ -511,13 +513,6 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY file::sink : public virtual io::sink {
         public:
-            /** Syntax sugar... */
-            template <typename... Args>
-            static shared make(Args &&...args) {
-                return endpoint::make<file::sink>(std::forward<Args>(args)...);
-            }
-
-        public:
             /** Open mode.
              * */
             enum openmode_type : uint32_t {
@@ -562,7 +557,7 @@ namespace vidre {
 
         public:
             cap getcap() const noexcept override {
-                return {cap::none, cap::chunk | cap::packet};
+                return {cap::none, cap::chunk | cap::packet}; // FIXME cap::push | cap::event
             }
 
             bool valid() const noexcept override {
@@ -624,13 +619,6 @@ namespace vidre {
          *
          * */
         class VIDRE_CORE_VISIBILITY file::source : public virtual io::source {
-        public:
-            /** Syntax sugar... */
-            template <typename... Args>
-            static shared make(Args &&...args) {
-                return endpoint::make<file::source>(std::forward<Args>(args)...);
-            }
-
         public:
             source() = default;
 
@@ -696,10 +684,6 @@ namespace vidre {
         public:
             settings::json setup() const override;
             void setup(const settings::json &config) override;
-
-            std::vector<endpoint *> sources() noexcept override {
-                return {this};
-            }
         };
 
         namespace standard {

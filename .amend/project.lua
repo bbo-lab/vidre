@@ -13,8 +13,9 @@
         Users are free to add additional entries.
     ]=]
 PROJECT = {
-    NAME = "vidre",
+    NAME = "Vidre",
     USES = {
+        "",
         "C",
         "CLANG",
         "CMAKE",
@@ -78,5 +79,4 @@ TOOLS = {
 
         Here, additional Lua paths may be listed, if necessary.
     ]=]
-PATHS = {
-}
+PATHS = {}

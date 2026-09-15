@@ -17,268 +17,29 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_EXCEPTION_HH
-#define VIDRE_CORE_EXCEPTION_HH
+#ifndef VIDRE_CORE_ERROR_EXCEPTIONS_HH
+#define VIDRE_CORE_ERROR_EXCEPTIONS_HH
 #pragma once
 
-/**@addtogroup api-core-exception
- * @details
- * @fileinfo
- *
- * There are many pro's and con's for using exceptions versus error return
- * types—which we shall not repeat here. We should note, though, that the
- * mantra that exceptions are generally slower is [untenable](https://www.youtube.com/watch?v=bY2FlayomlE).
- *
- * Within VidRe, exceptions are used for transporting terse error reporting
- * information, and, therefore, should not be used in fast code paths (use
- * @c std::optional and @c std::expected there).
- *
- * @{
- * @namespace vidre::error Exception and errors.
- * @defgroup api-core-exception-details Implementation details.
- * @}
- * */
 #include <vidre/core/config.hh>
-#include <vidre/util/shared.hh>
+#include <vidre/error/details.hh>
+#include <vidre/error/flow.hh>
 
 #include <source_location>
 #include <system_error>
 #include <string>
-#include <expected>
-
-#if not defined(VIDRE_EXCEPTION_STORE) or defined(DOXYGEN)
-/** Size of per-thread storage for exceptions.
- * @ingroup api-core-exception-details
- * */
-#define VIDRE_EXCEPTION_STORE (64UL * 1024UL)
-#endif
 
 namespace vidre {
 
-    namespace error {
-
-        /** Implementation details namespace.
-         * @ingroup api-core-exception-details
-         * */
-        namespace detail {
-
-            /**@addtogroup api-core-exception-details
-             * */
-            ///@{
-
-            /** Thread-local storage for exceptions.
-             * Even though we're wasting @c VIDRE_EXCEPTION_STORE bytes per
-             * thread - this store should make exceptions mostly usable even under
-             * out-of-memory conditions.
-             * */
-            class VIDRE_CORE_VISIBILITY store {
-            public:
-                using pointer = void *;
-                using const_pointer = const void *;
-                using size_type = std::size_t;
-
-                static constexpr size_type granularity = sizeof(std::ptrdiff_t);
-
-                struct entry {
-                    entry *next;
-                    size_type size;
-
-                    entry() = default;
-                    entry(pointer ptr, size_type sz) : next(reinterpret_cast<entry *>(ptr)), size(sz) {}
-
-                    const char *addr() const noexcept {
-                        return reinterpret_cast<const char *>(this);
-                    }
-
-                    const char *data() const noexcept {
-                        return addr() + sizeof(entry);
-                    }
-                };
-
-                static constexpr size_type max_available = VIDRE_EXCEPTION_STORE - sizeof(entry);
-
-            public:
-                store();
-
-            protected:
-                static thread_local size_type used_;
-                static thread_local char mem_[VIDRE_EXCEPTION_STORE];
-
-            public:
-                /** Report free storage.
-                 * @note This is for development only.
-                 * */
-                static size_type free() noexcept {
-                    return (max_available - used_) * (used_ <= max_available);
-                }
-
-                /** Allocate @a n bytes.
-                 * */
-                static pointer allocate(size_t n) noexcept;
-
-                /** Deallocate previously allocated pointer @a ptr.
-                 * */
-                static void deallocate(pointer ptr) noexcept;
-            };
-
-            /** Standard allocator.
-             * @internal
-             * With friendly help from DeepSeek.
-             * @endinternal
-             * */
-            template <class T>
-            struct allocator {
-                using value_type = T;
-
-                // For rebinding to other types (C++17 and later can omit this)
-                template <typename U>
-                struct rebind {
-                    using other = allocator<U>;
-                };
-
-                // Default constructor (required)
-                allocator() noexcept = default;
-
-                // Copy constructor (required)
-                template <typename U>
-                allocator(const allocator<U> &) noexcept {}
-
-                // Allocate memory
-                T *allocate(std::size_t n) {
-                    if (n > max_size()) {
-                        throw std::bad_alloc();
-                    }
-
-                    // Call your static memory allocation function
-                    void *ptr = store::allocate(n * sizeof(T));
-                    if (!ptr) {
-                        throw std::bad_alloc();
-                    }
-                    return static_cast<T *>(ptr);
-                }
-
-                // Deallocate memory
-                void deallocate(T *ptr, std::size_t n) noexcept {
-                    // Call your static deallocation function
-                    store::deallocate(static_cast<typename store::pointer>(ptr));
-                }
-
-                // Optional: max_size
-                std::size_t max_size() const noexcept {
-                    return static_cast<std::size_t>(-1) / sizeof(T);
-                }
-
-                // Optional: equality operators
-                friend bool operator==(const allocator &, const allocator &) noexcept {
-                    return true;  // All instances are equivalent
-                }
-
-                friend bool operator!=(const allocator &, const allocator &) noexcept {
-                    return false;
-                }
-            };
-
-            template <typename T, typename U>
-            bool operator==(const allocator<T> &, const allocator<U> &) noexcept {
-                return true;
-            }
-
-            /** Deleter.
-             * */
-            template <class T>
-            struct deleter {
-                void operator()(T *p) const {
-                    p->~T();
-                    store::deallocate(p);
-                }
-            };
-
-            ///@}
-
-        }  // namespace detail
-
-        /**@addtogroup api-core-exception
-         * */
-        ///@{
-
-        /** Allocator for exception handling.
-         * */
-        template <typename T>
-        using allocator = error::detail::allocator<T>;
-
-        /** Standard type for error messages.
-         * */
-        using string = std::basic_string<char, std::char_traits<char>, error::detail::allocator<char>>;
-
-        class diagnostic;
-
-        ///@}
-
-    }  // namespace error
-
-    namespace error {
-
-        namespace detail {
-
-            /**@addtogroup api-core-exception-details
-             * */
-            ///@{
-
-            /** Supplemental information for exceptions.
-             * */
-            class VIDRE_CORE_VISIBILITY supplement {
-            public:
-                supplement() = default;
-                virtual ~supplement() {}
-
-            public:
-                /** Individual tag.
-                 * */
-                virtual const char *tag() noexcept {
-                    return nullptr;
-                }
-
-                /** Make the message.
-                 * */
-                virtual void make(vidre::error::string &) noexcept {}
-            };
-
-            ///@}
-
-        }  // namespace detail
-
-    }  // namespace error
-
+    // forward declaration
     class exception;
 
-    /**@addtogroup api-core-exception
-     * */
-    ///@{
-
-    /** Abort program with a message.
-     * */
-    [[noreturn]] void abort_with_message(const char *msg);
-
-    ///@}
-
-    /** Representation of two values: an expected value of type T, or an unexpected value of type E.
-     * @see <a href="https://en.cppreference.com/w/cpp/utility/expected.html">std::expected on CppReference</a>
-     * */
-    template <class T, class E>
-    using expected = std::expected<T, E>;
-
-    /** Representation of an unexpected value as stored in @ref vidre::expected.
-     * @see <a href="https://en.cppreference.com/w/cpp/utility/expected/unexpected.html">std::unexpected on CppReference</a>
-     * */
-    template <class E>
-    using unexpected = std::unexpected<E>;
-
     namespace error {
 
-        /**@addtogroup api-core-exception
+        /**@addtogroup api-core-error-exceptions
          * */
         ///@{
 
@@ -286,8 +47,8 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY info : public error::detail::supplement {
         public:
-            using shared_type = shared<error::detail::supplement,  //
-                                       error::detail::allocator<error::detail::supplement>>;
+            using shared_type = detail::error_shared<error::detail::supplement,  //
+                                                     error::detail::allocator<error::detail::supplement>>;
 
         public:
             info() = default;
@@ -335,7 +96,7 @@ namespace vidre {
 
     }  // namespace error
 
-    /**@addtogroup api-core-exception
+    /**@addtogroup api-core-error-exceptions
      * */
     ///@{
 
@@ -353,6 +114,7 @@ namespace vidre {
 
     public:
         class logic;
+        class internal;
         class runtime;
         class argument;
         class memory;
@@ -380,6 +142,17 @@ namespace vidre {
     public:
         logic(const std::source_location &src = std::source_location::current()) noexcept : exception(src) {}
         virtual ~logic() {}
+
+    public:
+        const char *what() const noexcept override;
+    };
+
+    /** Internal error.
+     * */
+    class VIDRE_CORE_VISIBILITY exception::internal : public virtual exception {
+    public:
+        internal(const std::source_location &src = std::source_location::current()) noexcept : exception(src) {}
+        virtual ~internal() {}
 
     public:
         const char *what() const noexcept override;
@@ -422,7 +195,7 @@ namespace vidre {
 
     namespace error {
 
-        /**@addtogroup api-core-exception
+        /**@addtogroup api-core-error-exceptions
          * */
         ///@{
 
@@ -562,4 +335,4 @@ namespace vidre {
 
 }  // namespace vidre
 
-#endif  // VIDRE_CORE_EXCEPTION_HH
+#endif  // VIDRE_CORE_ERROR_EXCEPTIONS_HH

@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_SINK_HH
@@ -26,7 +26,7 @@
 #pragma once
 
 #include <vidre/core/config.hh>
-#include <vidre/io/types/basic.hh>
+#include <vidre/io/types/endpoint.hh>
 
 namespace vidre {
 
@@ -63,18 +63,6 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY sink : public virtual endpoint {
         public:
-            /** Create sink as shared pointer.
-             * @tparam T Type of the sink to create.
-             * @param args Arguments to forward to the sink's constructor.
-             * @returns A shared pointer to the newly created sink.
-             * @see sink::shared
-             * */
-            template <typename T, typename... Args>
-            static shared make(Args &&...args) {
-                return std::make_shared<T>(std::forward<Args>(args)...);
-            }
-
-        public:
             sink() = default;
 
             sink(const sink &) = delete;
@@ -82,10 +70,11 @@ namespace vidre {
             sink(sink &&) = delete;
             sink &operator=(sink &&) = delete;
 
-            virtual ~sink() {}
+            virtual ~sink();
 
         protected:
-            event ready_{};  ///< Event for signaling sink ready state.
+            shared<io::source> source_{};  ///< Connected io::source.
+            shared<task> sink_task_{};     ///< Thread handler if applicable.
 
         protected:
             /** The low-level write method (if applicable).
@@ -96,14 +85,6 @@ namespace vidre {
                 return invalid<offset_type>;
             }
 
-            /** Signal that the sink is ready.
-             * This method can be called by derived classes to indicate that the sink is ready
-             * to accept data.
-             * */
-            void ready() {
-                ready_.notify();
-            }
-
         public:
             /** Transfer data from a memory view.
              * @param v Memory view containing the data to write.
@@ -112,47 +93,74 @@ namespace vidre {
             virtual result put(const memory::view &v) {
                 result retval = write(v);
 
-                if (retval)
-                    stats_.bytes.transmitted += retval.count;
-                else
+                // update stats
+                stats_.bytes.transmitted += retval.count;
+                if (not retval)
                     stats_.errors++;
 
                 return retval;
             }
 
-            /** Put a value of type @c T.
+            /** Transfer a data of type @c T.
              * @tparam T Type of the value to write.
              * @param v Value to write (in binary form).
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
             template <typename T>
-            requires (not std::derived_from<T, memory::view>)
+            requires (not std::derived_from<T, memory::view> && std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>)
             result put(const T &v) {
+                static_assert(!std::is_pointer_v<T>, "put() does not support pointer types");
                 return put({sizeof(T), reinterpret_cast<const memory::const_pointer>(&v)});
             }
 
-            result put(packet::shared p) override {
-                throw exception::logic() << "sink is not packet based";
+            /** Transfer an array of type @c T.
+             * @tparam T Type of the array elements.
+             * @tparam N Number of elements in the array.
+             * @param arr The array to write (in binary form).
+             * @returns Number of bytes actually written (@c invalid for write failure).
+             * */
+            template <typename T, size_t N>
+            requires std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>
+            result put(const T (&arr)[N]) {
+                static_assert(!std::is_pointer_v<T>, "put() does not support arrays of pointer types");
+                return put({sizeof(T) * N, reinterpret_cast<const memory::const_pointer>(arr)});
             }
 
-            /** Wait for sink ready signal.
-             * @returns True if the sink is ready, false if the wait was interrupted.
+            /** Transfer a data packet.
+             * @param p Shared pointer to the packet to write.
+             * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            [[nodiscard]] event::result wait() {
-                return ready_.wait();
+            result put(shared<packet> p) override {
+                throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
-            /** Wait for sink ready signal, with a timeout.
-             * @param timeout The maximum time to wait for the sink to become ready (milliseconds).
-             * @returns True if the sink is ready, false if the wait timed out or was interrupted.
+        protected:
+            /** Terminate sink.
+             * This method may be called from connected sources to termainate the sink.
              * */
-            [[nodiscard]] event::result wait(std::chrono::milliseconds timeout) {
-                return ready_.wait(timeout);
-            }
+            void terminate() override;
+
+            /** Default thread handler.
+             * @param pause Pause duration in milliseconds (used, for example, when waiting for the source to become active).
+             * @see endpoint::isactive()
+             * @see source_step()
+             * */
+            void sink_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
+
+        protected:
+            /** Connect a source to this sink.
+             * @param other The source to connect to.
+             * @param cap The capabilities of the connection.
+             *
+             * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
+             *       source and sink capabilities. This connect method then sets up the actual connection. If additional
+             *       connection logic is required, the method can be overridden.
+             * */
+            virtual status connect(shared<io::source> other, cap::flag_type cap);
 
         private:
-            friend class route;
-            friend class dashboard;
+            friend class source;
+            friend class endpoint;
         };
 
         ///@}

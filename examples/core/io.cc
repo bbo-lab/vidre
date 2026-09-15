@@ -1,9 +1,8 @@
 #include <vidre/io.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 
 #include <iostream>
-#include <vidre/io/types.hh>
-#include <vidre/io/monitor.hh>
+#include <vidre/io.hh>
 
 using namespace vidre;
 
@@ -35,15 +34,15 @@ std::filesystem::path create_dummy_file() {
 //! [create-dummy-file]
 
 struct files {
-    io::source::shared src;
-    io::sink::shared dst;
+    shared<io::source> src;
+    shared<io::sink> dst;
 
     static files make() {
         std::filesystem::path data = create_dummy_file();
 
-        auto src = io::source::make<io::file::source>(data);
-        auto dst = io::sink::make<io::file::sink>("/tmp/vidre.example.io.copy", io::file::sink::truncate  //
-                                                                                    | io::file::sink::direct);
+        auto src = io::endpoint::make<io::file::source>(data);
+        auto dst = io::endpoint::make<io::file::sink>("/tmp/vidre.example.io.copy",  //
+                                                      io::file::sink::truncate | io::file::sink::direct);
 
         if (not src->valid())
             throw exception::runtime() << error::system();

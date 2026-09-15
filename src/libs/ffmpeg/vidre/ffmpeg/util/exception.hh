@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_FFMPEG_EXCEPTION_HH
@@ -25,7 +25,7 @@
 #pragma once
 
 #include <vidre/ffmpeg/config.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 
 extern "C" {
 #include <libavutil/error.h>

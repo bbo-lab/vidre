@@ -14,7 +14,7 @@
  * @defgroup api-core-os            OS utilities
  * @defgroup api-core-cpp           C++ compatibility
  * @defgroup api-core-util          Utilities
- * @defgroup api-core-exception     Errors and exceptions
+ * @defgroup api-core-error         Errors and exceptions
  * @defgroup api-core-log           Logging
  * @defgroup api-core-memory        Memory
  * @defgroup api-core-script        Scripting

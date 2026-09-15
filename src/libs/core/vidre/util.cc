@@ -17,15 +17,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "util/develop.hh"
 #include "util/endian.hh"
-#include "util/events.hh"
 #include "util/filesystem.hh"
 #include "util/macros.hh"
-#include "util/shared.hh"
-#include "util/status.hh"
 #include "util/uuid.hh"
 #include "util/variant.hh"
 #include "util/version.hh"

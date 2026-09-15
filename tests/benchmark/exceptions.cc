@@ -1,4 +1,4 @@
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 #include <vidre/util/chrono.hh>
 
 using namespace vidre;

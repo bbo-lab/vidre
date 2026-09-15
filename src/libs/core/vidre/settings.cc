@@ -17,11 +17,11 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "settings.hh"
-#include "log.hh"
-#include "exception.hh"
+// #include "log.hh"
+#include "error.hh"
 
 #include "util/filesystem.hh"
 
@@ -66,8 +66,8 @@ std::vector<std::string> settings::node::keys() const {
 void settings::file::load(const std::filesystem::path &fname, bool force) {
     using namespace vidre::script;
 
-    log::trace tr;
-    tr << "settings::file::load(" << std::string(fname) << "," << force << ")\n";
+    // log::trace tr;
+    // tr << "settings::file::load(" << std::string(fname) << "," << force << ")\n";
 
     // make absolute
     std::filesystem::path file = fname;
@@ -87,11 +87,11 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     if (not g.isnil(-1)) {
         ref_ = g.tointeger(-1);
         if (not force) {
-            tr << "-> already loaded\n";
+            // tr << "-> already loaded\n";
             return;
         }
         else {
-            tr << "- going to reload\n";
+            // tr << "- going to reload\n";
         }
     }
     g.pop(1);
@@ -116,7 +116,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
                 break;
         }
 
-        tr << "- loaded with return, status: " << int(s) << "\n";
+        // tr << "- loaded with return, status: " << int(s) << "\n";
     }
 
     if (top == scope.size()) {
@@ -135,7 +135,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
                 throw vidre::exception() << error::message("failed");
         }
 
-        tr << "- loaded plain, status: " << int(s) << "\n";
+        // tr << "- loaded plain, status: " << int(s) << "\n";
     }
 
     if (top == scope.size()) {
@@ -143,8 +143,8 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     }
 
     if (g.type(-1) != lua::type::table) {
-        log::error() << "While loading configuration from\n    " << std::string(file) << "\na value of type '"
-                     << g.type_name(g.type(-1)) << "' was returned.\n";
+        // log::error() << "While loading configuration from\n    " << std::string(file) << "\na value of type '"
+        //              << g.type_name(g.type(-1)) << "' was returned.\n";
         g.checktype(-1, lua::type::table);
     }
 
@@ -158,7 +158,7 @@ void settings::file::load(const std::filesystem::path &fname, bool force) {
     g.pushinteger(ref_);
     g.setfield(-2, std::string(file).c_str());
 
-    tr << "-> acquired reference " << ref_ << "\n";
+    // tr << "-> acquired reference " << ref_ << "\n";
 }
 
 std::string longquote(const std::string &s) {

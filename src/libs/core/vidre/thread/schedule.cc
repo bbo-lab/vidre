@@ -17,11 +17,11 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "schedule.hh"
 
-#include "../log.hh"
+// #include "../log.hh"
 #include <cstring>
 #include <cerrno>
 
@@ -42,7 +42,7 @@ namespace vidre::detail {
                 // For SCHED_OTHER/SCHED_BATCH, priority value is actually the nice level
                 // Convert: our priority value is already the desired nice level (-20 to 19)
                 if (handle != pthread_self()) {
-                    log::debug() << "Warning: nice value can only be set for the current thread.";
+                    // log::debug() << "Warning: nice value can only be set for the current thread.";
                     return status::bad;
                 }
 
@@ -52,12 +52,12 @@ namespace vidre::detail {
                     priority = 19;
 
                 if (setpriority(PRIO_PROCESS, syscall(SYS_gettid), priority) != 0) {
-                    log::debug() << "Failed to set nice value: " << std::strerror(errno);
+                    // log::debug() << "Failed to set nice value: " << std::strerror(errno);
                 }
 
                 // Also set the scheduling policy itself
                 if (pthread_setschedparam(handle, policy_, &param) != 0) {
-                    log::debug() << "Failed to set scheduling policy: " << std::strerror(errno);
+                    // log::debug() << "Failed to set scheduling policy: " << std::strerror(errno);
                     return status::bad;
                 }
                 break;
@@ -90,7 +90,7 @@ namespace vidre::detail {
                 return status::bad;
         }
 
-        return status::good;
+        return status::ok;
     }
 #endif
 

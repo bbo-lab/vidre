@@ -1,7 +1,7 @@
 #include <vidre/script.hh>
 #include <vidre/log.hh>
-#include <vidre/exception.hh>
-#include <vidre/storage/raw.hh>
+#include <vidre/error.hh>
+// #include <vidre/storage/raw.hh>
 #include <vidre/io.hh>
 
 using namespace vidre;

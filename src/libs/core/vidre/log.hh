@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_LOG_HH
@@ -110,11 +110,11 @@
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
 #include <vidre/cpp/format.hh>
-#include <vidre/io/types.hh>
-#include <vidre/io/packet.hh>
+// #include <vidre/io/types.hh>
+// #include <vidre/io/packet.hh>
 #include <vidre/util/chrono.hh>
-#include <vidre/util/events.hh>
-#include <vidre/exception.hh>
+#include <vidre/sync/events.hh>
+#include <vidre/error.hh>
 
 #include <ankerl/unordered_dense.h>
 
@@ -133,6 +133,7 @@
 
 namespace vidre {
 
+#if 0
     namespace lognew {
         /* TODO:
         - the log system needs to be transformed to use the packet system
@@ -296,6 +297,7 @@ namespace vidre {
         ///@}
 
     }  // namespace lognew
+#endif
 
     // ============================================================================
     // ============================================================================

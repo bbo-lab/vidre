@@ -17,7 +17,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
 #ifndef VIDRE_CORE_SETTINGS_LUA_HH
@@ -39,7 +39,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/script.hh>
-#include <vidre/exception.hh>
+#include <vidre/error.hh>
 
 #include <string>
 #include <vector>

@@ -42,18 +42,21 @@ vidre_library(vidrecore SHARED
             vidre/os/paths.hh vidre/os/paths.cc
         vidre/cpp/format.hh
         vidre/cpp/util.hh
+        vidre/cpp/shared.hh
         vidre/util.cc
             vidre/util/version.hh vidre/util/version.cc
             vidre/util/develop.hh vidre/util/develop.cc
             vidre/util/uuid.hh vidre/util/uuid.cc
             vidre/util/filesystem.hh vidre/util/filesystem.cc
             vidre/util/variant.hh
-            vidre/util/status.hh
             vidre/util/events.hh
             vidre/util/endian.hh
             vidre/util/bit.hh vidre/util/bit.cc
             vidre/util/chrono.hh vidre/util/chrono.cc
-        vidre/exception.hh vidre/exception.cc
+        vidre/error.hh vidre/error.cc
+            vidre/error/details.hh
+            vidre/error/flow.hh
+            vidre/error/exceptions.hh
         vidre/log.hh vidre/log.cc
         vidre/memory.hh vidre/memory.cc
             vidre/memory/base.hh
@@ -65,20 +68,22 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/io.hh vidre/io.cc
             vidre/io/types.hh vidre/io/types.cc
-                vidre/io/types/basic.hh vidre/io/types/basic.cc
+                vidre/io/types/core.hh vidre/io/types/core.cc
                 vidre/io/types/sink.hh vidre/io/types/sink.cc
+                vidre/io/types/endpoint.hh vidre/io/types/endpoint.cc
                 vidre/io/types/source.hh vidre/io/types/source.cc
-                vidre/io/types/channel.hh vidre/io/types/channel.cc
-                vidre/io/types/merger.hh vidre/io/types/merger.cc
-                vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
-            vidre/io/monitor.hh vidre/io/monitor.cc
-            vidre/io/file.hh vidre/io/file.cc
+            #     vidre/io/types/channel.hh vidre/io/types/channel.cc
+            #     vidre/io/types/merger.hh vidre/io/types/merger.cc
+            #     vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
             vidre/io/packet.hh vidre/io/packet.cc
-            vidre/io/flow.hh vidre/io/flow.cc
-        vidre/storage.hh vidre/storage.cc
-            vidre/storage/raw.hh vidre/storage/raw.cc
+            vidre/io/file.hh vidre/io/file.cc
+            # vidre/io/monitor.hh vidre/io/monitor.cc
+            # vidre/io/flow.hh vidre/io/flow.cc
+        # vidre/storage.hh vidre/storage.cc
+        #     vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/thread.hh vidre/thread.cc
             vidre/thread/types.hh 
+            vidre/thread/task.hh vidre/thread/task.cc
             vidre/thread/schedule.hh vidre/thread/schedule.cc
         vidre/plugin.hh vidre/plugin.cc
             vidre/plugin/types.hh vidre/plugin/types.cc
