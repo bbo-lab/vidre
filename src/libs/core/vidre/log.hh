@@ -110,8 +110,8 @@
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
 #include <vidre/cpp/format.hh>
-// #include <vidre/io/types.hh>
-// #include <vidre/io/packet.hh>
+#include <vidre/io/types.hh>
+#include <vidre/io/packet.hh>
 #include <vidre/util/chrono.hh>
 #include <vidre/sync/events.hh>
 #include <vidre/error.hh>
@@ -133,12 +133,11 @@
 
 namespace vidre {
 
-#if 0
     namespace lognew {
         /* TODO:
         - the log system needs to be transformed to use the packet system
         - check, as std::string has the zero-termination, if we need to include it in the packet data
-        - what about color output?        
+        - what about color output?
         */
 
         /**@addtogroup api-core-log-if
@@ -186,7 +185,7 @@ namespace vidre {
          * @note In contrast to other packets, the log packet is not "groupable",
          *       instead, the minor packet type indicates the log level.
          * */
-        struct VIDRE_CORE_VISIBILITY packet : public virtual io::packet::basic {
+        struct VIDRE_CORE_VISIBILITY packet : public virtual io::packet {
             chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
                                                                      /// @see chrono::reference
             std::string message{};                                   ///< Log message (variable length).
@@ -198,18 +197,16 @@ namespace vidre {
             packet &operator=(packet &&) = default;
             virtual ~packet() = default;
 
-            packet(level lvl, uint16_t stream = 0) noexcept     //
-                : basic(to_underlying(io::packet::major::log),  //
-                        to_underlying(lvl), stream, sizeof(timestamp))
+            packet(level lvl, uint16_t stream = 0) noexcept          //
+                : io::packet(to_underlying(io::packet::major::log),  //
+                             to_underlying(lvl), stream, sizeof(timestamp))
                 , timestamp{chrono::timestamp::now()} {
                 message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
                 update();
             }
 
-            using shared = std::shared_ptr<packet>;
-
             template <typename... Args>
-            static shared make(Args &&...args) {
+            static shared<packet> make(Args &&...args) {
                 return std::make_shared<packet>(std::forward<Args>(args)...);
             }
 
@@ -218,7 +215,7 @@ namespace vidre {
             }
 
             io::result put(io::sink &f) const override {
-                return basic::put(f)                                                                 //
+                return io::packet::put(f)                                                            //
                        + f.put(timestamp)                                                            //
                        + f.put({message.size(), reinterpret_cast<const uint8_t *>(message.data())})  //
                        + pad(f);
@@ -261,16 +258,24 @@ namespace vidre {
             handler() = delete;
             handler(const handler &) = delete;
             handler &operator=(const handler &) = delete;
-            handler(handler &&) = default;
-            handler &operator=(handler &&) = default;
+            handler(handler &&) = delete;
+            handler &operator=(handler &&) = delete;
             ~handler() {
                 // FIXME ship packet
             }
 
+            /** Constructor.
+             * @param lvl The log level.
+             * @param stream The stream ID (default is 0).
+             *
+             * @note The stream ID (used in the distributed log packets) is 0 by default 
+             *       (and, indeed, 0 is globally reserved for log messages). If a 
+             *       different stream ID is needed, it must be explicitly specified.
+             * */
             handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
 
         protected:
-            packet::shared msg_{};  ///< Log message packet.
+            shared<packet> msg_{};  ///< Log message packet.
 
         public:
             handler &operator<<(const std::string_view &msg) noexcept {
@@ -297,7 +302,6 @@ namespace vidre {
         ///@}
 
     }  // namespace lognew
-#endif
 
     // ============================================================================
     // ============================================================================

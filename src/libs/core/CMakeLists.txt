@@ -49,7 +49,6 @@ vidre_library(vidrecore SHARED
             vidre/util/uuid.hh vidre/util/uuid.cc
             vidre/util/filesystem.hh vidre/util/filesystem.cc
             vidre/util/variant.hh
-            vidre/util/events.hh
             vidre/util/endian.hh
             vidre/util/bit.hh vidre/util/bit.cc
             vidre/util/chrono.hh vidre/util/chrono.cc
@@ -79,8 +78,8 @@ vidre_library(vidrecore SHARED
             vidre/io/file.hh vidre/io/file.cc
             # vidre/io/monitor.hh vidre/io/monitor.cc
             # vidre/io/flow.hh vidre/io/flow.cc
-        # vidre/storage.hh vidre/storage.cc
-        #     vidre/storage/raw.hh vidre/storage/raw.cc
+        vidre/storage.hh vidre/storage.cc
+            vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/thread.hh vidre/thread.cc
             vidre/thread/types.hh 
             vidre/thread/task.hh vidre/thread/task.cc

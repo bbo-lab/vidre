@@ -104,6 +104,8 @@ namespace vidre {
          * used for dispatching to the appropriate handler. The actual content
          * of the packet is determined by the major and minor types, and may be
          * further specified by the stream ID (e.g., for multiplexed streams).
+         *
+         * @todo need a stream ID registry (0 is reserved for unassigned streams, such as log)
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet {
             /** Major type of a packet.
