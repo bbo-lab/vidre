@@ -64,6 +64,7 @@
 #include <vidre/io/types/core.hh>
 
 #include <functional>
+#include <bit>
 
 namespace vidre {
 
@@ -107,7 +108,7 @@ namespace vidre {
          *
          * @todo need a stream ID registry (0 is reserved for unassigned streams, such as log)
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY packet {
+        struct VIDRE_CORE_VISIBILITY packet {
             /** Major type of a packet.
              * */
             enum class major : uint16_t {
@@ -181,12 +182,19 @@ namespace vidre {
                 }
             };
 
-            id type{};          ///< Packet ID.
-            uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
-            uint64_t length{};  ///< Size of the packet payload (excluding the header).
+            /** The packet header.
+             * */
+            struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY header {
+                id type{};          ///< Packet ID.
+                uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
+                uint64_t length{};  ///< Size of the packet payload (excluding the header).
+            };
 
+            header hdr{};  ///< Packet header.
+
+            // FIXME explain, that this is intended for the factory to quickly identify packet types based on their header
             constexpr std::size_t hash() const noexcept {
-                return type.hash();
+                return hdr.type.hash();
             }
 
             packet() = default;
@@ -195,9 +203,9 @@ namespace vidre {
             packet(packet &&) = default;
             packet &operator=(packet &&) = default;
 
-            packet(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : type{type_}, stream(stream), length(length) {}
+            packet(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : hdr{type_, stream, length} {}
             packet(uint16_t major, uint16_t minor, uint32_t stream = 0, uint64_t length = 0) noexcept
-                : type{major, minor}, stream(stream), length(length) {}
+                : hdr{ {major, minor}, stream, length} {}
             virtual ~packet() = default;
 
             /** Create a shared pointer to a new packet.
@@ -232,7 +240,7 @@ namespace vidre {
              * @return The size of the packet, aligned to the required byte boundary.
              * */
             constexpr size_t size() const noexcept {
-                return (length + alignment - 1) & ~(alignment - 1);
+                return (hdr.length + alignment - 1) & ~(alignment - 1);
             }
 
             /** Update packet length (if applicable).
@@ -252,7 +260,7 @@ namespace vidre {
              * determine the packet type at compile time.
              * @endinternal
              * */
-            virtual result put(io::sink &f) const;
+            virtual result emit(io::sink &f) const;
 
             /** Helper for padding.
              * @note This method is to be called when the packet payload possibly
@@ -261,18 +269,10 @@ namespace vidre {
              * */
             result pad(io::sink &f) const;
 
-            /* FIXME how to handle packet-based loading?
-
-            There should be some internal mapping of T <-> reader. The
-            reader should return "basic *" (freshly allocated) or "T*"?
-
-            -> requires some form of registry...
-
-            Note: virtual doesn't cut it here, we do not know what type of
-            packe we want to read at compile time...
-
-            */
-            result get(io::source &s) noexcept;
+            /** "Absorb" the packet from memory.
+             * @param view The memory view containing the packet data.
+             * */
+            virtual void absorb(memory::view view, std::endian endian = std::endian::native);
         };
 
         ///@}

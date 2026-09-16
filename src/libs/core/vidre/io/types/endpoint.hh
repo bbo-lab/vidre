@@ -321,15 +321,10 @@ namespace vidre {
                 throw exception::internal() << "endpoint does not implement source interface";
             }
 
-            /** Get packet header.
-             * @returns Pointer to the packet header, or @c nullptr if not applicable.
-             *
-             * This method returns the packet header specifically associated with this endpoint
-             * (or `nullptr` if not applicable).
-             *
-             * @see `io::packet::basic` for the standard packet header format.
+            /** Get packet manifest.
+             * FIXME (the "manifest" contains the streams configuration data)
              * */
-            virtual packet *header() noexcept {
+            virtual packet *manifest() noexcept {
                 return nullptr;
             }
 

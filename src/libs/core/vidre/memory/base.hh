@@ -32,11 +32,8 @@
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
 
-#include <utility>
-#include <bit>
 #include <string_view>
 #include <string>
-#include <array>
 #include <type_traits>
 
 namespace vidre {
@@ -181,6 +178,8 @@ namespace vidre {
             }
             ///@}
         };
+
+
 
         ///@}
 

@@ -211,11 +211,11 @@ namespace vidre {
             }
 
             void update() noexcept override {
-                length = sizeof(timestamp) + message.size();
+                hdr.length = sizeof(timestamp) + message.size();
             }
 
-            io::result put(io::sink &f) const override {
-                return io::packet::put(f)                                                            //
+            io::result emit(io::sink &f) const override {
+                return io::packet::emit(f)                                                            //
                        + f.put(timestamp)                                                            //
                        + f.put({message.size(), reinterpret_cast<const uint8_t *>(message.data())})  //
                        + pad(f);
@@ -226,7 +226,7 @@ namespace vidre {
              * */
             template <std::endian E = std::endian::native>
             lognew::level getlevel() const noexcept {
-                return static_cast<lognew::level>(type.minor);
+                return static_cast<lognew::level>(hdr.type.minor);
             }
         };
 

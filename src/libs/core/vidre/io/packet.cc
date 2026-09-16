@@ -21,19 +21,19 @@
  */
 #include "packet.hh"
 #include "types/sink.hh"
-#include "types/source.hh"
+#include "../util/endian.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
-io::result packet::put(io::sink &f) const {
+io::result packet::emit(io::sink &f) const {
     result retval = f.put({sizeof(packet), reinterpret_cast<memory::const_pointer>(this)});
     return retval;
 }
 
 // FIXME should be possibly inline (in sink.hh)
 io::result packet::pad(io::sink &f) const {
-    size_t padding = size() - length;
+    size_t padding = size() - hdr.length;
     if (padding > 0) {
         static const uint8_t padbuf[alignment] = {};
         return f.put({padding, padbuf});
@@ -41,7 +41,17 @@ io::result packet::pad(io::sink &f) const {
     return 0;
 }
 
-// FIXME should be possibly inline (in source.hh)
-io::result packet::get(io::source &s) noexcept {
-    return s.get({sizeof(packet), reinterpret_cast<memory::pointer>(this)});
+void packet::absorb(memory::view view, std::endian endian) {
+    if (sizeof(*this) > view.size())
+        throw exception::internal() << "invalid view size for packet absorption";
+
+    // FIXME
+    // memory::copy(view, this);
+
+    if (endian != std::endian::native) {
+        endian::byteswap(hdr.type.major, endian);
+        endian::byteswap(hdr.type.minor, endian);
+        endian::byteswap(hdr.stream, endian);
+        endian::byteswap(hdr.length, endian);
+    }
 }

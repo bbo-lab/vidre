@@ -17,9 +17,9 @@ struct array_wrapper : std::array<T, N> {
 #include <vidre/io/types.hh>
 using namespace vidre;
 TEST_CASE("types.hh", "[vidre/io]") {
+    // FIXME
     std::cout << (sizeof(io::result)) << std::endl;
 }
-
 
 #if 0
 #include <vidre/storage/bit.hh>
