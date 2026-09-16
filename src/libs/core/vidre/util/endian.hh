@@ -33,6 +33,7 @@
 #include <vidre/core/config.hh>
 
 #include <bit>
+#include <concepts>
 
 namespace vidre {
 

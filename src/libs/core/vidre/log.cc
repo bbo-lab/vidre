@@ -23,7 +23,6 @@
 #include "os/tty.hh"
 #include "cpp/util.hh"
 #include "io/file.hh"
-#include "io/packet.hh"
 
 #include <array>
 

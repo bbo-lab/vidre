@@ -120,6 +120,7 @@
 
 #include <limits>
 #include <vector>
+#include <queue>
 #include <string>
 #include <string_view>
 
@@ -240,6 +241,34 @@ namespace vidre {
             friend class handler;
         };
 
+        /** Log message source.
+         *
+         * @see io::source
+         * */
+        class VIDRE_CORE_VISIBILITY source : public virtual io::source {
+        public:
+            
+        public:
+            source() = default;
+
+            source(const source &) = delete;
+            source &operator=(const source &) = delete;
+            source(source &&) = delete;
+            source &operator=(source &&) = delete;
+
+            virtual ~source() = default;
+
+        protected:
+        public:
+
+
+        public:
+            cap getcap() const noexcept override {
+                return {cap::packet | cap::multi, {}};
+            }
+            status connect(shared<io::sink> other, cap::flag_type cap) override;
+        };
+
         ///@}
 
         /**@addtogroup api-core-log-details
@@ -252,13 +281,18 @@ namespace vidre {
          * */
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            { t.operator()(outs) } -> std::same_as<Stream &>;
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
         };
 
         /** Log message handler.
          *
          * This class handles logging and, as well, is the base class for
          * the individual implementations (see @c log::fatal, etc.);
+         *
+         * @note The handler class is not meant to be instantiated directly.
+         *       Use the specific log level classes (e.g., @c log::fatal) instead.
          *
          * */
         class VIDRE_CORE_VISIBILITY handler {
@@ -357,7 +391,9 @@ namespace vidre {
 
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            { t.operator()(outs) } -> std::same_as<Stream &>;
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
         };
 
         ///@}
