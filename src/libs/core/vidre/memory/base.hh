@@ -31,10 +31,14 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
+#include <vidre/error.hh>
 
 #include <string_view>
 #include <string>
 #include <type_traits>
+#include <cstring>
+#include <algorithm>
+#include <cassert>
 
 namespace vidre {
 
@@ -65,7 +69,8 @@ namespace vidre {
         /** Check if type is a string type.
          * */
         template <typename T>
-        concept string_type = std::same_as<std::remove_cvref_t<T>, std::string_view> || std::same_as<std::remove_cvref_t<T>, const char *>;
+        concept string_type =
+            std::same_as<std::remove_cvref_t<T>, std::string_view> || std::same_as<std::remove_cvref_t<T>, const char *>;
 
         /** Memory view.
          *
@@ -92,8 +97,8 @@ namespace vidre {
             view(const std::string &str) noexcept : size_(str.size()), data_(reinterpret_cast<const_pointer>(str.data())) {}
 
             template <typename T>
-            requires (not string_type<T> and std::contiguous_iterator<T>)
-            view(const T &value) noexcept : size_(sizeof(T)), data_(reinterpret_cast<pointer>(&value)) {}
+            requires (not string_type<T> and not std::contiguous_iterator<T> and std::is_trivially_copyable_v<T>)
+            view(const T &value) noexcept : size_(sizeof(T)), data_(reinterpret_cast<const_pointer>(&value)) {}
 
         protected:
             size_type size_{};
@@ -179,7 +184,67 @@ namespace vidre {
             ///@}
         };
 
+        /** Area-or-view concept.
+         * This concept checks if a type is either `area` or `view`.
+         * */
+        template <typename T>
+        concept area_or_view = std::same_as<std::remove_cvref_t<T>, area> || std::same_as<std::remove_cvref_t<T>, view>;
 
+        /** Copy data from source to destination.
+         * @tparam Src The type of the source, which must be either `area` or `view`.
+         * @param source The source memory view or area.
+         * @param destination The destination memory area.
+         * @return The number of bytes copied.
+         *
+         * This function copies data from the source memory view or area to the
+         * destination memory area, up to the minimum of their sizes.
+         *
+         * */
+        template <area_or_view Src>
+        inline size_type copy(const Src &source, area destination) noexcept {
+            const auto n = std::min(source.size(), destination.size());
+            std::memcpy(destination.data(), source.data(), n);
+            return n;
+        }
+
+        /** Byte-wise copy from a source area or view to a trivially copyable destination.
+         * @tparam Src The type of the source, which must be either `area` or `view`.
+         * @tparam Dst The type of the destination, which must be trivially copyable.
+         * @param source The source memory area or view.
+         * @param destination The destination object.
+         * @return The number of bytes copied.
+         *
+         * This function copies data from the source memory area or view to the
+         * trivially copyable destination object.
+         *
+         * @pre source.size() >= sizeof(Dst)
+         * */
+        template <area_or_view Src, typename Dst>
+        requires (std::is_trivially_copyable_v<Dst> and not area_or_view<Dst>)
+        inline size_type copy(const Src &source, Dst &destination) noexcept {
+            assert(source.size() >= sizeof(Dst) && "source area or view is too small for the destination type");
+            std::memcpy(&destination, source.data(), sizeof(Dst));
+            return sizeof(Dst);
+        }
+
+        /** Byte-wise copy a trivially copyable source to a destination area.
+         * @tparam T The type of the source, which must be trivially copyable.
+         * @param source The source object.
+         * @param destination The destination memory area.
+         * @return The number of bytes copied.
+         *
+         * This function copies data from the trivially copyable source object to the
+         * destination memory area.
+         *
+         * @pre destination.size() >= sizeof(T)
+         * */
+        template <typename T>
+        requires std::is_trivially_copyable_v<T>
+        inline size_type copy(const T &source, area destination) noexcept {
+            assert(destination.size() >= sizeof(T) && "destination area is too small for the source type");
+            std::memcpy(destination.data(), &source, sizeof(T));
+            return sizeof(T);
+        }
 
         ///@}
 

@@ -45,13 +45,33 @@ namespace vidre {
          * */
         ///@{
 
+        /** Byteswap a value from a given endianness to the target endianness.
+         * @tparam T The type of the value to byteswap.
+         * @tparam Target The target endianness (default is native).
+         * @param value The value to byteswap.
+         * @param from The current endianness of the value.
+         * @return The byteswapped value if the endianness differs from the target, otherwise the original value.
+         */
         template <typename T, std::endian Target = std::endian::native>
-        inline constexpr T byteswap(T value, std::endian from) noexcept {
+        [[nodiscard]] inline constexpr T byteswap(T value, std::endian from) noexcept {
             if (from == Target)
                 return value;
             else
                 return std::byteswap(value);
         }
+
+        /** Byteswap a value in place.
+         * @tparam T The type of the value to byteswap.
+         * @tparam Target The target endianness (default is native).
+         * @param value The value to byteswap.
+         * @param from The current endianness of the value.
+         * */
+        template <typename T, std::endian Target = std::endian::native>
+        inline constexpr void byteswap_inplace(T &value, std::endian from) noexcept {
+            if (from != Target)
+                value = std::byteswap(value);
+        }
+
         ///@}
 
     }  // namespace endian

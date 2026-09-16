@@ -44,7 +44,7 @@ namespace vidre {
     namespace io {
 
         // forward declarations
-        struct packet;
+        class packet;
         class sink;
         class source;
 

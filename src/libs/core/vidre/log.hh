@@ -134,6 +134,7 @@
 namespace vidre {
 
     namespace lognew {
+
         /* TODO:
         - the log system needs to be transformed to use the packet system
         - check, as std::string has the zero-termination, if we need to include it in the packet data
@@ -185,11 +186,13 @@ namespace vidre {
          * @note In contrast to other packets, the log packet is not "groupable",
          *       instead, the minor packet type indicates the log level.
          * */
-        struct VIDRE_CORE_VISIBILITY packet : public virtual io::packet {
+        class VIDRE_CORE_VISIBILITY packet : public virtual io::packet {
+        protected:
             chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
                                                                      /// @see chrono::reference
             std::string message{};                                   ///< Log message (variable length).
 
+        public:
             packet() = delete;
             packet(const packet &) = delete;
             packet &operator=(const packet &) = delete;
@@ -214,8 +217,8 @@ namespace vidre {
                 hdr.length = sizeof(timestamp) + message.size();
             }
 
-            io::result emit(io::sink &f) const override {
-                return io::packet::emit(f)                                                            //
+            io::result emit(io::sink &f) override {
+                return io::packet::emit(f)                                                           //
                        + f.put(timestamp)                                                            //
                        + f.put({message.size(), reinterpret_cast<const uint8_t *>(message.data())})  //
                        + pad(f);
@@ -228,6 +231,9 @@ namespace vidre {
             lognew::level getlevel() const noexcept {
                 return static_cast<lognew::level>(hdr.type.minor);
             }
+
+        private:
+            friend class handler;
         };
 
         ///@}
@@ -242,9 +248,7 @@ namespace vidre {
          * */
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            {
-                t.operator()(outs)
-            } -> std::same_as<Stream &>;
+            { t.operator()(outs) } -> std::same_as<Stream &>;
         };
 
         /** Log message handler.
@@ -268,8 +272,8 @@ namespace vidre {
              * @param lvl The log level.
              * @param stream The stream ID (default is 0).
              *
-             * @note The stream ID (used in the distributed log packets) is 0 by default 
-             *       (and, indeed, 0 is globally reserved for log messages). If a 
+             * @note The stream ID (used in the distributed log packets) is 0 by default
+             *       (and, indeed, 0 is globally reserved for log messages). If a
              *       different stream ID is needed, it must be explicitly specified.
              * */
             handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
@@ -280,7 +284,6 @@ namespace vidre {
         public:
             handler &operator<<(const std::string_view &msg) noexcept {
                 msg_->message += msg;
-                msg_->update();
                 return *this;
             }
 
@@ -294,7 +297,6 @@ namespace vidre {
             requires (not std::is_convertible_v<V, std::string_view> and std::formattable<std::remove_cvref_t<V>, char>)
             handler &operator<<(const V &value) noexcept {
                 msg_->message += std::format("{}", value);
-                msg_->update();
                 return *this;
             }
         };
@@ -351,9 +353,7 @@ namespace vidre {
 
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            {
-                t.operator()(outs)
-            } -> std::same_as<Stream &>;
+            { t.operator()(outs) } -> std::same_as<Stream &>;
         };
 
         ///@}
