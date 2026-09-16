@@ -36,7 +36,7 @@
 
 namespace vidre {
 
-    /** Endianness handling. 
+    /** Endianness handling.
      * @ingroup api-core-util-endian
      * */
     namespace endian {
@@ -53,11 +53,28 @@ namespace vidre {
          * @return The byteswapped value if the endianness differs from the target, otherwise the original value.
          */
         template <typename T, std::endian Target = std::endian::native>
+        requires (not std::floating_point<T>)
         [[nodiscard]] inline constexpr T byteswap(T value, std::endian from) noexcept {
             if (from == Target)
                 return value;
             else
                 return std::byteswap(value);
+        }
+
+        template <std::floating_point T, std::endian Target = std::endian::native>
+        [[nodiscard]] inline constexpr T byteswap(T value, std::endian from) noexcept {
+            if (from == Target)
+                return value;
+            else {
+                if constexpr (sizeof(T) == 4) {
+                    auto bits = std::bit_cast<uint32_t>(value);
+                    return std::bit_cast<T>(std::byteswap(bits));
+                }
+                else if constexpr (sizeof(T) == 8) {
+                    auto bits = std::bit_cast<uint64_t>(value);
+                    return std::bit_cast<T>(std::byteswap(bits));
+                }
+            }
         }
 
         /** Byteswap a value in place.

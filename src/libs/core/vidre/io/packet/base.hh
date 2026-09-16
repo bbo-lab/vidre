@@ -39,6 +39,9 @@ namespace vidre {
 
     namespace io {
 
+        // forward declarations
+        class manifest;
+
         namespace detail {
 
             /**@addtogroup api-core-io-details
@@ -68,6 +71,15 @@ namespace vidre {
          * */
         inline constexpr size_t alignment = 8;
 
+        /** Major/minor packet code concept.
+         * */
+        template <typename T>
+        concept packet_code =
+            (std::unsigned_integral<std::remove_cvref_t<T>> && !std::same_as<std::remove_cvref_t<T>, bool> &&
+             sizeof(std::remove_cvref_t<T>) <= sizeof(uint16_t)) ||
+            (std::is_enum_v<std::remove_cvref_t<T>> && std::unsigned_integral<std::underlying_type_t<std::remove_cvref_t<T>>> &&
+             sizeof(std::underlying_type_t<std::remove_cvref_t<T>>) <= sizeof(uint16_t));
+
         /** Stream packets.
          * This reflects the basic type of an IO packet ([TLV
          * encoded](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value)),
@@ -84,8 +96,10 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                value = 0x0001,   ///< Plain data (see `packet::value`).
-                object = 0x0002,  ///< Structured data (see `packet::object`).
+                value = 0x0001,     ///< Plain data (see `packet::value`).
+                sequence = 0x0002,  ///< Sequence of values (see `packet::value`).
+                object = 0x0003,    ///< Structured data (see `packet::object`).
+                manifest = 0x0004,  ///< Manifest data (see `manifest`).
 
                 // standard types
                 video = 0x0010,   ///< Video data (see @ref FIXME).
@@ -113,6 +127,11 @@ namespace vidre {
             struct __vidre_packed__(4) VIDRE_CORE_VISIBILITY id {
                 uint16_t major{};  ///< Major packet type.
                 uint16_t minor{};  ///< Sub-type.
+
+                constexpr id() = default;
+                template <packet_code Major, packet_code Minor>
+                constexpr id(Major major_, Minor minor_)
+                    : major(static_cast<uint16_t>(major_)), minor(static_cast<uint16_t>(minor_)) {}
 
                 /** Hash function (FNV).
                  * @note: The stream ID is ignored in the hash calculation,
@@ -181,8 +200,10 @@ namespace vidre {
             packet &operator=(packet &&) = default;
 
             packet(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : hdr{type_, stream, length} {}
-            packet(uint16_t major, uint16_t minor, uint32_t stream = 0, uint64_t length = 0) noexcept
+            template <packet_code Major, packet_code Minor>
+            packet(Major major, Minor minor, uint32_t stream = 0, uint64_t length = 0) noexcept
                 : hdr{{major, minor}, stream, length} {}
+
             packet(const header &hdr_) noexcept : hdr{hdr_} {}
             virtual ~packet() = default;
 
@@ -249,6 +270,7 @@ namespace vidre {
         public:
             struct factory;
             class value;
+            class sequence;
             class object;
 
         private:

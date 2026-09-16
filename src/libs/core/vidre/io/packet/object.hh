@@ -25,5 +25,20 @@
 #pragma once
 
 #include <vidre/core/config.hh>
+#include <vidre/io/packet/base.hh>
+
+namespace vidre {
+
+    namespace io {
+
+        /**@addtogroup api-core-io-packet
+         * */
+        ///@{
+
+        ///@}
+
+    }  // namespace io
+
+}  // namespace vidre
 
 #endif  // VIDRE_CORE_IO_PACKET_OBJECT_HH

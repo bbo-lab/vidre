@@ -25,25 +25,110 @@
 #pragma once
 
 #include <vidre/core/config.hh>
+#include <vidre/io/packet/base.hh>
+#include <vidre/util/chrono.hh>
+#include <vidre/util/uuid.hh>
 
-            // /** Plain data types.
-            //  * */
-            // enum class plain : uint16_t {
-            //     sequence = 0x0000,   ///< Grouped packet (see @ref FIXME).
-            //                          // === 0x0001-0x000F reserved
-            //     nil = 0x0010,        ///< Nil value (no data).
-            //     boolean = 0x0011,    ///< Boolean value (true/false).
-            //     integer = 0x0012,    ///< 64-bit signed integer.
-            //     natural = 0x0013,    ///< 64-bit unsigned integer.
-            //     number = 0x0014,     ///< 64-bit floating-point value (double).
-            //     string = 0x0015,     ///< UTF-8 sequence (not! zero-terminated).
-            //     binary = 0x0016,     ///< Binary data (see @ref FIXME).
-            //     uuid = 0x0017,       ///< UUID (128-bit universally unique identifier).
-            //                          // === 0x0018-0x001F reserved for future POD types.
-            //     isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
-            //     timestamp = 0x0021,  ///< Timestamp.
-            //     localtime = 0x0022,  ///< Local time (timestamp with timezone information).
-            // };
+#include <variant>
+#include <string>
+#include <vector>
 
+namespace vidre {
+
+    namespace io {
+
+        /**@addtogroup api-core-io-packet
+         * */
+        ///@{
+
+        class VIDRE_CORE_VISIBILITY packet::value : public virtual io::packet {
+        public:
+            /** Plain data types.
+             * */
+            enum class minor : uint16_t {
+                // === 0x0000-0x000F reserved
+                nil = 0x0010,        ///< Nil value (no data).
+                boolean = 0x0011,    ///< Boolean value (true/false).
+                integer = 0x0012,    ///< 64-bit signed integer.
+                natural = 0x0013,    ///< 64-bit unsigned integer.
+                number = 0x0014,     ///< 64-bit floating-point value (double).
+                string = 0x0015,     ///< UTF-8 sequence (not! zero-terminated).
+                binary = 0x0016,     ///< Binary data (see @ref FIXME).
+                uuid = 0x0017,       ///< UUID (128-bit universally unique identifier).
+                                     // === 0x0018-0x001F reserved for future POD types.
+                isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
+                timestamp = 0x0021,  ///< Timestamp.
+                utctime = 0x0022,    ///< UTC time.
+            };
+
+            using value_type = std::variant<std::monostate,        // nil
+                                            bool,                  // boolean
+                                            int64_t,               // integer
+                                            uint64_t,              // natural, bool
+                                            double,                // number
+                                            std::string,           // string
+                                            std::vector<uint8_t>,  // binary
+                                            uuid,                  // uuid
+                                            chrono::isodate,       // isodate
+                                            chrono::timestamp,     // timestamp
+                                            chrono::clock          // utctime
+                                            >;
+
+        public:
+            value(const value &) = delete;
+            value &operator=(const value &) = delete;
+            value(value &&) = default;
+            value &operator=(value &&) = default;
+            value(const header &hdr_) noexcept : packet{hdr_} {}
+
+            value(uint16_t stream = 0)  //
+                : packet{packet::major::value, minor::nil, stream, 0}, value_{} {}
+            value(bool v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::boolean, stream, sizeof(int64_t)}, value_{v} {}
+            template <typename T>
+            requires (std::is_integral_v<T> && std::is_signed_v<T>)
+            value(T v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::integer, stream, sizeof(int64_t)}, value_{static_cast<int64_t>(v)} {}
+            template <typename T>
+            requires (std::is_integral_v<T> && std::is_unsigned_v<T>)
+            value(T v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::natural, stream, sizeof(uint64_t)}, value_{static_cast<uint64_t>(v)} {}
+
+            template <typename T>
+            requires std::is_floating_point_v<T>
+            value(T v, uint16_t stream = 0)  //
+                : packet{packet::major::value, minor::number, stream, sizeof(double)}, value_{static_cast<double>(v)} {}
+
+            value(const std::string &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::string, stream, static_cast<uint32_t>(v.size())}, value_{v} {}
+            value(const char *v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::string, stream, static_cast<uint32_t>(std::strlen(v))}, value_{v} {}
+
+            virtual ~value() = default;
+
+        protected:
+            value_type value_;
+
+        public:
+            void update() noexcept override;
+            result emit(io::sink &f) override;
+            void absorb(memory::view view, std::endian endian = std::endian::native) override;
+
+        public:
+            /** Get stored value.
+             * @tparam T The type to retrieve the value as.
+             * @return The stored value cast to the specified type.
+             * */
+            template <typename T>
+            T get() const {
+                return std::get<T>(value_);
+            }
+        };
+
+        ///@}
+
+    }  // namespace io
+
+}  // namespace vidre
 
 #endif  // VIDRE_CORE_IO_PACKET_VALUE_HH

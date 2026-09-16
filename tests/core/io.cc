@@ -3,6 +3,46 @@
 
 #include <iostream>
 
+#include <cctype>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+
+#include <vidre/memory/base.hh>
+
+void hexdump(vidre::memory::view view) {
+    const auto *p = static_cast<const std::uint8_t *>(view.data());
+
+    for (std::size_t offset = 0; offset < view.size(); offset += 16) {
+        std::printf("%08zx  ", offset);
+
+        // Hexadecimal representation
+        for (std::size_t i = 0; i < 16; ++i) {
+            if (offset + i < view.size())
+                std::printf("%02x ", p[offset + i]);
+            else
+                std::printf("   ");
+
+            if (i == 7)
+                std::printf(" ");
+        }
+
+        std::printf(" |");
+
+        // ASCII representation
+        const auto n = (view.size() - offset < 16) ? view.size() - offset : 16;
+
+        for (std::size_t i = 0; i < n; ++i) {
+            const auto c = p[offset + i];
+            std::printf("%c", std::isprint(static_cast<unsigned char>(c)) ? static_cast<char>(c) : '.');
+        }
+
+        std::printf("|\n");
+    }
+
+    std::printf("%08zx\n", view.size());
+}
+
 #include <vidre/util/macros.hh>
 #define PREPARE(...)                             \
     UNSCOPED_INFO(VIDRE_STRINGIFY(__VA_ARGS__)); \
@@ -16,9 +56,88 @@ struct array_wrapper : std::array<T, N> {
 
 #include <vidre/io/types.hh>
 using namespace vidre;
+
+class memory_sink : public virtual io::sink {
+public:
+    memory_sink() = default;
+    virtual ~memory_sink() = default;
+
+    cap getcap() const noexcept override {
+        return {};
+    }
+
+public:
+    std::vector<uint8_t> data;
+
+    io::offset_type write(const memory::view &v) override {
+        auto first = v.data();
+        data.insert(data.end(), first, first + v.size());
+        return v.size();
+    }
+
+    memory::view view() const noexcept {
+        return {data.size(), data.data()};
+    }
+
+    shared<io::packet> parse() const;
+};
+
 TEST_CASE("types.hh", "[vidre/io]") {
     // FIXME
-    std::cout << (sizeof(io::result)) << std::endl;
+}
+
+#include <vidre/io/packet.hh>
+
+shared<io::packet> memory_sink::parse() const {
+    io::packet::header hdr{};
+    memory::copy(view(), hdr);
+
+    auto pkt = io::packet::factory::make(hdr);
+    pkt->absorb(view());
+    return pkt;
+}
+
+TEST_CASE("packet.hh", "[vidre/io]") {
+    using namespace vidre::io;
+
+#define test_io_packet_value(TYPE, VALUE)                                                       \
+    {                                                                                           \
+        memory_sink sink;                                                                       \
+        TYPE value = VALUE;                                                                     \
+        packet::value a(value);                                                                 \
+        a.emit(sink);                                                                           \
+        if (1)                                                                                  \
+            hexdump(sink.view());                                                               \
+        REQUIRE(*reinterpret_cast<TYPE *>(sink.data.data() + sizeof(packet::header)) == value); \
+        shared<io::packet> parsed = sink.parse();                                               \
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);                        \
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);             \
+    }
+
+    // test_io_packet_value(bool, true);
+    // test_io_packet_value(bool, false);
+    // test_io_packet_value(int64_t, -123456789);
+    // test_io_packet_value(uint64_t, 123U);
+    // test_io_packet_value(double, 0.0);
+    // test_io_packet_value(double, -1.0);
+    // test_io_packet_value(double, 1.0);
+    // test_io_packet_value(double, 3.14159);
+    // test_io_packet_value(double, std::numeric_limits<double>::infinity());
+    // test_io_packet_value(double, -std::numeric_limits<double>::infinity());
+    // // test_io_packet_value(double, std::numeric_limits<double>::quiet_NaN());
+    // {
+    //     memory_sink sink;
+    //     double value = std::numeric_limits<double>::quiet_NaN();
+    //     packet::value a(value);
+    //     a.emit(sink);
+    //     if (0)
+    //         hexdump(sink.view());
+    //     REQUIRE(std::isnan(*reinterpret_cast<double *>(sink.data.data() + sizeof(packet::header))));
+    //     shared<io::packet> parsed = sink.parse();
+    //     REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);
+    //     REQUIRE(std::isnan(dynamic_cast<packet::value *>(parsed.get())->get<double>()));
+    // }
+    test_io_packet_value(std::string, "Hello World!");
 }
 
 #if 0

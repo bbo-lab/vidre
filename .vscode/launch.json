@@ -160,6 +160,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "test.core.io",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test.core.io",
+            "args": [ "-s" ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "test.core.program",
             "type": "cppdbg",
             "request": "launch",

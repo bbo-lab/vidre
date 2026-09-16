@@ -37,13 +37,6 @@ namespace vidre {
          * */
         ///@{
 
-        template <typename T>
-        concept packet_code =
-            (std::unsigned_integral<std::remove_cvref_t<T>> && !std::same_as<std::remove_cvref_t<T>, bool> &&
-             sizeof(std::remove_cvref_t<T>) <= sizeof(uint16_t)) ||
-            (std::is_enum_v<std::remove_cvref_t<T>> && std::unsigned_integral<std::underlying_type_t<std::remove_cvref_t<T>>> &&
-             sizeof(std::underlying_type_t<std::remove_cvref_t<T>>) <= sizeof(uint16_t));
-
         /** Factory class for creating packet instances.
          * FIXME
          * */
@@ -58,6 +51,14 @@ namespace vidre {
              **/
             using map_type = ankerl::unordered_dense::map<io::packet::id, make_type, std::hash<io::packet::id>>;
 
+            /** Get internal registry.
+             * @return A reference to the internal map storing packet creation functions.
+             * */
+            static auto &registry() {
+                static map_type map;
+                return map;
+            }
+
             /** Add a packet type to the factory.
              * @tparam T The packet type to add.
              * @param id The identifier for the packet type.
@@ -65,7 +66,7 @@ namespace vidre {
              * */
             template <typename T>
             static void add(io::packet::id id) {
-                auto [it, inserted] = map.emplace(id, [](packet::header hdr) -> shared<io::packet> {
+                auto [it, inserted] = registry().emplace(id, [](packet::header hdr) -> shared<io::packet> {
                     return make_shared<T>(hdr);
                 });
 
@@ -79,17 +80,14 @@ namespace vidre {
              * @throws exception::logic if the packet type is not registered.
              * */
             static shared<io::packet> make(packet::header hdr) {
-                auto it = map.find(hdr.type);
-                if (it == map.end())
+                auto it = registry().find(hdr.type);
+                if (it == registry().end())
                     throw exception::logic() << "packet type not registered";
                 return it->second(hdr);
             }
 
             template <typename T>
             struct registrar;
-
-        private:
-            static map_type map;
         };
 
         /** Registration of packet types.

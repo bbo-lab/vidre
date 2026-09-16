@@ -23,4 +23,3 @@
 
 using namespace vidre;
 
-vidre::io::packet::factory::map_type vidre::io::packet::factory::map{};

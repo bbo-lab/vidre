@@ -97,7 +97,10 @@ namespace vidre {
             view(const std::string &str) noexcept : size_(str.size()), data_(reinterpret_cast<const_pointer>(str.data())) {}
 
             template <typename T>
-            requires (not string_type<T> and not std::contiguous_iterator<T> and std::is_trivially_copyable_v<T>)
+            requires (not std::is_same_v<std::remove_cvref_t<T>, view> and
+                      not std::is_same_v<std::remove_cvref_t<T>, std::string_view> and
+                      not std::is_same_v<std::remove_cvref_t<T>, const char *> and not std::contiguous_iterator<T> and
+                      std::is_trivially_copyable_v<T>)
             view(const T &value) noexcept : size_(sizeof(T)), data_(reinterpret_cast<const_pointer>(&value)) {}
 
         protected:
@@ -126,7 +129,30 @@ namespace vidre {
                 return static_cast<const void *>(data_);
             }
             ///@}
+
+            /** Advance the view by a given offset.
+             * @param offset The number of bytes to advance the view.
+             * @return The updated view.
+             * */
+            view &operator+=(size_type offset) noexcept {
+                if (offset > size_)
+                    offset = size_;
+                data_ += offset;
+                size_ -= offset;
+                return *this;
+            }
         };
+
+        /** Get new memory view with an offset.
+         * @param v The original memory view.
+         * @param offset The number of bytes to offset the view.
+         * @return A new memory view starting at the given offset.
+         * */
+        inline view operator+(const view &v, size_type offset) noexcept {
+            view result = v;
+            result += offset;
+            return result;
+        }
 
         /** Writable memory view.
          * This class extends the basic view by allowing write access to the underlying memory.
