@@ -76,6 +76,7 @@ vidre_library(vidrecore SHARED
             #     vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
             vidre/io/packet.hh vidre/io/packet.cc
                 vidre/io/packet/base.hh vidre/io/packet/base.cc
+                vidre/io/packet/factory.hh vidre/io/packet/factory.cc
                 vidre/io/packet/value.hh vidre/io/packet/value.cc
                 vidre/io/packet/object.hh vidre/io/packet/object.cc
             vidre/io/file.hh vidre/io/file.cc

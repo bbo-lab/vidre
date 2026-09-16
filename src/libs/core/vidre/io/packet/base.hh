@@ -33,6 +33,8 @@
 #include <functional>
 #include <bit>
 
+#include <ankerl/unordered_dense.h>
+
 namespace vidre {
 
     namespace io {
@@ -82,8 +84,8 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                plain = 0x0001,   ///< Plain data (see @ref FIXME).
-                object = 0x0002,  ///< Structured data (see @ref FIXME).
+                value = 0x0001,   ///< Plain data (see `packet::value`).
+                object = 0x0002,  ///< Structured data (see `packet::object`).
 
                 // standard types
                 video = 0x0010,   ///< Video data (see @ref FIXME).
@@ -105,25 +107,6 @@ namespace vidre {
             enum class minor : uint16_t {
                 group = 0x0000,  ///< Grouped packet.
             };
-
-            // /** Plain data types.
-            //  * */
-            // enum class plain : uint16_t {
-            //     sequence = 0x0000,   ///< Grouped packet (see @ref FIXME).
-            //                          // === 0x0001-0x000F reserved
-            //     nil = 0x0010,        ///< Nil value (no data).
-            //     boolean = 0x0011,    ///< Boolean value (true/false).
-            //     integer = 0x0012,    ///< 64-bit signed integer.
-            //     natural = 0x0013,    ///< 64-bit unsigned integer.
-            //     number = 0x0014,     ///< 64-bit floating-point value (double).
-            //     string = 0x0015,     ///< UTF-8 sequence (not! zero-terminated).
-            //     binary = 0x0016,     ///< Binary data (see @ref FIXME).
-            //     uuid = 0x0017,       ///< UUID (128-bit universally unique identifier).
-            //                          // === 0x0018-0x001F reserved for future POD types.
-            //     isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
-            //     timestamp = 0x0021,  ///< Timestamp.
-            //     localtime = 0x0022,  ///< Local time (timestamp with timezone information).
-            // };
 
             /** Packet ID.
              * */
@@ -147,6 +130,10 @@ namespace vidre {
                     result = (result * 0x01000193) ^ minor;
 #endif
                     return result;
+                }
+
+                constexpr bool operator==(const id &other) const noexcept {
+                    return major == other.major && minor == other.minor;
                 }
             };
 
@@ -196,6 +183,7 @@ namespace vidre {
             packet(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : hdr{type_, stream, length} {}
             packet(uint16_t major, uint16_t minor, uint32_t stream = 0, uint64_t length = 0) noexcept
                 : hdr{{major, minor}, stream, length} {}
+            packet(const header &hdr_) noexcept : hdr{hdr_} {}
             virtual ~packet() = default;
 
         protected:
@@ -259,6 +247,12 @@ namespace vidre {
             virtual void absorb(memory::view view, std::endian endian = std::endian::native);
 
         public:
+            struct factory;
+            class value;
+            class object;
+
+        private:
+            friend struct factory;
         };
 
         ///@}

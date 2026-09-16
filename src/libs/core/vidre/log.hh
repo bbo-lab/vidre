@@ -208,6 +208,10 @@ namespace vidre {
                 update();
             }
 
+            packet(const header &hdr_) noexcept : io::packet(hdr_) {
+                message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
+            }
+
             template <typename... Args>
             static shared<packet> make(Args &&...args) {
                 return std::make_shared<packet>(std::forward<Args>(args)...);

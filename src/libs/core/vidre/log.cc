@@ -23,10 +23,16 @@
 #include "os/tty.hh"
 #include "cpp/util.hh"
 #include "io/file.hh"
+#include "io/packet.hh"
 
 #include <array>
 
 using namespace vidre;
+
+static io::packet::factory::registrar<lognew::packet>              //
+    log_packet_factory(io::packet::major::log,                     //
+                       {static_cast<uint16_t>(lognew::level_min),  //
+                        static_cast<uint16_t>(lognew::level_max)});
 
 // ============================================================================
 // ============================================================================
@@ -151,7 +157,6 @@ void log::handler::emit(const message_type &txt, unsigned indent [[maybe_unused]
         for (auto *it : io::stream::channels) {
             if (level_ > it->threshold_)
                 continue;
-
 #if defined(DEBUG)
             // indent
             if ((last_ == 0) || (last_ == '\n')) {

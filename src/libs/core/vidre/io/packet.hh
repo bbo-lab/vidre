@@ -60,5 +60,6 @@
 #include <vidre/io/packet/base.hh>
 #include <vidre/io/packet/value.hh>
 #include <vidre/io/packet/object.hh>
+#include <vidre/io/packet/factory.hh>
 
 #endif  // VIDRE_CORE_IO_PACKET_HH
