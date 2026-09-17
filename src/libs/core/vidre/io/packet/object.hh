@@ -26,6 +26,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
+#include <vidre/io/packet/value.hh>
 
 namespace vidre {
 
@@ -34,6 +35,48 @@ namespace vidre {
         /**@addtogroup api-core-io-packet
          * */
         ///@{
+
+        /** Object (i.e. key-value pair)
+         * */
+        class VIDRE_CORE_VISIBILITY packet::object : public virtual packet {
+        public:
+            using key_type = shared<packet::value>;
+            using value_type = shared<packet::value>;
+
+        public:
+            object(const object &) = delete;
+            object &operator=(const object &) = delete;
+            object(object &&) = default;
+            object &operator=(object &&) = default;
+            object(const header &hdr_) noexcept : packet{hdr_} {}
+
+            virtual ~object() = default;
+
+            object(uint16_t stream = 0) noexcept : io::packet{packet::major::object, packet::minor::group, stream, 0} {}
+            object(packet::value &&k, packet::value &&v, uint16_t stream = 0) noexcept
+                : io::packet{packet::major::object, packet::minor::group, stream, 0} {
+                key_ = make_shared<packet::value>(std::move(k));
+                value_ = make_shared<packet::value>(std::move(v));
+            }
+
+        protected:
+            key_type key_;
+            value_type value_;
+
+        public:
+            void update() noexcept override;
+            result emit(io::sink &f) override;
+            void absorb(memory::view view, std::endian endian = std::endian::native) override;
+            settings::json to_json() const override;
+
+        public:
+            shared<packet> key() const noexcept {
+                return key_;
+            }
+            shared<packet> value() const noexcept {
+                return value_;
+            }
+        };
 
         ///@}
 

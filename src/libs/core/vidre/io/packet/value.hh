@@ -76,7 +76,7 @@ namespace vidre {
             using value_type = std::variant<std::monostate,     // nil
                                             bool,               // boolean
                                             int64_t,            // integer
-                                            uint64_t,           // natural, bool
+                                            uint64_t,           // natural
                                             double,             // number
                                             std::string,        // string
                                             memory::view,       // binary

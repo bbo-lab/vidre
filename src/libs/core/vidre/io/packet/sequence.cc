@@ -24,6 +24,10 @@
 
 using namespace vidre;
 
+static io::packet::registry<io::packet::sequence>        //
+    packet_factory_b(io::packet::major::sequence,        //
+                     io::packet::minor::group);
+
 void io::packet::sequence::update() noexcept {
     hdr.length = 0;
     for (auto &pkt : packets_) {
@@ -47,11 +51,7 @@ void io::packet::sequence::absorb(memory::view view, std::endian endian) {
     memory::const_pointer end_it = view.begin() + size();
 
     while (it.begin() < end_it) {
-        io::packet::header hdr;
-        memory::copy(it, hdr);
-
-        auto pkt = io::packet::factory::make(hdr);
-        pkt->absorb(it, endian);
+        auto pkt = io::packet::factory::make(it,endian);
         it += pkt->size();
         packets_.push_back(std::move(pkt));
     }

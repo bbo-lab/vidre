@@ -85,6 +85,23 @@ namespace vidre {
                     throw exception::logic() << "packet type not registered";
                 return it->second(hdr);
             }
+
+            /** Create packet from memory view.
+             * @param view The memory view containing the packet data.
+             * @param from The endian format of the memory view.
+             * @return A shared pointer to the created packet instance.
+             * @throws exception::logic if the packet type is not registered.
+             * */
+            template<typename Packet = io::packet>
+            requires std::derived_from<Packet, io::packet>
+            static shared<io::packet> make(memory::view view, std::endian from) {
+                packet::header hdr;
+                memory::copy(view, hdr);
+                auto pkt = factory::make(hdr);
+                pkt->io::packet::absorb(view, from);
+                pkt->absorb(view, from);
+                return pkt;
+            }
         };
 
         ///@}
