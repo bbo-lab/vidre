@@ -22,7 +22,6 @@
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_SINK_HH
 #define VIDRE_CORE_IO_TYPES_SINK_HH
-#include <memory>
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -157,6 +156,11 @@ namespace vidre {
              *       connection logic is required, the method can be overridden.
              * */
             virtual status connect(shared<io::source> other, cap::flag_type cap);
+
+            /** Disconnect a source from this sink.
+             * @param src The source to disconnect.
+             * */
+            virtual status disconnect(const io::source *src);
 
         private:
             friend class source;

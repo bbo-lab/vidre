@@ -194,6 +194,11 @@ namespace vidre {
              * */
             virtual status connect(shared<io::sink> other, cap::flag_type cap);
 
+            /** Disconnect a sink from this source.
+             * @param snk The sink to disconnect.
+             * */
+            virtual status disconnect(const io::sink *snk);
+
         private:
             friend class sink;
             friend class endpoint;

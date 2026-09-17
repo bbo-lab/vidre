@@ -73,3 +73,13 @@ status source::connect(shared<io::sink> other, cap::flag_type cap) {
 
     return status::ok;
 }
+
+status source::disconnect(const io::sink *snk) {
+    if (sink_.get() != snk)
+        return status::bad;
+
+    // FIXME
+
+    sink_.reset();
+    return status::ok;
+}
