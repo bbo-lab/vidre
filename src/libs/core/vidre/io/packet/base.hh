@@ -96,10 +96,12 @@ namespace vidre {
             enum class major : uint16_t {
                 undefined = 0x0000,
 
-                value = 0x0001,     ///< Plain data (see `packet::value`).
-                sequence = 0x0002,  ///< Sequence of values (see `packet::value`).
-                object = 0x0003,    ///< Structured data (see `packet::object`).
-                manifest = 0x0004,  ///< Manifest data (see `manifest`).
+                // basic types (usually representable also in JSON format)
+                value = 0x0001,     ///< Plain data (see `io::packet::value`).
+                sequence = 0x0002,  ///< Sequence of values (see `io::packet::sequence`).
+                object = 0x0003,    ///< Structured data (see `io::packet::object`).
+
+                manifest = 0x000F,  ///< Manifest data (see `io::manifest`).
 
                 // standard types
                 video = 0x0010,   ///< Video data (see @ref FIXME).
@@ -269,9 +271,13 @@ namespace vidre {
 
         public:
             struct factory;
+
             class value;
             class sequence;
             class object;
+
+            template <typename T>
+            struct registry;
 
         private:
             friend struct factory;

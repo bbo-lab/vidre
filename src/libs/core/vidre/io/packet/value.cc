@@ -27,11 +27,11 @@
 
 using namespace vidre;
 
-static io::packet::factory::registrar<io::packet::value>  //
-    packet_factory_b(io::packet::major::value,            //
-                     {io::packet::value::minor::nil,      //
+static io::packet::registry<io::packet::value>        //
+    packet_factory_b(io::packet::major::value,        //
+                     {io::packet::value::minor::nil,  //
                       io::packet::value::minor::uuid});
-static io::packet::factory::registrar<io::packet::value>  //
+static io::packet::registry<io::packet::value>            //
     packet_factory_c(io::packet::major::value,            //
                      {io::packet::value::minor::isodate,  //
                       io::packet::value::minor::utctime});
@@ -54,22 +54,22 @@ void io::packet::value::update() noexcept {
             hdr.length = sizeof(double);
             break;
         case minor::string:
-            hdr.length = std::get<std::string>(value_).size() - 1;
+            hdr.length = std::get<std::string>(value_).size();
             break;
         case minor::binary:
-            hdr.length = std::get<std::vector<uint8_t>>(value_).size();
+            hdr.length = std::get<memory::view>(value_).size();
             break;
         case minor::uuid:
-            hdr.length = sizeof("00000000-0000-0000-0000-000000000000") - 1;
+            hdr.length = 16;
             break;
         case minor::isodate:
-            hdr.length = sizeof(chrono::isodate);  // FIXME
+            hdr.length = sizeof(chrono::isodate);
             break;
         case minor::timestamp:
-            hdr.length = sizeof(chrono::timestamp);  // FIXME
+            hdr.length = sizeof(chrono::timestamp);
             break;
         case minor::utctime:
-            hdr.length = sizeof(chrono::clock);  // FIXME
+            hdr.length = sizeof(chrono::utcstamp);
             break;
     }
 }
@@ -105,23 +105,31 @@ io::result io::packet::value::emit(io::sink &f) {
             retval += f.put({v.size(), v.data()});
             break;
         }
-        case minor::binary:
-            // FIXME
-            break;
-        case minor::uuid: {
-            auto v = std::get<uuid>(value_).tostring();
-            retval += f.put({v.size(), v.data()});
+        case minor::binary: {
+            auto v = std::get<memory::view>(value_);
+            retval += f.put(v);
             break;
         }
-        case minor::isodate:
-            // FIXME
+        case minor::uuid: {
+            auto v = std::get<uuid>(value_);
+            retval += f.put(static_cast<memory::view>(v));
             break;
-        case minor::timestamp:
-            // FIXME
+        }
+        case minor::isodate: {
+            auto v = std::get<chrono::isodate>(value_);
+            retval += f.put(static_cast<memory::view>(v));
             break;
-        case minor::utctime:
-            // FIXME
+        }
+        case minor::timestamp: {
+            auto v = std::get<chrono::timestamp>(value_);
+            retval += f.put(static_cast<memory::view>(v));
             break;
+        }
+        case minor::utctime: {
+            auto v = std::get<chrono::utcstamp>(value_);
+            retval += f.put(static_cast<memory::view>(v));
+            break;
+        }
     }
 
     return retval;
@@ -134,7 +142,7 @@ void io::packet::value::absorb(memory::view view, std::endian endian) {
         case minor::boolean: {
             int64_t v;
             memory::copy(view + sizeof(header), v);
-            value_ = static_cast<bool>(endian::byteswap(v, endian));
+            value_ = static_cast<bool>(endian::byteswap(v, endian));  // FIXME do we need the byteswap for boolean?
             break;
         }
         case minor::integer: {
@@ -161,20 +169,46 @@ void io::packet::value::absorb(memory::view view, std::endian endian) {
             value_ = std::move(v);
             break;
         }
-        case minor::binary:
-            // FIXME
+        case minor::binary: {
+            memory::view bin_view = view + sizeof(header);
+            memory::view v(hdr.length, bin_view.data());
+            value_ = v;
             break;
-        case minor::uuid:
-            // FIXME
+        }
+        case minor::uuid: {
+            memory::view uuid_view = view + sizeof(header);
+            uuid v(uuid_view);
+            value_ = std::move(v);
             break;
-        case minor::isodate:
-            // FIXME
+        }
+        case minor::isodate: {
+            memory::view isodate_view = view + sizeof(header);
+            chrono::isodate v;
+            memory::copy(isodate_view, v);
+            value_ = std::move(v);
             break;
-        case minor::timestamp:
-            // FIXME
+        }
+        case minor::timestamp: {
+            memory::view timestamp_view = view + sizeof(header);
+            chrono::timestamp v;
+            memory::copy(timestamp_view, v);
+            if (endian != std::endian::native) {
+                v.sec = endian::byteswap(v.sec, endian);
+                v.nsec = endian::byteswap(v.nsec, endian);
+            }
+            value_ = std::move(v);
             break;
-        case minor::utctime:
-            // FIXME
+        }
+        case minor::utctime: {
+            memory::view utctime_view = view + sizeof(header);
+            chrono::utcstamp v;
+            memory::copy(utctime_view, v);
+            if (endian != std::endian::native) {
+                v.sec = endian::byteswap(v.sec, endian);
+                v.nsec = endian::byteswap(v.nsec, endian);
+            }
+            value_ = std::move(v);
             break;
+        }
     }
 }

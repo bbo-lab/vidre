@@ -41,6 +41,19 @@ namespace vidre {
          * */
         ///@{
 
+        /** Represents a value packet in the VidRe framework.
+         * 
+         * This class encapsulates various types of values, including plain data types
+         * such as boolean, integer, natural, number, string, binary, UUID, ISO date,
+         * timestamp, and UTC time. It provides mechanisms for emitting and absorbing
+         * these values to and from memory views.
+         * 
+         * @note Except for the nil and binary type, all other types have a defined memory 
+         *       representation. In case of the binary type, the data is represented as a 
+         *       memory view, therefore, not owned.
+         *
+         * @todo Need to check if non-owning binary type handling is correct.
+         * */
         class VIDRE_CORE_VISIBILITY packet::value : public virtual io::packet {
         public:
             /** Plain data types.
@@ -61,18 +74,20 @@ namespace vidre {
                 utctime = 0x0022,    ///< UTC time.
             };
 
-            using value_type = std::variant<std::monostate,        // nil
-                                            bool,                  // boolean
-                                            int64_t,               // integer
-                                            uint64_t,              // natural, bool
-                                            double,                // number
-                                            std::string,           // string
-                                            std::vector<uint8_t>,  // binary
-                                            uuid,                  // uuid
-                                            chrono::isodate,       // isodate
-                                            chrono::timestamp,     // timestamp
-                                            chrono::clock          // utctime
+            using value_type = std::variant<std::monostate,     // nil
+                                            bool,               // boolean
+                                            int64_t,            // integer
+                                            uint64_t,           // natural, bool
+                                            double,             // number
+                                            std::string,        // string
+                                            memory::view,       // binary
+                                            uuid,               // uuid
+                                            chrono::isodate,    // isodate
+                                            chrono::timestamp,  // timestamp
+                                            chrono::utcstamp    // utctime
                                             >;
+
+            ///@todo JSON and Lua have a "nil" - this needs to be represented in the framework
 
         public:
             value(const value &) = delete;
@@ -83,8 +98,7 @@ namespace vidre {
 
             value(uint16_t stream = 0)  //
                 : packet{packet::major::value, minor::nil, stream, 0}, value_{} {}
-            value(bool v, uint16_t stream = 0)
-                : packet{packet::major::value, minor::boolean, stream, sizeof(int64_t)}, value_{v} {}
+            value(bool v, uint16_t stream = 0) : packet{packet::major::value, minor::boolean, stream, sizeof(int64_t)}, value_{v} {}
             template <typename T>
             requires (std::is_integral_v<T> && std::is_signed_v<T>)
             value(T v, uint16_t stream = 0)
@@ -103,6 +117,20 @@ namespace vidre {
                 : packet{packet::major::value, minor::string, stream, static_cast<uint32_t>(v.size())}, value_{v} {}
             value(const char *v, uint16_t stream = 0)
                 : packet{packet::major::value, minor::string, stream, static_cast<uint32_t>(std::strlen(v))}, value_{v} {}
+
+            value(const memory::view &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::binary, stream, static_cast<uint32_t>(v.size())}, value_{v} {}
+
+            value(const chrono::isodate &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::isodate, stream, sizeof(chrono::isodate)}, value_{v} {}
+
+            value(const chrono::timestamp &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::timestamp, stream, sizeof(chrono::timestamp)}, value_{v} {}
+
+            value(const chrono::utcstamp &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utcstamp)}, value_{v} {}
+            value(const chrono::clock::time_point &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utcstamp)}, value_{chrono::utcstamp(v)} {}
 
             virtual ~value() = default;
 

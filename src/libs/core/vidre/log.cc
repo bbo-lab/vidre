@@ -28,7 +28,7 @@
 
 using namespace vidre;
 
-static io::packet::factory::registrar<lognew::packet>              //
+static io::packet::registry<lognew::packet>                        //
     log_packet_factory(io::packet::major::log,                     //
                        {static_cast<uint16_t>(lognew::level_min),  //
                         static_cast<uint16_t>(lognew::level_max)});

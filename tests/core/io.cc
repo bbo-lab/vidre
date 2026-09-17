@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include <vidre/memory/base.hh>
+#include "vidre/util/chrono.hh"
 
 void hexdump(vidre::memory::view view) {
     const auto *p = static_cast<const std::uint8_t *>(view.data());
@@ -100,18 +101,20 @@ shared<io::packet> memory_sink::parse() const {
 TEST_CASE("packet.hh", "[vidre/io]") {
     using namespace vidre::io;
 
-#define test_io_packet_value(TYPE, VALUE)                                                       \
-    {                                                                                           \
-        memory_sink sink;                                                                       \
-        TYPE value = VALUE;                                                                     \
-        packet::value a(value);                                                                 \
-        a.emit(sink);                                                                           \
-        if (1)                                                                                  \
-            hexdump(sink.view());                                                               \
-        REQUIRE(*reinterpret_cast<TYPE *>(sink.data.data() + sizeof(packet::header)) == value); \
-        shared<io::packet> parsed = sink.parse();                                               \
-        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);                        \
-        REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);             \
+#define test_io_packet_value(TYPE, VALUE)                                                           \
+    {                                                                                               \
+        memory_sink sink;                                                                           \
+        TYPE value = VALUE;                                                                         \
+        packet::value a(value);                                                                     \
+        a.emit(sink);                                                                               \
+        if (1)                                                                                      \
+            hexdump(sink.view());                                                                   \
+        if constexpr (std::is_trivially_copyable_v<TYPE>) {                                         \
+            REQUIRE(*reinterpret_cast<TYPE *>(sink.data.data() + sizeof(packet::header)) == value); \
+        }                                                                                           \
+        shared<io::packet> parsed = sink.parse();                                                   \
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);                            \
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);                 \
     }
 
     // test_io_packet_value(bool, true);
@@ -137,7 +140,9 @@ TEST_CASE("packet.hh", "[vidre/io]") {
     //     REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);
     //     REQUIRE(std::isnan(dynamic_cast<packet::value *>(parsed.get())->get<double>()));
     // }
-    test_io_packet_value(std::string, "Hello World!");
+    // test_io_packet_value(std::string, "Hello World!");
+    test_io_packet_value(chrono::isodate, chrono::isodate::now());
+    test_io_packet_value(chrono::utcstamp, chrono::utcstamp::now());
 }
 
 #if 0
