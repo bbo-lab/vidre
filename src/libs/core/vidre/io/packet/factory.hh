@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vidre/core/config.hh>
+#include <vidre/util/endian.hh>
 #include <vidre/io/packet/base.hh>
 
 #include <ankerl/unordered_dense.h>
@@ -74,7 +75,7 @@ namespace vidre {
                     throw exception::logic() << "packet type already registered";
             }
 
-            /** Create a packet instance by its header.
+            /** Create a packet instance by its (normalized) header.
              * @param hdr The header to pass to the packet constructor.
              * @return A shared pointer to the created packet instance.
              * @throws exception::logic if the packet type is not registered.
@@ -88,19 +89,26 @@ namespace vidre {
 
             /** Create packet from memory view.
              * @param view The memory view containing the packet data.
-             * @param from The endian format of the memory view.
+             * @param from The endian format of the memory view (default: native).
              * @return A shared pointer to the created packet instance.
              * @throws exception::logic if the packet type is not registered.
              * */
-            template<typename Packet = io::packet>
+            template <typename Packet = io::packet>
             requires std::derived_from<Packet, io::packet>
-            static shared<io::packet> make(memory::view view, std::endian from) {
+            static shared<Packet> make(memory::view view, std::endian from = std::endian::native) {
                 packet::header hdr;
                 memory::copy(view, hdr);
+
+                if (from != std::endian::native) {
+                    endian::byteswap_inplace(hdr.type.major, from);
+                    endian::byteswap_inplace(hdr.type.minor, from);
+                    endian::byteswap_inplace(hdr.stream, from);
+                    endian::byteswap_inplace(hdr.length, from);
+                }
+
                 auto pkt = factory::make(hdr);
-                pkt->io::packet::absorb(view, from);
                 pkt->absorb(view, from);
-                return pkt;
+                return std::dynamic_pointer_cast<Packet>(pkt);
             }
         };
 

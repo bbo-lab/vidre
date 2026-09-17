@@ -40,7 +40,7 @@ io::result io::packet::sequence::emit(io::sink &f) {
     auto retval = io::packet::emit(f);
     for (auto &pkt : packets_)
         retval += pkt->emit(f);
-    return retval;
+    return retval + pad(f);
 }
 
 void io::packet::sequence::absorb(memory::view view, std::endian endian) {

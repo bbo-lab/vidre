@@ -43,15 +43,17 @@ io::result packet::pad(io::sink &f) const {
 }
 
 void packet::absorb(memory::view view, std::endian endian) {
-    if (view.size() < sizeof(hdr))
-        throw exception::runtime() << "invalid view size for packet header absorption";
+    // nothing to be done here packet::factory has taken care of it
 
-    memory::copy(view, hdr);
+    // if (view.size() < sizeof(hdr))
+    //     throw exception::runtime() << "invalid view size for packet header absorption";
 
-    if (endian != std::endian::native) {
-        endian::byteswap_inplace(hdr.type.major, endian);
-        endian::byteswap_inplace(hdr.type.minor, endian);
-        endian::byteswap_inplace(hdr.stream, endian);
-        endian::byteswap_inplace(hdr.length, endian);
-    }
+    // memory::copy(view, hdr);
+
+    // if (endian != std::endian::native) {
+    //     endian::byteswap_inplace(hdr.type.major, endian);
+    //     endian::byteswap_inplace(hdr.type.minor, endian);
+    //     endian::byteswap_inplace(hdr.stream, endian);
+    //     endian::byteswap_inplace(hdr.length, endian);
+    // }
 }

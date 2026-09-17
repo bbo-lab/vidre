@@ -133,7 +133,7 @@ io::result io::packet::value::emit(io::sink &f) {
         }
     }
 
-    return retval;
+    return retval + pad(f);
 }
 
 void io::packet::value::absorb(memory::view view, std::endian endian) {

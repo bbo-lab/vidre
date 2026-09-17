@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include <vidre/memory/base.hh>
+#include "vidre/io/packet/base.hh"
 #include "vidre/util/chrono.hh"
 
 void hexdump(vidre::memory::view view) {
@@ -101,6 +102,7 @@ shared<io::packet> memory_sink::parse() const {
 TEST_CASE("packet.hh", "[vidre/io]") {
     using namespace vidre::io;
 
+#if 0
 #define test_io_packet_value(TYPE, VALUE)                                                           \
     {                                                                                               \
         memory_sink sink;                                                                           \
@@ -117,7 +119,6 @@ TEST_CASE("packet.hh", "[vidre/io]") {
         REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);                 \
     }
 
-#if 0
     test_io_packet_value(bool, true);
     test_io_packet_value(bool, false);
     test_io_packet_value(int64_t, -123456789);
@@ -155,12 +156,17 @@ TEST_CASE("packet.hh", "[vidre/io]") {
         seq.add(io::packet::make<io::packet::value>(uuid::make()));
         seq.add(io::packet::make<io::packet::value>(chrono::utcstamp::now()));
         seq.add(io::packet::make<io::packet::value>(chrono::isodate::now()));
+        seq.add(io::packet::make<io::packet::object>("key","value"));
         seq.emit(sink);
 
         hexdump(sink.view());
 
-        auto doc = seq.to_json();
-        std::cout << doc << std::endl;
+        // std::cout << seq.to_json() << std::endl;
+
+        shared<io::packet> reread = io::packet::factory::make(sink.view());
+        // std::cout << reread->to_json() << std::endl;
+
+        REQUIRE(seq.to_json() == reread->to_json());
     }
 }
 
