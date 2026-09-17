@@ -190,6 +190,17 @@ namespace vidre {
                     stamp = chrono::monotonic::now();
                 }
 
+                /** Update statistics with the given packet.
+                 * @param pkt The packet to update statistics for.
+                 * @param result The result of the I/O operation associated with the packet.
+                 * */
+                void update(shared<io::packet> pkt, const io::result &result) noexcept;
+
+                /** Update statistics from IO result only.
+                 * @param result The result of the I/O operation to update statistics for.
+                 * */
+                void update(const io::result &result) noexcept;
+
             protected:
                 chrono::timer::time_point stamp = chrono::monotonic::now();  ///< Timestamp.
 

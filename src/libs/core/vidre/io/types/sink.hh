@@ -81,6 +81,7 @@ namespace vidre {
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
             virtual offset_type write(const memory::view &buf) {
+                // FIXME why is this const memory::view & ?
                 return invalid<offset_type>;
             }
 
@@ -134,8 +135,7 @@ namespace vidre {
             }
 
         protected:
-            /** Terminate sink.
-             * This method may be called from connected sources to termainate the sink.
+            /** Terminate sink task if running.
              * */
             void terminate() override;
 

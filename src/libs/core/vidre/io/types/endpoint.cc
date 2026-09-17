@@ -22,9 +22,30 @@
 #include "endpoint.hh"
 #include "source.hh"
 #include "sink.hh"
+#include "../packet.hh"
 
 using namespace vidre;
 using namespace vidre::io;
+
+void endpoint::stats::update(shared<io::packet> pkt, const io::result &result) noexcept {
+    if (pkt) {
+        if (result) {
+            ++packets.transmitted;
+            bytes.transmitted += result.count;
+        }
+        else {
+            ++packets.dropped;
+            ++errors;
+        }
+    }
+}
+
+void endpoint::stats::update(const io::result &result) noexcept {
+    if (!result)
+        ++errors;
+    else
+        bytes.transmitted += result.count;
+}
 
 settings::json endpoint::cap::setup(flag_type flgs) const {
     return {
@@ -69,8 +90,9 @@ status endpoint::connect(shared<io::source> src, shared<io::sink> snk) {
     // FIXME at the moment of writing, we only deal with packet-mode endpoints
     if (!(src_cap & endpoint::cap::packet) || !(snk_cap & endpoint::cap::packet))
         return status::bad;
-    src_cap &= ~cap::packet;
-    snk_cap &= ~cap::packet;
+
+    src_cap &= ~cap::chunk;
+    snk_cap &= ~cap::chunk;
 
     // select mode (preferred mode is, that the source pushes if it can)
     if ((src_cap & cap::push) && (snk_cap & cap::push)) {

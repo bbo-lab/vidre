@@ -20,3 +20,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "channel.hh"
+
+using namespace vidre;
+
+io::result io::channel::put(shared<packet> p) {
+    io::result retval = invalid<offset_type>;
+    if (sink_) {
+        retval = sink_->put(p);
+        stats_.update(p, retval);
+    }
+    return retval;
+}
+
+void io::channel::terminate() {
+    source::terminate();
+    sink::terminate();
+}

@@ -36,14 +36,42 @@ namespace vidre {
          * */
         ///@{
 
+        /** A channel for transforming and relaying packets between a sink and a source.
+         * 
+         * The channel acts as an intermediary that can transform packets before 
+         * relaying them from the sink to the source. The default implementation
+         * only relays data directly from the source to the sink (without any 
+         * transformation). 
+         *
+         * By default, channels always use the push method on the sink side.
+         *
+         * @todo example filter implementation.
+         * */
         class VIDRE_CORE_VISIBILITY channel
             : public virtual sink
             , public virtual source {
         public:
+            channel() = default;
 
-        protected:
+            channel(const channel &) = delete;
+            channel &operator=(const channel &) = delete;
+            channel(channel &&) = delete;
+            channel &operator=(channel &&) = delete;
+
+            virtual ~channel() = default;
 
         public:
+            /** Default channel capabilities.
+             * */
+            cap getcap() const noexcept override {
+                return {cap::packet | cap::push | cap::event, cap::packet | cap::push};
+            }
+
+            /** Default implementation for the put method.
+             * */
+            result put(shared<packet> p) override;
+
+        protected:
             void terminate() override;
         };
 

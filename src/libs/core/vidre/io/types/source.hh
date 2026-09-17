@@ -137,8 +137,7 @@ namespace vidre {
             }
 
         protected:
-            /** Terminate source.
-             * This method may be called from connected sinks to terminate the source.
+            /** Terminate source task (if running).
              * */
             void terminate() override;
 

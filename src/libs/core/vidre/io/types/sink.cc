@@ -30,10 +30,7 @@ sink::~sink() {
 }
 
 void sink::terminate() {
-    if (source_)
-        source_->terminate();
-
-    if(sink_task_ && sink_task_->isrunning())
+    if (sink_task_ && sink_task_->isrunning())
         sink_task_->terminate();
 }
 
@@ -58,15 +55,19 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
 }
 
 status sink::connect(shared<io::source> other, cap::flag_type cap) {
-    if (source_.get()) // already connected
+    if (source_.get())  // already connected
         return status::bad;
 
+    // store fields, clear stats
     cap_[index::sink] = cap;
     source_ = other;
+    clearstats();
 
+    // push mechanism -> all done
     if (!(cap & cap::event))
         return status::ok;
 
+    // event mechanism -> start sink task
     sink_task_ = task::make([this](shared<task> self) {
         sink_handler(self);
     });
@@ -78,8 +79,8 @@ status sink::disconnect(const io::source *src) {
     if (source_.get() != src)
         return status::bad;
 
-    // FIXME
+    terminate();
 
-    source_.reset();
+    source_ = {};
     return status::ok;
 }

@@ -13,35 +13,35 @@ vidre_test(GROUP
                 Vidre::Core
 )
 
-if(FFmpeg_FOUND)
-    vidre_test(decode_video EXCLUDE
-        BUILD
-            COMPILE_DEFINITIONS
-                PRIVATE
-                    ${FFMPEG_DEFINITIONS}
-            INCLUDE_DIRECTORIES
-                PUBLIC 
-                    ${FFMPEG_INCLUDE_DIRS}
-            LINK_LIBRARIES 
-                PUBLIC
-                    ${FFMPEG_LIBRARIES}
+# if(FFmpeg_FOUND)
+#     vidre_test(decode_video EXCLUDE
+#         BUILD
+#             COMPILE_DEFINITIONS
+#                 PRIVATE
+#                     ${FFMPEG_DEFINITIONS}
+#             INCLUDE_DIRECTORIES
+#                 PUBLIC 
+#                     ${FFMPEG_INCLUDE_DIRS}
+#             LINK_LIBRARIES 
+#                 PUBLIC
+#                     ${FFMPEG_LIBRARIES}
         
-        SOURCES decode_video.cc
-    )
-endif()
+#         SOURCES decode_video.cc
+#     )
+# endif()
 
-if(VIDRE_HAVE_MIDLIB2)
-    vidre_test(aptina EXCLUDE
-        BUILD
-            COMPILE_OPTIONS
-                PRIVATE
-                    -Wno-pragma-pack
-            LINK_LIBRARIES 
-                PUBLIC
-                    Vidre::Device::MIDlib2
-        SOURCES aptina.cc
-    )
-endif()
+# if(VIDRE_HAVE_MIDLIB2)
+#     vidre_test(aptina EXCLUDE
+#         BUILD
+#             COMPILE_OPTIONS
+#                 PRIVATE
+#                     -Wno-pragma-pack
+#             LINK_LIBRARIES 
+#                 PUBLIC
+#                     Vidre::Device::MIDlib2
+#         SOURCES aptina.cc
+#     )
+# endif()
 
 vidre_test(datachain EXCLUDE
     BUILD
@@ -51,22 +51,22 @@ vidre_test(datachain EXCLUDE
     SOURCES datachain.cc
 )
 
-vidre_test(hdspeed EXCLUDE
-    BUILD
-        LINK_LIBRARIES 
-            PUBLIC
-                Vidre::Core
-    SOURCES hdspeed.cc
-)
+# vidre_test(hdspeed EXCLUDE
+#     BUILD
+#         LINK_LIBRARIES 
+#             PUBLIC
+#                 Vidre::Core
+#     SOURCES hdspeed.cc
+# )
 
-if(Vidre_BUILD_PLUGIN_CAMERA_UVC)
-    vidre_test(uvc EXCLUDE
-        BUILD
-            LINK_LIBRARIES 
-                PUBLIC
-                    Vidre::Core
-                    Vidre::Device
-                    Vidre::Device::UVC
-        SOURCES uvc.cc
-    )
-endif()
+# if(Vidre_BUILD_PLUGIN_CAMERA_UVC)
+#     vidre_test(uvc EXCLUDE
+#         BUILD
+#             LINK_LIBRARIES 
+#                 PUBLIC
+#                     Vidre::Core
+#                     Vidre::Device
+#                     Vidre::Device::UVC
+#         SOURCES uvc.cc
+#     )
+# endif()

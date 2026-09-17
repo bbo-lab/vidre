@@ -30,15 +30,8 @@ source::~source() {
 }
 
 void source::terminate() {
-    // terminate ourselves
     if (source_task_ && source_task_->isrunning())
         source_task_->terminate();
-
-    // terminate sink (if applicable)
-    if (sink_) {
-        sink_->terminate();
-        sink_ = {};
-    }
 }
 
 void source::source_handler(shared<task> self, std::chrono::milliseconds pause) {
@@ -64,9 +57,12 @@ status source::connect(shared<io::sink> other, cap::flag_type cap) {
     if (sink_.get())  // already connected
         return status::bad;
 
+    // store fields, clear stats
     cap_[index::source] = cap;
     sink_ = other;
+    clearstats();
 
+    // start source task
     source_task_ = task::make([this](shared<task> self) {
         source_handler(self);
     });
@@ -78,8 +74,8 @@ status source::disconnect(const io::sink *snk) {
     if (sink_.get() != snk)
         return status::bad;
 
-    // FIXME
+    terminate();
 
-    sink_.reset();
+    sink_ = {};
     return status::ok;
 }
