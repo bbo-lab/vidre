@@ -27,6 +27,8 @@ using namespace vidre::io;
 
 source::~source() {
     terminate();
+    if (sink_)
+        sink_->disconnect(this);
 }
 
 void source::terminate() {

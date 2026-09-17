@@ -22,7 +22,6 @@
 #include "endpoint.hh"
 #include "source.hh"
 #include "sink.hh"
-#include "../packet.hh"
 
 using namespace vidre;
 using namespace vidre::io;
@@ -117,6 +116,12 @@ status endpoint::connect(shared<io::source> src, shared<io::sink> snk) {
         src->terminate();
         return status::bad;
     }
+
+    return status::ok;
+}
+
+status endpoint::disconnect(shared<io::source> src, shared<io::sink> snk) {
+    // FIXME
 
     return status::ok;
 }

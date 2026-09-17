@@ -27,6 +27,8 @@ using namespace vidre::io;
 
 sink::~sink() {
     terminate();
+    if (source_)
+        source_->disconnect(this);
 }
 
 void sink::terminate() {
@@ -80,6 +82,7 @@ status sink::disconnect(const io::source *src) {
         return status::bad;
 
     terminate();
+    source_->disconnect(this);
 
     source_ = {};
     return status::ok;

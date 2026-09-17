@@ -343,6 +343,10 @@ namespace vidre {
              * */
             static status connect(shared<io::source> src, shared<io::sink> snk);
 
+            /** Disconnect source from sink.
+             * */
+            static status disconnect(shared<io::source> src, shared<io::sink> snk);
+
         protected:
             /** Terminate endpoint.
              * This method is called to properly terminate the endpoint, releasing any
