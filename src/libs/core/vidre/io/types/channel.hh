@@ -37,11 +37,11 @@ namespace vidre {
         ///@{
 
         /** A channel for transforming and relaying packets between a sink and a source.
-         * 
-         * The channel acts as an intermediary that can transform packets before 
+         *
+         * The channel acts as an intermediary that can transform packets before
          * relaying them from the sink to the source. The default implementation
-         * only relays data directly from the source to the sink (without any 
-         * transformation). 
+         * only relays data directly from the source to the sink (without any
+         * transformation).
          *
          * By default, channels always use the push method on the sink side.
          *
@@ -70,6 +70,17 @@ namespace vidre {
             /** Default implementation for the put method.
              * */
             result put(shared<packet> p) override;
+
+        public:
+            /** Get the queue depth limit for this source.
+             * @note This method returns the queue depth limit of the connected source,
+             *       or 0 if no source is connected.
+             * */
+            size_type queue_depth() const noexcept override {
+                if (source_)
+                    return source_->queue_depth();
+                return 0;
+            }
 
         protected:
             void terminate() override;

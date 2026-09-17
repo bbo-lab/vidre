@@ -174,6 +174,7 @@ namespace vidre {
         std::mutex terminate_mutex_{};        ///< Mutex to protect access to termination handlers.
         std::vector<terminate_handler>
             terminate_handlers_{};  ///< List of termination handlers to be invoked when the thread is signaled to terminate.
+            
     public:
         /** Check if thread is running.
          * @returns @c true if the thread is running, @c false otherwise.
