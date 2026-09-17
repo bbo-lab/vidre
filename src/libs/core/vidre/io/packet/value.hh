@@ -31,7 +31,6 @@
 
 #include <variant>
 #include <string>
-#include <vector>
 
 namespace vidre {
 
@@ -42,14 +41,14 @@ namespace vidre {
         ///@{
 
         /** Represents a value packet in the VidRe framework.
-         * 
+         *
          * This class encapsulates various types of values, including plain data types
          * such as boolean, integer, natural, number, string, binary, UUID, ISO date,
          * timestamp, and UTC time. It provides mechanisms for emitting and absorbing
          * these values to and from memory views.
-         * 
-         * @note Except for the nil and binary type, all other types have a defined memory 
-         *       representation. In case of the binary type, the data is represented as a 
+         *
+         * @note Except for the nil and binary type, all other types have a defined memory
+         *       representation. In case of the binary type, the data is represented as a
          *       memory view, therefore, not owned.
          *
          * @todo Need to check if non-owning binary type handling is correct.
@@ -96,6 +95,8 @@ namespace vidre {
             value &operator=(value &&) = default;
             value(const header &hdr_) noexcept : packet{hdr_} {}
 
+            virtual ~value() = default;
+
             value(uint16_t stream = 0)  //
                 : packet{packet::major::value, minor::nil, stream, 0}, value_{} {}
             value(bool v, uint16_t stream = 0) : packet{packet::major::value, minor::boolean, stream, sizeof(int64_t)}, value_{v} {}
@@ -121,6 +122,9 @@ namespace vidre {
             value(const memory::view &v, uint16_t stream = 0)
                 : packet{packet::major::value, minor::binary, stream, static_cast<uint32_t>(v.size())}, value_{v} {}
 
+            value(const uuid &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::uuid, stream, sizeof(uuid)}, value_{v} {}
+
             value(const chrono::isodate &v, uint16_t stream = 0)
                 : packet{packet::major::value, minor::isodate, stream, sizeof(chrono::isodate)}, value_{v} {}
 
@@ -132,8 +136,6 @@ namespace vidre {
             value(const chrono::clock::time_point &v, uint16_t stream = 0)
                 : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utcstamp)}, value_{chrono::utcstamp(v)} {}
 
-            virtual ~value() = default;
-
         protected:
             value_type value_;
 
@@ -141,6 +143,7 @@ namespace vidre {
             void update() noexcept override;
             result emit(io::sink &f) override;
             void absorb(memory::view view, std::endian endian = std::endian::native) override;
+            settings::json to_json() const override;
 
         public:
             /** Get stored value.

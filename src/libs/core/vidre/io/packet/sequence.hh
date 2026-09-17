@@ -35,6 +35,52 @@ namespace vidre {
          * */
         ///@{
 
+        /** Sequence of packets.
+         * */
+        class VIDRE_CORE_VISIBILITY packet::sequence : public virtual packet {
+        public:
+            using list_type = std::vector<shared<packet>>;
+
+        public:
+            sequence(const sequence &) = delete;
+            sequence &operator=(const sequence &) = delete;
+            sequence(sequence &&) = default;
+            sequence &operator=(sequence &&) = default;
+            sequence(const header &hdr_) noexcept : packet{hdr_} {}
+
+            virtual ~sequence() = default;
+
+            sequence(uint16_t stream = 0) noexcept : io::packet{packet::major::sequence, packet::minor::group, stream, 0} {}
+
+        protected:
+            list_type packets_{};  ///< Sequence of packets contained within this sequence.
+
+        public:
+            void update() noexcept override;
+            result emit(io::sink &f) override;
+            void absorb(memory::view view, std::endian endian = std::endian::native) override;
+            settings::json to_json() const override;
+
+        public:
+            /** Get the sequence of packets contained within this sequence.
+             * */
+            const list_type &packets() const noexcept {
+                return packets_;
+            }
+
+            /** Get the packet cound contained within this sequence.
+             * */
+            std::size_t count() const noexcept {
+                return packets_.size();
+            }
+
+            /** Add packet.
+             * */
+            void add(shared<packet> pkt) {
+                packets_.push_back(std::move(pkt));
+            }
+        };
+
         ///@}
 
     }  // namespace io

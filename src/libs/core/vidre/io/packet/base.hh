@@ -29,6 +29,7 @@
 #include <vidre/util/uuid.hh>
 #include <vidre/util/chrono.hh>
 #include <vidre/io/types/core.hh>
+#include <vidre/settings/json.hh>
 
 #include <functional>
 #include <bit>
@@ -268,6 +269,12 @@ namespace vidre {
              * @param view The memory view containing the packet data.
              * */
             virtual void absorb(memory::view view, std::endian endian = std::endian::native);
+
+            /** Convert to JSON (if applicable).
+             * */
+            virtual settings::json to_json() const {
+                return {};
+            }
 
         public:
             struct factory;

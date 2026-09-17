@@ -78,6 +78,7 @@ vidre_library(vidrecore SHARED
                 vidre/io/packet/base.hh vidre/io/packet/base.cc
                 vidre/io/packet/factory.hh vidre/io/packet/factory.cc
                 vidre/io/packet/value.hh vidre/io/packet/value.cc
+                vidre/io/packet/sequence.hh vidre/io/packet/sequence.cc
                 vidre/io/packet/object.hh vidre/io/packet/object.cc
             vidre/io/file.hh vidre/io/file.cc
             # vidre/io/monitor.hh vidre/io/monitor.cc

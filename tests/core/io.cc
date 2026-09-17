@@ -117,32 +117,51 @@ TEST_CASE("packet.hh", "[vidre/io]") {
         REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);                 \
     }
 
-    // test_io_packet_value(bool, true);
-    // test_io_packet_value(bool, false);
-    // test_io_packet_value(int64_t, -123456789);
-    // test_io_packet_value(uint64_t, 123U);
-    // test_io_packet_value(double, 0.0);
-    // test_io_packet_value(double, -1.0);
-    // test_io_packet_value(double, 1.0);
-    // test_io_packet_value(double, 3.14159);
-    // test_io_packet_value(double, std::numeric_limits<double>::infinity());
-    // test_io_packet_value(double, -std::numeric_limits<double>::infinity());
-    // // test_io_packet_value(double, std::numeric_limits<double>::quiet_NaN());
-    // {
-    //     memory_sink sink;
-    //     double value = std::numeric_limits<double>::quiet_NaN();
-    //     packet::value a(value);
-    //     a.emit(sink);
-    //     if (0)
-    //         hexdump(sink.view());
-    //     REQUIRE(std::isnan(*reinterpret_cast<double *>(sink.data.data() + sizeof(packet::header))));
-    //     shared<io::packet> parsed = sink.parse();
-    //     REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);
-    //     REQUIRE(std::isnan(dynamic_cast<packet::value *>(parsed.get())->get<double>()));
-    // }
-    // test_io_packet_value(std::string, "Hello World!");
+#if 0
+    test_io_packet_value(bool, true);
+    test_io_packet_value(bool, false);
+    test_io_packet_value(int64_t, -123456789);
+    test_io_packet_value(uint64_t, 123U);
+    test_io_packet_value(double, 0.0);
+    test_io_packet_value(double, -1.0);
+    test_io_packet_value(double, 1.0);
+    test_io_packet_value(double, 3.14159);
+    test_io_packet_value(double, std::numeric_limits<double>::infinity());
+    test_io_packet_value(double, -std::numeric_limits<double>::infinity());
+    // test_io_packet_value(double, std::numeric_limits<double>::quiet_NaN());
+    {
+        memory_sink sink;
+        double value = std::numeric_limits<double>::quiet_NaN();
+        packet::value a(value);
+        a.emit(sink);
+        if (0)
+            hexdump(sink.view());
+        REQUIRE(std::isnan(*reinterpret_cast<double *>(sink.data.data() + sizeof(packet::header))));
+        shared<io::packet> parsed = sink.parse();
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);
+        REQUIRE(std::isnan(dynamic_cast<packet::value *>(parsed.get())->get<double>()));
+    }
+    test_io_packet_value(std::string, "Hello World!");
     test_io_packet_value(chrono::isodate, chrono::isodate::now());
     test_io_packet_value(chrono::utcstamp, chrono::utcstamp::now());
+#endif
+
+    {
+        memory_sink sink;
+
+        io::packet::sequence seq;
+        seq.add(io::packet::make<io::packet::value>(42));
+        seq.add(io::packet::make<io::packet::value>(std::string("hello world")));
+        seq.add(io::packet::make<io::packet::value>(uuid::make()));
+        seq.add(io::packet::make<io::packet::value>(chrono::utcstamp::now()));
+        seq.add(io::packet::make<io::packet::value>(chrono::isodate::now()));
+        seq.emit(sink);
+
+        hexdump(sink.view());
+
+        auto doc = seq.to_json();
+        std::cout << doc << std::endl;
+    }
 }
 
 #if 0

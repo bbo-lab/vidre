@@ -151,10 +151,10 @@ namespace vidre {
         /** Representation of an ISO 8601 date.
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY isodate {
-            char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSSSSZ").
+            char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSSSSZ", padded).
 
             operator std::string_view() const noexcept {
-                return std::string_view(iso, sizeof(iso));
+                return std::string_view(iso, sizeof("YYYYMMDDTHHMMSS.SSSSSSZ")-1);
             }
 
             operator memory::view() const noexcept {

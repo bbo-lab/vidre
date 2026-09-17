@@ -24,6 +24,7 @@
 #include "../types/sink.hh"
 #include "../../util/endian.hh"
 #include "vidre/memory/base.hh"
+#include "vidre/settings/json.hh"
 
 using namespace vidre;
 
@@ -136,6 +137,9 @@ io::result io::packet::value::emit(io::sink &f) {
 }
 
 void io::packet::value::absorb(memory::view view, std::endian endian) {
+    if (view.size() < size())
+        throw exception::runtime() << "packet data is truncated";
+
     switch (static_cast<minor>(hdr.type.minor)) {
         case minor::nil:
             break;
@@ -211,4 +215,47 @@ void io::packet::value::absorb(memory::view view, std::endian endian) {
             break;
         }
     }
+}
+
+settings::json io::packet::value::to_json() const {
+    switch (static_cast<minor>(hdr.type.minor)) {
+        case minor::nil:
+            break;
+        case minor::boolean: 
+            return std::get<bool>(value_);
+        case minor::integer: 
+            return std::get<int64_t>(value_);
+        case minor::natural: 
+            return std::get<uint64_t>(value_);
+        case minor::number: 
+            return std::get<double>(value_);
+        case minor::string: 
+            return std::get<std::string>(value_);
+        case minor::binary: {
+            // FIXME
+            return {};
+        }
+        case minor::uuid: {
+            return std::get<uuid>(value_).tostring();
+        }
+        case minor::isodate: {
+            return static_cast<std::string_view>(std::get<chrono::isodate>(value_));
+        }
+        case minor::timestamp: {
+            settings::json node;
+            auto value = std::get<chrono::timestamp>(value_);
+            node["sec"] = value.sec;
+            node["nsec"] = value.nsec;
+            return node;
+        }
+        case minor::utctime: {
+            settings::json node;
+            auto value = std::get<chrono::utcstamp>(value_);
+            node["sec"] = value.sec;
+            node["nsec"] = value.nsec;
+            return node;
+        }
+    }
+
+    throw exception::internal() << "should not be reached";
 }
