@@ -33,6 +33,11 @@ sink::~sink() {
 }
 
 void io::sink::start() {
+    // // event mechanism -> start sink task
+    // sink_task_ = task::make([this](shared<task> self) {
+    //     sink_handler(self);
+    // });
+
     throw exception::internal() << "method not implemented or capability erroneously advertised";
 }
 
@@ -42,6 +47,39 @@ void io::sink::stop() {
 
 status io::sink::unlink() {
     throw exception::internal() << "method not implemented or capability erroneously advertised";
+}
+
+status sink::attach(shared<io::source> other, cap::flag_type cap) {
+    if (source_.get())  // already connected
+        return status::bad;
+
+    // store fields, clear stats
+    cap_[index::sink] = cap;
+    source_ = other;
+    clearstats();
+
+    // push mechanism -> all done
+    if (!(cap & cap::event))
+        return status::ok;
+
+    return status::ok;
+}
+
+status sink::detach(const io::source *src) {
+    if (source_.get() != src)
+        return status::bad;
+
+    if (sink_task_->isrunning())
+        return status::bad;
+
+    // source must be disconnected first
+    if (source_->detach(this) == status::bad)
+        return status::bad;
+
+    source_->detach(this);
+
+    source_ = {};
+    return status::ok;
 }
 
 void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
@@ -62,37 +100,4 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
         for (size_type i = 0; i < *retval; ++i)
             put(source_->get());
     }
-}
-
-status sink::connect(shared<io::source> other, cap::flag_type cap) {
-    if (source_.get())  // already connected
-        return status::bad;
-
-    // store fields, clear stats
-    cap_[index::sink] = cap;
-    source_ = other;
-    clearstats();
-
-    // push mechanism -> all done
-    if (!(cap & cap::event))
-        return status::ok;
-
-    // event mechanism -> start sink task
-    sink_task_ = task::make([this](shared<task> self) {
-        sink_handler(self);
-    });
-
-    return status::ok;
-}
-
-status sink::disconnect(const io::source *src) {
-    if (source_.get() != src)
-        return status::bad;
-
-    // FIXME
-    // terminate();
-    source_->disconnect(this);
-
-    source_ = {};
-    return status::ok;
 }

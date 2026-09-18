@@ -196,20 +196,23 @@ namespace vidre {
             virtual void source_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
 
         protected:
-            /** Connect a sink to this source.
-             * @param other The sink to connect to.
+            /** Attach a sink to this source.
+             * @param snk The sink to connect to.
              * @param cap The capabilities of the connection.
+             * @returns `status::ok` on success, `status::bad` on failure (e.g. when already connected)
              *
              * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
-             *       source and sink capabilities. This connect method then sets up the actual connection. If additional
+             *       source and sink capabilities. This attach method then sets up the actual connection. If additional
              *       connection logic is required, the method can be overridden.
              * */
-            virtual status connect(shared<io::sink> other, cap::flag_type cap);
+            virtual status attach(shared<io::sink> snk, cap::flag_type cap);
 
-            /** Disconnect a sink from this source.
-             * @param snk The sink to disconnect.
+            /** Detach a sink from this source.
+             * @param snk The sink to detach.
+             * @returns `status::ok` on success (including when already disconnected), 
+             *          `status::bad` on failure (e.g. when still active).
              * */
-            virtual status disconnect(const io::sink *snk);
+            virtual status detach(const io::sink *snk);
 
         private:
             friend class sink;

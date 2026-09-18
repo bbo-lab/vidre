@@ -266,7 +266,7 @@ namespace vidre {
             cap getcap() const noexcept override {
                 return {cap::packet | cap::multi, {}};
             }
-            status connect(shared<io::sink> other, cap::flag_type cap) override;
+            status attach(shared<io::sink> other, cap::flag_type cap) override;
         };
 
         ///@}

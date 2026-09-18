@@ -108,12 +108,12 @@ status endpoint::connect(shared<io::source> src, shared<io::sink> snk) {
     }
 
     // connect source
-    if (src->connect(snk, src_cap) == status::bad)
+    if (src->attach(snk, src_cap) == status::bad)
         return status::bad;
 
     // connect sink
-    if (snk->connect(src, snk_cap) == status::bad) {
-        src->terminate();
+    if (snk->attach(src, snk_cap) == status::bad) {
+        src->detach(snk.get());
         return status::bad;
     }
 

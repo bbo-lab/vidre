@@ -33,6 +33,11 @@ source::~source() {
 }
 
 void io::source::start() {
+    // // start source task
+    // source_task_ = task::make([this](shared<task> self) {
+    //     source_handler(self);
+    // });
+
     throw exception::internal() << "method not implemented or capability erroneously advertised";
 }
 
@@ -42,6 +47,31 @@ void io::source::stop() {
 
 status io::source::unlink() {
     throw exception::internal() << "method not implemented or capability erroneously advertised";
+}
+
+status source::attach(shared<io::sink> other, cap::flag_type cap) {
+    if (sink_.get())  // already connected
+        return status::bad;
+
+    // store fields, clear stats
+    cap_[index::source] = cap;
+    sink_ = other;
+    clearstats();
+
+    return status::ok;
+}
+
+status source::detach(const io::sink *snk) {
+    if (sink_.get() != snk)
+        return status::ok;
+
+    if (source_task_->isrunning())
+        return status::bad;
+
+    sink_ = {};
+
+    // FIXME stop stats?
+    return status::ok;
 }
 
 void source::source_handler(shared<task> self, std::chrono::milliseconds pause) {
@@ -61,32 +91,4 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     while (not scope.isterminated()) {
         source_step();
     }
-}
-
-status source::connect(shared<io::sink> other, cap::flag_type cap) {
-    if (sink_.get())  // already connected
-        return status::bad;
-
-    // store fields, clear stats
-    cap_[index::source] = cap;
-    sink_ = other;
-    clearstats();
-
-    // start source task
-    source_task_ = task::make([this](shared<task> self) {
-        source_handler(self);
-    });
-
-    return status::ok;
-}
-
-status source::disconnect(const io::sink *snk) {
-    if (sink_.get() != snk)
-        return status::bad;
-
-    // FIXME
-    // terminate();
-
-    sink_ = {};
-    return status::ok;
 }
