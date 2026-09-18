@@ -134,11 +134,24 @@ namespace vidre {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
-        protected:
-            /** Terminate sink task if running.
+        public:
+            /** Start the sink.
+             * @throw exception::runtime if the sink cannot be started.
              * */
-            void terminate() override;
+            void start() override;
 
+            /** Stop the sink.
+             * @throw exception::runtime if the sink cannot be stopped.
+             * */
+            void stop() override;
+
+            /** Unlink the sink.
+             * This method disconnects the sink from any connected sources.
+             * @returns Status of the unlink operation.
+             * */
+            status unlink() override;
+
+        protected:
             /** Default thread handler.
              * @param pause Pause duration in milliseconds (used, for example, when waiting for the source to become active).
              * @see endpoint::isactive()

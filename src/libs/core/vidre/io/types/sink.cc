@@ -26,14 +26,22 @@ using namespace vidre;
 using namespace vidre::io;
 
 sink::~sink() {
-    terminate();
-    if (source_)
-        source_->disconnect(this);
+    // FIXME
+    // terminate();
+    // if (source_)
+    //     source_->disconnect(this);
 }
 
-void sink::terminate() {
-    if (sink_task_ && sink_task_->isrunning())
-        sink_task_->terminate();
+void io::sink::start() {
+    throw exception::internal() << "method not implemented or capability erroneously advertised";
+}
+
+void io::sink::stop() {
+    throw exception::internal() << "method not implemented or capability erroneously advertised";
+}
+
+status io::sink::unlink() {
+    throw exception::internal() << "method not implemented or capability erroneously advertised";
 }
 
 void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
@@ -81,7 +89,8 @@ status sink::disconnect(const io::source *src) {
     if (source_.get() != src)
         return status::bad;
 
-    terminate();
+    // FIXME
+    // terminate();
     source_->disconnect(this);
 
     source_ = {};

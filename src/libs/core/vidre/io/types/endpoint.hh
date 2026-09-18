@@ -76,10 +76,8 @@ namespace vidre {
                 sink = 0x01,              ///< Endpoint is a sink (i.e., it can consume data).
                 source = 0x02,            ///< Endpoint is a source (i.e., it can produce data).
                 channel = sink | source,  ///< Endpoint is a channel (i.e., it can both produce and consume data).
-                broadcast =
-                    0x04 | channel,  ///< Endpoint is a broadcast (i.e., it can combine multiple sources into a single sink).
-                aggregate =
-                    0x08 | channel,  ///< Endpoint is an aggregate (i.e., it can distribute a single source to multiple sinks).
+                fanout = 0x04 | channel,  ///< Endpoint is a fan-out (i.e., it can distribute a single source to multiple sinks).
+                fanin = 0x08 | channel,   ///< Endpoint is a fan-in (i.e., it can combine multiple sources into a single sink).
             };
 
             /** Endpoint capabilities.
@@ -131,8 +129,8 @@ namespace vidre {
                     uint16_t retval = 0;
                     retval |= to_underlying(type::sink) * !!static_cast<bool>(flags[sink]);
                     retval |= to_underlying(type::source) * !!static_cast<bool>(flags[source]);
-                    retval |= to_underlying(type::broadcast) * !!static_cast<bool>(flags[sink] & flag_type::multi);
-                    retval |= to_underlying(type::aggregate) * !!static_cast<bool>(flags[source] & flag_type::multi);
+                    retval |= to_underlying(type::fanout) * !!static_cast<bool>(flags[sink] & flag_type::multi);
+                    retval |= to_underlying(type::fanin) * !!static_cast<bool>(flags[source] & flag_type::multi);
                     return static_cast<type>(retval);
                 }
 
@@ -225,8 +223,21 @@ namespace vidre {
 
             cap cap_{};  ///< Assigned endpoint capabilities.
 
-        protected:
-            std::atomic<bool> terminating_{false};  ///< Avoids re-entrant termination of the endpoint.
+        public:
+            /** Store a packet.
+             * @param p The packet to store.
+             * @returns Number of bytes actually written (@c invalid for write failure).
+             * */
+            virtual result put(shared<packet> p) {
+                throw exception::internal() << "endpoint does not implement sink interface";
+            }
+
+            /** Retrieve a packet from the source.
+             * @returns The packet.
+             * */
+            virtual shared<packet> get() {
+                throw exception::internal() << "endpoint does not implement source interface";
+            }
 
         public:
             /** Check if the endpoint is valid (ie. usable).
@@ -317,27 +328,20 @@ namespace vidre {
                 return true;
             }
 
-            /** Store a packet.
-             * @param p The packet to store.
-             * @returns Number of bytes actually written (@c invalid for write failure).
+            /** Start endpoint.
+             * FIXME
              * */
-            virtual result put(shared<packet> p) {
-                throw exception::internal() << "endpoint does not implement sink interface";
-            }
+            virtual void start() = 0;
 
-            /** Retrieve a packet from the source.
-             * @returns The packet.
+            /** Stop endpoint.
+             * FIXME
              * */
-            virtual shared<packet> get() {
-                throw exception::internal() << "endpoint does not implement source interface";
-            }
+            virtual void stop() = 0;
 
-            /** Get packet manifest.
-             * FIXME (the "manifest" contains the streams configuration data)
+            /** Unlink this endpoint.
+             * This method disconnects the endpoint from any connected sources or sinks.
              * */
-            virtual packet *manifest() noexcept {
-                return nullptr;
-            }
+            virtual status unlink() = 0;
 
             /** Connect source to sink.
              * */
@@ -346,6 +350,13 @@ namespace vidre {
             /** Disconnect source from sink.
              * */
             static status disconnect(shared<io::source> src, shared<io::sink> snk);
+
+            /** Get packet manifest.
+             * FIXME (the "manifest" contains the streams configuration data)
+             * */
+            virtual shared<packet> manifest() noexcept {
+                return {};
+            }
 
         protected:
             /** Terminate endpoint.

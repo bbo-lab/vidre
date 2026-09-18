@@ -97,6 +97,23 @@ namespace vidre {
             }
 
         public:
+            /** Start the source.
+             * @throw exception::runtime if the source cannot be started.
+             * */
+            void start() override;
+
+            /** Stop the source.
+             * @throw exception::runtime if the source cannot be stopped.
+             * */
+            void stop() override;
+
+            /** Unlink the source.
+             * This method disconnects the source from any connected sinks.
+             * @returns Status of the unlink operation.
+             * */
+            status unlink() override;
+
+        public:
             /** Get the queue depth limit for this source.
              *
              * @return The maximum number of packets that can be buffered
@@ -137,10 +154,6 @@ namespace vidre {
             }
 
         protected:
-            /** Terminate source task (if running).
-             * */
-            void terminate() override;
-
             /** Notify the sink, that a packet is available for pulling.
              * @param count The number of packets available for pulling.
              * */

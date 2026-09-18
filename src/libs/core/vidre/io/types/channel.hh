@@ -82,8 +82,22 @@ namespace vidre {
                 return 0;
             }
 
-        protected:
-            void terminate() override;
+        public:
+            /** Start the sink.
+             * @throw exception::runtime if the sink cannot be started.
+             * */
+            void start() override;
+
+            /** Stop the sink.
+             * @throw exception::runtime if the sink cannot be stopped.
+             * */
+            void stop() override;
+
+            /** Unlink the sink.
+             * This method disconnects the sink from any connected sources.
+             * @returns Status of the unlink operation.
+             * */
+            status unlink() override;
         };
 
         ///@}
