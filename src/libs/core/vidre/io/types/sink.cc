@@ -85,12 +85,8 @@ status sink::detach(const io::source *src) {
 void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
     task::scope scope(self);
 
-    // wait, until active (ie. started).
-    while (not isactive() and not scope.isterminated()) {
-        std::this_thread::sleep_for(pause);
-    }
+    enter_handler();
 
-    // process loop
     while (not scope.isterminated()) {
         auto retval = source_->wait();
         if (retval == status::bad)
@@ -100,4 +96,6 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
         for (size_type i = 0; i < *retval; ++i)
             put(source_->get());
     }
+
+    leave_handler();
 }

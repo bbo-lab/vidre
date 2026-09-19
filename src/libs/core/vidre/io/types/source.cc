@@ -82,13 +82,11 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
         ev->cancel();
     });
 
-    // wait, until active (ie. started).
-    while (not isactive() and not scope.isterminated()) {
-        std::this_thread::sleep_for(pause);
-    }
+    enter_handler();
 
-    // process loop
     while (not scope.isterminated()) {
         source_step();
     }
+
+    leave_handler();
 }

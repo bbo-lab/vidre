@@ -320,12 +320,20 @@ namespace vidre {
              * */
             virtual void setup(const settings::json &config) {}
 
-            /** Check if the endpoint is active (i.e., data is or can be flowing).
-             * Default implementation returns true, meaning the endpoint is
-             * considered always active. Override in derived classes.
+            /** Start/stop order.
+             * @returns The start/stop order of this endpoint (0 for highest), if defined (default: undefined).
+             * 
+             * @note Endpoints with lower order values are started _later_ but stopped _earlier_.
+             *       (cf. with camera devices where a camera that triggers other cameras must be
+             *       started last, so that neighboring cameras will not miss the trigger signal.)
+             * 
+             * @internal
+             * An undefined return value is generally interpreted in a way that automatically starts the 
+             * endpoint on attachment and stops it on detachment.
+             * @endinternal
              * */
-            virtual bool isactive() const noexcept {
-                return true;
+            virtual std::optional<unsigned> order() const noexcept {
+                return {};
             }
 
             /** Start endpoint.
@@ -359,13 +367,15 @@ namespace vidre {
             }
 
         protected:
-            /** Terminate endpoint.
-             * This method is called to properly terminate the endpoint, releasing any
-             * resources and performing necessary cleanup.
-             *
-             * @note This method must block as long as the endpoint is active.
+            /** Called when entering the handler context.
+             * This method is invoked at the beginning of the handler loop.
              * */
-            virtual void terminate() {}
+            virtual void enter_handler() {}
+
+            /** Called when leaving the handler context.
+             * This method is invoked at the end of the handler loop.
+             * */
+            virtual void leave_handler() {}
 
         private:
             friend class manager;
