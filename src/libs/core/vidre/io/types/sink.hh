@@ -80,8 +80,7 @@ namespace vidre {
              * @param buf Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type write(const memory::view &buf) {
-                // FIXME why is this const memory::view & ?
+            virtual offset_type write(const memory::view &buf) { // FIXME why is this const memory::view & ?
                 return invalid<offset_type>;
             }
 
@@ -91,6 +90,13 @@ namespace vidre {
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
             virtual result put(const memory::view &v) {
+                if (not issink(cap::chunk)) {
+                    if (getcap().getsink(cap::chunk))
+                        throw exception::runtime() << "sink is not configured for chunk-based transmission";
+                    else
+                        throw exception::logic() << "sink is not capable of chunk-based transmission";
+                }
+
                 result retval = write(v);
 
                 // update stats
@@ -126,11 +132,11 @@ namespace vidre {
                 return put({sizeof(T) * N, reinterpret_cast<const memory::const_pointer>(arr)});
             }
 
-            /** Transfer a data packet.
+            /** Push a data packet.
              * @param p Shared pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            result put(shared<packet> p) override {
+            result push(shared<packet> p) override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 

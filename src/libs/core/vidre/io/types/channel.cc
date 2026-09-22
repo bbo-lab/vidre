@@ -23,10 +23,10 @@
 
 using namespace vidre;
 
-io::result io::channel::put(shared<packet> p) {
+io::result io::channel::push(shared<packet> p) {
     io::result retval = invalid<offset_type>;
     if (sink_) {
-        retval = sink_->put(p);
+        retval = sink_->push(p);
         stats_.update(p, retval);
     }
     return retval;

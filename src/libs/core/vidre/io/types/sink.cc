@@ -83,7 +83,7 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
 
         // FIXME this logic needs to use source_->queue_depth()
         for (size_type i = 0; i < *retval; ++i)
-            put(source_->get());
+            push(source_->pull());
     }
 
     leave_handler();

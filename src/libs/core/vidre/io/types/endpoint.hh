@@ -97,8 +97,9 @@ namespace vidre {
 
                     // Connection capabilities
                     push = 0x0010,      ///< Supporting push method (where source pushes data to sink).
-                    nonblock = 0x0020,  ///< Source requires non-blocking push, sink support non-blocking mode.
-                    event = 0x0040,     ///< Supporting event-based transmission.
+                    event = 0x0020,     ///< Supporting event-based transmission (sink may pull, event-driven).
+                    pull = 0x0020,      ///< Supporting pull method (sink pulls data from source, event-driven).
+                    nonblock = 0x0040,  ///< Source requires non-blocking push, sink support non-blocking mode.
                     multi = 0x0080,     ///< Endpoint can be connected to multiple other endpoints (e.g., for broadcasting).
 
                     // Behavioral flags for diagnostic purposes
@@ -148,6 +149,22 @@ namespace vidre {
                     return flags[idx & 1];
                 }
                 ///@}
+
+                /** Check sink capability bits.
+                 * @param bit The capability bit(s) to check.
+                 * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
+                 * */
+                bool getsink(cap::flag_type bit) const noexcept {
+                    return !!static_cast<bool>(flags[endpoint::sink] & bit);
+                }
+
+                /** Check source capability bits.
+                 * @param bit The capability bit(s) to check.
+                 * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
+                 * */
+                bool getsource(cap::flag_type bit) const noexcept {
+                    return !!static_cast<bool>(flags[endpoint::source] & bit);
+                }
 
                 /** Get capabilities setup.
                  * @returns The capabilities setup in JSON format.
@@ -224,18 +241,18 @@ namespace vidre {
             cap cap_{};  ///< Assigned endpoint capabilities.
 
         public:
-            /** Store a packet.
+            /** Push a packet to the sink.
              * @param p The packet to store.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual result put(shared<packet> p) {
+            virtual result push(shared<packet> p) {
                 throw exception::internal() << "endpoint does not implement sink interface";
             }
 
-            /** Retrieve a packet from the source.
-             * @returns The packet.
+            /** Pull a packet from the source.
+             * @returns Shared pointer to the retrieved packet.
              * */
-            virtual shared<packet> get() {
+            virtual shared<packet> pull() {
                 throw exception::internal() << "endpoint does not implement source interface";
             }
 
@@ -263,7 +280,9 @@ namespace vidre {
             /** Get capabilities of the endpoint.
              * @note This method returns the capabilities of the /unconnected/ endpoint.
              * */
-            virtual cap getcap() const noexcept = 0;
+            virtual cap getcap() const noexcept {
+                return {};
+            }
 
             /** Check sink capabilities.
              * @param bit The capability bit to check (default: any).
@@ -271,7 +290,7 @@ namespace vidre {
              * @note If `bit` is not specified, this method checks if the endpoint is a sink.
              * */
             bool issink(cap::flag_type bit = cap::any) const noexcept {
-                return !!static_cast<bool>(cap_.flags[endpoint::sink] & bit);
+                return cap_.getsink(bit);
             }
 
             /** Check if object provides a source interface.
@@ -280,7 +299,7 @@ namespace vidre {
              * @note If `bit` is not specified, this method checks if the endpoint is a source.
              * */
             bool issource(cap::flag_type bit = cap::any) const noexcept {
-                return !!static_cast<bool>(cap_.flags[endpoint::source] & bit);
+                return cap_.getsource(bit);
             }
 
             /** Get endpoint statistics.
@@ -322,13 +341,13 @@ namespace vidre {
 
             /** Start/stop order.
              * @returns The start/stop order of this endpoint (0 for highest), if defined (default: undefined).
-             * 
+             *
              * @note Endpoints with lower order values are started _later_ but stopped _earlier_.
              *       (cf. with camera devices where a camera that triggers other cameras must be
              *       started last, so that neighboring cameras will not miss the trigger signal.)
-             * 
+             *
              * @internal
-             * An undefined return value is generally interpreted in a way that automatically starts the 
+             * An undefined return value is generally interpreted in a way that automatically starts the
              * endpoint on attachment and stops it on detachment.
              * @endinternal
              * */
@@ -353,7 +372,7 @@ namespace vidre {
              * FIXME (the "manifest" contains the streams configuration data)
              * */
             virtual shared<packet> manifest() noexcept {
-                return {}; // FIXME
+                return {};  // FIXME
             }
 
         protected:

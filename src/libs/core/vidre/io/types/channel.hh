@@ -69,7 +69,7 @@ namespace vidre {
 
             /** Default implementation for the put method.
              * */
-            result put(shared<packet> p) override;
+            result push(shared<packet> p) override;
 
         public:
             /** Get the queue depth limit for this source.

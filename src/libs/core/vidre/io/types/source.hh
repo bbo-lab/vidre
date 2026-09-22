@@ -78,6 +78,13 @@ namespace vidre {
              * @returns Number of bytes actually read (@c invalid for read failure).
              * */
             virtual result get(memory::area v) {
+                if (not issource(cap::chunk)) {
+                    if (getcap().getsink(cap::chunk))
+                        throw exception::runtime() << "source is not configured for chunk-based transmission";
+                    else
+                        throw exception::logic() << "source is not capable of chunk-based transmission";
+                }
+
                 result retval = read(v);
 
                 if (retval)
@@ -88,11 +95,11 @@ namespace vidre {
                 return retval;
             }
 
-            /** Get a packet from the source.
+            /** Pull a packet from the source.
              * @throw exception::logic if source is not packet based.
              * @returns Shared pointer to the retrieved packet.
              * */
-            shared<packet> get() override {
+            shared<packet> pull() override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
@@ -199,7 +206,7 @@ namespace vidre {
 
             /** Detach a sink from this source.
              * @param snk The sink to detach.
-             * @returns `status::ok` on success (including when already disconnected), 
+             * @returns `status::ok` on success (including when already disconnected),
              *          `status::bad` on failure (e.g. when still active).
              * */
             virtual status detach(const io::sink *snk);

@@ -279,7 +279,7 @@ namespace vidre {
             virtual ~output() = default;
 
         protected:
-            void push(shared<packet> msg) noexcept;
+            void send(shared<packet> msg) noexcept;
 
         public:
             cap getcap() const noexcept override {

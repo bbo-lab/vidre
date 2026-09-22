@@ -153,7 +153,7 @@ void log::handler::emit() noexcept {
     log::source->push(std::move(msg_));
 }
 
-void log::output::push(shared<packet> msg) noexcept {
+void log::output::send(shared<packet> msg) noexcept {
     // FIXME
 }
 

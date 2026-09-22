@@ -19,7 +19,7 @@ public:
         return {cap::packet | cap::push | cap::event, {}};
     }
 
-    shared<io::packet> get() override {
+    shared<io::packet> pull() override {
         stats_.packets.dropped--;
         stats_.packets.transmitted++;
         stats_.bytes.transmitted += packet_->size();
@@ -32,7 +32,7 @@ protected:
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
         if (cap_[index::source] & cap::push) {
-            auto retval = sink_->put(packet_);
+            auto retval = sink_->push(packet_);
             stats_.update(packet_, retval);
         }
         else {
@@ -96,7 +96,7 @@ public:
         return {{}, cap::packet | cap::push | cap::event};
     }
 
-    io::result put(shared<io::packet> p) override {
+    io::result push(shared<io::packet> p) override {
         return p->emit(*this);
     }
 };
