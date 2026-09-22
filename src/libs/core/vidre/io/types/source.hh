@@ -97,16 +97,6 @@ namespace vidre {
             }
 
         public:
-            /** Start the source.
-             * @throw exception::runtime if the source cannot be started.
-             * */
-            void start() override;
-
-            /** Stop the source.
-             * @throw exception::runtime if the source cannot be stopped.
-             * */
-            void stop() override;
-
             /** Unlink the source.
              * This method disconnects the source from any connected sinks.
              * @returns Status of the unlink operation.

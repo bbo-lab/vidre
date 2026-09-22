@@ -336,16 +336,6 @@ namespace vidre {
                 return {};
             }
 
-            /** Start endpoint.
-             * FIXME
-             * */
-            virtual void start() = 0;
-
-            /** Stop endpoint.
-             * FIXME
-             * */
-            virtual void stop() = 0;
-
             /** Unlink this endpoint.
              * This method disconnects the endpoint from any connected sources or sinks.
              * */
@@ -363,7 +353,7 @@ namespace vidre {
              * FIXME (the "manifest" contains the streams configuration data)
              * */
             virtual shared<packet> manifest() noexcept {
-                return {};
+                return {}; // FIXME
             }
 
         protected:

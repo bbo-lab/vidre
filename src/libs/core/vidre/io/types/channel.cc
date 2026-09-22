@@ -32,14 +32,6 @@ io::result io::channel::put(shared<packet> p) {
     return retval;
 }
 
-void io::channel::start() {
-    throw exception::internal() << "method not implemented or capability erroneously advertised";
-}
-
-void io::channel::stop() {
-    throw exception::internal() << "method not implemented or capability erroneously advertised";
-}
-
 status io::channel::unlink() {
     throw exception::internal() << "method not implemented or capability erroneously advertised";
 }

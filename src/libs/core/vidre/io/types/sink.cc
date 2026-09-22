@@ -32,36 +32,25 @@ sink::~sink() {
     //     source_->disconnect(this);
 }
 
-void io::sink::start() {
-    // // event mechanism -> start sink task
-    // sink_task_ = task::make([this](shared<task> self) {
-    //     sink_handler(self);
-    // });
-
-    throw exception::internal() << "method not implemented or capability erroneously advertised";
-}
-
-void io::sink::stop() {
-    throw exception::internal() << "method not implemented or capability erroneously advertised";
-}
-
 status io::sink::unlink() {
-    throw exception::internal() << "method not implemented or capability erroneously advertised";
+    // FIXME stop handler
+    return detach(source_.get());
 }
 
 status sink::attach(shared<io::source> other, cap::flag_type cap) {
-    if (source_.get())  // already connected
+    if (source_)  // already connected
         return status::bad;
 
     // store fields, clear stats
     cap_[index::sink] = cap;
-    source_ = other;
     clearstats();
 
-    // push mechanism -> all done
-    if (!(cap & cap::event))
-        return status::ok;
+    // start event handler if needed
+    if (cap & cap::event) {
+        // FIXME start handler
+    }
 
+    source_ = other;
     return status::ok;
 }
 

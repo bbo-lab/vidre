@@ -33,6 +33,13 @@ static io::packet::registry<lognew::packet>                        //
                        {static_cast<uint16_t>(lognew::level_min),  //
                         static_cast<uint16_t>(lognew::level_max)});
 
+lognew::handler::~handler() {
+    io::standard::error.write({msg_->message.size(), msg_->message.data()});
+    // FIXME ship packet
+}   
+
+
+
 // ============================================================================
 // ============================================================================
 // ============================================================================

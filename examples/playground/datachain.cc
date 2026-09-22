@@ -2,6 +2,7 @@
 #include <thread>
 #include <vidre/io.hh>
 #include "vidre/io/types/channel.hh"
+#include <vidre/log.hh>
 
 using namespace vidre;
 
@@ -101,13 +102,19 @@ public:
 };
 
 int main(int argc, char *argv[]) {
+    lognew::handler log(lognew::level::info);
+    log << "Starting the data chain example.\n";
+
+#if 0
     auto inp = io::endpoint::make<sensor>();
-    auto chp = io::endpoint::make<io::channel>();
+    // auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
 
-    io::endpoint::connect(chp, outp);
-    io::endpoint::connect(inp, chp);
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    // io::endpoint::connect(chp, outp);
+    // io::endpoint::connect(inp, chp);
+    io::endpoint::connect(inp, outp);
 
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+#endif
     return 0;
 }

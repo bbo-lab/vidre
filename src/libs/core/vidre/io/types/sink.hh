@@ -135,19 +135,6 @@ namespace vidre {
             }
 
         public:
-            /** Start the sink.
-             * @throw exception::runtime if the sink cannot be started.
-             *
-             * @note Sinks are generally automatically started. Only sources require an explicit "start()".
-             *
-             * */
-            void start() override;
-
-            /** Stop the sink.
-             * @throw exception::runtime if the sink cannot be stopped.
-             * */
-            void stop() override;
-
             /** Unlink the sink.
              *
              * This method disconnects the sink from any connected endpoints.

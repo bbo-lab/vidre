@@ -120,7 +120,6 @@
 
 #include <limits>
 #include <vector>
-#include <queue>
 #include <string>
 #include <string_view>
 
@@ -247,7 +246,6 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY source : public virtual io::source {
         public:
-            
         public:
             source() = default;
 
@@ -260,12 +258,12 @@ namespace vidre {
 
         protected:
         public:
-
-
         public:
             cap getcap() const noexcept override {
                 return {cap::packet | cap::multi, {}};
             }
+
+        protected:
             status attach(shared<io::sink> other, cap::flag_type cap) override;
         };
 
@@ -302,9 +300,7 @@ namespace vidre {
             handler &operator=(const handler &) = delete;
             handler(handler &&) = delete;
             handler &operator=(handler &&) = delete;
-            ~handler() {
-                // FIXME ship packet
-            }
+            ~handler();
 
             /** Constructor.
              * @param lvl The log level.
@@ -313,6 +309,8 @@ namespace vidre {
              * @note The stream ID (used in the distributed log packets) is 0 by default
              *       (and, indeed, 0 is globally reserved for log messages). If a
              *       different stream ID is needed, it must be explicitly specified.
+             *
+             * @todo it seems unwise to be able to change the stream ID
              * */
             handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
 
