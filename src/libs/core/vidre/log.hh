@@ -134,6 +134,8 @@
 namespace vidre {
 
     namespace log {
+        // forward declarations
+        class trace;
 
         /* TODO:
         - the log system needs to be transformed to use the packet system
@@ -260,7 +262,6 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY output : public virtual io::source {
         public:
-        public:
             output() = default;
 
             output(const output &) = delete;
@@ -284,6 +285,7 @@ namespace vidre {
 
         private:
             friend class handler;
+            friend class trace;
         };
 
         /**@addtogroup api-core-log-details
@@ -296,7 +298,13 @@ namespace vidre {
          * */
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            { t.operator()(outs) } -> std::same_as<Stream &>;
+            {
+                t.operator()(outs)
+            } -> std::same_as<Stream &>;
+        } or requires (Stream &outs, T &&t) {
+            {
+                t(outs)
+            } -> std::same_as<Stream &>;
         };
 
         /** Log message handler.
@@ -314,7 +322,7 @@ namespace vidre {
          * err << "An error occurred.\n";
          * err << "And this is what went wrong: ...\n";
          * @endcode
-         * 
+         *
          * @note The log message (or packet, respectively) is emitted when log object goes out of scope.
          * */
         class VIDRE_CORE_VISIBILITY handler {
@@ -345,9 +353,16 @@ namespace vidre {
              * */
             void emit() noexcept;
 
+            /** Write message to the packet buffer.
+             * @param msg The message to write.
+             * */
+            void write(const std::string_view &msg) noexcept {
+                msg_->message += msg;
+            }
+
         public:
             handler &operator<<(const std::string_view &msg) noexcept {
-                msg_->message += msg;
+                write(msg);
                 return *this;
             }
 
@@ -447,9 +462,9 @@ namespace vidre {
 #if defined(DEBUG) or defined(DOXYGEN)
         /** Log trace.
          *
-         * Tracing is costly and should be used judiciously; it is only enabled when 
+         * Tracing is costly and should be used judiciously; it is only enabled when
          * the @c DEBUG macro is defined during compilation.
-         * 
+         *
          * @note In contrast to the default handling, trace messages (or packets) are
          *       emitted per line.
          *
@@ -503,19 +518,13 @@ namespace vidre {
             ~trace();
 
         protected:
+            std::string message_;     ///< Temporary message buffer.
             std::size_t follow_ = 0;  ///< Indentation depth (0 counts as not traced).
 
         protected:
-            void emit(const std::string_view &txt) noexcept {
-                // FIXME
-                // if (io::stream::maxthreshold < level_)
-                //     return;
+            void emit(bool last = false) noexcept;
 
-                // if (follow_ == 0)
-                //     return;
-
-                // handler::emit(txt, follow_ - 1);
-            }
+            void emit(const std::string_view &txt) noexcept;
 
         public:
             trace &operator<<(const std::string_view &msg) noexcept {

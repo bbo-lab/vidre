@@ -20,30 +20,30 @@ void block_wise() {
 //! [block-wise]
 
 //! [tracing]
-// void level3() {
-//     log::trace tr;
+void level3() {
+    log::trace tr;
 
-//     tr << "entering level 3\n";
-//     tr << "leaving level 3\n";
-// }
+    tr << "entering level 3\n";
+    tr << "leaving level 3\n";
+}
 
-// void level2() {
-//     log::trace tr;
-//     tr << "entering level 2\n";
+void level2() {
+    log::trace tr;
+    tr << "entering level 2\n";
 
-//     level3();
+    level3();
 
-//     tr << "leaving level 2\n";
-// }
+    tr << "leaving level 2\n";
+}
 
-// void level1() {
-//     log::trace tr;
-//     tr << "entering level 1\n";
+void level1() {
+    log::trace tr;
+    tr << "entering level 1\n";
 
-//     level2();
+    level2();
 
-//     tr << "leaving level 1\n";
-// }
+    tr << "leaving level 1\n";
+}
 
 void tracing() {
 #if defined(DEBUG)
@@ -53,15 +53,15 @@ void tracing() {
         // // set default streamer threshold to "trace"
         // log::io::stream::threshold(0, log::level::trace);
 
-        // // set wildcard pattern for what to trace
-        // log::trace::pattern("*/core/*");
+        // set wildcard pattern for what to trace
+        log::trace::pattern("*/core/*");
 
-        // // trace...
-        // log::debug() << "starting to trace\n";
-        // log::trace tr;
-        // tr << "tracing 3 levels\n";
+        // trace...
+        log::debug() << "starting to trace\n";
+        log::trace tr;
+        tr << "tracing 3 levels\n";
 
-        // level1();
+        level1();
     }
     log::notice() << "done tracing\n";
 #endif

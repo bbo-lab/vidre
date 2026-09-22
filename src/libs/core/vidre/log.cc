@@ -65,7 +65,7 @@ static const style_tag vidre_log_style_tagged[log::level_n] = {
     {"[STATUS] ", {}},    //
     {"[INFO] ", {}},      //
     {"[DEBUG] ", {}},     //
-    {"", {}}              //
+    {"[TRACE]", {}}       //
 };
 
 static const std::string_view vidre_log_indent_s = "                                                                        ";
@@ -113,7 +113,7 @@ void vidre_log_emit_standard(log::level lvl, const std::string &msg, unsigned in
     if (level > log::level_max)
         level = log::level_max;
 
-    if ((lvl <= log::level::debug) && vidre::os::isatty())
+    if (/*(lvl <= log::level::debug) &&*/ vidre::os::isatty())
         vidre_log_emit_standard(vidre_log_style_color[level], msg, indent);
     else {
         auto tag = vidre_log_style_tagged[level];
@@ -176,9 +176,8 @@ log::trace::trace(std::source_location source) noexcept : log::handler{log::leve
     // if (io::stream::maxthreshold < level_)
     //     return;
 
-    if ((stack.size() == 0) and not(std::regex_match(source.file_name(), match))) {
+    if (not follow_ and not std::regex_match(source.file_name(), match))
         return;
-    }
 
     stack.push_back(source);
 
@@ -190,9 +189,50 @@ log::trace::trace(std::source_location source) noexcept : log::handler{log::leve
 log::trace::~trace() {
     if (stack.size() > 0)
         stack.pop_back();
+
+    emit(true);
 }
 
+void log::trace::emit(bool last) noexcept {
+    // empty log messages are ignored
+    if (message_.empty())
+        return;
+
+    if (last && (message_.end()[-1] != '\n'))
+        message_ += '\n';
+
+#if defined(DEBUG)
+    // emit the log message using the standard output function
+    vidre_log_emit_standard(static_cast<log::level>(level::trace), message_, follow_-1);
 #endif
+
+    // emit packet
+    write(message_);
+    log::source->push(std::move(msg_));
+    if (not last)
+        msg_ = packet::make(level::trace, 0);
+#endif
+}
+
+void log::trace::emit(const std::string_view &txt) noexcept {
+    // FIXME
+    // if (io::stream::maxthreshold < level_)
+    //     return;
+
+    if (follow_ == 0)
+        return;
+
+    auto eol = txt.find_last_of('\n');
+    if (eol == std::string_view::npos) {
+        message_ += txt;
+        return;
+    }
+
+    message_ += txt.substr(0, eol + 1);
+    emit();
+
+    message_ = txt.substr(eol + 1);
+}
 
 #if 0
 
