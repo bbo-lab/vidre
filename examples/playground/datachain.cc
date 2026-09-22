@@ -102,9 +102,6 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    lognew::handler log(lognew::level::info);
-    log << "Starting the data chain example.\n";
-
 #if 0
     auto inp = io::endpoint::make<sensor>();
     // auto chp = io::endpoint::make<io::channel>();

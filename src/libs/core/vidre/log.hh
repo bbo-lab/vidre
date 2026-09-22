@@ -133,7 +133,7 @@
 
 namespace vidre {
 
-    namespace lognew {
+    namespace log {
 
         /* TODO:
         - the log system needs to be transformed to use the packet system
@@ -181,6 +181,14 @@ namespace vidre {
         constexpr static unsigned level_default = to_underlying(level::info);
 #endif
         ///@endinternal
+
+        /** End-of-line.
+         * */
+        constexpr static std::string_view endl = {"\n", 1};
+
+        /**@internal Indentation.
+         * */
+        constexpr static std::string_view indent_s = {"    ", 4};
 
         /** Log-message packet.
          * @note In contrast to other packets, the log packet is not "groupable",
@@ -232,32 +240,39 @@ namespace vidre {
              * @returns The log level of this message.
              * */
             template <std::endian E = std::endian::native>
-            lognew::level getlevel() const noexcept {
-                return static_cast<lognew::level>(hdr.type.minor);
+            log::level getlevel() const noexcept {
+                return static_cast<log::level>(hdr.type.minor);
             }
 
         private:
             friend class handler;
         };
 
-        /** Log message source.
+        ///@}
+
+        /**@addtogroup api-core-log-details
+         * */
+        ///@{
+
+        /** Log message source implementation.
          *
          * @see io::source
          * */
-        class VIDRE_CORE_VISIBILITY source : public virtual io::source {
+        class VIDRE_CORE_VISIBILITY output : public virtual io::source {
         public:
         public:
-            source() = default;
+            output() = default;
 
-            source(const source &) = delete;
-            source &operator=(const source &) = delete;
-            source(source &&) = delete;
-            source &operator=(source &&) = delete;
+            output(const output &) = delete;
+            output &operator=(const output &) = delete;
+            output(output &&) = delete;
+            output &operator=(output &&) = delete;
 
-            virtual ~source() = default;
+            virtual ~output() = default;
 
         protected:
-        public:
+            void push(shared<packet> msg) noexcept;
+
         public:
             cap getcap() const noexcept override {
                 return {cap::packet | cap::multi, {}};
@@ -265,9 +280,11 @@ namespace vidre {
 
         protected:
             status attach(shared<io::sink> other, cap::flag_type cap) override;
-        };
+            status detach(const io::sink *snk) override;
 
-        ///@}
+        private:
+            friend class handler;
+        };
 
         /**@addtogroup api-core-log-details
          * */
@@ -279,43 +296,54 @@ namespace vidre {
          * */
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            {
-                t.operator()(outs)
-            } -> std::same_as<Stream &>;
+            { t.operator()(outs) } -> std::same_as<Stream &>;
         };
 
         /** Log message handler.
          *
-         * This class handles logging and, as well, is the base class for
-         * the individual implementations (see @c log::fatal, etc.);
+         * This class handles all log messages. For readability it is recommended to use
+         * the individual implementations (see @c log::fatal, etc.).
          *
-         * @note The handler class is not meant to be instantiated directly.
-         *       Use the specific log level classes (e.g., @c log::fatal) instead.
-         *
+         * Typical usage:
+         * @code{.cpp}
+         * log::error() << "An error occurred.";
+         * @endcode
+         * or
+         * @code{.cpp}
+         * log::error err;
+         * err << "An error occurred.\n";
+         * err << "And this is what went wrong: ...\n";
+         * @endcode
+         * 
+         * @note The log message (or packet, respectively) is emitted when log object goes out of scope.
          * */
         class VIDRE_CORE_VISIBILITY handler {
         public:
             handler() = delete;
+
             handler(const handler &) = delete;
             handler &operator=(const handler &) = delete;
             handler(handler &&) = delete;
             handler &operator=(handler &&) = delete;
-            ~handler();
+
+            ~handler() {
+                emit();
+            }
 
             /** Constructor.
              * @param lvl The log level.
-             * @param stream The stream ID (default is 0).
-             *
-             * @note The stream ID (used in the distributed log packets) is 0 by default
-             *       (and, indeed, 0 is globally reserved for log messages). If a
-             *       different stream ID is needed, it must be explicitly specified.
-             *
-             * @todo it seems unwise to be able to change the stream ID
              * */
-            handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
+            handler(level lvl) noexcept : msg_{packet::make(lvl, 0)} {};
 
         protected:
             shared<packet> msg_{};  ///< Log message packet.
+
+        protected:
+            /** Packet emission method.
+             * This method is responsible for emitting the log message packet.
+             * It is called automatically when the log handler goes out of scope.
+             * */
+            void emit() noexcept;
 
         public:
             handler &operator<<(const std::string_view &msg) noexcept {
@@ -337,10 +365,191 @@ namespace vidre {
             }
         };
 
+        /** Helper for log-level classes.
+         * @ingroup api-core-log-details */
+#define VIDRE_CORE_LOG_IMPL(T)                       \
+    class VIDRE_CORE_VISIBILITY T : public handler { \
+    public:                                          \
+        T() noexcept : handler(level::T) {}          \
+    };
+
+        /** Null sink.
+         * @ingroup api-core-log-details */
+        class VIDRE_CORE_VISIBILITY null {
+        public:
+            null() = default;
+            template <typename V>
+            null &operator<<(const V &value) noexcept {
+                return *this;
+            }
+        };
+
         ///@}
 
-    }  // namespace lognew
+        /**@addtogroup api-core-log-if
+         * */
+        ///@{
 
+        /** Log message source.
+         * */
+        extern shared<output> source;
+
+        /** Fatal log message.
+         * @note
+         *      The destructor here calls @c std::terminate.
+         * */
+        class VIDRE_CORE_VISIBILITY fatal : public handler {
+        public:
+            fatal() noexcept : handler(log::level::fatal) {}
+            [[noreturn]] ~fatal() {
+                std::terminate();
+            }
+        };
+
+        /** Alert (requiring user interaction).
+         * @see log::level::alert */
+        VIDRE_CORE_LOG_IMPL(alert);
+        /** Critical condition (such as hardware failure).
+         * @see log::level::critical */
+        VIDRE_CORE_LOG_IMPL(critical);
+        /** Errors.
+         * @see log::level::error */
+        VIDRE_CORE_LOG_IMPL(error);
+        /** Warnings.
+         * @see log::level::warning */
+        VIDRE_CORE_LOG_IMPL(warning);
+        /** Noteworthy condition.
+         * @see log::level::notice */
+        VIDRE_CORE_LOG_IMPL(notice);
+        /** Status message.
+         * @see log::level::status */
+        VIDRE_CORE_LOG_IMPL(status);
+        /** Purely informational.
+         * @see log::level::info */
+        VIDRE_CORE_LOG_IMPL(info);
+
+#if defined(NDEBUG) or defined(DOXYGEN)
+        /** Debug message.
+         * */
+        class VIDRE_CORE_VISIBILITY debug {
+        public:
+            debug() = default;
+
+            template <typename V>
+            debug &operator<<(const V &value) noexcept {
+                return *this;
+            }
+        };
+#else
+        VIDRE_CORE_LOG_IMPL(debug);
+#endif
+
+#if defined(DEBUG) or defined(DOXYGEN)
+        /** Log trace.
+         *
+         * Tracing is costly and should be used judiciously; it is only enabled when 
+         * the @c DEBUG macro is defined during compilation.
+         * 
+         * @note In contrast to the default handling, trace messages (or packets) are
+         *       emitted per line.
+         *
+         * @see pattern()
+         * */
+        class VIDRE_CORE_VISIBILITY trace : public handler {
+        protected:
+            /**@internal Internal stack when tracing.
+             * */
+            static std::vector<std::source_location> stack;
+
+            /**@internal Pattern for tracing.
+             * */
+            static std::regex match;
+
+            /**@internal Source filename.
+             * */
+            static std::string_view file_name() noexcept {
+                std::string_view name = stack.back().file_name();
+                auto pos = name.find("vidre/");
+                if (pos == std::string_view::npos)
+                    return name;
+                return {name.data() + pos, name.size() - pos};
+            }
+
+            /**@internal Source line. */
+            static auto line() noexcept {
+                return stack.back().line();
+            }
+
+            /**@internal Source column. */
+            static auto column() noexcept {
+                return stack.back().column();
+            }
+
+            /**@internal Source function. */
+            static auto function_name() noexcept {
+                return stack.back().function_name();
+            }
+
+        public:
+            /** Set wildcard pattern (what to trace).
+             * The wildcard pattern is matched with the calling functions
+             * source file name. If matched, anything called from there has
+             * active tracing.
+             * */
+            static void pattern(std::string_view pat);
+
+        public:
+            trace(std::source_location source = std::source_location::current()) noexcept;
+            ~trace();
+
+        protected:
+            std::size_t follow_ = 0;  ///< Indentation depth (0 counts as not traced).
+
+        protected:
+            void emit(const std::string_view &txt) noexcept {
+                // FIXME
+                // if (io::stream::maxthreshold < level_)
+                //     return;
+
+                // if (follow_ == 0)
+                //     return;
+
+                // handler::emit(txt, follow_ - 1);
+            }
+
+        public:
+            trace &operator<<(const std::string_view &msg) noexcept {
+                emit(msg);
+                return *this;
+            }
+
+            template <typename V>
+            requires (not std::is_convertible_v<V, std::string_view> and std::formattable<std::remove_cvref_t<V>, char>)
+            trace &operator<<(const V &value) noexcept {
+                emit(std::format("{}", value));
+                return *this;
+            }
+        };
+#else
+        class VIDRE_CORE_VISIBILITY trace : public null {
+        public:
+            static void pattern(std::string_view pat) {}
+        };
+#endif
+
+        /** Setup log streams.
+         *
+         * This command intended for use with command line options.
+         *
+         * @todo show example
+         * */
+        void setup(const std::string &def);
+
+        ///@}
+
+    }  // namespace log
+
+#if 0
     // ============================================================================
     // ============================================================================
     // ============================================================================
@@ -389,9 +598,7 @@ namespace vidre {
 
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            {
-                t.operator()(outs)
-            } -> std::same_as<Stream &>;
+            { t.operator()(outs) } -> std::same_as<Stream &>;
         };
 
         ///@}
@@ -437,6 +644,12 @@ namespace vidre {
         class VIDRE_CORE_VISIBILITY handler {
         public:
             handler() = default;
+
+            handler(const handler &) = delete;
+            handler(handler &&) = delete;
+            handler &operator=(const handler &) = delete;
+            handler &operator=(handler &&) = delete;
+
             handler(level lvl) : level_(static_cast<int>(lvl)) {};
 
         protected:
@@ -808,6 +1021,7 @@ namespace vidre {
         ///@}
 
     }  // namespace log
+#endif
 
 }  // namespace vidre
 

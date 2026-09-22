@@ -230,6 +230,13 @@ namespace vidre {
                 return hdr.type.hash();
             }
 
+            /** Get the packet header.
+             * @return The packet header.
+             * */
+            constexpr const header &getheader() const noexcept {
+                return hdr;
+            }
+
             /** Update packet length (if applicable).
              * This method is intended to be overridden by derived packet types
              * that need to update their length based on their content or other
