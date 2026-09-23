@@ -88,7 +88,7 @@ bool io::file::sink::open(const std::filesystem::path &filename, openmode_type m
         return false;
 
     if ((mode & openmode_type::direct) and not(mode & openmode_type::unbuffered)) {
-        auto mem = std::max(fd_.blocksize(), os::pagesize());
+        auto mem = std::max(fd_.blocksize(), os::pagesize);
         mem = std::max(mem, 1048576UL);  // ensure a reasonable minimum buffer size
         buf_.setup(mem);
     }

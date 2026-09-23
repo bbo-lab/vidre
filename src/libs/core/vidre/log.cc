@@ -24,203 +24,147 @@
 #include "cpp/util.hh"
 #include "io/file.hh"
 
-#include <array>
-
-using namespace vidre;
-
-static io::packet::factory::registrar<lognew::packet>              //
-    log_packet_factory(io::packet::major::log,                     //
-                       {static_cast<uint16_t>(lognew::level_min),  //
-                        static_cast<uint16_t>(lognew::level_max)});
-
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
-// ============================================================================
+#include <algorithm>
 
 using namespace std::literals::string_view_literals;
+using namespace vidre;
 
-static log::io::style::type vidre_use_fret() {
-    if (vidre::os::isatty())
-        return log::io::style::type::color;
-    else
-        return log::io::style::type::tagged;
-}
+static io::packet::registry<log::packet>                        //
+    log_packet_factory(io::packet::major::log,                  //
+                       {static_cast<uint16_t>(log::level_min),  //
+                        static_cast<uint16_t>(log::level_max)});
 
-static vidre::log::stream vidrelog{vidre_use_fret()};
+#if defined(DEBUG)
+log::level vidre::log::output::maxthreshold = log::level::trace;
+#elif defined(NDEBUG)
+log::level vidre::log::output::maxthreshold = log::level::notice;
+#else
+log::level vidre::log::output::maxthreshold = log::level::status;
+#endif
 
-std::vector<vidre::log::io::stream *> vidre::log::io::stream::channels = {&vidrelog};
-int vidre::log::io::stream::maxthreshold = vidrelog.threshold_;
+shared<log::output> vidre::log::source = io::endpoint::make<log::output>();
 
-void log::io::stream::put(const message_type &msg) noexcept {
-    vidre::io::standard::error.write({msg.size(), msg.data()});
-}
-
-void log::io::stream::remove(unsigned chanid) noexcept {
-    if (chanid == 0)
-        return;
-    else if (chanid >= channels.size())
-        return;
-    else {
-        channels[chanid] = nullptr;
-
-        while (channels.back() == nullptr)
-            channels.pop_back();
-
-        maxthreshold = 0;
-        for (auto *it : channels) {
-            if (it->threshold_ > maxthreshold)
-                maxthreshold = it->threshold_;
-        }
-    }
-}
-
-log::level log::io::stream::threshold(unsigned chanid) noexcept {
-    if (chanid >= channels.size())
-        return log::level::fatal;
-    else {
-        return static_cast<log::level>(channels[chanid]->threshold_);
-    }
-}
-
-void log::io::stream::threshold(unsigned chanid, int lvl) noexcept {
-    if (chanid >= channels.size())
-        return;
-    else {
-        channels[chanid]->threshold_ = lvl;
-        if (lvl > maxthreshold)
-            maxthreshold = lvl;
-    }
-}
-
-struct style_tags {
-    log::message_type prefix;
-    log::message_type suffix;
+// io::standard::error ========================================================
+struct style_tag {
+    std::string_view prefix;
+    std::string_view suffix;
 };
 
-static const style_tags vidre_log_style_color[log::level_n] = {
-    {"\e[1;91m", "\e[0m"},      // fatal
-    {"\e[4;31m", "\e[0m"},      // alert
-    {"\e[0;91m", "\e[0m"},      // critical
-    {"\e[0;31m", "\e[0m"},      // error
-    {"\e[0;33m", "\e[0m"},      // warning
-    {"\e[0;97m", "\e[0m"},      // notice
-    {"\e[0;92m", "\e[0m"},      // status
-    {"\e[0m", "\e[0m"},         // info
-    {"\e[38:5:244m", "\e[0m"},  // debug
-    {"\e[38:5:239m", "\e[0m"}   // trace
+static const style_tag vidre_log_style_color[] = {
+    {"\e[1;91m", "\e[0m"},             // fatal
+    {"\e[4;31m", "\e[0m"},             // alert
+    {"\e[0;91m", "\e[0m"},             // critical
+    {"\e[0;31m", "\e[0m"},             // error
+    {"\e[0;33m", "\e[0m"},             // warning
+    {"\e[0;97m", "\e[0m"},             // user
+    {"\e[0;97m", "\e[0m"},             // notice
+    {"\e[0;92m", "\e[0m"},             // status
+    {"\e[0m", "\e[0m"},                // info
+    {"\e[38:5:244m", "\e[0m"},         // debug
+    {"\e[38:5:239m[TRACE] ", "\e[0m"}  // trace
 };
 
-static const style_tags vidre_log_style_tagged[log::level_n] = {
+static_assert(size_of(vidre_log_style_color) == log::level_n);
+
+static const style_tag vidre_log_style_tagged[] = {
     {"[FATAL] ", {}},     //
     {"[ALERT] ", {}},     //
     {"[CRITICAL] ", {}},  //
     {"[ERROR] ", {}},     //
     {"[WARNING] ", {}},   //
+    {"[USER] ", {}},      //
     {"[NOTICE] ", {}},    //
     {"[STATUS] ", {}},    //
     {"[INFO] ", {}},      //
     {"[DEBUG] ", {}},     //
-    {"", {}}              //
+    {"[TRACE] ", {}}      //
 };
 
-static const char *vidre_log_spaces = "                    ";
+static_assert(size_of(vidre_log_style_tagged) == log::level_n);
 
-void log::handler::emit(const message_type &txt, unsigned indent [[maybe_unused]]) noexcept {
-    if (txt.size() == 0)
-        return;
+static const std::string_view vidre_log_indent_s = "                                                                        ";
 
-    auto ptr = txt.data();
-    auto end = ptr + txt.size();
-    unsigned sty = level_ - level_min;
-    assert(sty < level_n);
-
-    do {
-        auto nl = std::string_view(ptr, end).find_first_of('\n');
-        auto nxt = (nl == std::string_view::npos) ? end : ptr + nl + 1;
-        auto last = nxt[-1];
-
-        for (auto *it : io::stream::channels) {
-            if (level_ > it->threshold_)
-                continue;
-#if defined(DEBUG)
-            // indent
-            if ((last_ == 0) || (last_ == '\n')) {
-                for (unsigned i = 0; i < indent; ++i)
-                    it->put(indent_s);
-            }
-#endif
-
-            // prefix
-            switch (it->style_) {
-                case io::style::plain:
-                    break;
-                case io::style::tagged:
-                    if (last_ == 0)
-                        it->put(vidre_log_style_tagged[sty].prefix);
-                    else if (last_ == '\n')
-                        it->put({vidre_log_spaces, vidre_log_style_tagged[sty].prefix.size()});
-                    break;
-                case io::style::color:
-                    if ((last_ == 0) || (last_ == '\n'))
-                        it->put(vidre_log_style_color[sty].prefix);
-                    break;
-            }
-
-            // text
-            it->put({ptr, nxt});
-
-            // suffix
-            switch (it->style_) {
-                case io::style::plain:
-                    break;
-                case io::style::tagged:
-                    break;
-                case io::style::color:
-                    if (last == '\n')
-                        it->put(vidre_log_style_color[sty].suffix);
-                    break;
-            }
-        }
-
-        ptr = nxt;
-        last_ = last;
-    } while (ptr < end);
-}
-
-log::io::file::file(const std::string_view filename, level th, style::type sty) noexcept : stream(th, sty) {
-    outs_ = ::fopen(std::string(filename).c_str(), "a");
-    if (outs_ == nullptr)
-        log::warning() << "Opening log file '" << filename << "' failed.\n";
-    else {
-        chanid_ = add(*this);
-        header();
+void vidre_log_indent(std::size_t indent) {
+    indent *= log::indent_s.size();
+    while (indent > 0) {
+        auto outn = std::min(indent, vidre_log_indent_s.size());
+        io::standard::error.write({outn, vidre_log_indent_s.data()});
+        indent -= outn;
     }
 }
 
-void log::io::file::header() noexcept {
-    if (ftell(outs_) > 0)
-        put("\n");
+void vidre_log_emit_standard(style_tag sty, const std::string &msg, unsigned indent) {
+    // output per line
+    for (size_t start = 0; start < msg.size();) {
+        size_t end = msg.find('\n', start);
+        if (end == std::string::npos)  // shouldn't happen, see emit()
+            end = msg.size();
 
-    put("[[[=== ");
+        size_t len = end - start;
+        if (len > 0 && msg[start + len - 1] == '\r')
+            --len;
 
-    auto now = std::chrono::utc_clock::now();
-    put(std::format("{:%Y-%m-%dT%H:%M:%SZ}", now));
+        io::standard::error.write({sty.prefix.size(), sty.prefix.data()});
+        vidre_log_indent(indent);
+        if (start == 0) {
+            // first line of the message
+            io::standard::error.write({len, msg.data() + start});
+        }
+        else {
+            io::standard::error.write({len, msg.data() + start});
+        }
+        io::standard::error.write({sty.suffix.size(), sty.suffix.data()});
+        io::standard::error.write({log::endl.size(), log::endl.data()});
 
-    put(" ===]]]\n");
+        if (end == msg.size())
+            break;
+        start = end + 1;
+    }
+}
+
+void vidre_log_emit_standard(log::level lvl, const std::string &msg, unsigned indent) {
+    auto level = to_underlying(lvl);
+    if (level > log::level_max)
+        level = log::level_max;
+
+    if (/*(lvl <= log::level::debug) &&*/ vidre::os::isatty())
+        vidre_log_emit_standard(vidre_log_style_color[level], msg, indent);
+    else {
+        auto tag = vidre_log_style_tagged[level];
+        vidre_log_emit_standard(tag, msg, indent);
+    }
+}
+
+void log::handler::emit() noexcept {
+    // empty log messages are ignored
+    if (msg_->message.empty())
+        return;
+
+    // ensure newline at the end of the message
+    if (msg_->message.end()[-1] != '\n')
+        msg_->message += '\n';
+
+#if defined(DEBUG)
+    // emit the log message using the standard output function
+    vidre_log_emit_standard(static_cast<log::level>(msg_->getheader().type.minor), msg_->message, 0);
+#endif
+
+    // emit packet
+    log::source->send(std::move(msg_));
+}
+
+void log::output::send(shared<packet> msg) noexcept {
+    // FIXME
+}
+
+status log::output::attach(shared<io::sink> other, cap::flag_type cap) {
+    // FIXME
+    return {};
+}
+
+status log::output::detach(const io::sink *snk) {
+    // FIXME
+    return {};
 }
 
 #if defined(DEBUG)
@@ -242,12 +186,11 @@ void vidre::log::trace::pattern(std::string_view wild) {
 }
 
 log::trace::trace(std::source_location source) noexcept : log::handler{log::level::trace}, follow_{stack.size()} {
-    if (io::stream::maxthreshold < level_)
+    if (log::output::maxthreshold < msg_->getlevel())
         return;
 
-    if ((stack.size() == 0) and not(std::regex_match(source.file_name(), match))) {
+    if (not follow_ and not std::regex_match(source.file_name(), match))
         return;
-    }
 
     stack.push_back(source);
 
@@ -259,9 +202,49 @@ log::trace::trace(std::source_location source) noexcept : log::handler{log::leve
 log::trace::~trace() {
     if (stack.size() > 0)
         stack.pop_back();
+
+    emit(true);
 }
 
+void log::trace::emit(bool last) noexcept {
+    // empty log messages are ignored
+    if (message_.empty())
+        return;
+
+    if (last && (message_.end()[-1] != '\n'))
+        message_ += '\n';
+
+#if defined(DEBUG)
+    // emit the log message using the standard output function
+    vidre_log_emit_standard(static_cast<log::level>(level::trace), message_, follow_ - 1);
 #endif
+
+    // emit packet
+    write(message_);
+    log::source->send(std::move(msg_));
+    if (not last)
+        msg_ = packet::make(level::trace, 0);
+#endif
+}
+
+void log::trace::emit(const std::string_view &txt) noexcept {
+    if (log::output::maxthreshold < msg_->getlevel())
+        return;
+
+    if (follow_ == 0)
+        return;
+
+    auto eol = txt.find_last_of('\n');
+    if (eol == std::string_view::npos) {
+        message_ += txt;
+        return;
+    }
+
+    message_ += txt.substr(0, eol + 1);
+    emit();
+
+    message_ = txt.substr(eol + 1);
+}
 
 static struct {
     const char *name;
@@ -273,6 +256,7 @@ static struct {
     {"critical", log::level::critical, "A critical error, such as hardware failure."},                             //
     {"error", log::level::error, "An application error occurred."},                                                //
     {"warning", log::level::warning, "Warning level, which may hint to future failure."},                          //
+    {"user", log::level::user, "A user-level message."},                                                           //
     {"notice", log::level::notice, "A noteworthy condition occurred."},                                            //
     {"status", log::level::status, "A status message."},                                                           //
     {"info", log::level::info, "A purely informational message."},                                                 //
@@ -302,8 +286,6 @@ static int tolevel(const std::string_view &str) {
     }
     return level_invalid;
 }
-
-static std::vector<log::io::file> vidre_log_files;
 
 void log::setup(const std::string &def) {
     if (def == "help") {
@@ -345,14 +327,14 @@ void log::setup(const std::string &def) {
                     int threshold = tolevel(part[1]);
                     if (threshold == static_cast<int>(level::trace)) {
                         // <file-name>:trace:<pattern>
-                        vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
+                        // FIXME vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
                         log::trace::pattern(part[2]);
                         continue;
                     }
                     else if (threshold != level_invalid) {
                         // <file-name>:<log-level>:<pattern>
                         // (pattern is ignored)
-                        vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
+                        // FIXME vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
                         continue;
                     }
                 }
@@ -360,7 +342,7 @@ void log::setup(const std::string &def) {
                     int threshold = tolevel(part[0]);
                     if (threshold == static_cast<int>(level::trace)) {
                         // trace:<pattern>
-                        log::io::stream::threshold(0, level::trace);
+                        // FIXME log::io::stream::threshold(0, level::trace);
                         log::trace::pattern(part[1]);
                         continue;
                     }
@@ -368,7 +350,7 @@ void log::setup(const std::string &def) {
                         threshold = tolevel(part[1]);
                         if (threshold != level_invalid) {
                             // <file-name>:<log-level>
-                            vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
+                            // FIXME vidre_log_files.emplace_back(part[0], static_cast<log::level>(threshold));
                             continue;
                         }
                     }
@@ -378,7 +360,7 @@ void log::setup(const std::string &def) {
                     if ((threshold != level_invalid) and (threshold != static_cast<int>(level::trace))) {
                         // <log-level>
                         // (trace not allowed, missing pattern)
-                        log::io::stream::threshold(0, static_cast<log::level>(threshold));
+                        // FIXME log::io::stream::threshold(0, static_cast<log::level>(threshold));
                         continue;
                     }
                 }

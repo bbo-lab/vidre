@@ -114,6 +114,13 @@ namespace vidre {
                 return size_;
             }
 
+            constexpr const_pointer begin() const noexcept {
+                return data_;
+            }
+            constexpr const_pointer end() const noexcept {
+                return data_ + size_;
+            }
+
             /** Get pointer to data.
              * */
             ///@{

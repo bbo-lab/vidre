@@ -25,6 +25,7 @@
 #pragma once
 
 #include <vidre/core/config.hh>
+#include <vidre/util/endian.hh>
 #include <vidre/io/packet/base.hh>
 
 #include <ankerl/unordered_dense.h>
@@ -74,7 +75,7 @@ namespace vidre {
                     throw exception::logic() << "packet type already registered";
             }
 
-            /** Create a packet instance by its header.
+            /** Create a packet instance by its (normalized) header.
              * @param hdr The header to pass to the packet constructor.
              * @return A shared pointer to the created packet instance.
              * @throws exception::logic if the packet type is not registered.
@@ -86,16 +87,45 @@ namespace vidre {
                 return it->second(hdr);
             }
 
-            template <typename T>
-            struct registrar;
+            /** Create packet from memory view.
+             * @param view The memory view containing the packet data.
+             * @param from The endian format of the memory view (default: native).
+             * @return A shared pointer to the created packet instance.
+             * @throws exception::logic if the packet type is not registered.
+             * */
+            template <typename Packet = io::packet>
+            requires std::derived_from<Packet, io::packet>
+            static shared<Packet> make(memory::view view, std::endian from = std::endian::native) {
+                packet::header hdr;
+                memory::copy(view, hdr);
+
+                if (from != std::endian::native) {
+                    endian::byteswap_inplace(hdr.type.major, from);
+                    endian::byteswap_inplace(hdr.type.minor, from);
+                    endian::byteswap_inplace(hdr.stream, from);
+                    endian::byteswap_inplace(hdr.length, from);
+                }
+
+                auto pkt = factory::make(hdr);
+                pkt->absorb(view, from);
+                return std::dynamic_pointer_cast<Packet>(pkt);
+            }
         };
+
+        ///@}
+
+        /**@addtogroup api-core-io-packet
+         * */
+        ///@{
 
         /** Registration of packet types.
          * This helper struct simplifies the registration of packet types with the factory.
          * It supports registering individual minor types as well as ranges of minor types.
+         *
+         * @todo Maybe it's worth (considering the typing effort) to take this class out of "factory" (and call it "registry")...?
          * */
         template <typename T>
-        struct packet::factory::registrar {
+        struct packet::registry {
             /** Register a list of minor packet types for a given major type.
              * @tparam Major The major packet type.
              * @tparam Minor The minor packet types.
@@ -104,17 +134,21 @@ namespace vidre {
              *
              * Example:
              * @code
-             * packet::factory::registrar<MyPacketType> reg(MAJOR_TYPE, MINOR_TYPE_1, MINOR_TYPE_2);
+             * packet::registry<MyPacketType> reg(MAJOR_TYPE, MINOR_TYPE_1, MINOR_TYPE_2);
              * @endcode
              * */
             template <packet_code Major, packet_code... Minor>
-            registrar(Major major, Minor... minors) {
+            registry(Major major, Minor... minors) {
                 (                                                                                            //
                     packet::factory::add<T>({static_cast<uint16_t>(major), static_cast<uint16_t>(minors)}),  //
                     ...                                                                                      //
                 );
             }
 
+            ///@internal
+
+            /** Helper struct representing a range of minor packet types.
+             * */
             struct range_type {
                 uint16_t first{};
                 uint16_t last{};
@@ -124,6 +158,8 @@ namespace vidre {
                 range_type(Minor first_, Minor last_) : first(static_cast<uint16_t>(first_)), last(static_cast<uint16_t>(last_)) {}
             };
 
+            ///@endinternal
+
             /** Register a range of minor packet types for a given major type.
              * @tparam Major The major packet type.
              * @param major The major packet type value.
@@ -131,11 +167,11 @@ namespace vidre {
              *
              * Example:
              * @code
-             * packet::factory::registrar<MyPacketType> reg(MAJOR_TYPE, {MINOR_START, MINOR_END});
+             * packet::registry<MyPacketType> reg(MAJOR_TYPE, {MINOR_START, MINOR_END});
              * @endcode
              * */
             template <packet_code Major>
-            registrar(Major major, range_type range) {
+            registry(Major major, range_type range) {
                 const auto first = range.first;
                 const auto last = range.last;
 

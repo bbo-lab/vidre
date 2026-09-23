@@ -62,6 +62,7 @@ namespace vidre {
          * @returns A shared pointer to the created task instance.
          * */
         template <typename F, typename... Args>
+        requires std::is_invocable_v<F, shared<task>, Args...>
         static shared<task> make(F &&f, Args &&...args) {
             auto task_ptr = std::make_shared<task>();
 
@@ -86,6 +87,7 @@ namespace vidre {
          * */
         template <typename Class, typename F, typename... Args>
         requires std::is_invocable_v<F, Class *, shared<task>, Args...>
+        // @todo make this standard argument aware, maybe
         static shared<task> make(Class *instance, F &&f, Args &&...args) {
             return make([instance, f = std::forward<F>(f), ... args = std::forward<Args>(args)](shared<task> self) mutable {
                 (instance->*f)(self, std::forward<Args>(args)...);
@@ -174,6 +176,7 @@ namespace vidre {
         std::mutex terminate_mutex_{};        ///< Mutex to protect access to termination handlers.
         std::vector<terminate_handler>
             terminate_handlers_{};  ///< List of termination handlers to be invoked when the thread is signaled to terminate.
+
     public:
         /** Check if thread is running.
          * @returns @c true if the thread is running, @c false otherwise.

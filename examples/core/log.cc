@@ -48,10 +48,10 @@ void level1() {
 void tracing() {
 #if defined(DEBUG)
     {
-        log::io::file trf("/tmp/trace.log", log::level::trace);
+        // log::io::file trf("/tmp/trace.log", log::level::trace);
 
-        // set default streamer threshold to "trace"
-        log::io::stream::threshold(0, log::level::trace);
+        // // set default streamer threshold to "trace"
+        // log::io::stream::threshold(0, log::level::trace);
 
         // set wildcard pattern for what to trace
         log::trace::pattern("*/core/*");

@@ -115,6 +115,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.playground.datachain",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.playground.datachain",
+            "args": [],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.playground.aptina",
             "type": "cppdbg",
             "request": "launch",

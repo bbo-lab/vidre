@@ -41,6 +41,7 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/memory/base.hh>
 #include <vidre/error.hh>
 
 #if VIDRE_HAVE_LIBUUID
@@ -468,6 +469,10 @@ namespace vidre {
             uuid_ = gen(s);
         }
         uuid(const detail::uuid_t &u) noexcept : uuid_(u) {}
+        uuid(const memory::view &view) noexcept {
+            // FIXME sanity checks?
+            memory::copy(view, uuid_);
+        }
 
         template <std::size_t N>
         constexpr uuid(const char (&c)[N]) {
@@ -527,6 +532,13 @@ namespace vidre {
          * */
         std::size_t hash() const noexcept {
             return detail::uuid::hash(uuid_);
+        }
+
+        /** Implicit memory view conversion.
+         * */
+        operator memory::view() const noexcept {
+            static_assert(sizeof(uuid_.data) == 16, "UUID data must be 16 bytes.");
+            return {sizeof(uuid_.data), reinterpret_cast<const uint8_t *>(&uuid_)};
         }
     };
 

@@ -29,10 +29,11 @@
  * @details
  * @fileinfo
  *
- * @todo should be cpp/chrono.hh?
+ * @todo should be cpp/chrono.hh? or even <vidre/chrono.hh>?
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/memory/base.hh>
 #include <vidre/error.hh>
 
 #include <chrono>
@@ -79,6 +80,10 @@ namespace vidre {
             uint64_t sec{};   ///< Seconds.
             uint64_t nsec{};  ///< Nanoseconds past the current second.
 
+            operator memory::view() const noexcept {
+                return {sizeof(timestamp), reinterpret_cast<const uint8_t *>(&sec)};
+            }
+
             /** Get current time as a timestamp.
              * @returns A timestamp (taken from a high-resolution, monotonic clock).
              * */
@@ -96,21 +101,78 @@ namespace vidre {
              * @see chrono::reference
              * */
             clock::time_point to_utc(const reference &) const noexcept;
+
+            bool operator<=>(const timestamp &) const noexcept = default;
+        };
+
+        /** UTC timestamp.
+         *
+         * The `utcstamp` struct represents a point in time in Coordinated Universal Time (UTC),
+         * with both seconds and nanoseconds precision.
+         *
+         * */
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY utcstamp {
+            int64_t sec{};    ///< Seconds.
+            uint64_t nsec{};  ///< Nanoseconds past the current second.
+
+            utcstamp() = default;
+            utcstamp(const utcstamp &) = default;
+            utcstamp &operator=(const utcstamp &) = default;
+            utcstamp(utcstamp &&) = default;
+            utcstamp &operator=(utcstamp &&) = default;
+
+            utcstamp(const clock::time_point &tp) noexcept {
+                auto sec_ = std::chrono::time_point_cast<std::chrono::seconds>(tp);
+                auto nsec_ = std::chrono::duration_cast<std::chrono::nanoseconds>(tp - sec_);
+
+                sec = static_cast<int64_t>(sec_.time_since_epoch().count());
+                nsec = static_cast<uint64_t>(nsec_.count());
+            }
+
+            operator memory::view() const noexcept {
+                return {sizeof(utcstamp), reinterpret_cast<const uint8_t *>(&sec)};
+            }
+
+            /** Get the current UTC timestamp.
+             */
+            static utcstamp now() noexcept {
+                return clock::now();
+            }
+
+            /** Implicit conversion to timepoint.
+             * */
+            operator clock::time_point() const noexcept {
+                return clock::time_point(std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec));
+            }
+
+            bool operator<=>(const utcstamp &) const noexcept = default;
         };
 
         /** Representation of an ISO 8601 date.
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY isodate {
-            char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSSSSZ").
+            char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSSSSZ", padded).
 
             operator std::string_view() const noexcept {
-                return std::string_view(iso, sizeof(iso));
+                return std::string_view(iso, sizeof("YYYYMMDDTHHMMSS.SSSSSSZ")-1);
+            }
+
+            operator memory::view() const noexcept {
+                return {sizeof(isodate), reinterpret_cast<const uint8_t *>(&iso)};
             }
 
             /** Get current time as an ISO 8601 date string.
              * @returns An ISO 8601 date string representing the current time in UTC.
              * */
             static isodate make(clock::time_point tp) noexcept;
+
+
+            /** Now.
+             * @returns The current time as an ISO 8601 date string.
+             * */
+            static isodate now() noexcept {
+                return make(clock::now());
+            }
 
             /** Parse an ISO 8601 date string.
              * */
@@ -121,6 +183,14 @@ namespace vidre {
              * */
             clock::time_point time() const noexcept {
                 return parse(iso);
+            }
+
+            // bool operator<=>(const isodate &other) const noexcept {
+            //     return time() <=> other.time();
+            // }
+
+            bool operator==(const isodate &other) const noexcept {
+                return time() == other.time();
             }
         };
 

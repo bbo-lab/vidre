@@ -71,17 +71,16 @@ vidre_library(vidrecore SHARED
                 vidre/io/types/sink.hh vidre/io/types/sink.cc
                 vidre/io/types/endpoint.hh vidre/io/types/endpoint.cc
                 vidre/io/types/source.hh vidre/io/types/source.cc
-            #     vidre/io/types/channel.hh vidre/io/types/channel.cc
-            #     vidre/io/types/merger.hh vidre/io/types/merger.cc
-            #     vidre/io/types/arbiter.hh vidre/io/types/arbiter.cc
+                vidre/io/types/channel.hh vidre/io/types/channel.cc
+                vidre/io/types/fan.hh vidre/io/types/fan.cc
             vidre/io/packet.hh vidre/io/packet.cc
                 vidre/io/packet/base.hh vidre/io/packet/base.cc
                 vidre/io/packet/factory.hh vidre/io/packet/factory.cc
                 vidre/io/packet/value.hh vidre/io/packet/value.cc
+                vidre/io/packet/sequence.hh vidre/io/packet/sequence.cc
                 vidre/io/packet/object.hh vidre/io/packet/object.cc
             vidre/io/file.hh vidre/io/file.cc
             # vidre/io/monitor.hh vidre/io/monitor.cc
-            # vidre/io/flow.hh vidre/io/flow.cc
         vidre/storage.hh vidre/storage.cc
             vidre/storage/raw.hh vidre/storage/raw.cc
         vidre/thread.hh vidre/thread.cc

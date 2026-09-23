@@ -9,6 +9,8 @@
 #include <cstdio>
 
 #include <vidre/memory/base.hh>
+#include "vidre/io/packet/base.hh"
+#include "vidre/util/chrono.hh"
 
 void hexdump(vidre::memory::view view) {
     const auto *p = static_cast<const std::uint8_t *>(view.data());
@@ -100,44 +102,72 @@ shared<io::packet> memory_sink::parse() const {
 TEST_CASE("packet.hh", "[vidre/io]") {
     using namespace vidre::io;
 
-#define test_io_packet_value(TYPE, VALUE)                                                       \
-    {                                                                                           \
-        memory_sink sink;                                                                       \
-        TYPE value = VALUE;                                                                     \
-        packet::value a(value);                                                                 \
-        a.emit(sink);                                                                           \
-        if (1)                                                                                  \
-            hexdump(sink.view());                                                               \
-        REQUIRE(*reinterpret_cast<TYPE *>(sink.data.data() + sizeof(packet::header)) == value); \
-        shared<io::packet> parsed = sink.parse();                                               \
-        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);                        \
-        REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);             \
+#if 0
+#define test_io_packet_value(TYPE, VALUE)                                                           \
+    {                                                                                               \
+        memory_sink sink;                                                                           \
+        TYPE value = VALUE;                                                                         \
+        packet::value a(value);                                                                     \
+        a.emit(sink);                                                                               \
+        if (1)                                                                                      \
+            hexdump(sink.view());                                                                   \
+        if constexpr (std::is_trivially_copyable_v<TYPE>) {                                         \
+            REQUIRE(*reinterpret_cast<TYPE *>(sink.data.data() + sizeof(packet::header)) == value); \
+        }                                                                                           \
+        shared<io::packet> parsed = sink.parse();                                                   \
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);                            \
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get())->get<TYPE>() == value);                 \
     }
 
-    // test_io_packet_value(bool, true);
-    // test_io_packet_value(bool, false);
-    // test_io_packet_value(int64_t, -123456789);
-    // test_io_packet_value(uint64_t, 123U);
-    // test_io_packet_value(double, 0.0);
-    // test_io_packet_value(double, -1.0);
-    // test_io_packet_value(double, 1.0);
-    // test_io_packet_value(double, 3.14159);
-    // test_io_packet_value(double, std::numeric_limits<double>::infinity());
-    // test_io_packet_value(double, -std::numeric_limits<double>::infinity());
-    // // test_io_packet_value(double, std::numeric_limits<double>::quiet_NaN());
-    // {
-    //     memory_sink sink;
-    //     double value = std::numeric_limits<double>::quiet_NaN();
-    //     packet::value a(value);
-    //     a.emit(sink);
-    //     if (0)
-    //         hexdump(sink.view());
-    //     REQUIRE(std::isnan(*reinterpret_cast<double *>(sink.data.data() + sizeof(packet::header))));
-    //     shared<io::packet> parsed = sink.parse();
-    //     REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);
-    //     REQUIRE(std::isnan(dynamic_cast<packet::value *>(parsed.get())->get<double>()));
-    // }
+    test_io_packet_value(bool, true);
+    test_io_packet_value(bool, false);
+    test_io_packet_value(int64_t, -123456789);
+    test_io_packet_value(uint64_t, 123U);
+    test_io_packet_value(double, 0.0);
+    test_io_packet_value(double, -1.0);
+    test_io_packet_value(double, 1.0);
+    test_io_packet_value(double, 3.14159);
+    test_io_packet_value(double, std::numeric_limits<double>::infinity());
+    test_io_packet_value(double, -std::numeric_limits<double>::infinity());
+    // test_io_packet_value(double, std::numeric_limits<double>::quiet_NaN());
+    {
+        memory_sink sink;
+        double value = std::numeric_limits<double>::quiet_NaN();
+        packet::value a(value);
+        a.emit(sink);
+        if (0)
+            hexdump(sink.view());
+        REQUIRE(std::isnan(*reinterpret_cast<double *>(sink.data.data() + sizeof(packet::header))));
+        shared<io::packet> parsed = sink.parse();
+        REQUIRE(dynamic_cast<packet::value *>(parsed.get()) != nullptr);
+        REQUIRE(std::isnan(dynamic_cast<packet::value *>(parsed.get())->get<double>()));
+    }
     test_io_packet_value(std::string, "Hello World!");
+    test_io_packet_value(chrono::isodate, chrono::isodate::now());
+    test_io_packet_value(chrono::utcstamp, chrono::utcstamp::now());
+#endif
+
+    {
+        memory_sink sink;
+
+        io::packet::sequence seq;
+        seq.add(io::packet::make<io::packet::value>(42));
+        seq.add(io::packet::make<io::packet::value>(std::string("hello world")));
+        seq.add(io::packet::make<io::packet::value>(uuid::make()));
+        seq.add(io::packet::make<io::packet::value>(chrono::utcstamp::now()));
+        seq.add(io::packet::make<io::packet::value>(chrono::isodate::now()));
+        seq.add(io::packet::make<io::packet::object>("key","value"));
+        seq.emit(sink);
+
+        hexdump(sink.view());
+
+        // std::cout << seq.to_json() << std::endl;
+
+        shared<io::packet> reread = io::packet::factory::make(sink.view());
+        // std::cout << reread->to_json() << std::endl;
+
+        REQUIRE(seq.to_json() == reread->to_json());
+    }
 }
 
 #if 0

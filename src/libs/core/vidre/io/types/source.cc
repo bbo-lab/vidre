@@ -21,55 +21,73 @@
  */
 #include "source.hh"
 #include "sink.hh"
+#include "../../log.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
 source::~source() {
-    terminate();
+    unlink();
 }
 
-void source::terminate() {
-    // terminate ourselves
-    if (source_task_ && source_task_->isrunning())
-        source_task_->terminate();
+status io::source::unlink() {
+    
+    return detach(sink_.get());
+}
 
-    // terminate sink (if applicable)
-    if (sink_) {
-        sink_->terminate();
-        sink_ = {};
-    }
+status source::attach(shared<io::sink> other, cap::flag_type cap) {
+    if (sink_.get())  // already connected
+        return status::bad;
+
+    // store fields, clear stats
+    cap_[index::source] = cap;
+    clearstats();
+
+    // attach sink
+    sink_ = other;
+
+    // start handler
+    source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
+
+    return status::ok;
+}
+
+status source::detach(const io::sink *snk) {
+    if (sink_.get() != snk)
+        return status::ok;
+
+    if (source_task_->isrunning())
+        return status::bad;
+
+    sink_ = {};
+
+    // FIXME stop stats?
+    return status::ok;
 }
 
 void source::source_handler(shared<task> self, std::chrono::milliseconds pause) {
     task::scope scope(self);
+    log::debug() << "source_handler: started...\n";
+
+    // wait for connection
+    while (!sink_ or not sink_->isattached()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
 
     // prepare
+    log::debug() << "source_handler: preparing...\n";
     self->on_terminate([ev = &source_event_]() {
         ev->cancel();
     });
 
-    // wait, until active (ie. started).
-    while (not isactive() and not scope.isterminated()) {
-        std::this_thread::sleep_for(pause);
-    }
+    enter_handler();
 
-    // process loop
+    // event loop
+    log::debug() << "source_handler: running...\n";
     while (not scope.isterminated()) {
         source_step();
     }
-}
 
-status source::connect(shared<io::sink> other, cap::flag_type cap) {
-    if (sink_.get())  // already connected
-        return status::bad;
-
-    cap_[index::source] = cap;
-    sink_ = other;
-
-    source_task_ = task::make([this](shared<task> self) {
-        source_handler(self);
-    });
-
-    return status::ok;
+    leave_handler();
+    log::debug() << "source_handler: finished.\n";
 }

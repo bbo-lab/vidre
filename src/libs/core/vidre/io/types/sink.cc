@@ -21,31 +21,74 @@
  */
 #include "sink.hh"
 #include "source.hh"
+#include "../../log.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
 sink::~sink() {
-    terminate();
+    unlink();
 }
 
-void sink::terminate() {
-    if (source_)
-        source_->terminate();
+status io::sink::unlink() {
+    // FIXME stop handler
+    return detach(source_.get());
+}
 
-    if(sink_task_ && sink_task_->isrunning())
-        sink_task_->terminate();
+status sink::attach(shared<io::source> src, cap::flag_type cap) {
+    if (source_)  // already connected
+        return status::bad;
+
+    // store fields, clear stats
+    cap_[index::sink] = cap;
+    clearstats();
+
+    // attach source
+    source_ = src;
+
+    // start event handler if needed
+    if (cap & cap::event) {
+        // start handler
+        sink_task_ = task::make(this, &sink::sink_handler, std::chrono::milliseconds(1));
+        sink_task_->on_terminate([src = source_]() {
+            src->source_event_.cancel();
+        });
+    }
+
+    return status::ok;
+}
+
+status sink::detach(const io::source *src) {
+    if (source_.get() != src)
+        return status::bad;
+
+    if (sink_task_->isrunning())
+        return status::bad;
+
+    // source must be disconnected first
+    if (source_->detach(this) == status::bad)
+        return status::bad;
+
+    source_->detach(this);
+
+    source_ = {};
+    return status::ok;
 }
 
 void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
     task::scope scope(self);
+    log::debug() << "sink_handler: started...\n";
 
-    // wait, until active (ie. started).
-    while (not isactive() and not scope.isterminated()) {
-        std::this_thread::sleep_for(pause);
+    // wait for connection
+    while (!source_ or not source_->isattached()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
-    // process loop
+    log::debug() << "sink_handler: preparing...\n";
+    enter_handler();
+
+    // event loop
+    log::debug() << "sink_handler: running...\n";
     while (not scope.isterminated()) {
         auto retval = source_->wait();
         if (retval == status::bad)
@@ -53,23 +96,9 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
 
         // FIXME this logic needs to use source_->queue_depth()
         for (size_type i = 0; i < *retval; ++i)
-            put(source_->get());
+            push(source_->pull());
     }
-}
 
-status sink::connect(shared<io::source> other, cap::flag_type cap) {
-    if (source_.get()) // already connected
-        return status::bad;
-
-    cap_[index::sink] = cap;
-    source_ = other;
-
-    if (!(cap & cap::event))
-        return status::ok;
-
-    sink_task_ = task::make([this](shared<task> self) {
-        sink_handler(self);
-    });
-
-    return status::ok;
+    leave_handler();
+    log::debug() << "sink_handler: finished.\n";
 }

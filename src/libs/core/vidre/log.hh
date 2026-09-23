@@ -120,7 +120,6 @@
 
 #include <limits>
 #include <vector>
-#include <queue>
 #include <string>
 #include <string_view>
 
@@ -134,7 +133,9 @@
 
 namespace vidre {
 
-    namespace lognew {
+    namespace log {
+        // forward declarations
+        class trace;
 
         /* TODO:
         - the log system needs to be transformed to use the packet system
@@ -182,6 +183,14 @@ namespace vidre {
         constexpr static unsigned level_default = to_underlying(level::info);
 #endif
         ///@endinternal
+
+        /** End-of-line.
+         * */
+        constexpr static std::string_view endl = {"\n", 1};
+
+        /**@internal Indentation.
+         * */
+        constexpr static std::string_view indent_s = {"    ", 4};
 
         /** Log-message packet.
          * @note In contrast to other packets, the log packet is not "groupable",
@@ -233,40 +242,57 @@ namespace vidre {
              * @returns The log level of this message.
              * */
             template <std::endian E = std::endian::native>
-            lognew::level getlevel() const noexcept {
-                return static_cast<lognew::level>(hdr.type.minor);
+            log::level getlevel() const noexcept {
+                return static_cast<log::level>(hdr.type.minor);
             }
 
         private:
             friend class handler;
         };
 
-        /** Log message source.
+        /** Log message output.
+         * This class represents the implementation of the log message packet
+         * source (fan out), but also provides a static interface for setting
+         * global log parameters.
          *
          * @see io::source
          * */
-        class VIDRE_CORE_VISIBILITY source : public virtual io::source {
+        class VIDRE_CORE_VISIBILITY output : public virtual io::source {
         public:
-            
+            /** Global maximum threshold level for log messages.
+             * This threshold determines the maximum log level that will be processed.
+             * Messages with a level higher than this threshold will be ignored.
+             *
+             * For DEBUG builds, the default is `level::trace`, for NDEBUG builds
+             * the default is `level::notice`, otherwise it is `level::status`.
+             * */
+            static log::level maxthreshold;
+
         public:
-            source() = default;
+            output() = default;
 
-            source(const source &) = delete;
-            source &operator=(const source &) = delete;
-            source(source &&) = delete;
-            source &operator=(source &&) = delete;
+            output(const output &) = delete;
+            output &operator=(const output &) = delete;
+            output(output &&) = delete;
+            output &operator=(output &&) = delete;
 
-            virtual ~source() = default;
+            virtual ~output() = default;
 
         protected:
-        public:
-
+            void send(shared<packet> msg) noexcept;
 
         public:
             cap getcap() const noexcept override {
                 return {cap::packet | cap::multi, {}};
             }
-            status connect(shared<io::sink> other, cap::flag_type cap) override;
+
+        protected:
+            status attach(shared<io::sink> other, cap::flag_type cap) override;
+            status detach(const io::sink *snk) override;
+
+        private:
+            friend class handler;
+            friend class trace;
         };
 
         ///@}
@@ -281,47 +307,67 @@ namespace vidre {
          * */
         template <typename Stream, typename T>
         concept functor = requires (Stream &outs, T &&t) {
-            {
-                t.operator()(outs)
-            } -> std::same_as<Stream &>;
+            { t.operator()(outs) } -> std::same_as<Stream &>;
+        } or requires (Stream &outs, T &&t) {
+            { t(outs) } -> std::same_as<Stream &>;
         };
 
         /** Log message handler.
          *
-         * This class handles logging and, as well, is the base class for
-         * the individual implementations (see @c log::fatal, etc.);
+         * This class handles all log messages. For readability it is recommended to use
+         * the individual implementations (see @c log::fatal, etc.).
          *
-         * @note The handler class is not meant to be instantiated directly.
-         *       Use the specific log level classes (e.g., @c log::fatal) instead.
+         * Typical usage:
+         * @code{.cpp}
+         * log::error() << "An error occurred.";
+         * @endcode
+         * or
+         * @code{.cpp}
+         * log::error err;
+         * err << "An error occurred.\n";
+         * err << "And this is what went wrong: ...\n";
+         * @endcode
          *
+         * @note The log message (or packet, respectively) is emitted when log object goes out of scope.
          * */
         class VIDRE_CORE_VISIBILITY handler {
         public:
             handler() = delete;
+
             handler(const handler &) = delete;
             handler &operator=(const handler &) = delete;
             handler(handler &&) = delete;
             handler &operator=(handler &&) = delete;
+
             ~handler() {
-                // FIXME ship packet
+                emit();
             }
 
             /** Constructor.
              * @param lvl The log level.
-             * @param stream The stream ID (default is 0).
-             *
-             * @note The stream ID (used in the distributed log packets) is 0 by default
-             *       (and, indeed, 0 is globally reserved for log messages). If a
-             *       different stream ID is needed, it must be explicitly specified.
              * */
-            handler(level lvl, uint16_t stream = 0) noexcept : msg_{packet::make(lvl, stream)} {};
+            handler(level lvl) noexcept : msg_{packet::make(lvl, 0)} {};
 
         protected:
             shared<packet> msg_{};  ///< Log message packet.
 
+        protected:
+            /** Packet emission method.
+             * This method is responsible for emitting the log message packet.
+             * It is called automatically when the log handler goes out of scope.
+             * */
+            void emit() noexcept;
+
+            /** Write message to the packet buffer.
+             * @param msg The message to write.
+             * */
+            void write(const std::string_view &msg) noexcept {
+                msg_->message += msg;
+            }
+
         public:
             handler &operator<<(const std::string_view &msg) noexcept {
-                msg_->message += msg;
+                write(msg);
                 return *this;
             }
 
@@ -339,304 +385,13 @@ namespace vidre {
             }
         };
 
-        ///@}
-
-    }  // namespace lognew
-
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-    // ============================================================================
-
-    namespace log {
-
-        class fatal;
-        class alert;
-        class critical;
-        class error;
-        class warning;
-        class notice;
-        class status;
-        class info;
-        class debug;
-        class trace;
-
-        inline namespace io {
-            class stream;
-        }  // namespace io
-
-        /**@addtogroup api-core-log-details
-         * */
-        ///@{
-
-        /** String (or message, respectively) type.
-         * */
-        using message_type = std::string_view;
-
-        template <typename T>
-        concept convertible_to_message_type = std::is_convertible_v<T, message_type>;
-
-        template <typename Stream, typename T>
-        concept functor = requires (Stream &outs, T &&t) {
-            {
-                t.operator()(outs)
-            } -> std::same_as<Stream &>;
-        };
-
-        ///@}
-
-        /**@addtogroup api-core-log-if
-         * */
-        ///@{
-
-        /** Log levels.
-         * */
-        enum class level : int {
-            fatal = -5,     ///< System is in an unusable state and the program will terminate.
-            alert = -4,     ///< Immediate user interaction is required, usually when data corruption occurs.
-            critical = -3,  ///< A critical error, such as hardware failure.
-            error = -2,     ///< An application error occurred.
-            warning = -1,   ///< Warning level, which may hint to future failure.
-            notice = 0,     ///< A noteworthy condition occurred.
-            status = 1,     ///< A status message.
-            info = 2,       ///< A purely informational message.
-            debug = 3,      ///< Debugging information.
-            trace = 4       ///< Tracing.
-        };
-
-        ///@internal
-        constexpr static unsigned level_n = 10;                            ///< Number of discernable log levels.
-        constexpr static int level_min = static_cast<int>(level::fatal);   ///< Minimum log level (as integer).
-        constexpr static int level_max = std::numeric_limits<int>::max();  ///< Maximum log level (as integer).
-#if defined(DEBUG) or defined(DOXYGEN)
-        constexpr static int level_default = static_cast<int>(level::debug);  ///< Default log level.
-#elif defined(NDEBUG)
-        constexpr static int level_default = static_cast<int>(level::notice);
-#else
-        constexpr static int level_default = static_cast<int>(level::info);
-#endif
-        ///@endinternal
-
-        /** Log message handler.
-         *
-         * This class handles logging and, as well, is the base class for
-         * the individual implementations (see @c log::fatal, etc.);
-         *
+        /** Helper for log-level classes.
          * @ingroup api-core-log-details */
-        class VIDRE_CORE_VISIBILITY handler {
-        public:
-            handler() = default;
-            handler(level lvl) : level_(static_cast<int>(lvl)) {};
-
-        protected:
-            int level_ = level_default;  ///< Log level for this object.
-
-        private:
-            char last_ = 0;  ///<@internal Last emitted character.
-
-        protected:
-            /** Emit text.
-             * @note
-             *      The message is parsed so that FIXME
-             * */
-            void emit(const message_type &txt, unsigned = 0) noexcept;
-
-        public:
-            handler &operator<<(const vidre::log::message_type &msg) noexcept {
-                emit(msg);
-                return *this;
-            }
-
-            template <typename T>
-            requires functor<handler, T>
-            handler &operator<<(T &&fn) noexcept {
-                return fn(*this);
-            }
-
-            template <typename V>
-            requires (not convertible_to_message_type<V> and std::formattable<std::remove_cvref_t<V>, char>)
-            handler &operator<<(const V &value) noexcept {
-                emit(std::format("{}", value));
-                return *this;
-            }
-        };
-
-        /** End-of-line.
-         * */
-        constexpr static message_type endl = {"\n", 1};
-
-        /**@internal Indentation.
-         * */
-        constexpr static message_type indent_s = {"    ", 4};
-
-        ///@}
-
-        inline namespace io {
-
-            /**@addtogroup api-core-log-io
-             * */
-            ///@{
-
-            /** Output style.
-             * */
-            struct style {
-                /** Style enumeration.
-                 * */
-                enum type : uint8_t {
-                    plain,   ///< Plain, undecorated output.
-                    tagged,  ///< As the name suggests (i.e. first line tag, following lines indented).
-                    color    ///< Colored output (uses terminal escape sequences).
-                };
-            };
-
-            /** Default log stream.
-             *
-             * This class implements logging to @c stderr, but also, serves a
-             * base class for implementing individual log streamers.
-             *
-             * Developers wishing to implement their own logic should study
-             * @c log::io::file.
-             *
-             * */
-            class VIDRE_CORE_VISIBILITY stream {
-            protected:
-                /**@internal List of log streams.
-                 * */
-                static std::vector<io::stream *> channels;
-
-                /**@internal Maximum log level in channels.
-                 * */
-                static int maxthreshold;
-
-            public:
-                /**@internal Add a log stream.
-                 * */
-                template <typename S>
-                requires std::derived_from<S, stream>
-                static unsigned add(S &channel) noexcept {
-                    unsigned id = channels.size();
-                    channels.push_back(&channel);
-                    if (channel.threshold_ > maxthreshold)
-                        maxthreshold = channel.threshold_;
-                    return id;
-                }
-
-                /**@internal Remove a log stream by channel id.
-                 * @see vidre::log::scope<>
-                 * */
-                static void remove(unsigned chanid) noexcept;
-
-                /** Get threshold.
-                 * */
-                static level threshold(unsigned chanid) noexcept;
-
-                /** Set threshold.
-                 * */
-                static void threshold(unsigned chanid, int lvl) noexcept;
-                static void threshold(unsigned chanid, level lvl) noexcept {
-                    threshold(chanid, static_cast<int>(lvl));
-                }
-
-            public:
-                stream() = default;
-                stream(level th) noexcept : threshold_(static_cast<int>(th)) {}
-                stream(style::type sty) noexcept : style_(sty) {}
-                stream(level th, style::type sty) noexcept : threshold_(static_cast<int>(th)), style_(sty) {}
-
-                virtual ~stream() {
-                    if (chanid_ >= 0)
-                        remove(chanid_);
-                }
-
-            protected:
-                int threshold_ = level_default;     ///< Log threshold for this stream.
-                style::type style_ = style::plain;  ///< Output style.
-                int chanid_ = -1;                   ///< Channel ID (if av.).
-
-            public:
-                /** Write text to this log stream.
-                 *
-                 * @note
-                 *      This method only writes text to the stream. All logic
-                 *      for styling is handled by the vidre::log::handler class.
-                 *
-                 * */
-                virtual void put(const message_type &msg) noexcept;
-
-            private:
-                friend class vidre::log::handler;
-                friend class vidre::log::trace;
-            };
-
-            /** File logger.
-             * */
-            class VIDRE_CORE_VISIBILITY file : public stream {
-            public:
-                file(const std::string_view filename, level th = static_cast<level>(level_default),
-                     style::type sty = style::tagged) noexcept;
-                virtual ~file() {
-                    if (outs_ != nullptr)
-                        ::fclose(outs_);
-                }
-
-            protected:
-                FILE *outs_ = nullptr;
-
-            protected:
-                /** Write header.
-                 *
-                 * This is, at the moment of writing:
-                 *
-                 *      [[[=== UTC ===]]]
-                 *
-                 * where "UTC" is the actual ISO 8601 UTC Time.
-                 */
-                void header() noexcept;
-
-            public:
-                void put(const message_type &msg) noexcept override {
-                    if (outs_)
-                        fwrite(msg.data(), msg.size(), 1, outs_);
-                }
-            };
-
-            /** Log to buffer.
-             * */
-            class VIDRE_CORE_VISIBILITY string : public stream {
-            public:
-                string(level th = static_cast<level>(level_default), style::type sty = style::color) noexcept;
-
-            protected:
-                std::string buf_ = {};
-
-            public:
-                void put(const message_type &msg) noexcept override {
-                    buf_.append(msg);
-                }
-
-                /** Get buffer content.
-                 * */
-                message_type get() noexcept {
-                    return buf_;
-                }
-            };
-
-            ///@}
-
-        }  // namespace io
+#define VIDRE_CORE_LOG_IMPL(T)                       \
+    class VIDRE_CORE_VISIBILITY T : public handler { \
+    public:                                          \
+        T() noexcept : handler(level::T) {}          \
+    };
 
         /** Null sink.
          * @ingroup api-core-log-details */
@@ -649,17 +404,15 @@ namespace vidre {
             }
         };
 
-        /** Helper for log-level classes.
-         * @ingroup api-core-log-details */
-#define VIDRE_CORE_LOG_IMPL(T)                       \
-    class VIDRE_CORE_VISIBILITY T : public handler { \
-    public:                                          \
-        T() noexcept : handler(level::T) {}          \
-    };
+        ///@}
 
         /**@addtogroup api-core-log-if
          * */
         ///@{
+
+        /** Log message source.
+         * */
+        extern shared<output> source;
 
         /** Fatal log message.
          * @note
@@ -714,9 +467,13 @@ namespace vidre {
 #if defined(DEBUG) or defined(DOXYGEN)
         /** Log trace.
          *
-         * Tracing is expensive but can give valuable information about the
-         * program flow. Therefore,
+         * Tracing is costly and should be used judiciously; it is only enabled when
+         * the @c DEBUG macro is defined during compilation.
          *
+         * @note In contrast to the default handling, trace messages (or packets) are
+         *       emitted per line.
+         *
+         * @see pattern()
          * */
         class VIDRE_CORE_VISIBILITY trace : public handler {
         protected:
@@ -730,10 +487,10 @@ namespace vidre {
 
             /**@internal Source filename.
              * */
-            static message_type file_name() noexcept {
-                message_type name = stack.back().file_name();
+            static std::string_view file_name() noexcept {
+                std::string_view name = stack.back().file_name();
                 auto pos = name.find("vidre/");
-                if (pos == message_type::npos)
+                if (pos == std::string_view::npos)
                     return name;
                 return {name.data() + pos, name.size() - pos};
             }
@@ -766,27 +523,22 @@ namespace vidre {
             ~trace();
 
         protected:
+            std::string message_;     ///< Temporary message buffer.
             std::size_t follow_ = 0;  ///< Indentation depth (0 counts as not traced).
 
         protected:
-            void emit(const message_type &txt) noexcept {
-                if (io::stream::maxthreshold < level_)
-                    return;
+            void emit(bool last = false) noexcept;
 
-                if (follow_ == 0)
-                    return;
-
-                handler::emit(txt, follow_ - 1);
-            }
+            void emit(const std::string_view &txt) noexcept;
 
         public:
-            trace &operator<<(const vidre::log::message_type &msg) noexcept {
+            trace &operator<<(const std::string_view &msg) noexcept {
                 emit(msg);
                 return *this;
             }
 
             template <typename V>
-            requires (not convertible_to_message_type<V> and std::formattable<std::remove_cvref_t<V>, char>)
+            requires (not std::is_convertible_v<V, std::string_view> and std::formattable<std::remove_cvref_t<V>, char>)
             trace &operator<<(const V &value) noexcept {
                 emit(std::format("{}", value));
                 return *this;
@@ -808,6 +560,18 @@ namespace vidre {
         void setup(const std::string &def);
 
         ///@}
+
+        // /** Output style.
+        //  * */
+        // struct style {
+        //     /** Style enumeration.
+        //      * */
+        //     enum type : uint8_t {
+        //         plain,   ///< Plain, undecorated output.
+        //         tagged,  ///< As the name suggests (i.e. first line tag, following lines indented).
+        //         color    ///< Colored output (uses terminal escape sequences).
+        //     };
+        // };
 
     }  // namespace log
 

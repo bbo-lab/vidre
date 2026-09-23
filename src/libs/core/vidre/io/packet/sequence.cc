@@ -20,4 +20,45 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sequence.hh"
- 
+#include "factory.hh"
+
+using namespace vidre;
+
+static io::packet::registry<io::packet::sequence>        //
+    packet_factory_b(io::packet::major::sequence,        //
+                     io::packet::minor::group);
+
+void io::packet::sequence::update() noexcept {
+    hdr.length = 0;
+    for (auto &pkt : packets_) {
+        pkt->update();
+        hdr.length += pkt->size();
+    }
+}
+
+io::result io::packet::sequence::emit(io::sink &f) {
+    auto retval = io::packet::emit(f);
+    for (auto &pkt : packets_)
+        retval += pkt->emit(f);
+    return retval + pad(f);
+}
+
+void io::packet::sequence::absorb(memory::view view, std::endian endian) {
+    if (view.size() < size())
+        throw exception::runtime() << "packet data is truncated";
+
+    memory::view it = view + sizeof(header);
+    memory::const_pointer end_it = view.begin() + size();
+
+    while (it.begin() < end_it) {
+        auto pkt = io::packet::factory::make(it,endian);
+        it += pkt->size();
+        packets_.push_back(std::move(pkt));
+    }
+}
+settings::json io::packet::sequence::to_json() const {
+    settings::json node; 
+    for (const auto &pkt : packets_)
+        node.push_back(pkt->to_json());
+    return node;
+}

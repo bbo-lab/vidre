@@ -22,7 +22,6 @@
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_SINK_HH
 #define VIDRE_CORE_IO_TYPES_SINK_HH
-#include <memory>
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -81,7 +80,7 @@ namespace vidre {
              * @param buf Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type write(const memory::view &buf) {
+            virtual offset_type write(const memory::view &buf) { // FIXME why is this const memory::view & ?
                 return invalid<offset_type>;
             }
 
@@ -126,37 +125,55 @@ namespace vidre {
                 return put({sizeof(T) * N, reinterpret_cast<const memory::const_pointer>(arr)});
             }
 
-            /** Transfer a data packet.
+            /** Push a data packet.
              * @param p Shared pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            result put(shared<packet> p) override {
+            result push(shared<packet> p) override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
-        protected:
-            /** Terminate sink.
-             * This method may be called from connected sources to termainate the sink.
+        public:
+            /** Unlink the sink.
+             *
+             * This method disconnects the sink from any connected endpoints.
+             *
+             * @returns Status of the unlink operation.
              * */
-            void terminate() override;
+            status unlink() override;
 
+        protected:
             /** Default thread handler.
              * @param pause Pause duration in milliseconds (used, for example, when waiting for the source to become active).
              * @see endpoint::isactive()
-             * @see source_step()
+             * @see sink_step()
              * */
             void sink_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
 
         protected:
-            /** Connect a source to this sink.
-             * @param other The source to connect to.
+            /** Attach a source to this sink.
+             * @param src The source to connect to.
              * @param cap The capabilities of the connection.
+             * @returns `status::ok` on success, `status::bad` on failure (e.g. when already connected)
              *
              * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
-             *       source and sink capabilities. This connect method then sets up the actual connection. If additional
+             *       source and sink capabilities. This attach method then sets up the actual connection. If additional
              *       connection logic is required, the method can be overridden.
              * */
-            virtual status connect(shared<io::source> other, cap::flag_type cap);
+            virtual status attach(shared<io::source> src, cap::flag_type cap);
+
+            /** Check if source is attached.
+             * */
+            const bool isattached() const {
+                return !!source_;
+            }
+
+            /** Detach a source from this sink.
+             * @param src The source to detach.
+             * @returns `status::ok` on success (including when already disconnected), 
+             *          `status::bad` on failure (e.g. when still active).
+             * */
+            virtual status detach(const io::source *src);
 
         private:
             friend class source;
