@@ -102,7 +102,6 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-#if 0
     auto inp = io::endpoint::make<sensor>();
     // auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
@@ -112,6 +111,6 @@ int main(int argc, char *argv[]) {
     io::endpoint::connect(inp, outp);
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
-#endif
+
     return 0;
 }
