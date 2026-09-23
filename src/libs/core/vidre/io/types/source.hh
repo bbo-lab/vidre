@@ -78,13 +78,6 @@ namespace vidre {
              * @returns Number of bytes actually read (@c invalid for read failure).
              * */
             virtual result get(memory::area v) {
-                if (not issource(cap::chunk)) {
-                    if (getcap().getsink(cap::chunk))
-                        throw exception::runtime() << "source is not configured for chunk-based transmission";
-                    else
-                        throw exception::logic() << "source is not capable of chunk-based transmission";
-                }
-
                 result retval = read(v);
 
                 if (retval)
@@ -203,6 +196,12 @@ namespace vidre {
              *       connection logic is required, the method can be overridden.
              * */
             virtual status attach(shared<io::sink> snk, cap::flag_type cap);
+
+            /** Check if sink is attached.
+             * */
+            const bool isattached() const {
+                return !!sink_;
+            }
 
             /** Detach a sink from this source.
              * @param snk The sink to detach.

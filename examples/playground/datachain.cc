@@ -2,6 +2,7 @@
 #include <thread>
 #include <vidre/io.hh>
 #include "vidre/io/types/channel.hh"
+#include "vidre/memory/base.hh"
 #include <vidre/log.hh>
 
 using namespace vidre;
@@ -37,7 +38,7 @@ protected:
         }
         else {
             notify();
-            stats_.packets.dropped++; // see get() above
+            stats_.packets.dropped++;  // see get() above
         }
     }
 };
@@ -73,8 +74,6 @@ public:
 
             std::printf("|\n");
         }
-
-        std::printf("%08zx\n", view.size());
     }
 
 public:
@@ -93,15 +92,18 @@ protected:
 
 public:
     cap getcap() const noexcept override {
-        return {{}, cap::packet | cap::push | cap::event};
+        return {{}, cap::packet | cap::pull | cap::event};
     }
 
     io::result push(shared<io::packet> p) override {
-        return p->emit(*this);
+        auto retval = p->emit(*this);
+        return retval;
     }
 };
 
 int main(int argc, char *argv[]) {
+    log::debug() << "Testing datachain...\n";
+
     auto inp = io::endpoint::make<sensor>();
     // auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
@@ -111,6 +113,8 @@ int main(int argc, char *argv[]) {
     io::endpoint::connect(inp, outp);
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
+
+    inp->unlink();
 
     return 0;
 }

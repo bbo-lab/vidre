@@ -21,6 +21,7 @@
  */
 #include "source.hh"
 #include "sink.hh"
+#include "../../log.hh"
 
 using namespace vidre;
 using namespace vidre::io;
@@ -45,13 +46,12 @@ status source::attach(shared<io::sink> other, cap::flag_type cap) {
     cap_[index::source] = cap;
     clearstats();
 
-    // start event handler if needed
-    if (cap & cap::event) {
-        // FIXME start handler
-    }
-
     // attach sink
     sink_ = other;
+
+    // start handler
+    source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
+
     return status::ok;
 }
 
@@ -70,17 +70,27 @@ status source::detach(const io::sink *snk) {
 
 void source::source_handler(shared<task> self, std::chrono::milliseconds pause) {
     task::scope scope(self);
+    log::debug() << "source_handler: started...\n";
+
+    // wait for connection
+    while (!sink_ or not sink_->isattached()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
 
     // prepare
+    log::debug() << "source_handler: preparing...\n";
     self->on_terminate([ev = &source_event_]() {
         ev->cancel();
     });
 
     enter_handler();
 
+    // event loop
+    log::debug() << "source_handler: running...\n";
     while (not scope.isterminated()) {
         source_step();
     }
 
     leave_handler();
+    log::debug() << "source_handler: finished.\n";
 }

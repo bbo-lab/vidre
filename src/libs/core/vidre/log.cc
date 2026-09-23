@@ -150,7 +150,7 @@ void log::handler::emit() noexcept {
 #endif
 
     // emit packet
-    log::source->push(std::move(msg_));
+    log::source->send(std::move(msg_));
 }
 
 void log::output::send(shared<packet> msg) noexcept {
@@ -221,7 +221,7 @@ void log::trace::emit(bool last) noexcept {
 
     // emit packet
     write(message_);
-    log::source->push(std::move(msg_));
+    log::source->send(std::move(msg_));
     if (not last)
         msg_ = packet::make(level::trace, 0);
 #endif

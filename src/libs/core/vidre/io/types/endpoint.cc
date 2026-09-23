@@ -103,7 +103,7 @@ status endpoint::connect(shared<io::source> src, shared<io::sink> snk) {
         snk_cap &= ~cap::push;
     }
     else {
-        // FIXME if src does push and snk only event, we can install a "channel" by default
+        // FIXME if src does push and snk only event, we can install an adapter (based on channel) by default
         return status::bad;
     }
 

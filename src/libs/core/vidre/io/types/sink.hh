@@ -90,13 +90,6 @@ namespace vidre {
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
             virtual result put(const memory::view &v) {
-                if (not issink(cap::chunk)) {
-                    if (getcap().getsink(cap::chunk))
-                        throw exception::runtime() << "sink is not configured for chunk-based transmission";
-                    else
-                        throw exception::logic() << "sink is not capable of chunk-based transmission";
-                }
-
                 result retval = write(v);
 
                 // update stats
@@ -168,6 +161,12 @@ namespace vidre {
              *       connection logic is required, the method can be overridden.
              * */
             virtual status attach(shared<io::source> src, cap::flag_type cap);
+
+            /** Check if source is attached.
+             * */
+            const bool isattached() const {
+                return !!source_;
+            }
 
             /** Detach a source from this sink.
              * @param src The source to detach.
