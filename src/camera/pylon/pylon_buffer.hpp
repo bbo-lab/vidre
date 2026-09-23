@@ -40,7 +40,7 @@ public:
                 (void *)((vidre::SharedFrameHeader *)(allocatedMemory) + 1);
             
                 // Zero out buffer
-            byte *bytePointer = (byte *)(*pCreatedBuffer);
+            std::uint8_t *bytePointer = (std::uint8_t *)(*pCreatedBuffer);
             for (size_t i = 0; i < bufferSize; ++i) {
                 bytePointer[i] = 0;
             }

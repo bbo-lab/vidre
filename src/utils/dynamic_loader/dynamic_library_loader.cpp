@@ -55,7 +55,7 @@ void* GetFunction(const std::string& library_name, const std::string& function) 
 #else
     dlerror();
 
-    auto handle = dl_open(library_name);
+    auto handle = dlopen(library_name.c_str(), RTLD_LAZY);
 
     auto result = dlsym(handle, function.c_str());
     // dlsym may return NULL even if succeeding
