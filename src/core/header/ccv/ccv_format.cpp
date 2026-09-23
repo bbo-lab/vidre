@@ -13,8 +13,12 @@ namespace vidre {
         size_t  byte_offset_in, byte_offset_out, buffersize_out_in_samples, nsamples, remaining_samples;
         buffersize_out_in_samples = (size_t) std::floor(((double) buffersize_out) * 0.8);
         nsamples = nbytes_in / 2; //rounds down
+#if defined(_WIN32)
+        size_t n = min(nsamples, buffersize_out_in_samples);
+#else
         size_t n = std::min(nsamples, buffersize_out_in_samples);
-        
+#endif
+
         size_t nblocks = n / 4; //rounds down
         
         byte_offset_out = 0;
