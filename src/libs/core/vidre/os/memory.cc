@@ -23,15 +23,15 @@
 
 using namespace vidre;
 
-#if defined(_WIN32)
-#include <windows.h>
-#elif defined(__linux__)
+#if defined(__linux__)
 #include <unistd.h>
 #include <sys/sysinfo.h>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
 #include <algorithm>
+#elif defined(_WIN32)
+#include <windows.h>
 #elif defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
@@ -40,7 +40,11 @@ using namespace vidre;
 #include <mach/mach_types.h>
 #include <mach/mach_init.h>
 #include <mach/mach_host.h>
+#include <unistd.h>
+#include <sys/sysinfo.h>
 #endif
+
+
 
 #include <string_view>
 
@@ -72,7 +76,7 @@ vidre::os::memory vidre::os::memory::get() noexcept {
         }
     }
     else {
-        // The following lines contain what we're after. The format itself 
+        // The following lines contain what we're after. The format itself
         // hasn't changed since Linux kernel version 2.6 (according to DeepSeek),
         // only fields were added.
 
@@ -132,3 +136,18 @@ vidre::os::memory vidre::os::memory::get() noexcept {
 
     return info;
 }
+
+static std::size_t systempagesize() noexcept {
+#if defined(_SC_PAGESIZE)
+    auto retval = sysconf(_SC_PAGESIZE);
+    return retval;
+#elif defined(_WIN32)
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    return si.dwPageSize;
+#else
+    return 4096;  // Unknown platform, assume 4 KB page size
+#endif
+}
+
+const std::size_t vidre::os::pagesize = systempagesize();

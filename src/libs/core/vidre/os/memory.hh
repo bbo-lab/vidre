@@ -32,13 +32,6 @@
 
 #include <vidre/core/config.hh>
 
-#if defined(_WIN32  ) || defined(_WIN64)
-#include <windows.h>
-#else
-#include <unistd.h>
-#include <sys/sysinfo.h>
-#endif
-
 namespace vidre {
 
     namespace os {
@@ -63,20 +56,9 @@ namespace vidre {
             static memory get() noexcept;
         };
 
-        /** Get system page size.
+        /** System page size.
          * */
-        inline std::size_t pagesize() noexcept {
-#if defined(_SC_PAGESIZE)
-            auto retval = sysconf(_SC_PAGESIZE);
-            return retval;
-#elif defined(_WIN32)
-            SYSTEM_INFO si;
-            GetSystemInfo(&si);
-            return si.dwPageSize;
-#else
-            return 0;  // Unknown platform
-#endif
-        }
+        extern const std::size_t pagesize;
 
         ///@}
 

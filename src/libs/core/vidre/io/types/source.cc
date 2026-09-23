@@ -27,14 +27,11 @@ using namespace vidre;
 using namespace vidre::io;
 
 source::~source() {
-    // FIXME
-    // terminate();
-    // if (sink_)
-    //     sink_->disconnect(this);
+    unlink();
 }
 
 status io::source::unlink() {
-    // FIXME stop handler
+    
     return detach(sink_.get());
 }
 

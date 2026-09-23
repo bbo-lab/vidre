@@ -27,10 +27,7 @@ using namespace vidre;
 using namespace vidre::io;
 
 sink::~sink() {
-    // FIXME
-    // terminate();
-    // if (source_)
-    //     source_->disconnect(this);
+    unlink();
 }
 
 status io::sink::unlink() {
