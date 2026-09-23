@@ -75,7 +75,7 @@ qt_generate_deploy_app_script(
 )
 
 install(SCRIPT ${deploy_script})
-
+install(CODE "file(REMOVE \"\${CMAKE_INSTALL_PREFIX}/bin/icuuc.dll\")")
 if(MSVC)
     target_compile_options(vidre_app PRIVATE /W4 /WX- /bigobj)
 endif()
