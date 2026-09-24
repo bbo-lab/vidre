@@ -118,7 +118,7 @@ set(VIDRE_BUILD_EXAMPLES ${VIDRE_DEVELOP} CACHE BOOL "Build examples.")
 set(VIDRE_BUILD_TESTS ${VIDRE_DEVELOP} CACHE BOOL "Build tests.")
 set(VIDRE_BUILD_GUI ON CACHE BOOL "Build GUIs.")
 
-set(VIDRE_FETCH_DEPS OFF CACHE BOOL "Fetch dependencies")
+set(VIDRE_FETCH_DEPS ON CACHE BOOL "Fetch dependencies")
 mark_as_advanced(VIDRE_FETCH_DEPS)
 
 # DEPENDENCIES ################################################################
