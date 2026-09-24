@@ -16,7 +16,7 @@ set(VIDRE_DEPS
     # units
     yaml
     unordered_dense
-
+    ftxui
     qt
 
     catch2
@@ -70,13 +70,11 @@ endforeach()
 
 vidre_deps_report_show()
 
-if(VIDRE_DEPS_UNMET AND NOT VIDRE_FETCH_DEPS)
-    message(FATAL_ERROR "Unmet depencies, see https://github.com/bbo-lab/vidre/blob/main/cmake/DEPENDENCIES.md for further information.")
-endif()
-
 if(VIDRE_FETCH_DEPS)
     set(VIDRE_DEPS_CHECK_ONLY OFF)
     foreach(dep ${VIDRE_DEPS})
         include(vidre/deps/${dep})
     endforeach()
+elseif(VIDRE_DEPS_UNMET)
+    message(FATAL_ERROR "Unmet depencies, see https://github.com/bbo-lab/vidre/blob/main/cmake/DEPENDENCIES.md for further information.")
 endif()
