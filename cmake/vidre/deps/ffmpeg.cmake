@@ -17,6 +17,8 @@ if(VIDRE_DEPS_CHECK_ONLY)
     )
     vidre_deps_set(FFmpeg ${FFmpeg_FOUND} REQUIRED)
 else()
+    message(STATUS "Fetching ffmpeg...")
+
     FetchContent_Declare(FFmpeg
         GIT_REPOSITORY https://git.ffmpeg.org/ffmpeg.git
         GIT_TAG n6.1.4

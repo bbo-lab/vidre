@@ -34,7 +34,7 @@ if(VIDRE_DEPS_CHECK_ONLY)
     )
     vidre_deps_set(Boost ${Boost_FOUND} REQUIRED)
 else()
-    set(BOOST_ENABLE_CMAKE ON)    
+    message(STATUS "Fetching boostorg/boost...")
 
     FetchContent_Declare(
         Boost
@@ -50,7 +50,8 @@ else()
             CONFIG
     )
 
-    #set(Boost_USE_STATIC_LIBS OFF) 
+    set(BOOST_ENABLE_CMAKE ON)
+    #set(Boost_USE_STATIC_LIBS OFF)
     set(Boost_USE_MULTITHREADED ON)  
     #set(Boost_USE_STATIC_RUNTIME OFF) 
 

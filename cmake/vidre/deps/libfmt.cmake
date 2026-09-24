@@ -14,6 +14,8 @@ if(NOT VIDRE_USE_CPP_LIB_FORMAT)
         find_package(fmt QUIET)
         vidre_deps_set(libfmt ${fmt_FOUND} REQUIRED)
     else()
+        message(STATUS "Fetching fmtlib/fmt...")
+
         FetchContent_Declare(fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
             GIT_TAG        12.1.0

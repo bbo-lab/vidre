@@ -3,6 +3,8 @@
 #
 # Info: This package is always fetched.
 
+message(STATUS "Fetching jsawbbo/delua...")
+
 FetchContent_Declare(delua
   GIT_REPOSITORY https://github.com/jsawbbo/delua.git
   GIT_TAG 5.4

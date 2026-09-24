@@ -47,6 +47,8 @@ if(VIDRE_DEPS_CHECK_ONLY)
 	endif()
 	vidre_deps_set(libyuv ${libyuv_FOUND} REQUIRED)
 elseif(NOT DEFINED YUVLIB)
+    message(STATUS "Fetching googlesource/libyuv...")
+
     FetchContent_Declare(libyuv
         GIT_REPOSITORY https://chromium.googlesource.com/libyuv/libyuv/
 		GIT_TAG        main

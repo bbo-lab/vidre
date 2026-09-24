@@ -11,6 +11,8 @@ if(VIDRE_DEPS_CHECK_ONLY)
         set(YAMLLIB yaml-cpp::yaml-cpp)
     endif()
 else()
+    message(STATUS "Fetching yaml-cpp...")
+
     FetchContent_Declare(
         yaml-cpp
         GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git

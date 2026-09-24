@@ -6,6 +6,8 @@ if(VIDRE_DEPS_CHECK_ONLY)
 	find_package(ftxui CONFIG QUIET)
 	vidre_deps_set(ftxui ${ftxui_FOUND} REQUIRED)
 elseif(NOT DEFINED FTXUI)
+    message(STATUS "Fetching ArthurSonzogni/FTXUI...")
+
     FetchContent_Declare(ftxui
         GIT_REPOSITORY https://github.com/ArthurSonzogni/FTXUI.git
 		GIT_TAG        v7.0.3

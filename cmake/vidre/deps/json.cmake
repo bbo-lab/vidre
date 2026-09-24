@@ -8,6 +8,8 @@ if(VIDRE_DEPS_CHECK_ONLY)
     find_package(nlohmann_json QUIET)
     vidre_deps_set(nlohmann-json ${nlohmann_json_FOUND} REQUIRED)
 else()
+    message(STATUS "Fetching nlohman/json...")
+
     FetchContent_Declare(nlohmann_json
         GIT_REPOSITORY https://github.com/nlohmann/json.git
         GIT_TAG        v3.12.0

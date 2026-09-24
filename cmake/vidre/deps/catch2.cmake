@@ -12,6 +12,8 @@ if(VIDRE_DEPS_CHECK_ONLY)
     find_package(Catch2 QUIET
         3.4)
 else(NOT Catch2_FOUND AND VIDRE_DEVELOP)
+    message(STATUS "Fetching catchorg/Catch2...")
+
     # see https://github.com/catchorg/Catch2/blob/v3.7.1/docs/tutorial.md
     FetchContent_Declare(Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git

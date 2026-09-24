@@ -6,6 +6,8 @@
 #     find_package(unordered_dense CONFIG)
 # 	vidre_deps_set(unordered_dense ${unordered_dense_FOUND} REQUIRED)
 # elseif(NOT ${unordered_dense_FOUND})
+    message(STATUS "Fetching martinus/unordered_dense...")
+
     FetchContent_Declare(unordered_dense
         GIT_REPOSITORY https://github.com/martinus/unordered_dense.git
 		GIT_TAG        v4.8.1

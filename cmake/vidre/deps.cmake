@@ -12,7 +12,6 @@ set(VIDRE_DEPS
     libuuid
     libyuv
     lua
-    terminal
     # units
     yaml
     unordered_dense
@@ -30,11 +29,13 @@ function(vidre_deps_report)
         set(VIDRE_DEPS_REPORT "${VIDRE_DEPS_REPORT};${line}" CACHE INTERNAL "Dependency report.")
     endforeach()
 endfunction()
+
 function(vidre_deps_report_show)
     foreach(line ${VIDRE_DEPS_REPORT})
         message(NOTICE "${line}")
     endforeach()
 endfunction()
+
 function(vidre_deps_set PACKAGE FOUND)
     cmake_parse_arguments(_ "OPTIONAL;RECOMMENDED;REQUIRED" ${ARGV})
 

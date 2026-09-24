@@ -3,6 +3,8 @@
 #
 # Info: This package is always fetched.
 
+message(STATUS "Fetching mpusz/mp-units...")
+
 FetchContent_Declare(mp-units
   GIT_REPOSITORY https://github.com/mpusz/mp-units
   GIT_TAG        2.2
