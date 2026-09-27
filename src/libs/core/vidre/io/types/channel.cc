@@ -56,7 +56,10 @@ status io::channel::unlink() {
     }
 
     // re-link left and right edges
-    return endpoint::connect(std::move(src), std::move(snk));
+    if (src && snk)
+        return endpoint::connect(std::move(src), std::move(snk));
+
+    return status::ok;
 }
 
 // status io::channel::attach(shared<io::source> src, cap::flag_type cap) {

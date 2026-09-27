@@ -39,7 +39,7 @@ status io::source::unlink() {
     tr << "unlinking source...\n";
 
     auto retval = source_right->detach(this);
-    if (retval == status::bad) {    
+    if (retval == status::bad) {
         tr << "failed to detach sink\n";
         return status::bad;
     }
@@ -102,6 +102,9 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
 
     // wait for connection
     while (!source_right or not source_right->isattached()) {
+        if (scope.isterminated())
+            return;
+
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 

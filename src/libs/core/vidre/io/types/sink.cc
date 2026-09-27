@@ -106,6 +106,9 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
 
     // wait for connection
     while (!sink_left or not sink_left->isattached()) {
+        if (scope.isterminated())
+            return;
+        
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
