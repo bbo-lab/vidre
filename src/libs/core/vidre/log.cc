@@ -169,7 +169,7 @@ status log::output::detach(const io::sink *snk) {
 
 #if defined(DEBUG)
 
-thread_local std::vector<std::source_location> vidre::log::trace::stack{};
+thread_local std::vector<std::source_location> vidre::log::trace::stack = {};
 std::regex vidre::log::trace::match{};
 
 void vidre::log::trace::pattern(std::string_view wild) {

@@ -105,18 +105,33 @@ int main(int argc, char *argv[]) {
     log::debug() << "Testing datachain...\n" << std::format("{}", io::endpoint::cap::pull) << "\n";
     log::trace::pattern("*");
 
+#if 0
     auto inp = io::endpoint::make<sensor>();
-    // auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
 
-    // io::endpoint::connect(chp, outp);
-    // io::endpoint::connect(inp, chp);
     io::endpoint::connect(inp, outp);
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     outp->unlink();
     inp->unlink();
+#else
+    auto inp = io::endpoint::make<sensor>();
+    auto chp = io::endpoint::make<io::channel>();
+    auto outp = io::endpoint::make<store>();
+
+    io::endpoint::connect(chp, outp);
+    io::endpoint::connect(inp, chp);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    chp->unlink();
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    outp->unlink();
+    inp->unlink();
+#endif
 
     return 0;
 }

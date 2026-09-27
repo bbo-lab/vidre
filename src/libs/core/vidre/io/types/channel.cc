@@ -23,6 +23,10 @@
 
 using namespace vidre;
 
+io::channel::~channel() {
+    unlink();
+}
+
 io::result io::channel::push(shared<packet> p) {
     io::result retval = invalid<offset_type>;
     if (sink_) {
@@ -33,6 +37,40 @@ io::result io::channel::push(shared<packet> p) {
 }
 
 status io::channel::unlink() {
-    throw exception::internal() << "method not implemented or capability erroneously advertised";
+    if (not source_ and not sink_)  // not connected
+        return status::ok;
+
+    shared<io::source> src = source_;
+    shared<io::sink> snk = sink_;
+
+    // unlink left edge (our sink from its source)
+    if (source_) {
+        if (source::unlink() == status::bad)
+            return status::bad;
+    }
+
+    // unlink right edge (our source from its sink) 
+    if (sink_) {
+        if (sink::unlink() == status::bad)
+            return status::bad;
+    }
+
+    // re-link left and right edges
+    return endpoint::connect(std::move(src), std::move(snk));
 }
 
+// status io::channel::attach(shared<io::source> src, cap::flag_type cap) {
+//     throw exception::internal() << "method not implemented or capability erroneously advertised";
+// }
+
+// status io::channel::attach(shared<io::sink> src, cap::flag_type cap) {
+//     throw exception::internal() << "method not implemented or capability erroneously advertised";
+// }
+
+// status io::channel::detach(const io::source *ptr) {
+//     throw exception::internal() << "method not implemented or capability erroneously advertised";
+// }
+
+// status io::channel::detach(const io::sink *ptr) {
+//     throw exception::internal() << "method not implemented or capability erroneously advertised";
+// }

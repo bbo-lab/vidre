@@ -28,9 +28,6 @@ using namespace vidre;
 using namespace vidre::io;
 
 source::~source() {
-    log::trace tr;
-    tr << debug::tag(this) << " destroying source\n";
-
     unlink();
 }
 
@@ -48,7 +45,7 @@ status io::source::unlink() {
 }
 
 status source::attach(shared<io::sink> other, cap::flag_type cap) {
-    if (sink_.get())  // already connected
+    if (sink_)  // already connected
         return status::bad;
 
     // store fields, clear stats
@@ -75,12 +72,18 @@ status source::detach(const io::sink *ptr) {
     log::trace tr;
     tr << debug::tag(this) << " detaching from sink...\n";
 
-        auto snk = std::exchange(sink_,{});
+    // stop task
+    if (source_task_) {
+        if (source_task_->isrunning()) {
+            source_task_->terminate();
+            source_task_->join();
+        }
 
-    if (source_task_ && source_task_->isrunning()) {
-        source_task_->terminate();
-        source_task_->join();
+        source_task_ = {};
     }
+
+    // clear link
+    sink_.reset();
 
     tr << "done.\n";
     return status::ok;

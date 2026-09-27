@@ -27,9 +27,6 @@ using namespace vidre;
 using namespace vidre::io;
 
 sink::~sink() {
-    log::trace tr;
-    tr << debug::tag(this) << " destroying sink\n";
-
     unlink();
 }
 
@@ -86,12 +83,18 @@ status sink::detach(const io::source *ptr) {
     log::trace tr;
     tr << debug::tag(this) << " detaching from source...\n";
 
-    auto src = std::exchange(source_,{});
+    // stop task
+    if (sink_task_) {
+        if (sink_task_->isrunning()) {
+            sink_task_->terminate();
+            sink_task_->join();
+        }
 
-    if (sink_task_ && sink_task_->isrunning()) {
-        sink_task_->terminate();
-        sink_task_->join();
+        sink_task_ = {};
     }
+
+    // clear link
+    source_.reset();
 
     tr << "done.\n";
     return status::ok;

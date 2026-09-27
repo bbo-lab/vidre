@@ -52,14 +52,13 @@ namespace vidre {
             , public virtual source {
         public:
             channel() = default;
-            
+
             channel(const channel &) = delete;
             channel &operator=(const channel &) = delete;
             channel(channel &&) = delete;
             channel &operator=(channel &&) = delete;
 
-            virtual ~channel() = default;
-
+            virtual ~channel();
         public:
             /** Default channel capabilities.
              * */
@@ -88,6 +87,12 @@ namespace vidre {
              * @returns Status of the unlink operation.
              * */
             status unlink() override;
+
+        protected:
+            status attach(shared<io::source> src, cap::flag_type cap) override;
+            status attach(shared<io::sink> src, cap::flag_type cap) override;
+            status detach(const io::source *ptr) override;
+            status detach(const io::sink *ptr) override;
         };
 
         ///@}
