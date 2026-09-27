@@ -44,14 +44,16 @@ vidre_library(vidrecore SHARED
         vidre/cpp/util.hh
         vidre/cpp/shared.hh
         vidre/util.cc
-            vidre/util/version.hh vidre/util/version.cc
-            vidre/util/develop.hh vidre/util/develop.cc
-            vidre/util/uuid.hh vidre/util/uuid.cc
-            vidre/util/filesystem.hh vidre/util/filesystem.cc
-            vidre/util/variant.hh
-            vidre/util/endian.hh
             vidre/util/bit.hh vidre/util/bit.cc
             vidre/util/chrono.hh vidre/util/chrono.cc
+            vidre/util/debug.hh vidre/util/debug.cc
+            vidre/util/develop.hh vidre/util/develop.cc
+            vidre/util/endian.hh
+            vidre/util/filesystem.hh vidre/util/filesystem.cc
+            vidre/util/macros.hh
+            vidre/util/uuid.hh vidre/util/uuid.cc
+            vidre/util/variant.hh
+            vidre/util/version.hh vidre/util/version.cc
         vidre/error.hh vidre/error.cc
             vidre/error/details.hh
             vidre/error/flow.hh

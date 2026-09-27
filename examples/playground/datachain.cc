@@ -102,7 +102,8 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    log::debug() << "Testing datachain...\n";
+    log::debug() << "Testing datachain...\n" << std::format("{}", io::endpoint::cap::pull) << "\n";
+    log::trace::pattern("*");
 
     auto inp = io::endpoint::make<sensor>();
     // auto chp = io::endpoint::make<io::channel>();
@@ -112,8 +113,9 @@ int main(int argc, char *argv[]) {
     // io::endpoint::connect(inp, chp);
     io::endpoint::connect(inp, outp);
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
+    outp->unlink();
     inp->unlink();
 
     return 0;

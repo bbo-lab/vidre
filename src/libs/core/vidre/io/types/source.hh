@@ -204,11 +204,11 @@ namespace vidre {
             }
 
             /** Detach a sink from this source.
-             * @param snk The sink to detach.
+             * @param ptr The sink to detach.
              * @returns `status::ok` on success (including when already disconnected),
              *          `status::bad` on failure (e.g. when still active).
              * */
-            virtual status detach(const io::sink *snk);
+            virtual status detach(const io::sink *ptr);
 
         private:
             friend class sink;

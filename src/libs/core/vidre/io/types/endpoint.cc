@@ -120,8 +120,3 @@ status endpoint::connect(shared<io::source> src, shared<io::sink> snk) {
     return status::ok;
 }
 
-status endpoint::disconnect(shared<io::source> src, shared<io::sink> snk) {
-    // FIXME
-
-    return status::ok;
-}

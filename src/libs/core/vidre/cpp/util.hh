@@ -28,14 +28,14 @@
  * @ingroup api-core-cpp
  * @details
  * @fileinfo
- * 
+ *
  * @todo symbol demangling support
  * */
 
 #include <vidre/config.hh>
 
 #include <type_traits>
-
+#include <string_view>
 #include <climits>
 #include <cstddef>
 
@@ -65,6 +65,80 @@ namespace vidre {
     constexpr auto to_underlying(E e) noexcept {
         return static_cast<std::underlying_type_t<E>>(e);
     }
+
+    /** Compile-time fixed-size string.
+     *
+     * Stores a string literal, including its terminating NUL character, in a
+     * structural type suitable for use as a non-type template parameter (NTTP).
+     *
+     * The template size @p N denotes the complete storage size, including the
+     * terminating NUL character. Consequently, size() returns @c N-1.
+     *
+     * @tparam N Storage size in characters, including the terminating NUL.
+     *
+     * @code
+     * template <fixed_string Name>
+     * void foo();
+     *
+     * foo<"example">();
+     * @endcode
+     */
+    template <std::size_t N>
+    struct fixed_string {
+        char data[N];  ///< Character storage, including the terminating NUL.
+
+        /** Construct from a string literal.
+         *
+         * @param str String literal to copy, including its terminating NUL.
+         */
+        constexpr fixed_string(const char (&str)[N]) noexcept {
+            for (std::size_t i = 0; i < N; ++i)
+                data[i] = str[i];
+        }
+
+        /** Return the string as a NUL-terminated C string.
+         *
+         * @returns Pointer to the internal character storage.
+         */
+        constexpr const char *c_str() const noexcept {
+            return data;
+        }
+
+        /** Return a view of the string.
+         *
+         * The terminating NUL character is not part of the returned view.
+         *
+         * @returns String view containing the stored string.
+         */
+        constexpr std::string_view view() const noexcept {
+            return {data, N - 1};
+        }
+
+        /** Return the length of the string.
+         *
+         * @returns Number of characters excluding the terminating NUL.
+         */
+        constexpr std::size_t size() const noexcept {
+            return N - 1;
+        }
+
+        /** Implicit conversion to a string view.
+         *
+         * @returns String view containing the stored string, excluding the
+         *          terminating NUL.
+         */
+        constexpr operator std::string_view() const noexcept {
+            return view();
+        }
+    };
+
+    /** Deduction guide for fixed strings.
+     *
+     * Deduces the storage size, including the terminating NUL, directly from a
+     * string literal.
+     */
+    template <std::size_t N>
+    fixed_string(const char (&)[N]) -> fixed_string<N>;
 
     ///@}
 

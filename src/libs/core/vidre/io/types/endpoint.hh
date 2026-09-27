@@ -26,8 +26,11 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/cpp/util.hh>
+#include <vidre/util/debug.hh>
 #include <vidre/settings/json.hh>
 #include <vidre/io/types/core.hh>
+
+#include <format>
 
 namespace vidre {
 
@@ -225,6 +228,7 @@ namespace vidre {
 
         public:
             endpoint() = default;
+
             endpoint(const endpoint &) = delete;
             endpoint &operator=(const endpoint &) = delete;
             endpoint(endpoint &&) = delete;
@@ -264,9 +268,13 @@ namespace vidre {
             }
 
             /** Get endpoint tag.
-             * @returns The tag of this endpoint.
+             * @returns The string tag of this endpoint.
              * */
-            const std::string &tag() const noexcept {
+            const std::string tag() const noexcept {
+#if defined(DEBUG)
+                if (tag_.empty())
+                    return debug::tag(this);
+#endif
                 return tag_;
             }
 
@@ -364,9 +372,14 @@ namespace vidre {
              * */
             static status connect(shared<io::source> src, shared<io::sink> snk);
 
-            /** Disconnect source from sink.
+            /** Disconnect an endpoint.
+             * @param ep The endpoint to disconnect.
+             * @returns The status of the disconnection operation.
+             * @note This method is synonymous with calling `unlink()` on the endpoint.
              * */
-            static status disconnect(shared<io::source> src, shared<io::sink> snk);
+            static status disconnect(shared<io::endpoint> ep) {
+                return ep->unlink();
+            }
 
             /** Get packet manifest.
              * FIXME (the "manifest" contains the streams configuration data)
@@ -374,17 +387,6 @@ namespace vidre {
             virtual shared<packet> manifest() noexcept {
                 return {};  // FIXME
             }
-
-        protected:
-            /** Called when entering the handler context.
-             * This method is invoked at the beginning of the handler loop.
-             * */
-            virtual void enter_handler() {}
-
-            /** Called when leaving the handler context.
-             * This method is invoked at the end of the handler loop.
-             * */
-            virtual void leave_handler() {}
 
         private:
             friend class manager;
@@ -419,5 +421,62 @@ namespace vidre {
     }  // namespace io
 
 }  // namespace vidre
+
+#if defined(DEBUG)
+namespace std {
+
+    template <>
+    struct formatter<vidre::io::endpoint::cap::flag_type> : std::formatter<std::string_view> {
+        auto format(vidre::io::endpoint::cap::flag_type value, std::format_context &ctx) const {
+            using cap = vidre::io::endpoint::cap;
+
+            std::string name;
+
+            if (value & cap::chunk)
+                name += "chk|";
+            if (value & cap::packet)
+                name += "pkt|";
+            if (name.empty())
+                name = "none:";
+            else
+                name.end()[-1] = ':';
+
+            if (value & cap::push)
+                name += "push,";
+            if (value & cap::pull)
+                name += "pull,";
+            if (value & cap::nonblock)
+                name += "n";
+            if (value & cap::multi)
+                name += "m";
+            if (value & cap::periodic)
+                name += "p";
+            if (value & cap::realtime)
+                name += "r";
+
+            if (!name.empty() && name.back() == ',')
+                name.pop_back();
+
+            return std::formatter<std::string_view>::format(name, ctx);
+        }
+    };
+
+}  // namespace std
+#else
+namespace std {
+
+    template <>
+    struct formatter<vidre::io::endpoint::cap::flag_type>
+        : formatter<std::underlying_type_t<vidre::io::endpoint::cap::flag_type> > {
+        using type = vidre::io::endpoint::cap::flag_type;
+        using underlying = std::underlying_type_t<vidre::io::endpoint::cap::flag_type>;
+
+        auto format(type value, format_context &ctx) const {
+            return formatter<underlying>::format(static_cast<underlying>(value), ctx);
+        }
+    };
+
+}  // namespace std
+#endif
 
 #endif  // VIDRE_CORE_IO_TYPES_ENDPOINT_HH

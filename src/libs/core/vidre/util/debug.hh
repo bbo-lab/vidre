@@ -35,6 +35,10 @@
  * */
 
 #include <vidre/core/config.hh>
+#include <vidre/cpp/util.hh>
+
+#include <string>
+#include <format>
 
 namespace vidre {
 
@@ -44,14 +48,73 @@ namespace vidre {
          * */
         ///@{
 
-        /** Prevents the compiler from optimizing away a variable.
+        /** Debugging helper to prevent the compiler from optimizing away a variable.
          * @tparam T Type of the variable.
          * @param val The variable to prevent optimization on.
+         *
+         * @note The effects of this function are system-dependent and primarily intended for debugging purposes.
+         *       At the moment of writing, only GCC and Clang are supported.
+         *
          * */
         template <typename T>
-        void do_not_optimize(T const &val) {
+        void do_not_optimize(T const &val [[maybe_unused]]) {
+#if defined(__GNUC__) || defined(__clang__)
             asm volatile("" : : "r,m"(val) : "memory");
+#endif
         }
+
+        /** Demangle a C++ type name.
+         * @param name Mangled type name.
+         * @returns Demangled type name as a string.
+         *
+         * @note This function is primarily intended for debugging purposes and may not be available on all platforms.
+         * */
+        std::string demangle(const char *name);
+
+#if defined(DEBUG) or defined(DOXYGEN)
+        /** Get a diagnostic object ID based on its memory address.
+         *
+         * @param ptr Pointer to the object.
+         * @returns 32-bit unique identifier derived from the object's address.
+         *
+         * @note This function *only* generates a (not necessarily unique) identifier
+         *       based on the memory address of the object if `DEBUG` is defined.
+         *       Otherwise, it returns a default value (0).
+         *
+         * @see tag<>()
+         * */
+        inline std::uint32_t object_id(const void *ptr) noexcept {
+            auto v = reinterpret_cast<std::uintptr_t>(ptr);
+
+            if constexpr (sizeof(v) > sizeof(std::uint32_t))
+                v ^= v >> 32;
+
+            return static_cast<std::uint32_t>(v);
+        }
+
+        /** Get a tag string for an object based on its memory address.
+         *
+         * @tparam Name Fixed string representing the tag name.
+         * @param ptr Pointer to the object.
+         * @returns Formatted tag string combining the name and object ID.
+         *
+         * @note This function generates a tag string based on the memory address of the object if `DEBUG` is defined.
+         *       Otherwise, it returns an empty string.
+         * */
+        template <class T>
+        std::string tag(const T *obj) {
+            return std::format("⟨{}@{:08x}⟩", demangle(typeid(T).name()), object_id(obj));
+        }
+#else
+        constexpr inline std::uint32_t object_id(const void *) noexcept {
+            return {};
+        }
+
+        template <fixed_string>
+        constexpr std::string tag(const void *) {
+            return {};
+        }
+#endif
 
         ///@}
 

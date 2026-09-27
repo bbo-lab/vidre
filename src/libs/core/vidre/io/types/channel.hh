@@ -52,7 +52,7 @@ namespace vidre {
             , public virtual source {
         public:
             channel() = default;
-
+            
             channel(const channel &) = delete;
             channel &operator=(const channel &) = delete;
             channel(channel &&) = delete;

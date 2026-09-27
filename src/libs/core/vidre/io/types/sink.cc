@@ -27,12 +27,29 @@ using namespace vidre;
 using namespace vidre::io;
 
 sink::~sink() {
+    log::trace tr;
+    tr << debug::tag(this) << " destroying sink\n";
+
     unlink();
 }
 
 status io::sink::unlink() {
-    // FIXME stop handler
-    return detach(source_.get());
+    if (!source_)  // not connected
+        return status::ok;
+
+    log::trace tr;
+    tr << "unlinking sink...\n";
+
+    auto retval = source_->detach(this);
+    if (retval == status::bad) {    
+        tr << "failed to detach from source\n";
+        return status::bad;
+    }
+
+    retval = detach(source_.get());
+    tr << retval << ".\n";
+
+    return retval;
 }
 
 status sink::attach(shared<io::source> src, cap::flag_type cap) {
@@ -58,20 +75,25 @@ status sink::attach(shared<io::source> src, cap::flag_type cap) {
     return status::ok;
 }
 
-status sink::detach(const io::source *src) {
-    if (source_.get() != src)
+status sink::detach(const io::source *ptr) {
+    if (!source_)
+        return status::ok;
+
+    if (source_.get() != ptr)
+        // shouldn't happen
         return status::bad;
 
-    if (sink_task_->isrunning())
-        return status::bad;
+    log::trace tr;
+    tr << debug::tag(this) << " detaching from source...\n";
 
-    // source must be disconnected first
-    if (source_->detach(this) == status::bad)
-        return status::bad;
+    auto src = std::exchange(source_,{});
 
-    source_->detach(this);
+    if (sink_task_ && sink_task_->isrunning()) {
+        sink_task_->terminate();
+        sink_task_->join();
+    }
 
-    source_ = {};
+    tr << "done.\n";
     return status::ok;
 }
 
@@ -84,21 +106,20 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
-    log::debug() << "sink_handler: preparing...\n";
-    enter_handler();
-
     // event loop
     log::debug() << "sink_handler: running...\n";
     while (not scope.isterminated()) {
         auto retval = source_->wait();
-        if (retval == status::bad)
+        if (retval == status::bad) {
+            if (retval.error() == std::errc::operation_canceled)
+                break;
             continue;
+        }
 
         // FIXME this logic needs to use source_->queue_depth()
         for (size_type i = 0; i < *retval; ++i)
             push(source_->pull());
     }
 
-    leave_handler();
     log::debug() << "sink_handler: finished.\n";
 }

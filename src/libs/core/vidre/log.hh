@@ -479,7 +479,7 @@ namespace vidre {
         protected:
             /**@internal Internal stack when tracing.
              * */
-            static std::vector<std::source_location> stack;
+            static thread_local std::vector<std::source_location> stack;
 
             /**@internal Pattern for tracing.
              * */

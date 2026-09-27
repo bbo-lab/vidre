@@ -23,6 +23,7 @@
 #ifndef VIDRE_CORE_ERROR_FLOW_HH
 #define VIDRE_CORE_ERROR_FLOW_HH
 #include <memory>
+#include <string_view>
 #pragma once
 
 /**@addtogroup api-core-error-flow
@@ -35,6 +36,7 @@
 
 #include <system_error>
 #include <expected>
+#include <format>
 
 namespace vidre {
 
@@ -62,8 +64,8 @@ namespace vidre {
             bad = -1
         };
 
-        constexpr static type ok = type::ok; ///< Short for "status::type::ok".
-        constexpr static type bad = type::bad; ///< Short for "status::type::bad".
+        constexpr static type ok = type::ok;    ///< Short for "status::type::ok".
+        constexpr static type bad = type::bad;  ///< Short for "status::type::bad".
 
     public:
         /** Construct from status type.
@@ -145,6 +147,20 @@ namespace vidre {
          * */
         bool operator!() const noexcept {
             return status_ == bad;
+        }
+
+        /** String conversion.
+         * @return A string representation of the status (`"ok"`, `"bad"`, or `"unknown"`).
+         * */
+        constexpr operator std::string_view() const noexcept {
+            switch (status_) {
+                case ok:
+                    return "ok";
+                case bad:
+                    return "bad";
+                default:
+                    return "unknown";
+            }
         }
     };
 

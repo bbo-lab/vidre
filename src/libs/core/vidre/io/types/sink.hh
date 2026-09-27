@@ -169,11 +169,11 @@ namespace vidre {
             }
 
             /** Detach a source from this sink.
-             * @param src The source to detach.
+             * @param ptr The source to detach.
              * @returns `status::ok` on success (including when already disconnected), 
              *          `status::bad` on failure (e.g. when still active).
              * */
-            virtual status detach(const io::source *src);
+            virtual status detach(const io::source *ptr);
 
         private:
             friend class source;

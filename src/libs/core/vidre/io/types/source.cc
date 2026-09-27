@@ -22,17 +22,29 @@
 #include "source.hh"
 #include "sink.hh"
 #include "../../log.hh"
+#include "../../util/debug.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
 source::~source() {
+    log::trace tr;
+    tr << debug::tag(this) << " destroying source\n";
+
     unlink();
 }
 
 status io::source::unlink() {
-    
-    return detach(sink_.get());
+    if (!sink_)  // not connected
+        return status::ok;
+
+    log::trace tr;
+    tr << "unlinking source...\n";
+
+    auto retval = detach(sink_.get());
+    tr << retval << ".\n";
+
+    return retval;
 }
 
 status source::attach(shared<io::sink> other, cap::flag_type cap) {
@@ -52,16 +64,25 @@ status source::attach(shared<io::sink> other, cap::flag_type cap) {
     return status::ok;
 }
 
-status source::detach(const io::sink *snk) {
-    if (sink_.get() != snk)
+status source::detach(const io::sink *ptr) {
+    if (!sink_)
         return status::ok;
 
-    if (source_task_->isrunning())
+    if (sink_.get() != ptr)
+        // shouldn't happen
         return status::bad;
 
-    sink_ = {};
+    log::trace tr;
+    tr << debug::tag(this) << " detaching from sink...\n";
 
-    // FIXME stop stats?
+        auto snk = std::exchange(sink_,{});
+
+    if (source_task_ && source_task_->isrunning()) {
+        source_task_->terminate();
+        source_task_->join();
+    }
+
+    tr << "done.\n";
     return status::ok;
 }
 
@@ -80,14 +101,11 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
         ev->cancel();
     });
 
-    enter_handler();
-
     // event loop
     log::debug() << "source_handler: running...\n";
     while (not scope.isterminated()) {
         source_step();
     }
 
-    leave_handler();
     log::debug() << "source_handler: finished.\n";
 }
