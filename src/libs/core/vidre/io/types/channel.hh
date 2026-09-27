@@ -59,6 +59,7 @@ namespace vidre {
             channel &operator=(channel &&) = delete;
 
             virtual ~channel();
+
         public:
             /** Default channel capabilities.
              * */
@@ -77,7 +78,7 @@ namespace vidre {
              * */
             size_type queue_depth() const noexcept override {
                 if (sink_left)
-                    return sink_left->queue_depth();
+                    return std::static_pointer_cast<io::source>(sink_left)->queue_depth();
                 return 0;
             }
 

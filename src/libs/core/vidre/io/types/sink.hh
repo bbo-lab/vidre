@@ -60,7 +60,7 @@ namespace vidre {
          *
          * @see sink::shared
          * */
-        class VIDRE_CORE_VISIBILITY sink : public virtual endpoint {
+        class VIDRE_CORE_VISIBILITY sink : public virtual endpoint::sink {
         public:
             sink() = default;
 
@@ -72,7 +72,7 @@ namespace vidre {
             virtual ~sink();
 
         protected:
-            shared<io::source> sink_left{};  ///< Connected io::source.
+            shared<endpoint::source> sink_left{};  ///< Connected io::source.
             shared<task> sink_task_{};       ///< Thread handler if applicable.
 
         protected:
@@ -160,7 +160,7 @@ namespace vidre {
              *       source and sink capabilities. This attach method then sets up the actual connection. If additional
              *       connection logic is required, the method can be overridden.
              * */
-            virtual status attach(shared<io::source> src, cap::flag_type cap);
+            status attach(shared<endpoint::source> src, cap::flag_type cap) override;
 
             /** Check if source is attached.
              * */
@@ -173,11 +173,11 @@ namespace vidre {
              * @returns `status::ok` on success (including when already disconnected),
              *          `status::bad` on failure (e.g. when still active).
              * */
-            virtual status detach(const io::source *ptr);
+            status detach(const endpoint::source *ptr) override;
 
         private:
-            friend class source;
-            friend class endpoint;
+            friend class io::source;
+            friend class io::endpoint;
         };
 
         ///@}

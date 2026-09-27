@@ -50,12 +50,12 @@ status io::source::unlink() {
     return retval;
 }
 
-status source::attach(shared<io::sink> other, cap::flag_type cap) {
+status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     if (source_right)  // already connected
         return status::bad;
 
     // store fields, clear stats
-    cap_[index::source] = cap;
+    cap_[endpoint::source::index] = cap;
     clearstats();
 
     // attach sink
@@ -68,7 +68,7 @@ status source::attach(shared<io::sink> other, cap::flag_type cap) {
     return status::ok;
 }
 
-status source::detach(const io::sink *ptr) {
+status source::detach(const endpoint::sink *ptr) {
     if (!source_right)
         return status::ok;
 
@@ -101,7 +101,7 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     log::debug() << "source_handler: started...\n";
 
     // wait for connection
-    while (!source_right or not source_right->isattached()) {
+    while (!source_right or not std::dynamic_pointer_cast<io::sink>(source_right)->isattached()) {
         if (scope.isterminated())
             return;
 

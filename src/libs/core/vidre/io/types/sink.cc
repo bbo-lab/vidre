@@ -37,7 +37,7 @@ status io::sink::unlink() {
     log::trace tr;
     tr << "unlinking sink...\n";
 
-    auto retval = sink_left->detach(this);
+    auto retval = std::static_pointer_cast<io::source>(sink_left)->detach(this);
     if (retval == status::bad) {    
         tr << "failed to detach source\n";
         return status::bad;
@@ -49,12 +49,12 @@ status io::sink::unlink() {
     return retval;
 }
 
-status sink::attach(shared<io::source> src, cap::flag_type cap) {
+status sink::attach(shared<endpoint::source> src, cap::flag_type cap) {
     if (sink_left)  // already connected
         return status::bad;
 
     // store fields, clear stats
-    cap_[index::sink] = cap;
+    cap_[endpoint::sink::index] = cap;
     clearstats();
 
     // attach source
@@ -65,14 +65,14 @@ status sink::attach(shared<io::source> src, cap::flag_type cap) {
         // start handler
         sink_task_ = task::make(this, &sink::sink_handler, std::chrono::milliseconds(1));
         sink_task_->on_terminate([src = sink_left]() {
-            src->source_event_.cancel();
+            std::static_pointer_cast<io::source>(src)->source_event_.cancel();
         });
     }
 
     return status::ok;
 }
 
-status sink::detach(const io::source *ptr) {
+status sink::detach(const endpoint::source *ptr) {
     if (!sink_left)
         return status::ok;
 
@@ -105,17 +105,17 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
     log::debug() << "sink_handler: started...\n";
 
     // wait for connection
-    while (!sink_left or not sink_left->isattached()) {
+    while (!sink_left or not std::static_pointer_cast<io::source>(sink_left)->isattached()) {
         if (scope.isterminated())
             return;
-        
+
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     // event loop
     log::debug() << "sink_handler: running...\n";
     while (not scope.isterminated()) {
-        auto retval = sink_left->wait();
+        auto retval = std::static_pointer_cast<io::source>(sink_left)->wait();
         if (retval == status::bad) {
             if (retval.error() == std::errc::operation_canceled)
                 break;
@@ -124,7 +124,7 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
 
         // FIXME this logic needs to use source_->queue_depth()
         for (size_type i = 0; i < *retval; ++i)
-            push(sink_left->pull());
+            push(std::static_pointer_cast<io::source>(sink_left)->pull());
     }
 
     log::debug() << "sink_handler: finished.\n";

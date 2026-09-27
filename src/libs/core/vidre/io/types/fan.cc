@@ -20,3 +20,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fan.hh"
+
+
+/*
+D'oh, I just realized that I need to introduce a level above io::source and io::sink, so that I can properly use endpoint::connect also on fans - but the fans don't want all of internal variables of the sink and source base class - that's in the respective branches...
+
+Should I go for 
+
+class endpoint::source : public virtual endpoint { ... }
+class endpoint::sink : public virtual endpoint { ... }
+
+?
+
+*/

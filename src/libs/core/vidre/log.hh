@@ -287,8 +287,8 @@ namespace vidre {
             }
 
         protected:
-            status attach(shared<io::sink> other, cap::flag_type cap) override;
-            status detach(const io::sink *snk) override;
+            status attach(shared<endpoint::sink> other, cap::flag_type cap) override;
+            status detach(const endpoint::sink *snk) override;
 
         private:
             friend class handler;

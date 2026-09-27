@@ -40,8 +40,8 @@ status io::channel::unlink() {
     if (not sink_left and not source_right)  // not connected
         return status::ok;
 
-    shared<io::source> src = sink_left;
-    shared<io::sink> snk = source_right;
+    shared<endpoint::source> src = sink_left;
+    shared<endpoint::sink> snk = source_right;
 
     // unlink left edge (our sink from its source)
     if (sink_left) {

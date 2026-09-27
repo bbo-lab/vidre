@@ -26,19 +26,69 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types/endpoint.hh>
+#include <vidre/io/types/sink.hh>
+#include <vidre/io/types/source.hh>
 
 namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-types
-         * */
-        ///@{
+        /** Fan-in and -out.
+         * @ingroup api-core-io-types */
+        namespace fan {
 
+            /**@addtogroup api-core-io-types
+             * */
+            ///@{
 
-        ///@}
+            class VIDRE_CORE_VISIBILITY out
+                : public io::sink
+                , public io::source {
+            public:
+                class branch;
 
-    } //
+            public:
+                out() = default;
 
-} //
-#endif // VIDRE_CORE_IO_TYPES_FAN_HH
+                out(const out &) = delete;
+                out &operator=(const out &) = delete;
+                out(out &&) = delete;
+                out &operator=(out &&) = delete;
+
+                virtual ~out() {}
+
+            protected:
+            
+            public:
+                status unlink() override {
+                    return status::bad;
+                }
+            };
+
+            class VIDRE_CORE_VISIBILITY out::branch : public io::source {
+            public:
+            public:
+                branch() = default;
+
+                branch(const branch &) = delete;
+                branch &operator=(const branch &) = delete;
+                branch(branch &&) = delete;
+                branch &operator=(branch &&) = delete;
+
+                virtual ~branch() {}
+
+            protected:
+            public:
+                status unlink() override {
+                    return status::bad;
+                }
+            };
+
+            ///@}
+
+        }  // namespace fan
+
+    }  // namespace io
+
+}  // namespace vidre
+#endif  // VIDRE_CORE_IO_TYPES_FAN_HH

@@ -44,6 +44,9 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY endpoint {
         public:
+            class source;
+            class sink;
+
             /** Syntactic sugar for std::make_shared<T>.
              * @tparam T The type of the endpoint to create, which must be derived from `endpoint`.
              * A syntactic convenience wrapper around `std::make_shared<T>`. Provided solely for readability
@@ -59,17 +62,6 @@ namespace vidre {
              * */
             template <typename T>
             static constexpr bool isa_v = std::derived_from<T, endpoint>;
-
-            /** Array index in flags of source and sink.
-             * @internal
-             * Represents the index positions for source and sink endpoints within arrays or other data structures
-             * (see specifically cap::flags below).
-             * @endinternal
-             * */
-            enum index : size_type {
-                source = 0,
-                sink = 1
-            };
 
             /** Endpoint type.
              * @note The provided types are only for informational (and possibly visual) purposes and
@@ -129,19 +121,12 @@ namespace vidre {
                 /** Convert capability flags to endpoint type.
                  * @returns The endpoint type based on the capability flags.
                  * */
-                operator type() const noexcept {
-                    uint16_t retval = 0;
-                    retval |= to_underlying(type::sink) * !!static_cast<bool>(flags[sink]);
-                    retval |= to_underlying(type::source) * !!static_cast<bool>(flags[source]);
-                    retval |= to_underlying(type::fanout) * !!static_cast<bool>(flags[sink] & flag_type::multi);
-                    retval |= to_underlying(type::fanin) * !!static_cast<bool>(flags[source] & flag_type::multi);
-                    return static_cast<type>(retval);
-                }
+                operator type() const noexcept;
 
                 /** Access capability flags by index.
                  * @param idx The index of the capability flags (0 for source, 1 for sink).
                  * @returns A reference to the capability flags at the specified index.
-                 * @see endpoint::sink, endpoint::source
+                 * @see endpoint::index::sink, endpoint::index::source
                  * */
                 ///@{
                 flag_type &operator[](size_type idx) noexcept {
@@ -157,17 +142,13 @@ namespace vidre {
                  * @param bit The capability bit(s) to check.
                  * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
                  * */
-                bool getsink(cap::flag_type bit) const noexcept {
-                    return !!static_cast<bool>(flags[endpoint::sink] & bit);
-                }
+                bool getsink(cap::flag_type bit) const noexcept;
 
                 /** Check source capability bits.
                  * @param bit The capability bit(s) to check.
                  * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
                  * */
-                bool getsource(cap::flag_type bit) const noexcept {
-                    return !!static_cast<bool>(flags[endpoint::source] & bit);
-                }
+                bool getsource(cap::flag_type bit) const noexcept;
 
                 /** Get capabilities setup.
                  * @returns The capabilities setup in JSON format.
@@ -377,7 +358,7 @@ namespace vidre {
 
             /** Connect source to sink.
              * */
-            static status connect(shared<io::source> src, shared<io::sink> snk);
+            static status connect(shared<endpoint::source> src, shared<endpoint::sink> snk);
 
             /** Disconnect an endpoint.
              * @param ep The endpoint to disconnect.
@@ -421,6 +402,88 @@ namespace vidre {
             lhs = static_cast<endpoint::cap::flag_type>(to_underlying(lhs) & to_underlying(rhs));
             return lhs;
         }
+        ///@endcond
+
+        /** Source endpoint role.
+         * */
+        class VIDRE_CORE_VISIBILITY endpoint::source : public virtual endpoint {
+        public:
+            static constexpr size_type index = 0;
+
+        public:
+            source() = default;
+
+            source(const source &) = delete;
+            source &operator=(const source &) = delete;
+            source(source &&) = delete;
+            source &operator=(source &&) = delete;
+
+            virtual ~source() = default;
+
+        public:
+            status unlink() override {
+                return status::bad;
+            }
+
+        protected:
+            virtual status attach(shared<endpoint::sink> snk, cap::flag_type cap) = 0;
+            virtual status detach(const endpoint::sink *ptr) = 0;
+
+        private:
+            friend class endpoint;
+            friend class sink;
+            friend class io::sink;
+        };
+
+        /** Sink endpoint role.
+         * */
+        class VIDRE_CORE_VISIBILITY endpoint::sink : public virtual endpoint {
+        public:
+            static constexpr size_type index = 1;
+
+        public:
+            sink() = default;
+
+            sink(const sink &) = delete;
+            sink &operator=(const sink &) = delete;
+            sink(sink &&) = delete;
+            sink &operator=(sink &&) = delete;
+
+            virtual ~sink() = default;
+
+        public:
+            status unlink() override {
+                return status::bad;
+            }
+
+        protected:
+            virtual status attach(shared<endpoint::source> src, cap::flag_type cap) = 0;
+            virtual status detach(const endpoint::source *ptr) = 0;
+
+        private:
+            friend class endpoint;
+            friend class source;
+            friend class io::source;
+        };
+
+        ///@cond
+        inline endpoint::cap::operator type() const noexcept {
+            uint16_t retval = 0;
+            retval |= to_underlying(type::sink) * !!static_cast<bool>(flags[sink::index]);
+            retval |= to_underlying(type::source) * !!static_cast<bool>(flags[source::index]);
+            retval |= to_underlying(type::fanout) * !!static_cast<bool>(flags[sink::index] & flag_type::multi);
+            retval |= to_underlying(type::fanin) * !!static_cast<bool>(flags[source::index] & flag_type::multi);
+            return static_cast<type>(retval);
+        }
+
+        inline bool endpoint::cap::getsink(cap::flag_type bit) const noexcept {
+            return !!static_cast<bool>(flags[endpoint::sink::index] & bit);
+        }
+
+        inline bool endpoint::cap::getsource(cap::flag_type bit) const noexcept {
+            return !!static_cast<bool>(flags[endpoint::source::index] & bit);
+        }
+
         ///@endcond
 
         ///@}

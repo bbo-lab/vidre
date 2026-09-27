@@ -63,22 +63,22 @@ settings::json endpoint::cap::setup(flag_type flgs) const {
 settings::json endpoint::cap::setup() const {
     settings::json retval;
 
-    if (flags[sink] != endpoint::cap::none)
-        retval["sink"] = setup(flags[sink]);
-    if (flags[source] != endpoint::cap::none)
-        retval["source"] = setup(flags[source]);
+    if (flags[sink::index] != endpoint::cap::none)
+        retval["sink"] = setup(flags[sink::index]);
+    if (flags[source::index] != endpoint::cap::none)
+        retval["source"] = setup(flags[source::index]);
 
     return retval;
 }
 
-status endpoint::connect(shared<io::source> src, shared<io::sink> snk) {
+status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> snk) {
     if (not src.get())
         throw exception::internal() << "endpoint passed as first argument is null";
     if (not snk.get())
         throw exception::internal() << "endpoint passed as second argument is null";
 
-    cap::flag_type src_cap = src->getcap()[index::source];
-    cap::flag_type snk_cap = snk->getcap()[index::sink];
+    cap::flag_type src_cap = src->getcap()[source::index];
+    cap::flag_type snk_cap = snk->getcap()[sink::index];
 
     // sanity checks
     if (!src_cap)

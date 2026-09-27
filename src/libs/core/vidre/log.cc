@@ -157,12 +157,12 @@ void log::output::send(shared<packet> msg) noexcept {
     // FIXME
 }
 
-status log::output::attach(shared<io::sink> other, cap::flag_type cap) {
+status log::output::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     // FIXME
     return {};
 }
 
-status log::output::detach(const io::sink *snk) {
+status log::output::detach(const endpoint::sink *snk) {
     // FIXME
     return {};
 }

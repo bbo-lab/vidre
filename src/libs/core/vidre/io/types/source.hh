@@ -45,7 +45,7 @@ namespace vidre {
          * to a sink, or use an event to notify that sink of data availability.
          *
          * */
-        class VIDRE_CORE_VISIBILITY source : public virtual endpoint {
+        class VIDRE_CORE_VISIBILITY source : public endpoint::source {
         public:
             source() = default;
 
@@ -57,9 +57,9 @@ namespace vidre {
             virtual ~source();
 
         protected:
-            shared<io::sink> source_right{};  ///< Connected io::sink.
-            shared<task> source_task_{};      ///< Task handler for event-pull or push method.
-            event source_event_{};            ///< Event for notifying data availability.
+            shared<endpoint::sink> source_right{};  ///< Connected io::sink.
+            shared<task> source_task_{};            ///< Task handler for event-pull or push method.
+            event source_event_{};                  ///< Event for notifying data availability.
 
         protected:
             /** The low-level read method (if applicable).
@@ -195,7 +195,7 @@ namespace vidre {
              *       source and sink capabilities. This attach method then sets up the actual connection. If additional
              *       connection logic is required, the method can be overridden.
              * */
-            virtual status attach(shared<io::sink> snk, cap::flag_type cap);
+            status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
 
             /** Check if sink is attached.
              * */
@@ -208,11 +208,11 @@ namespace vidre {
              * @returns `status::ok` on success (including when already disconnected),
              *          `status::bad` on failure (e.g. when still active).
              * */
-            virtual status detach(const io::sink *ptr);
+            status detach(const endpoint::sink *ptr) override;
 
         private:
-            friend class sink;
-            friend class endpoint;
+            friend class io::sink;
+            friend class io::endpoint;
         };
 
         ///@}

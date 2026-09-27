@@ -32,7 +32,7 @@ protected:
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
-        if (cap_[index::source] & cap::push) {
+        if (cap_[endpoint::source::index] & cap::push) {
             auto retval = source_right->push(packet_);
             stats_.update(packet_, retval);
         }
