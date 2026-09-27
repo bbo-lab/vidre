@@ -31,26 +31,26 @@ sink::~sink() {
 }
 
 status io::sink::unlink() {
-    if (!source_)  // not connected
+    if (!sink_left)  // not connected
         return status::ok;
 
     log::trace tr;
     tr << "unlinking sink...\n";
 
-    auto retval = source_->detach(this);
+    auto retval = sink_left->detach(this);
     if (retval == status::bad) {    
-        tr << "failed to detach from source\n";
+        tr << "failed to detach source\n";
         return status::bad;
     }
 
-    retval = detach(source_.get());
+    retval = detach(sink_left.get());
     tr << retval << ".\n";
 
     return retval;
 }
 
 status sink::attach(shared<io::source> src, cap::flag_type cap) {
-    if (source_)  // already connected
+    if (sink_left)  // already connected
         return status::bad;
 
     // store fields, clear stats
@@ -58,13 +58,13 @@ status sink::attach(shared<io::source> src, cap::flag_type cap) {
     clearstats();
 
     // attach source
-    source_ = src;
+    sink_left = src;
 
     // start event handler if needed
     if (cap & cap::event) {
         // start handler
         sink_task_ = task::make(this, &sink::sink_handler, std::chrono::milliseconds(1));
-        sink_task_->on_terminate([src = source_]() {
+        sink_task_->on_terminate([src = sink_left]() {
             src->source_event_.cancel();
         });
     }
@@ -73,10 +73,10 @@ status sink::attach(shared<io::source> src, cap::flag_type cap) {
 }
 
 status sink::detach(const io::source *ptr) {
-    if (!source_)
+    if (!sink_left)
         return status::ok;
 
-    if (source_.get() != ptr)
+    if (sink_left.get() != ptr)
         // shouldn't happen
         return status::bad;
 
@@ -94,7 +94,7 @@ status sink::detach(const io::source *ptr) {
     }
 
     // clear link
-    source_.reset();
+    sink_left.reset();
 
     tr << "done.\n";
     return status::ok;
@@ -105,14 +105,14 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
     log::debug() << "sink_handler: started...\n";
 
     // wait for connection
-    while (!source_ or not source_->isattached()) {
+    while (!sink_left or not sink_left->isattached()) {
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     // event loop
     log::debug() << "sink_handler: running...\n";
     while (not scope.isterminated()) {
-        auto retval = source_->wait();
+        auto retval = sink_left->wait();
         if (retval == status::bad) {
             if (retval.error() == std::errc::operation_canceled)
                 break;
@@ -121,7 +121,7 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
 
         // FIXME this logic needs to use source_->queue_depth()
         for (size_type i = 0; i < *retval; ++i)
-            push(source_->pull());
+            push(sink_left->pull());
     }
 
     log::debug() << "sink_handler: finished.\n";

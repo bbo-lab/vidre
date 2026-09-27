@@ -48,8 +48,8 @@ namespace vidre {
          * @todo example filter implementation.
          * */
         class VIDRE_CORE_VISIBILITY channel
-            : public virtual sink
-            , public virtual source {
+            : public sink
+            , public source {
         public:
             channel() = default;
 
@@ -76,8 +76,8 @@ namespace vidre {
              *       or 0 if no source is connected.
              * */
             size_type queue_depth() const noexcept override {
-                if (source_)
-                    return source_->queue_depth();
+                if (sink_left)
+                    return sink_left->queue_depth();
                 return 0;
             }
 
@@ -89,10 +89,10 @@ namespace vidre {
             status unlink() override;
 
         protected:
-            status attach(shared<io::source> src, cap::flag_type cap) override;
-            status attach(shared<io::sink> src, cap::flag_type cap) override;
-            status detach(const io::source *ptr) override;
-            status detach(const io::sink *ptr) override;
+            // status attach(shared<io::source> src, cap::flag_type cap) override;
+            // status attach(shared<io::sink> src, cap::flag_type cap) override;
+            // status detach(const io::source *ptr) override;
+            // status detach(const io::sink *ptr) override;
         };
 
         ///@}

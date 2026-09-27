@@ -72,15 +72,15 @@ namespace vidre {
             virtual ~sink();
 
         protected:
-            shared<io::source> source_{};  ///< Connected io::source.
-            shared<task> sink_task_{};     ///< Thread handler if applicable.
+            shared<io::source> sink_left{};  ///< Connected io::source.
+            shared<task> sink_task_{};       ///< Thread handler if applicable.
 
         protected:
             /** The low-level write method (if applicable).
              * @param buf Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            virtual offset_type write(const memory::view &buf) { // FIXME why is this const memory::view & ?
+            virtual offset_type write(const memory::view &buf) {  // FIXME why is this const memory::view & ?
                 return invalid<offset_type>;
             }
 
@@ -165,12 +165,12 @@ namespace vidre {
             /** Check if source is attached.
              * */
             const bool isattached() const {
-                return !!source_;
+                return !!sink_left;
             }
 
             /** Detach a source from this sink.
              * @param ptr The source to detach.
-             * @returns `status::ok` on success (including when already disconnected), 
+             * @returns `status::ok` on success (including when already disconnected),
              *          `status::bad` on failure (e.g. when still active).
              * */
             virtual status detach(const io::source *ptr);

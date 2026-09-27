@@ -57,9 +57,9 @@ namespace vidre {
             virtual ~source();
 
         protected:
-            shared<io::sink> sink_{};     ///< Connected io::sink.
-            shared<task> source_task_{};  ///< Task handler for event-pull or push method.
-            event source_event_{};        ///< Event for notifying data availability.
+            shared<io::sink> source_right{};  ///< Connected io::sink.
+            shared<task> source_task_{};      ///< Task handler for event-pull or push method.
+            event source_event_{};            ///< Event for notifying data availability.
 
         protected:
             /** The low-level read method (if applicable).
@@ -200,7 +200,7 @@ namespace vidre {
             /** Check if sink is attached.
              * */
             const bool isattached() const {
-                return !!sink_;
+                return !!source_right;
             }
 
             /** Detach a sink from this source.

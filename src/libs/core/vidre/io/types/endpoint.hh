@@ -278,6 +278,13 @@ namespace vidre {
                 return tag_;
             }
 
+            /** Set endpoint tag.
+             * @param tag The new tag for this endpoint.
+             * */
+            void settag(const std::string &tag) noexcept {
+                tag_ = tag;
+            }
+
             /** Get endpoint stream ID.
              * @returns The stream ID of this endpoint.
              * */

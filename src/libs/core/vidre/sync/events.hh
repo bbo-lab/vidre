@@ -185,6 +185,15 @@ namespace vidre {
                 notify();
             }
 
+            /** Reset event to its initial state.
+             * */
+            void reset() noexcept {
+                if (!empty())
+                    ::read(handle, nullptr, 0);
+
+                cancelled_.store(false, std::memory_order_release);
+            }
+
             /** Notify the event, i.e. wake up the consumer.
              * @param count The number of notifications to send (default: 1).
              * @return The @a count or error information.
@@ -378,6 +387,12 @@ namespace vidre {
          */
         void cancel() noexcept {
             impl_.cancel();
+        }
+
+        /** Reset event to its initial state.
+         * */
+        void reset() noexcept {
+            impl_.reset();
         }
 
         /** Wait for the event to be notified.

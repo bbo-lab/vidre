@@ -32,20 +32,26 @@ source::~source() {
 }
 
 status io::source::unlink() {
-    if (!sink_)  // not connected
+    if (!source_right)  // not connected
         return status::ok;
 
     log::trace tr;
     tr << "unlinking source...\n";
 
-    auto retval = detach(sink_.get());
+    auto retval = source_right->detach(this);
+    if (retval == status::bad) {    
+        tr << "failed to detach sink\n";
+        return status::bad;
+    }
+
+    retval = detach(source_right.get());
     tr << retval << ".\n";
 
     return retval;
 }
 
 status source::attach(shared<io::sink> other, cap::flag_type cap) {
-    if (sink_)  // already connected
+    if (source_right)  // already connected
         return status::bad;
 
     // store fields, clear stats
@@ -53,19 +59,20 @@ status source::attach(shared<io::sink> other, cap::flag_type cap) {
     clearstats();
 
     // attach sink
-    sink_ = other;
+    source_right = other;
 
     // start handler
+    source_event_.reset();
     source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
 
     return status::ok;
 }
 
 status source::detach(const io::sink *ptr) {
-    if (!sink_)
+    if (!source_right)
         return status::ok;
 
-    if (sink_.get() != ptr)
+    if (source_right.get() != ptr)
         // shouldn't happen
         return status::bad;
 
@@ -83,7 +90,7 @@ status source::detach(const io::sink *ptr) {
     }
 
     // clear link
-    sink_.reset();
+    source_right.reset();
 
     tr << "done.\n";
     return status::ok;
@@ -94,7 +101,7 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     log::debug() << "source_handler: started...\n";
 
     // wait for connection
-    while (!sink_ or not sink_->isattached()) {
+    while (!source_right or not source_right->isattached()) {
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 

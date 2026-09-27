@@ -33,7 +33,7 @@ protected:
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
         if (cap_[index::source] & cap::push) {
-            auto retval = sink_->push(packet_);
+            auto retval = source_right->push(packet_);
             stats_.update(packet_, retval);
         }
         else {
@@ -120,6 +120,10 @@ int main(int argc, char *argv[]) {
     auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
 
+    inp->settag("input");
+    chp->settag("channel");
+    outp->settag("output");
+
     io::endpoint::connect(chp, outp);
     io::endpoint::connect(inp, chp);
 
@@ -127,7 +131,7 @@ int main(int argc, char *argv[]) {
 
     chp->unlink();
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     outp->unlink();
     inp->unlink();
