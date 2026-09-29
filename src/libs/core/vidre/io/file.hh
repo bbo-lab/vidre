@@ -24,7 +24,7 @@
 #define VIDRE_CORE_IO_FILE_HH
 #pragma once
 
-/**@addtogroup api-core-io-file
+/**@addtogroup api-core-io-store
  * @brief File based I/O.
  * @details
  * @fileinfo
@@ -220,7 +220,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-file
+        /**@addtogroup api-core-io-store
          * */
         ///@{
 

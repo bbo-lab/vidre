@@ -43,12 +43,9 @@ namespace vidre {
         /** Endpoint.
          *
          * This represents a generic endpoint in the I/O system, which can be a
-         * source, sink, channel, fan-in, or fan-out. Also, any device that interacts
-         * with the I/O system can be represented as an endpoint.
-         *
-         * @note Endpoint connections are graph based, meaning that they can form
-         *       complex networks of sources, sinks, and channels. The documentation
-         *       and code may refer to sources as "left" and sinks as "right".
+         * source, sink, channel, fan-in, or fan-out. Also, any device that 
+         * represents a data producer or consumer within the I/O system.
+         * can—and in fact is—represented as an endpoint.
          *
          * @todo example
          * */

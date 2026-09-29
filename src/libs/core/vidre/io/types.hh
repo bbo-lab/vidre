@@ -28,15 +28,6 @@
  * @brief Basic types and streaming fundamentals.
  * @details
  * @fileinfo
- *
- * The data flow in VidRe has to cover various forms of data (such as its main
- * focus: video images, see @ref api-video) as well as modes of transmission
- * (from fixed to variable sized data packets, as well as raw I/O).
- *
- * ## Overview
- *
- * FIXME
- *
  * */
 
 #include <vidre/core/config.hh>

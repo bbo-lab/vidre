@@ -36,7 +36,7 @@ namespace vidre {
 
     namespace io {
 
-        /** Fan-in and -out.
+        /** Fan-in and -out endpoints for I/O.
          * @ingroup api-core-io-endpoint */
         namespace fan {
 

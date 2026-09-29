@@ -24,8 +24,8 @@
 #define VIDRE_CORE_IO_ENDPOINT_HH
 #pragma once
 
-/**@addtogroup api-core-io-types
- * @brief Basic types and streaming fundamentals.
+/**@addtogroup api-core-io-endpoint
+ * @brief Endpoint abstractions for I/O
  * @details
  * @fileinfo
  *
