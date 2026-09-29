@@ -46,6 +46,7 @@ namespace vidre {
          * By default, channels always use the push method on the sink side.
          *
          * @todo example filter implementation.
+         * @see @ref example/core/iograph.cc
          * */
         class VIDRE_CORE_VISIBILITY channel
             : public sink
@@ -64,18 +65,16 @@ namespace vidre {
             /** Default channel capabilities.
              * */
             cap getcap() const noexcept override {
-                return {cap::packet | cap::push | cap::event, cap::packet | cap::push};
+                return {                                                 //
+                        .source = cap::packet | cap::push | cap::event,  //
+                        .sink = cap::packet | cap::push};
             }
 
-            /** Default implementation for the put method.
+            /** Default implementation for the push (i.e. transform) method.
              * */
             result push(shared<packet> p) override;
 
         public:
-            /** Get the queue depth limit for this source.
-             * @note This method returns the queue depth limit of the connected source,
-             *       or 0 if no source is connected.
-             * */
             size_type queue_depth() const noexcept override {
                 if (sink_left)
                     return std::static_pointer_cast<io::source>(sink_left)->queue_depth();
@@ -83,11 +82,23 @@ namespace vidre {
             }
 
         public:
-            /** Unlink the sink.
-             * This method disconnects the sink from any connected sources.
-             * @returns Status of the unlink operation.
-             * */
             status unlink() override;
+            bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
+                if (!source_right)
+                    return false;
+
+                if (!sink_left)
+                    return false;
+
+                auto retval = true;
+                if (!!(direction & endpoint::dir::sink))
+                    retval &= source_right->isready(endpoint::dir::sink);
+
+                if (retval and !!(direction & endpoint::dir::source))
+                    retval &= sink_left->isready(endpoint::dir::source);
+
+                return retval;
+            }
 
         protected:
             // status attach(shared<io::source> src, cap::flag_type cap) override;

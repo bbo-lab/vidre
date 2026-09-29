@@ -34,19 +34,21 @@
 #include <vidre/error.hh>
 #include <vidre/cpp/util.hh>
 
-///@cond
 #if defined(_WIN32)
 #include <windows.h>
+///@cond
 #define VIDRE_USE_THREAD_PTHREAD 0
 #define VIDRE_USE_THREAD_WINAPI  1
+///@endcond
 #else
+///@cond
 #define VIDRE_USE_THREAD_PTHREAD 1
 #define VIDRE_USE_THREAD_WINAPI  0
+///@endcond
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #endif
-///@endcond
 
 #include <thread>
 

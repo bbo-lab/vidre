@@ -44,7 +44,7 @@
 #include <vidre/io/types/endpoint.hh>
 #include <vidre/io/types/sink.hh>
 #include <vidre/io/types/source.hh>
-// #include <vidre/io/types/channel.hh>
+#include <vidre/io/types/channel.hh>
 // #include <vidre/io/types/arbiter.hh>
 // #include <vidre/io/types/merger.hh>
 

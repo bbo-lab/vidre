@@ -557,10 +557,11 @@ namespace vidre {
 
         public:
             cap getcap() const noexcept override {
-                return {cap::none, cap::chunk | cap::packet}; // FIXME cap::push | cap::event
+                return {cap::none, cap::chunk | cap::packet};  // FIXME cap::push | cap::event
             }
 
-            bool valid() const noexcept override {
+            /** FIXME  */
+            bool valid() const noexcept {
                 return fd_.valid();
             }
 
@@ -654,10 +655,11 @@ namespace vidre {
 
         public:
             cap getcap() const noexcept override {
-                return {cap::chunk | cap::push, cap::none};
+                return {.source = cap::chunk | cap::push};
             }
 
-            bool valid() const noexcept override {
+            /**  FIXME */
+            bool valid() const noexcept {
                 return fd_.valid();
             }
 

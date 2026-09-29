@@ -97,6 +97,15 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "example.core.iograph",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/example.core.iograph",
+            "args": [  ],
+            "environment": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "example.core.cache",
             "type": "cppdbg",
             "request": "launch",
@@ -111,15 +120,6 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/example.core.event",
             "args": [ "-s" ],
-            "environment": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "example.playground.datachain",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.playground.datachain",
-            "args": [],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },

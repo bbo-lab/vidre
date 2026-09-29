@@ -1,8 +1,7 @@
 #include <chrono>
 #include <thread>
 #include <vidre/io.hh>
-#include "vidre/io/types/channel.hh"
-#include "vidre/memory/base.hh"
+#include <vidre/memory/base.hh>
 #include <vidre/log.hh>
 
 using namespace vidre;
@@ -32,7 +31,7 @@ protected:
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
-        if (cap_[endpoint::source::index] & cap::push) {
+        if (cap_.source & cap::push) {
             auto retval = source_right->push(packet_);
             stats_.update(packet_, retval);
         }
@@ -105,17 +104,6 @@ int main(int argc, char *argv[]) {
     log::debug() << "Testing datachain...\n" << std::format("{}", io::endpoint::cap::pull) << "\n";
     log::trace::pattern("*");
 
-#if 0
-    auto inp = io::endpoint::make<sensor>();
-    auto outp = io::endpoint::make<store>();
-
-    io::endpoint::connect(inp, outp);
-
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    outp->unlink();
-    inp->unlink();
-#else
     auto inp = io::endpoint::make<sensor>();
     auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
@@ -135,7 +123,13 @@ int main(int argc, char *argv[]) {
 
     outp->unlink();
     inp->unlink();
-#endif
 
     return 0;
 }
+
+/**@example examples/core/iograph.cc
+ * @details
+ *
+ * FIXME
+ *
+ * */

@@ -55,7 +55,7 @@ status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
         return status::bad;
 
     // store fields, clear stats
-    cap_[endpoint::source::index] = cap;
+    cap_.source = cap;
     clearstats();
 
     // attach sink
@@ -101,7 +101,7 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     log::debug() << "source_handler: started...\n";
 
     // wait for connection
-    while (!source_right or not std::dynamic_pointer_cast<io::sink>(source_right)->isattached()) {
+    while (!source_right or not source_right->isready()) {
         if (scope.isterminated())
             return;
 

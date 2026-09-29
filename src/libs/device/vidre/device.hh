@@ -24,6 +24,23 @@
 #define VIDRE_DEVICE_HH
 #pragma once
 
+            /** Start/stop order.
+             * @returns The start/stop order of this endpoint (0 for highest), if defined (default: undefined).
+             *
+             * @note Endpoints with lower order values are started _later_ but stopped _earlier_.
+             *       (cf. with camera devices where a camera that triggers other cameras must be
+             *       started last, so that neighboring cameras will not miss the trigger signal.)
+             *
+             * @internal
+             * An undefined return value is generally interpreted in a way that automatically starts the
+             * endpoint on attachment and stops it on detachment.
+             * @endinternal
+             * */
+            virtual std::optional<unsigned> order() const noexcept {
+                return {};
+            }
+
+
 /**@addtogroup api-device
  * @details
  * @fileinfo

@@ -41,9 +41,20 @@ namespace vidre {
         ///@{
 
         /** Endpoint.
+         *
+         * This represents a generic endpoint in the I/O system, which can be a
+         * source, sink, channel, fan-in, or fan-out. Also, any device that interacts
+         * with the I/O system can be represented as an endpoint.
+         *
+         * @note Endpoint connections are graph based, meaning that they can form
+         *       complex networks of sources, sinks, and channels. The documentation
+         *       and code may refer to sources as "left" and sinks as "right".
+         *
+         * @todo example
          * */
         class VIDRE_CORE_VISIBILITY endpoint {
         public:
+            // forward declarations
             class source;
             class sink;
 
@@ -63,13 +74,25 @@ namespace vidre {
             template <typename T>
             static constexpr bool isa_v = std::derived_from<T, endpoint>;
 
+            /** Direction of data flow.
+             * Represents the direction of data flow for an endpoint.
+             * @note The direction is usually only used for informational and validation
+             *       purposes, and otherwise not provided as quality of an endpoint.
+             * */
+            enum class dir : unsigned int {
+                local = 0,           ///< No direction, just "endpoint local".
+                source = 1,          ///< Direction towards the source.
+                sink = 2,            ///< Direction towards the sink.
+                any = source | sink  ///< Any direction, i.e. both towards source and sink.
+            };
+
             /** Endpoint type.
              * @note The provided types are only for informational (and possibly visual) purposes and
              *       are always computed from the capabilities and configuration of the endpoint.
              * */
             enum class type {
-                sink = 0x01,              ///< Endpoint is a sink (i.e., it can consume data).
-                source = 0x02,            ///< Endpoint is a source (i.e., it can produce data).
+                source = 0x01,            ///< Endpoint is a source (i.e., it can produce data).
+                sink = 0x02,              ///< Endpoint is a sink (i.e., it can consume data).
                 channel = sink | source,  ///< Endpoint is a channel (i.e., it can both produce and consume data).
                 fanout = 0x04 | channel,  ///< Endpoint is a fan-out (i.e., it can distribute a single source to multiple sinks).
                 fanin = 0x08 | channel,   ///< Endpoint is a fan-in (i.e., it can combine multiple sources into a single sink).
@@ -106,49 +129,13 @@ namespace vidre {
                              use this information to generate better diagnostics for the user. */
                 };
 
-                cap() = default;
-                cap(const cap &) = default;
-                cap &operator=(const cap &) = default;
-                cap(cap &&) = default;
-                cap &operator=(cap &&) = default;
-                ~cap() = default;
-
-                cap(const flag_type (&flgs)[2]) noexcept : flags{flgs[0], flgs[1]} {}
-                cap(flag_type flgs_source, flag_type flgs_sink) noexcept : flags{flgs_source, flgs_sink} {}
-
-                flag_type flags[2]{};  ///< Capability flags for source (index 0) and sink (index 1).
+                flag_type source{};  ///< Source capability flags.
+                flag_type sink{};    ///< Sink capability flags.
 
                 /** Convert capability flags to endpoint type.
                  * @returns The endpoint type based on the capability flags.
                  * */
-                operator type() const noexcept;
-
-                /** Access capability flags by index.
-                 * @param idx The index of the capability flags (0 for source, 1 for sink).
-                 * @returns A reference to the capability flags at the specified index.
-                 * @see endpoint::index::sink, endpoint::index::source
-                 * */
-                ///@{
-                flag_type &operator[](size_type idx) noexcept {
-                    return flags[idx & 1];
-                }
-
-                flag_type operator[](size_type idx) const noexcept {
-                    return flags[idx & 1];
-                }
-                ///@}
-
-                /** Check sink capability bits.
-                 * @param bit The capability bit(s) to check.
-                 * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
-                 * */
-                bool getsink(cap::flag_type bit) const noexcept;
-
-                /** Check source capability bits.
-                 * @param bit The capability bit(s) to check.
-                 * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
-                 * */
-                bool getsource(cap::flag_type bit) const noexcept;
+                operator endpoint::type() const noexcept;
 
                 /** Get capabilities setup.
                  * @returns The capabilities setup in JSON format.
@@ -168,6 +155,8 @@ namespace vidre {
              * The I/O API provides an `io::monitor` that reads the stats and generates
              * overall and current speed measurements using this data.
              * @endinternal
+             *
+             * @todo Once we have a monitoring system in place, this might require reconsideration...
              * */
             struct VIDRE_CORE_VISIBILITY stats {
                 struct {
@@ -207,6 +196,19 @@ namespace vidre {
                 friend class monitor;
             };
 
+            /** Connect source to sink.
+             * */
+            static status connect(shared<endpoint::source> src, shared<endpoint::sink> snk);
+
+            /** Disconnect an endpoint.
+             * @param ep The endpoint to disconnect.
+             * @returns The status of the disconnection operation.
+             * @note This method is synonymous with calling `unlink()` on the endpoint.
+             * */
+            static status disconnect(shared<io::endpoint> ep) {
+                return ep->unlink();
+            }
+
         public:
             endpoint() = default;
 
@@ -218,12 +220,12 @@ namespace vidre {
             virtual ~endpoint() = default;
 
         protected:
-            std::string tag_{};  ///< Endpoint tag (used by manager).
-            uint32_t stream_{};  ///< Endpoint ID (used by manager and storage::raw).
-
-            stats stats_{};  ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
+            std::string tag_{};  ///< Endpoint tag (should be a unique identifier describing the endpoint, e.g. "camera").
+            uint32_t stream_{};  ///< Endpoint stream ID (FIXME clarify usage).
 
             cap cap_{};  ///< Assigned endpoint capabilities.
+
+            stats stats_{};  ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
 
         public:
             /** Push a packet to the sink.
@@ -242,12 +244,6 @@ namespace vidre {
             }
 
         public:
-            /** Check if the endpoint is valid (ie. usable).
-             * */
-            virtual bool valid() const noexcept {
-                return false;
-            }
-
             /** Get endpoint tag.
              * @returns The string tag of this endpoint.
              * */
@@ -273,7 +269,7 @@ namespace vidre {
                 return stream_;
             }
 
-            /** Get capabilities of the endpoint.
+            /** Get implementation capabilities of the endpoint.
              * @note This method returns the capabilities of the /unconnected/ endpoint.
              * */
             virtual cap getcap() const noexcept {
@@ -286,7 +282,7 @@ namespace vidre {
              * @note If `bit` is not specified, this method checks if the endpoint is a sink.
              * */
             bool issink(cap::flag_type bit = cap::any) const noexcept {
-                return cap_.getsink(bit);
+                return cap_.sink & bit;
             }
 
             /** Check if object provides a source interface.
@@ -295,7 +291,7 @@ namespace vidre {
              * @note If `bit` is not specified, this method checks if the endpoint is a source.
              * */
             bool issource(cap::flag_type bit = cap::any) const noexcept {
-                return cap_.getsource(bit);
+                return cap_.source & bit;
             }
 
             /** Get endpoint statistics.
@@ -335,20 +331,18 @@ namespace vidre {
              * */
             virtual void setup(const settings::json &config) {}
 
-            /** Start/stop order.
-             * @returns The start/stop order of this endpoint (0 for highest), if defined (default: undefined).
+            /** Endpoint is ready for data transmission.
              *
-             * @note Endpoints with lower order values are started _later_ but stopped _earlier_.
-             *       (cf. with camera devices where a camera that triggers other cameras must be
-             *       started last, so that neighboring cameras will not miss the trigger signal.)
+             * This method should be overridden by derived classes to indicate
+             * whether the endpoint is ready for data transmission. A typical
+             * implementation might check if the endpoint is properly connected.
+             * Higher-level checks might involve verifying that all required resources
+             * are available and that the endpoint is in a valid state for transmission.
              *
-             * @internal
-             * An undefined return value is generally interpreted in a way that automatically starts the
-             * endpoint on attachment and stops it on detachment.
-             * @endinternal
+             * @returns @c true if the endpoint is ready, @c false otherwise.
              * */
-            virtual std::optional<unsigned> order() const noexcept {
-                return {};
+            virtual bool isready(dir direction = dir::any) const noexcept {
+                return false;  // Default implementation
             }
 
             /** Unlink this endpoint.
@@ -356,21 +350,8 @@ namespace vidre {
              * */
             virtual status unlink() = 0;
 
-            /** Connect source to sink.
-             * */
-            static status connect(shared<endpoint::source> src, shared<endpoint::sink> snk);
-
-            /** Disconnect an endpoint.
-             * @param ep The endpoint to disconnect.
-             * @returns The status of the disconnection operation.
-             * @note This method is synonymous with calling `unlink()` on the endpoint.
-             * */
-            static status disconnect(shared<io::endpoint> ep) {
-                return ep->unlink();
-            }
-
             /** Get packet manifest.
-             * FIXME (the "manifest" contains the streams configuration data)
+             * FIXME (the "manifest" contains the streams or rather the devices configuration data)
              * */
             virtual shared<packet> manifest() noexcept {
                 return {};  // FIXME
@@ -381,6 +362,19 @@ namespace vidre {
         };
 
         ///@cond
+        inline constexpr endpoint::dir operator|(endpoint::dir lhs, endpoint::dir rhs) {
+            return static_cast<endpoint::dir>(to_underlying(lhs) | to_underlying(rhs));
+        }
+        inline constexpr endpoint::dir operator&(endpoint::dir lhs, endpoint::dir rhs) {
+            return static_cast<endpoint::dir>(to_underlying(lhs) & to_underlying(rhs));
+        }
+        inline constexpr endpoint::dir operator~(endpoint::dir m) {
+            return static_cast<endpoint::dir>(~to_underlying(m));
+        }
+        inline constexpr bool operator!(endpoint::dir m) {
+            return m == endpoint::dir::local;
+        }
+
         inline constexpr endpoint::cap::flag_type operator|(endpoint::cap::flag_type lhs, endpoint::cap::flag_type rhs) {
             return static_cast<endpoint::cap::flag_type>(to_underlying(lhs) | to_underlying(rhs));
         }
@@ -405,10 +399,16 @@ namespace vidre {
         ///@endcond
 
         /** Source endpoint role.
+         * This class serves as the base for endpoints that act as data sources
+         * in the I/O framework. Adopters need to provide the `attach()` and `detach()`
+         * methods to manage connections with sinks.
          * */
         class VIDRE_CORE_VISIBILITY endpoint::source : public virtual endpoint {
         public:
-            static constexpr size_type index = 0;
+            /** Type-trait to check if a type represents an endpoint::source role.
+             * */
+            template <typename T>
+            static constexpr bool isa_v = std::derived_from<T, endpoint::source>;
 
         public:
             source() = default;
@@ -420,13 +420,23 @@ namespace vidre {
 
             virtual ~source() = default;
 
-        public:
-            status unlink() override {
-                return status::bad;
-            }
-
         protected:
+            /** Attach a sink to this source.
+             * @param snk The sink to connect to.
+             * @param cap The capabilities of the connection.
+             * @returns `status::ok` on success, `status::bad` on failure (e.g. when already connected)
+             *
+             * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
+             *       source and sink capabilities. This attach method then sets up the actual connection. If additional
+             *       connection logic is required, the method can be overridden.
+             * */
             virtual status attach(shared<endpoint::sink> snk, cap::flag_type cap) = 0;
+
+            /** Detach a sink from this source.
+             * @param ptr The sink to detach.
+             * @returns `status::ok` on success (including when already disconnected),
+             *          `status::bad` on failure (e.g. when still active).
+             * */
             virtual status detach(const endpoint::sink *ptr) = 0;
 
         private:
@@ -436,10 +446,14 @@ namespace vidre {
         };
 
         /** Sink endpoint role.
+         * @see `endpoint::source`
          * */
         class VIDRE_CORE_VISIBILITY endpoint::sink : public virtual endpoint {
         public:
-            static constexpr size_type index = 1;
+            /** Type-trait to check if a type represents an endpoint::sink role.
+             * */
+            template <typename T>
+            static constexpr bool isa_v = std::derived_from<T, endpoint::sink>;
 
         public:
             sink() = default;
@@ -451,13 +465,23 @@ namespace vidre {
 
             virtual ~sink() = default;
 
-        public:
-            status unlink() override {
-                return status::bad;
-            }
-
         protected:
+            /** Attach a source to this sink.
+             * @param src The source to connect to.
+             * @param cap The capabilities of the connection.
+             * @returns `status::ok` on success, `status::bad` on failure (e.g. when already connected)
+             *
+             * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
+             *       source and sink capabilities. This attach method then sets up the actual connection. If additional
+             *       connection logic is required, the method can be overridden.
+             * */
             virtual status attach(shared<endpoint::source> src, cap::flag_type cap) = 0;
+
+            /** Detach a source from this sink.
+             * @param ptr The source to detach.
+             * @returns `status::ok` on success (including when already disconnected),
+             *          `status::bad` on failure (e.g. when still active).
+             * */
             virtual status detach(const endpoint::source *ptr) = 0;
 
         private:
@@ -467,23 +491,14 @@ namespace vidre {
         };
 
         ///@cond
-        inline endpoint::cap::operator type() const noexcept {
+        inline endpoint::cap::operator endpoint::type() const noexcept {
             uint16_t retval = 0;
-            retval |= to_underlying(type::sink) * !!static_cast<bool>(flags[sink::index]);
-            retval |= to_underlying(type::source) * !!static_cast<bool>(flags[source::index]);
-            retval |= to_underlying(type::fanout) * !!static_cast<bool>(flags[sink::index] & flag_type::multi);
-            retval |= to_underlying(type::fanin) * !!static_cast<bool>(flags[source::index] & flag_type::multi);
+            retval |= to_underlying(type::sink) * !!static_cast<bool>(sink);
+            retval |= to_underlying(type::source) * !!static_cast<bool>(source);
+            retval |= to_underlying(type::fanout) * !!static_cast<bool>(sink & flag_type::multi);
+            retval |= to_underlying(type::fanin) * !!static_cast<bool>(source & flag_type::multi);
             return static_cast<type>(retval);
         }
-
-        inline bool endpoint::cap::getsink(cap::flag_type bit) const noexcept {
-            return !!static_cast<bool>(flags[endpoint::sink::index] & bit);
-        }
-
-        inline bool endpoint::cap::getsource(cap::flag_type bit) const noexcept {
-            return !!static_cast<bool>(flags[endpoint::source::index] & bit);
-        }
-
         ///@endcond
 
         ///@}

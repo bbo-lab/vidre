@@ -58,10 +58,13 @@ namespace vidre {
                 virtual ~out() {}
 
             protected:
-            
             public:
                 status unlink() override {
                     return status::bad;
+                }
+                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
+                    // FIXME
+                    return false;
                 }
             };
 

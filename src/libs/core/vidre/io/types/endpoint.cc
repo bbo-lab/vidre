@@ -20,8 +20,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "endpoint.hh"
-#include "source.hh"
-#include "sink.hh"
 
 using namespace vidre;
 using namespace vidre::io;
@@ -63,10 +61,10 @@ settings::json endpoint::cap::setup(flag_type flgs) const {
 settings::json endpoint::cap::setup() const {
     settings::json retval;
 
-    if (flags[sink::index] != endpoint::cap::none)
-        retval["sink"] = setup(flags[sink::index]);
-    if (flags[source::index] != endpoint::cap::none)
-        retval["source"] = setup(flags[source::index]);
+    if (sink != endpoint::cap::none)
+        retval["sink"] = setup(sink);
+    if (source != endpoint::cap::none)
+        retval["source"] = setup(source);
 
     return retval;
 }
@@ -77,8 +75,8 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
     if (not snk.get())
         throw exception::internal() << "endpoint passed as second argument is null";
 
-    cap::flag_type src_cap = src->getcap()[source::index];
-    cap::flag_type snk_cap = snk->getcap()[sink::index];
+    cap::flag_type src_cap = src->getcap().source;
+    cap::flag_type snk_cap = snk->getcap().sink;
 
     // sanity checks
     if (!src_cap)
@@ -86,7 +84,7 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
     if (!snk_cap)
         throw exception::internal() << "endpoint passed as second argument has no capabilities";
 
-    // FIXME at the moment of writing, we only deal with packet-mode endpoints
+    // we only deal with packet-based endpoints
     if (!(src_cap & endpoint::cap::packet) || !(snk_cap & endpoint::cap::packet))
         return status::bad;
 
@@ -107,15 +105,15 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
         return status::bad;
     }
 
-    // connect source
-    if (src->attach(snk, src_cap) == status::bad)
-        return status::bad;
-
     // connect sink
     if (snk->attach(src, snk_cap) == status::bad) {
         src->detach(snk.get());
         return status::bad;
     }
+
+    // connect source
+    if (src->attach(snk, src_cap) == status::bad)
+        return status::bad;
 
     return status::ok;
 }

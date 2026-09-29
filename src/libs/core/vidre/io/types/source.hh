@@ -44,6 +44,7 @@ namespace vidre {
          * Packet based sources implement a task loop that either pushes packets directly
          * to a sink, or use an event to notify that sink of data availability.
          *
+         * @see @ref example/core/iograph.cc
          * */
         class VIDRE_CORE_VISIBILITY source : public endpoint::source {
         public:
@@ -88,7 +89,7 @@ namespace vidre {
                 return retval;
             }
 
-            /** Pull a packet from the source.
+            /** Pull a packet from this source.
              * @throw exception::logic if source is not packet based.
              * @returns Shared pointer to the retrieved packet.
              * */
@@ -97,11 +98,17 @@ namespace vidre {
             }
 
         public:
-            /** Unlink the source.
-             * This method disconnects the source from any connected sinks.
-             * @returns Status of the unlink operation.
-             * */
             status unlink() override;
+
+            bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
+                if (!source_right)
+                    return false;
+
+                if (!!(direction & endpoint::dir::sink))
+                    return source_right->isready(endpoint::dir::sink);
+
+                return true;
+            }
 
         public:
             /** Get the queue depth limit for this source.
@@ -186,28 +193,7 @@ namespace vidre {
             virtual void source_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
 
         protected:
-            /** Attach a sink to this source.
-             * @param snk The sink to connect to.
-             * @param cap The capabilities of the connection.
-             * @returns `status::ok` on success, `status::bad` on failure (e.g. when already connected)
-             *
-             * @note This method is called from io::connect (or endpoint::connect), which initially matches and selects the
-             *       source and sink capabilities. This attach method then sets up the actual connection. If additional
-             *       connection logic is required, the method can be overridden.
-             * */
             status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
-
-            /** Check if sink is attached.
-             * */
-            const bool isattached() const {
-                return !!source_right;
-            }
-
-            /** Detach a sink from this source.
-             * @param ptr The sink to detach.
-             * @returns `status::ok` on success (including when already disconnected),
-             *          `status::bad` on failure (e.g. when still active).
-             * */
             status detach(const endpoint::sink *ptr) override;
 
         private:

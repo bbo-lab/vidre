@@ -29,23 +29,34 @@
  * @details
  * @fileinfo
  *
- * The I/O abstraction focuses on providing mechanism to retrieve, convert and
- * store data, more specifically data streams of various types (such as video
- * and audio). 
- * FIXME
+ * The I/O abstraction provides mechanisms to acquire, transport, transform,
+ * distribute, and store data, in particular continuous data streams such as
+ * video, audio, and sensor data.
+ *
+ * Data flow is represented as a directed graph of interconnected endpoints.
+ * Sources produce data, sinks consume data, and channels combine both roles to
+ * transform or otherwise process data while forwarding it through the graph.
+ * Fan-in and fan-out endpoints provide branching and aggregation where the
+ * one-to-one source/sink model is insufficient.
+ *
+ * The design is strongly influenced by GStreamer, in particular its element,
+ * pad, capability, and push/pull data-flow concepts; see
+ * [Pads and capabilities](https://gstreamer.freedesktop.org/documentation/application-development/basics/pads.html?gi-language=c).
+ * VidRe uses its own considerably smaller abstraction tailored to acquisition
+ * and recording systems and does not attempt to provide API compatibility with
+ * GStreamer.
  *
  * @{
  * @namespace vidre::io             In-/output related functionality.
  * @defgroup api-core-io-types      Basic types
- * @defgroup api-core-io-flow       Data flow 
  * @defgroup api-core-io-packet     Packet based I/O
- * @defgroup api-core-io-file       File and memory I/O
+ * @defgroup api-core-io-store      File and memory I/O
  * @defgroup api-core-io-monitor    Monitoring
  * @defgroup api-core-io-details    Implementation details
  * @}
- * 
- * @todo memory mapped io
- * */
+ *
+ * @todo -types and -packet is not an appropriate grouping - need different order and sections
+ */
 
  /**@addtogroup api-core-io-details
   * @{
@@ -57,6 +68,5 @@
 #include <vidre/io/types.hh>
 #include <vidre/io/packet.hh>
 #include <vidre/io/file.hh>
-// #include <vidre/io/flow.hh>
 
 #endif  // VIDRE_CORE_IO_HH

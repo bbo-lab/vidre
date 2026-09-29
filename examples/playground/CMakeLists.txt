@@ -43,14 +43,6 @@ vidre_test(GROUP
 #     )
 # endif()
 
-vidre_test(datachain EXCLUDE
-    BUILD
-        LINK_LIBRARIES 
-            PUBLIC
-                Vidre::Core
-    SOURCES datachain.cc
-)
-
 # vidre_test(hdspeed EXCLUDE
 #     BUILD
 #         LINK_LIBRARIES 

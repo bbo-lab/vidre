@@ -51,6 +51,15 @@ namespace vidre {
      * */
     class VIDRE_CORE_VISIBILITY task {
     public:
+        ///@todo need to pull in "std::thread_self::*"
+        using id = std::thread::id;
+
+        struct VIDRE_CORE_VISIBILITY self {
+            auto id() {
+                return std::this_thread::get_id();
+            }
+        };
+
         /** Create a shared task instance.
          * @tparam F The type of the callable object (function, lambda, etc.) to be executed in the thread.
          *         @note The first argument of the callable object must be a `task::shared` pointer to the
