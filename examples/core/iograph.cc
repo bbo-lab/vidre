@@ -32,7 +32,7 @@ protected:
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
         if (cap_.source & cap::push) {
-            auto retval = source_right->push(packet_);
+            auto retval = source_right_->push(packet_);
             stats_.update(packet_, retval);
         }
         else {

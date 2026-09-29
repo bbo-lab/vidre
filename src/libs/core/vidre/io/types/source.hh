@@ -58,9 +58,9 @@ namespace vidre {
             virtual ~source();
 
         protected:
-            shared<endpoint::sink> source_right{};  ///< Connected io::sink.
-            shared<task> source_task_{};            ///< Task handler for event-pull or push method.
-            event source_event_{};                  ///< Event for notifying data availability.
+            shared<endpoint::sink> source_right_{};  ///< Connected io::sink.
+            shared<task> source_task_{};             ///< Task handler for event-pull or push method.
+            event source_event_{};                   ///< Event for notifying data availability.
 
         protected:
             /** The low-level read method (if applicable).
@@ -101,11 +101,11 @@ namespace vidre {
             status unlink() override;
 
             bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                if (!source_right)
+                if (!source_right_)
                     return false;
 
                 if (!!(direction & endpoint::dir::sink))
-                    return source_right->isready(endpoint::dir::sink);
+                    return source_right_->isready(endpoint::dir::sink);
 
                 return true;
             }

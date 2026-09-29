@@ -72,8 +72,8 @@ namespace vidre {
             virtual ~sink();
 
         protected:
-            shared<endpoint::source> sink_left{};  ///< Connected io::source.
-            shared<task> sink_task_{};             ///< Thread handler if applicable.
+            shared<endpoint::source> sink_left_{};  ///< Connected io::source.
+            shared<task> sink_task_{};              ///< Thread handler if applicable.
 
         protected:
             /** The low-level write method (if applicable).
@@ -136,11 +136,11 @@ namespace vidre {
         public:
             status unlink() override;
             bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                if (!sink_left)
+                if (!sink_left_)
                     return false;
 
                 if (!!(direction & endpoint::dir::source))
-                    return sink_left->isready(endpoint::dir::source);
+                    return sink_left_->isready(endpoint::dir::source);
 
                 return true;
             }

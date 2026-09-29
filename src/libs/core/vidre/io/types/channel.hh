@@ -76,26 +76,26 @@ namespace vidre {
 
         public:
             size_type queue_depth() const noexcept override {
-                if (sink_left)
-                    return std::static_pointer_cast<io::source>(sink_left)->queue_depth();
+                if (sink_left_)
+                    return std::static_pointer_cast<io::source>(sink_left_)->queue_depth();
                 return 0;
             }
 
         public:
             status unlink() override;
             bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                if (!source_right)
+                if (!source_right_)
                     return false;
 
-                if (!sink_left)
+                if (!sink_left_)
                     return false;
 
                 auto retval = true;
                 if (!!(direction & endpoint::dir::sink))
-                    retval &= source_right->isready(endpoint::dir::sink);
+                    retval &= source_right_->isready(endpoint::dir::sink);
 
                 if (retval and !!(direction & endpoint::dir::source))
-                    retval &= sink_left->isready(endpoint::dir::source);
+                    retval &= sink_left_->isready(endpoint::dir::source);
 
                 return retval;
             }

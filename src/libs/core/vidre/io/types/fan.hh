@@ -64,7 +64,7 @@ namespace vidre {
                 virtual ~out();
 
             protected:
-                std::vector<shared<branch>> branches_{};  ///< The list of branches connected to this fan-out endpoint.
+                std::vector<shared<branch>> branches_right_{};  ///< The list of branches connected to this fan-out endpoint.
 
             public:
                 cap getcap() const noexcept override {
@@ -75,14 +75,28 @@ namespace vidre {
                     };
                 }
 
+                result push(shared<packet> p) override;
+
+                /** Unlink this fan-out endpoint from all connected branches and sources.
+                 * @note This operation will attempt to disconnect all branches and sources
+                 *       associated with this fan-out endpoint. In contrast to io::channel,
+                 *       it will not automatically reconnect the source to any sink.
+                 *
+                 * @return status indicating success or failure of the unlink operation.
+                 * */
                 status unlink() override;
 
                 bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
             protected:
-                status attach(shared<endpoint::source> src, cap::flag_type cap) override;
-                status detach(const endpoint::source *ptr) override;
-                
+                status attach(shared<endpoint::source> src, cap::flag_type cap) override {
+                    return sink::attach(std::move(src), cap);
+                }
+
+                status detach(const endpoint::source *ptr) override {
+                    return sink::detach(ptr);
+                }
+
                 status attach(shared<endpoint::sink> src, cap::flag_type cap) override;
                 status detach(const endpoint::sink *ptr) override;
             };
@@ -125,15 +139,13 @@ namespace vidre {
                 status unlink() override;
 
                 size_type queue_depth() const noexcept override {
-                    if (parent_.sink_left)
-                        return std::static_pointer_cast<io::source>(parent_.sink_left)->queue_depth();
+                    if (parent_.sink_left_)
+                        return std::static_pointer_cast<io::source>(parent_.sink_left_)->queue_depth();
                     return 0;
                 }
 
-            protected:
-                void source_step() override;
-                status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
-                status detach(const endpoint::sink *ptr) override;
+            private:
+                friend class out;
             };
 
             ///@}

@@ -29,28 +29,28 @@ io::channel::~channel() {
 
 io::result io::channel::push(shared<packet> p) {
     io::result retval = invalid<offset_type>;
-    if (source_right) {
-        retval = source_right->push(p);
+    if (source_right_) {
+        retval = source_right_->push(p);
         stats_.update(p, retval);
     }
     return retval;
 }
 
 status io::channel::unlink() {
-    if (not sink_left and not source_right)  // not connected
+    if (not sink_left_ and not source_right_)  // not connected
         return status::ok;
 
-    shared<endpoint::source> src = sink_left;
-    shared<endpoint::sink> snk = source_right;
+    shared<endpoint::source> src = sink_left_;
+    shared<endpoint::sink> snk = source_right_;
 
     // unlink left edge (our sink from its source)
-    if (sink_left) {
+    if (sink_left_) {
         if (sink::unlink() == status::bad)
             return status::bad;
     }
 
     // unlink right edge (our source from its sink)
-    if (source_right) {
+    if (source_right_) {
         if (source::unlink() == status::bad)
             return status::bad;
     }
