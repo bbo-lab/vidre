@@ -266,18 +266,30 @@ namespace vidre {
             stats stats_{};  ///< Endpoint statistics (e.g., bytes transmitted, errors, etc.).
 
         public:
-            /** Push a packet to the sink.
+            /** Push a packet to the sink (if endpoint implements the sink role).
+             *
+             * @note The return value is only indicative of success or failure of
+             *       local delivery (fans, for example, will only indicate if queueing
+             *       the packet succeeded, which is no indication of actual delivery).
+             *
              * @param p The packet to store.
              * @returns Number of bytes actually written (@c invalid for write failure).
+             * @see endpoint::sink
              * */
-            virtual result push(shared<packet> p) {
+            virtual result put(shared<packet> p) {
                 throw exception::internal() << "endpoint does not implement sink interface";
             }
 
-            /** Pull a packet from the source.
+            /** Pull a packet from the source (if endpoint implements the source role).
+             *
+             * @note The return value is only indicative of success or failure of
+             *       local retrieval (fans, for example, will only indicate if a packet
+             *       is available for pulling, which is no indication of actual delivery).
+             *
              * @returns Shared pointer to the retrieved packet.
+             * @see endpoint::source
              * */
-            virtual shared<packet> pull() {
+            virtual shared<packet> get() {
                 throw exception::internal() << "endpoint does not implement source interface";
             }
 

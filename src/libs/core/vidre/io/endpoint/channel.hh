@@ -72,30 +72,30 @@ namespace vidre {
 
             /** Default implementation for the push (i.e. transform) method.
              * */
-            result push(shared<packet> p) override;
+            result put(shared<packet> p) override;
 
         public:
             size_type queue_depth() const noexcept override {
-                if (sink_left_)
-                    return std::static_pointer_cast<io::source>(sink_left_)->queue_depth();
+                if (sink_predecessor_)
+                    return std::static_pointer_cast<io::source>(sink_predecessor_)->queue_depth();
                 return 0;
             }
 
         public:
             status unlink() override;
             bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                if (!source_right_)
+                if (!source_follower_)
                     return false;
 
-                if (!sink_left_)
+                if (!sink_predecessor_)
                     return false;
 
                 auto retval = true;
                 if (!!(direction & endpoint::dir::sink))
-                    retval &= source_right_->isready(endpoint::dir::sink);
+                    retval &= source_follower_->isready(endpoint::dir::sink);
 
                 if (retval and !!(direction & endpoint::dir::source))
-                    retval &= sink_left_->isready(endpoint::dir::source);
+                    retval &= sink_predecessor_->isready(endpoint::dir::source);
 
                 return retval;
             }

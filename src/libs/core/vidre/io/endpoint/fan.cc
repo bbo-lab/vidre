@@ -30,7 +30,7 @@ io::fan::out::~out() {
     unlink();
 }
 
-io::result io::fan::out::push(shared<packet> p) {
+io::result io::fan::out::put(shared<packet> p) {
     // FIXME this raises the question how a return value for push is sensible...
 
     for (auto &branch : branches_right_)
@@ -41,11 +41,11 @@ io::result io::fan::out::push(shared<packet> p) {
 }
 
 bool io::fan::out::isready(endpoint::dir direction) const noexcept {
-    if (!sink_left_ or branches_right_.empty())
+    if (!sink_predecessor_ or branches_right_.empty())
         return false;
 
     if (!!(direction & endpoint::dir::source)) {
-        if (not sink_left_->isready(endpoint::dir::source))
+        if (not sink_predecessor_->isready(endpoint::dir::source))
             return false;
     }
 
@@ -60,14 +60,14 @@ bool io::fan::out::isready(endpoint::dir direction) const noexcept {
 }
 
 status io::fan::out::unlink() {
-    if (not sink_left_ and branches_right_.empty())  // not connected
+    if (not sink_predecessor_ and branches_right_.empty())  // not connected
         return status::ok;
 
-    if (sink_left_) {
-        if (sink_left_->unlink() == status::bad)
+    if (sink_predecessor_) {
+        if (sink_predecessor_->unlink() == status::bad)
             return status::bad;
 
-        sink_left_.reset();
+        sink_predecessor_.reset();
     }
 
     for (auto &branch : branches_right_) {
@@ -92,7 +92,7 @@ status io::fan::out::attach(shared<endpoint::sink> src, cap::flag_type cap) {
 
 status io::fan::out::detach(const endpoint::sink *ptr) {
     for (auto &branch : branches_right_) {
-        if (branch->source_right_.get() == ptr) {
+        if (branch->source_follower_.get() == ptr) {
             auto retval = branch->detach(ptr);
             branches_right_.erase(std::remove(branches_right_.begin(), branches_right_.end(), branch), branches_right_.end());
             return retval;
@@ -115,7 +115,7 @@ status io::fan::out::branch::queue(shared<packet> pkt) {
     return status::ok;
 }
 
-shared<io::packet> io::fan::out::branch::pull() {
+shared<io::packet> io::fan::out::branch::get() {
     std::lock_guard<std::mutex> lock(queue_mutex_);
     if (queue_.empty())
         return {};

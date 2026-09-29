@@ -72,8 +72,8 @@ namespace vidre {
             virtual ~sink();
 
         protected:
-            shared<endpoint::source> sink_left_{};  ///< Connected io::source.
-            shared<task> sink_task_{};              ///< Thread handler if applicable.
+            shared<endpoint::source> sink_predecessor_{};  ///< Connected io::source.
+            shared<task> sink_task_{};                     ///< Thread handler if applicable.
 
         protected:
             /** The low-level write method (if applicable).
@@ -129,18 +129,18 @@ namespace vidre {
              * @param p Shared pointer to the packet to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
-            result push(shared<packet> p) override {
+            result put(shared<packet> p) override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
         public:
             status unlink() override;
             bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                if (!sink_left_)
+                if (!sink_predecessor_)
                     return false;
 
                 if (!!(direction & endpoint::dir::source))
-                    return sink_left_->isready(endpoint::dir::source);
+                    return sink_predecessor_->isready(endpoint::dir::source);
 
                 return true;
             }

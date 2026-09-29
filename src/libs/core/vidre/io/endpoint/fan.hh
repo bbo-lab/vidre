@@ -75,7 +75,7 @@ namespace vidre {
                     };
                 }
 
-                result push(shared<packet> p) override;
+                result put(shared<packet> p) override;
 
                 /** Unlink this fan-out endpoint from all connected branches and sources.
                  * @note This operation will attempt to disconnect all branches and sources
@@ -134,13 +134,13 @@ namespace vidre {
                     };
                 }
 
-                shared<packet> pull() override;
+                shared<packet> get() override;
 
                 status unlink() override;
 
                 size_type queue_depth() const noexcept override {
-                    if (parent_.sink_left_)
-                        return std::static_pointer_cast<io::source>(parent_.sink_left_)->queue_depth();
+                    if (parent_.sink_predecessor_)
+                        return std::static_pointer_cast<io::source>(parent_.sink_predecessor_)->queue_depth();
                     return 0;
                 }
 

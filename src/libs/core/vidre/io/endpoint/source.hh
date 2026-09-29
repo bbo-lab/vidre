@@ -58,9 +58,9 @@ namespace vidre {
             virtual ~source();
 
         protected:
-            shared<endpoint::sink> source_right_{};  ///< Connected io::sink.
-            shared<task> source_task_{};             ///< Task handler for event-pull or push method.
-            event source_event_{};                   ///< Event for notifying data availability.
+            shared<endpoint::sink> source_follower_{};  ///< Connected io::sink.
+            shared<task> source_task_{};                ///< Task handler for event-pull or push method.
+            event source_event_{};                      ///< Event for notifying data availability.
 
         protected:
             /** The low-level read method (if applicable).
@@ -93,7 +93,7 @@ namespace vidre {
              * @throw exception::logic if source is not packet based.
              * @returns Shared pointer to the retrieved packet.
              * */
-            shared<packet> pull() override {
+            shared<packet> get() override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
@@ -101,11 +101,11 @@ namespace vidre {
             status unlink() override;
 
             bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                if (!source_right_)
+                if (!source_follower_)
                     return false;
 
                 if (!!(direction & endpoint::dir::sink))
-                    return source_right_->isready(endpoint::dir::sink);
+                    return source_follower_->isready(endpoint::dir::sink);
 
                 return true;
             }

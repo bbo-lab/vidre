@@ -32,26 +32,26 @@ source::~source() {
 }
 
 status io::source::unlink() {
-    if (!source_right_)  // not connected
+    if (!source_follower_)  // not connected
         return status::ok;
 
     log::trace tr;
     tr << "unlinking source...\n";
 
-    auto retval = source_right_->detach(this);
+    auto retval = source_follower_->detach(this);
     if (retval == status::bad) {
         tr << "failed to detach sink\n";
         return status::bad;
     }
 
-    retval = detach(source_right_.get());
+    retval = detach(source_follower_.get());
     tr << retval << ".\n";
 
     return retval;
 }
 
 status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
-    if (source_right_)  // already connected
+    if (source_follower_)  // already connected
         return status::bad;
 
     // store fields, clear stats
@@ -59,7 +59,7 @@ status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     clearstats();
 
     // attach sink
-    source_right_ = other;
+    source_follower_ = other;
 
     // start handler
     source_event_.reset();
@@ -69,10 +69,10 @@ status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
 }
 
 status source::detach(const endpoint::sink *ptr) {
-    if (!source_right_)
+    if (!source_follower_)
         return status::ok;
 
-    if (source_right_.get() != ptr)
+    if (source_follower_.get() != ptr)
         // shouldn't happen
         return status::bad;
 
@@ -90,7 +90,7 @@ status source::detach(const endpoint::sink *ptr) {
     }
 
     // clear link
-    source_right_.reset();
+    source_follower_.reset();
 
     tr << "done.\n";
     return status::ok;
@@ -101,7 +101,7 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     log::debug() << "source_handler: started...\n";
 
     // wait for connection
-    while (!source_right_ or not source_right_->isready()) {
+    while (!source_follower_ or not source_follower_->isready()) {
         if (scope.isterminated())
             return;
 
