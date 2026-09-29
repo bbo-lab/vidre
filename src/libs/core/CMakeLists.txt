@@ -69,12 +69,12 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/io.hh vidre/io.cc
             vidre/io/types.hh vidre/io/types.cc
-                vidre/io/types/core.hh vidre/io/types/core.cc
-                vidre/io/types/sink.hh vidre/io/types/sink.cc
-                vidre/io/types/endpoint.hh vidre/io/types/endpoint.cc
-                vidre/io/types/source.hh vidre/io/types/source.cc
-                vidre/io/types/channel.hh vidre/io/types/channel.cc
-                vidre/io/types/fan.hh vidre/io/types/fan.cc
+            vidre/io/endpoint.hh vidre/io/endpoint.cc
+                vidre/io/endpoint/base.hh vidre/io/endpoint/base.cc
+                vidre/io/endpoint/source.hh vidre/io/endpoint/source.cc
+                vidre/io/endpoint/sink.hh vidre/io/endpoint/sink.cc
+                vidre/io/endpoint/channel.hh vidre/io/endpoint/channel.cc
+                vidre/io/endpoint/fan.hh vidre/io/endpoint/fan.cc
             vidre/io/packet.hh vidre/io/packet.cc
                 vidre/io/packet/base.hh vidre/io/packet/base.cc
                 vidre/io/packet/factory.hh vidre/io/packet/factory.cc

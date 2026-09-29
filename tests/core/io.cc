@@ -56,7 +56,7 @@ struct array_wrapper : std::array<T, N> {
     constexpr array_wrapper(ArgTs &&...args) : std::array<T, N>{std::forward<ArgTs>(args)...} {}
 };
 
-#include <vidre/io/types.hh>
+#include <vidre/io/endpoint.hh>
 using namespace vidre;
 
 class memory_sink : public virtual io::sink {

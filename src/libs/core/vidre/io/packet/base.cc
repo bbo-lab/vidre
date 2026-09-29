@@ -20,8 +20,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "base.hh"
-#include "../types/sink.hh"
-#include "../../util/endian.hh"
+#include "vidre/io/endpoint/sink.hh"
+#include "vidre/util/endian.hh"
 
 using namespace vidre;
 using namespace vidre::io;

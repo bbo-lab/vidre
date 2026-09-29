@@ -25,14 +25,14 @@
 #pragma once
 
 #include <vidre/core/config.hh>
-#include <vidre/io/types/sink.hh>
-#include <vidre/io/types/source.hh>
+#include <vidre/io/endpoint/sink.hh>
+#include <vidre/io/endpoint/source.hh>
 
 namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-types
+        /**@addtogroup api-core-io-endpoint
          * */
         ///@{
 

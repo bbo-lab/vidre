@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include "endpoint.hh"
+#include "base.hh"
 
 using namespace vidre;
 using namespace vidre::io;
@@ -27,11 +27,13 @@ using namespace vidre::io;
 void endpoint::stats::update(shared<io::packet> pkt, const io::result &result) noexcept {
     if (pkt) {
         if (result) {
-            ++packets.transmitted;
+            // FIXME
+            // ++packets.transmitted;
             bytes.transmitted += result.count;
         }
         else {
-            ++packets.dropped;
+            // FIXME
+            // ++packets.dropped;
             ++errors;
         }
     }

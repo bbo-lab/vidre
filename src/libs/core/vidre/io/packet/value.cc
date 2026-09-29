@@ -21,8 +21,8 @@
  */
 #include "value.hh"
 #include "factory.hh"
-#include "../types/sink.hh"
-#include "../../util/endian.hh"
+#include "vidre/io/endpoint/sink.hh"
+#include "vidre/util/endian.hh"
 #include "vidre/memory/base.hh"
 #include "vidre/settings/json.hh"
 

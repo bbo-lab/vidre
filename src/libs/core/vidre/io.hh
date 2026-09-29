@@ -49,7 +49,8 @@
  * @{
  * @namespace vidre::io             In-/output related functionality.
  * @defgroup api-core-io-types      Basic types
- * @defgroup api-core-io-packet     Packet based I/O
+ * @defgroup api-core-io-endpoint   Endpoint types
+ * @defgroup api-core-io-packet     Packet types
  * @defgroup api-core-io-store      File and memory I/O
  * @defgroup api-core-io-monitor    Monitoring
  * @defgroup api-core-io-details    Implementation details
@@ -66,6 +67,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/endpoint.hh>
 #include <vidre/io/packet.hh>
 #include <vidre/io/file.hh>
 

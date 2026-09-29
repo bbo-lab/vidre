@@ -28,7 +28,7 @@
 #include <vidre/cpp/shared.hh>
 #include <vidre/util/uuid.hh>
 #include <vidre/util/chrono.hh>
-#include <vidre/io/types/core.hh>
+#include <vidre/io/types.hh>
 #include <vidre/settings/json.hh>
 
 #include <functional>

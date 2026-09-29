@@ -28,7 +28,7 @@
 #include <vidre/cpp/util.hh>
 #include <vidre/util/debug.hh>
 #include <vidre/settings/json.hh>
-#include <vidre/io/types/core.hh>
+#include <vidre/io/types.hh>
 
 #include <format>
 
@@ -36,7 +36,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-types
+        /**@addtogroup api-core-io-endpoint
          * */
         ///@{
 
@@ -160,11 +160,52 @@ namespace vidre {
              * */
             struct VIDRE_CORE_VISIBILITY stats {
                 struct {
-                    size_type transmitted{};  ///< Total number of packets that were available for transmission.
-                    size_type dropped{};      ///< Total number of packets dropped by this endpoint.
+                    size_type stashed{};
+                    size_type committed{};
+                    size_type errors{};
+
+                    size_type pending() const noexcept {
+                        /*
+
+                        chatGPT:
+                            Yes, that makes the semantics considerably cleaner:
+
+                            ```cpp
+                            struct packet {
+                                uint64_t stashed{};
+                                uint64_t committed{};
+                                uint64_t errors{};
+                            };
+                            ```
+
+                            Then you don't have to overload `stashed - committed` with two meanings. In particular, you can define a useful accounting
+                            relationship such as:
+
+                            ```text
+                            stashed = committed + errors + pending
+                            ```
+
+                            and therefore:
+
+                            ```cpp
+                            pending = stashed - committed - errors
+                            ```
+
+                            assuming every failed packet increments `errors` exactly once and is no longer pending.
+
+                            That also gives the monitor three immediately understandable quantities: **accepted work, successfully completed work, failed
+                            work**. I like this more than trying to encode failure indirectly in the other two counters.
+
+
+                        @todo need to rethink - for a device, if the camera fails to capture a frame, how should that be reflected in the statistics? Do we have to increment stashed and errors, or is there a better way to account for failed captures?
+                        Also, there's an "errors" field a level higher (see below)
+                        */
+                        return stashed - committed - errors;
+                    }
                 } packets;
 
                 struct {
+                    // @todo see above, maybe here, an additional field "dropped" is enough?
                     size_type transmitted{};  ///< Total number of bytes that were available for transmission.
                 } bytes;
 

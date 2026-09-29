@@ -25,9 +25,9 @@
 #pragma once
 
 #include <vidre/core/config.hh>
-#include <vidre/io/types/endpoint.hh>
-#include <vidre/io/types/source.hh>
-#include <vidre/io/types/sink.hh>
+#include <vidre/io/endpoint/base.hh>
+#include <vidre/io/endpoint/source.hh>
+#include <vidre/io/endpoint/sink.hh>
 
 #include <queue>
 #include <mutex>
@@ -37,10 +37,10 @@ namespace vidre {
     namespace io {
 
         /** Fan-in and -out.
-         * @ingroup api-core-io-types */
+         * @ingroup api-core-io-endpoint */
         namespace fan {
 
-            /**@addtogroup api-core-io-types
+            /**@addtogroup api-core-io-endpoint
              * */
             ///@{
 

@@ -20,19 +20,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 /// @file
-#ifndef VIDRE_CORE_IO_TYPES_SOURCE_HH
-#define VIDRE_CORE_IO_TYPES_SOURCE_HH
+#ifndef VIDRE_CORE_IO_ENDPOINT_SOURCE_HH
+#define VIDRE_CORE_IO_ENDPOINT_SOURCE_HH
 #pragma once
 
 #include <vidre/core/config.hh>
 #include <vidre/sync/events.hh>
-#include <vidre/io/types/endpoint.hh>
+#include <vidre/io/endpoint/base.hh>
 
 namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-types
+        /**@addtogroup api-core-io-endpoint
          * */
         ///@{
 
@@ -206,4 +206,4 @@ namespace vidre {
     }  // namespace io
 
 }  // namespace vidre
-#endif  // VIDRE_CORE_IO_TYPES_SOURCE_HH
+#endif  // VIDRE_CORE_IO_ENDPOINT_SOURCE_HH

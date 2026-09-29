@@ -21,7 +21,7 @@
  */
 #include "sink.hh"
 #include "source.hh"
-#include "../../log.hh"
+#include "vidre/log.hh"
 
 using namespace vidre;
 using namespace vidre::io;

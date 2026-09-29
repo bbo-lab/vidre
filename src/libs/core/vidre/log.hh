@@ -111,6 +111,7 @@
 #include <vidre/cpp/util.hh>
 #include <vidre/cpp/format.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/endpoint.hh>
 #include <vidre/io/packet.hh>
 #include <vidre/util/chrono.hh>
 #include <vidre/sync/events.hh>

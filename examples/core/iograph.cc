@@ -20,9 +20,10 @@ public:
     }
 
     shared<io::packet> pull() override {
-        stats_.packets.dropped--;
-        stats_.packets.transmitted++;
-        stats_.bytes.transmitted += packet_->size();
+        // FIXME
+        // stats_.packets.dropped--;
+        // stats_.packets.transmitted++;
+        // stats_.bytes.transmitted += packet_->size();
         return packet_;
     }
 
@@ -37,7 +38,8 @@ protected:
         }
         else {
             notify();
-            stats_.packets.dropped++;  // see get() above
+            // FIXME
+            // stats_.packets.dropped++;  // see get() above
         }
     }
 };

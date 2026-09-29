@@ -40,6 +40,7 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types.hh>
+#include <vidre/io/endpoint.hh>
 #include <vidre/os/memory.hh>
 
 #if VIDRE_HOST_WINDOWS
