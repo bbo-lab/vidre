@@ -333,16 +333,18 @@ namespace vidre {
 
             /** Endpoint is ready for data transmission.
              *
-             * This method should be overridden by derived classes to indicate
-             * whether the endpoint is ready for data transmission. A typical
-             * implementation might check if the endpoint is properly connected.
-             * Higher-level checks might involve verifying that all required resources
-             * are available and that the endpoint is in a valid state for transmission.
+             * Readiness indicates whether data can be transmitted in the specified
+             * direction. For regular I/O endpoints this generally requires the relevant
+             * connections to be established and the connected endpoints to be ready as
+             * well. Derived implementations may impose additional requirements; devices,
+             * for example, may become ready only after acquisition has been started.
              *
-             * @returns @c true if the endpoint is ready, @c false otherwise.
+             * @param direction Direction for which readiness is queried.
+             * @returns @c true if the endpoint is ready in the specified direction,
+             *          @c false otherwise.
              * */
             virtual bool isready(dir direction = dir::any) const noexcept {
-                return false;  // Default implementation
+                return false;
             }
 
             /** Unlink this endpoint.
@@ -351,7 +353,7 @@ namespace vidre {
             virtual status unlink() = 0;
 
             /** Get packet manifest.
-             * FIXME (the "manifest" contains the streams or rather the devices configuration data)
+             * @todo the "manifest" contains the streams or rather the devices configuration data
              * */
             virtual shared<packet> manifest() noexcept {
                 return {};  // FIXME

@@ -26,8 +26,11 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/types/endpoint.hh>
-#include <vidre/io/types/sink.hh>
 #include <vidre/io/types/source.hh>
+#include <vidre/io/types/sink.hh>
+
+#include <queue>
+#include <mutex>
 
 namespace vidre {
 
@@ -41,9 +44,12 @@ namespace vidre {
              * */
             ///@{
 
+            /** Fan-out endpoint.
+             * This class represents an output endpoint that can fan out data from one source to many branches.
+             * */
             class VIDRE_CORE_VISIBILITY out
                 : public io::sink
-                , public io::source {
+                , public endpoint::source {
             public:
                 class branch;
 
@@ -55,23 +61,39 @@ namespace vidre {
                 out(out &&) = delete;
                 out &operator=(out &&) = delete;
 
-                virtual ~out() {}
+                virtual ~out();
 
             protected:
+                std::vector<shared<branch>> branches_{};  ///< The list of branches connected to this fan-out endpoint.
+
             public:
-                status unlink() override {
-                    return status::bad;
+                cap getcap() const noexcept override {
+                    return {
+                        .source = {},  //
+                        .sink = {}     //
+                        // FIXME
+                    };
                 }
-                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
-                    // FIXME
-                    return false;
-                }
+
+                status unlink() override;
+
+                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+
+            protected:
+                status attach(shared<endpoint::source> src, cap::flag_type cap) override;
+                status detach(const endpoint::source *ptr) override;
+                
+                status attach(shared<endpoint::sink> src, cap::flag_type cap) override;
+                status detach(const endpoint::sink *ptr) override;
             };
 
+            /** Branch of a fan-out endpoint.
+             * This class represents a single branch that receives data from the fan-out endpoint.
+             * */
             class VIDRE_CORE_VISIBILITY out::branch : public io::source {
             public:
             public:
-                branch() = default;
+                branch(fan::out &parent) : parent_(parent) {}
 
                 branch(const branch &) = delete;
                 branch &operator=(const branch &) = delete;
@@ -80,11 +102,38 @@ namespace vidre {
 
                 virtual ~branch() {}
 
+            private:
+                fan::out &parent_;
+
             protected:
+                std::queue<shared<packet>> queue_{};
+                std::mutex queue_mutex_{};
+
+            protected:
+                status queue(shared<packet> pkt);
+
             public:
-                status unlink() override {
-                    return status::bad;
+                cap getcap() const noexcept override {
+                    return {
+                        .source = {}
+                        // FIXME
+                    };
                 }
+
+                shared<packet> pull() override;
+
+                status unlink() override;
+
+                size_type queue_depth() const noexcept override {
+                    if (parent_.sink_left)
+                        return std::static_pointer_cast<io::source>(parent_.sink_left)->queue_depth();
+                    return 0;
+                }
+
+            protected:
+                void source_step() override;
+                status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
+                status detach(const endpoint::sink *ptr) override;
             };
 
             ///@}

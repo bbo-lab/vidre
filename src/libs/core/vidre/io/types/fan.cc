@@ -20,3 +20,33 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fan.hh"
+
+using namespace vidre;
+
+io::fan::out::~out() {
+    // FIXME kill all branches and clean up resources
+}
+
+bool io::fan::out::isready(endpoint::dir direction) const noexcept {
+    // FIXME
+    return false;
+}
+
+status io::fan::out::unlink() {
+    // FIXME
+    return status::bad;
+}
+status io::fan::out::branch::queue(shared<packet> pkt) {
+    // FIXME
+    return status::bad;
+}
+
+shared<io::packet> io::fan::out::branch::pull() {
+    return {};
+}
+
+status io::fan::out::branch::unlink() {
+    // FIXME
+    return status::bad;
+}
+
