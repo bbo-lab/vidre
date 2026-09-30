@@ -3,9 +3,9 @@
 
 #include <thread>
 
-// #ifdef PYLON_WIN_BUILD
+#ifdef PYLON_WIN_BUILD
 #include <pylon/PylonGUI.h>
-// #endif
+#endif
 #include <pylon/PylonIncludes.h>
 #include <camera/pylon/pylon_buffer.hpp>
 

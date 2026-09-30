@@ -219,7 +219,7 @@ std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> LoadSys
             continue;
             
         // Create camera from file-defined details if the node is a camera node.
-        if (!it->second["type"].as<std::string>().compare("camera") != 0) {
+        if (it->second["type"].as<std::string>().compare("camera") == 0) {
             cameras[it->first.as<std::string>()] = std::make_unique<vidre::RuntimeInstance>();
             
             cameras[it->first.as<std::string>()]->setCamera(LoadCamera(it->second));

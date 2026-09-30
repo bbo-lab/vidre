@@ -4,6 +4,7 @@
 
 #include <core/header/header.hpp>
 #include <vector>
+#include <cstdint>
 
 
 namespace vidre {
