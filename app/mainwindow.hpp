@@ -60,6 +60,7 @@ private:
     QTextEdit *logTextEdit_;
     QLabel *statusIndicator_;
     CameraInfosDock *cameraInfosDock_;
+    QAction *loadConfigAction_ = nullptr;
     
     std::unordered_map<std::string, std::unique_ptr<vidre::RuntimeInstance>> cameras_;
     std::unordered_map<QString, CameraWidget*> cameraWidgets_;
@@ -80,6 +81,9 @@ private:
     void createToolBar();
     void createDockWidgets();
     void logMessage(const QString& message);
+    bool anyCameraRecording();
+    void updateLoadConfigEnabled();
+    void releaseAllCameras();
 };
 
 #endif // MAINWINDOW_HPP

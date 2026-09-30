@@ -23,7 +23,7 @@ namespace vidre {
 
     class ICamera {
     public:
-        virtual ~ICamera() = default;
+        // virtual ~ICamera() = default;
 
         // -------------------
         // Runtime controls

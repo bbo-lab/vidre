@@ -280,6 +280,7 @@ void CameraWidget::onStartClicked()
         frameCount_ = 0;
         updateStatus();
     }
+    emit recordingStateChanged();
 }
 
 void CameraWidget::onShowClicked()
@@ -293,6 +294,7 @@ void CameraWidget::onShowClicked()
         frameCount_ = 0;
         updateStatus();
     }
+    emit recordingStateChanged();
 }
 
 void CameraWidget::onStopClicked()
@@ -302,6 +304,7 @@ void CameraWidget::onStopClicked()
         frameTimer_->stop();
         updateStatus();
     }
+    emit recordingStateChanged();
 }
 
 void CameraWidget::onSingleGrabClicked()

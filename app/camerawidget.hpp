@@ -38,6 +38,7 @@ public:
 signals:
     void windowClosed(const QString& cameraName);
     void windowActivated(const QString& cameraName);
+    void recordingStateChanged();
 
 protected:
     void closeEvent(QCloseEvent *event) override;

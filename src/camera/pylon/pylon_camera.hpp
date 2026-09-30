@@ -70,8 +70,8 @@ namespace vidre {
         std::atomic<SharedFrameHeader *> latestFrame;
 
         // -------- Pylon specific --------
+        Pylon::PylonAutoInitTerm pylonAutoInitTerm;  // declared first: Pylon is initialized before and terminated after `camera`
         Pylon::CInstantCamera camera;
-        Pylon::PylonAutoInitTerm pylonAutoInitTerm;
         ShrBufferFactory shrBufferFactory;
 
 

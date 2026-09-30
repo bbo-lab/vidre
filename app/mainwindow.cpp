@@ -106,8 +106,8 @@ void MainWindow::createToolBar()
     mainToolBar_->setMovable(false);
     mainToolBar_->setIconSize(QSize(32, 32));
     
-    QAction *loadAction = mainToolBar_->addAction("Load Config");
-    connect(loadAction, &QAction::triggered, this, &MainWindow::onLoadConfigClicked);
+    loadConfigAction_ = mainToolBar_->addAction("Load Config");
+    connect(loadConfigAction_, &QAction::triggered, this, &MainWindow::onLoadConfigClicked);
     
     mainToolBar_->addSeparator();
 
@@ -189,27 +189,33 @@ void MainWindow::onLoadConfigClicked()
 
 void MainWindow::loadConfigFile(const QString& filename)
 {
+    if (anyCameraRecording()) {
+        logMessage("Cannot load a configuration while a camera is recording. Stop all recordings first.");
+        QMessageBox::information(this, "Recording in progress",
+            "Stop all recordings before loading a new configuration.");
+        updateLoadConfigEnabled();
+        return;
+    }
+
     logMessage("Loading configuration from: " + filename);
     
-    // Close all MDI windows and dock widgets
+    // Close all camera windows, docked and undocked
     mdiArea_->closeAllSubWindows();
-    for (auto& widget : cameraWidgets_) {
-        QDockWidget *dock = qobject_cast<QDockWidget*>(widget.second->parentWidget());
-        if (dock) {
-            dock->close();
-        }
+    const auto openWidgets = cameraWidgets_;
+    for (auto& widget : openWidgets) {
+        widget.second->close();
     }
     cameraWidgets_.clear();
+    cameraInfosDock_->clearAllCameras();
     
-    // Stop all running cameras first
-    for (auto& cam : cameras_) {
-        if (cam.second && cam.second->isRunning()) {
-            cam.second->stop();
-        }
-    }
+    // Stop and destroy every camera and runtime instance before creating new ones,
+    // so the new instances can open the same devices and shared memory again
+    releaseAllCameras();
+    deviceListDock_->updateDeviceList(cameras_);
     
     // Load new configuration
     cameras_ = loadSystemSetup(filename.toStdString());
+    updateCameraStatus();
     
     if (cameras_.empty()) {
         logMessage("ERROR: Failed to load configuration or no cameras found.");
@@ -224,6 +230,40 @@ void MainWindow::loadConfigFile(const QString& filename)
     deviceListDock_->updateDeviceList(cameras_);
     
     statusBar()->showMessage(QString("%1 camera(s) loaded").arg(cameras_.size()), 3000);
+}
+
+bool MainWindow::anyCameraRecording()
+{
+    for (auto& cam : cameras_) {
+        if (cam.second && cam.second->isRunning()
+            && cam.second->getRecordingStatus() != vidre::RecordingStatus::Streaming) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void MainWindow::updateLoadConfigEnabled()
+{
+    const bool allowed = !anyCameraRecording();
+    const QString tip = allowed ? "Load a configuration file"
+                                : "Stop all recordings before loading a new configuration";
+    for (QAction *action : {loadConfigAction_, ui->actionLoadConfig}) {
+        if (action) {
+            action->setEnabled(allowed);
+            action->setToolTip(tip);
+        }
+    }
+}
+
+void MainWindow::releaseAllCameras()
+{
+    for (auto& cam : cameras_) {
+        if (cam.second && cam.second->isRunning()) {
+            cam.second->stop();
+        }
+    }
+    cameras_.clear();
 }
 
 void MainWindow::onShowAllClicked()
@@ -348,6 +388,8 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
                 this, &MainWindow::onCameraWindowClosed);
         connect(cameraWidget, &CameraWidget::windowActivated,
                 this, &MainWindow::onCameraWindowActivated);
+        connect(cameraWidget, &CameraWidget::recordingStateChanged,
+                this, &MainWindow::updateCameraStatus);
         
         subWindow->show();
         mdiArea_->setActiveSubWindow(subWindow);
@@ -372,6 +414,8 @@ void MainWindow::onCameraWindowActivated(const QString& cameraName)
 
 void MainWindow::updateCameraStatus()
 {
+    updateLoadConfigEnabled();
+
     if (cameras_.empty()) {
         statusIndicator_->setStyleSheet("background-color: grey; border-radius: 10px;");
         statusIndicator_->setToolTip("No cameras loaded");
