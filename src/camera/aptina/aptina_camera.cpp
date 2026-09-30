@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 
 // TODO: check whether if(ap_F) is needed
@@ -324,20 +325,21 @@ namespace vidre {
     
     void AptinaCamera::SetTriggerIn(unsigned int line) {
         if (!ap_Destroy || !ap_Finalize || !ap_LoadIniPreset) {
-            std::cerr << "Aptina API not loaded!\n";
-            return;
+            throw std::runtime_error("Aptina API not loaded");
         }
         ap_Destroy(_handle);
         ap_Finalize();
-        Init(_serial);
+        if (!Init(_serial)) {
+            throw std::runtime_error("Aptina camera could not be re-initialized");
+        }
         int result = ap_LoadIniPreset(_handle, _config_file.c_str(), "EyeCAM-Triggered");
         if (result != AP_INI_SUCCESS) {
-            std::cout << "Failed to load trigger config for aptina\n";
-            return;
+            throw std::runtime_error("Aptina preset EyeCAM-Triggered could not be loaded from " + _config_file);
         }
     }
     
     void AptinaCamera::SetTriggerOut(unsigned int line) {
+        throw std::runtime_error("trigger out is not supported for Aptina");
     }
 
     bool AptinaCamera::LoadConfiguration(std::string filepath) {

@@ -18,13 +18,14 @@ void DeviceListDock::setupUI()
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     
-    treeWidget_->setHeaderLabels(QStringList() << "Device" << "Status" << "Vendor");
+    treeWidget_->setHeaderLabels(QStringList() << "Device" << "Status" << "Vendor" << "Trigger");
     treeWidget_->setAlternatingRowColors(true);
     treeWidget_->setRootIsDecorated(false);
     treeWidget_->header()->setStretchLastSection(false);
     treeWidget_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
     treeWidget_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     treeWidget_->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    treeWidget_->header()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
     
     // Dark theme styling
     treeWidget_->setStyleSheet(
@@ -73,6 +74,15 @@ void DeviceListDock::updateDeviceList(const std::unordered_map<std::string, std:
             vendor = "Aptina";
         }
         item->setText(2, vendor);
+        
+        vidre::ICamera *camera = cam.second->getCamera();
+        if (camera && camera->triggerOutSet) {
+            item->setText(3, camera->triggerInSet ? "IN + OUT" : "OUT");
+            item->setForeground(3, QBrush(QColor(204, 102, 255)));
+        } else if (camera && camera->triggerInSet) {
+            item->setText(3, "IN");
+            item->setForeground(3, QBrush(QColor(51, 170, 255)));
+        }
         
         // Color code status
         if (cam.second->isRunning()) {

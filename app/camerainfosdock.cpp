@@ -185,6 +185,12 @@ QString CameraInfosDock::generateCameraInfo(const QString& cameraName, vidre::Ru
         
         info += QString("Serial: %1\n").arg(QString::fromStdString(serialNumber));
         info += QString("Vendor: %1\n").arg(QString::fromStdString(vendorName));
+        if (camera->triggerInSet) {
+            info += "Trigger: IN\n";
+        }
+        if (camera->triggerOutSet) {
+            info += "Trigger: OUT\n";
+        }
         
         
         info += "\n";

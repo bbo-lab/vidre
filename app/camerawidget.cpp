@@ -8,8 +8,25 @@
 #include <QApplication>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QScrollBar>
 
 #include <core/runtime/shared_frame_header.hpp>
+
+namespace {
+    QString statusStyle(const char* color)
+    {
+        return QString(
+            "QLabel {"
+            "    background-color: #1e1e1e;"
+            "    color: %1;"
+            "    border: 1px solid #555555;"
+            "    border-radius: 2px;"
+            "    padding: 1px 5px;"
+            "    font-size: 8pt;"
+            "    font-weight: bold;"
+            "}").arg(color);
+    }
+}
 
 CameraWidget::CameraWidget(const QString& cameraName, 
                            vidre::RuntimeInstance* runtimeInstance,
@@ -42,45 +59,23 @@ void CameraWidget::setupUI()
     
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(2);
-    mainLayout->setContentsMargins(3, 3, 3, 3);
-    
-    // Control buttons group
-    QGroupBox *controlGroup = new QGroupBox("Camera Control", this);
-    controlGroup->setStyleSheet(
-        "QGroupBox {"
-        "    background-color: #2b2b2b;"
-        "    color: #bbbbbb;"
-        "    border: 1px solid #555555;"
-        "    border-radius: 3px;"
-        "    margin-top: 5px;"
-        "    font-weight: bold;"
-        "    font-size: 9pt;"
-        "}"
-        "QGroupBox::title {"
-        "    subcontrol-origin: margin;"
-        "    left: 10px;"
-        "    padding: 0 2px 0 2px;"
-        "}"
-    );
-    
-    QGridLayout *controlLayout = new QGridLayout(controlGroup);
-    controlLayout->setSpacing(2);
-    controlLayout->setContentsMargins(3, 3, 3, 3);
+    mainLayout->setContentsMargins(2, 2, 2, 2);
     
     startButton_ = new QPushButton("Record", this);
     stopButton_ = new QPushButton("Stop", this);
     showButton_ = new QPushButton("Show", this);
     singleGrabButton_ = new QPushButton("Single Frame", this);
+    singleGrabButton_->hide();
     undockButton_ = new QPushButton("Undock", this);
     
-    QString buttonStyle = 
+    const QString buttonStyle = 
         "QPushButton {"
         "    background-color: #3c3f41;"
         "    color: #bbbbbb;"
         "    border: 1px solid #555555;"
         "    border-radius: 2px;"
-        "    padding: 3px 5px;"
-        "    font-size: 9pt;"
+        "    padding: 1px 6px;"
+        "    font-size: 8pt;"
         "}"
         "QPushButton:hover {"
         "    background-color: #4b4b4b;"
@@ -94,46 +89,49 @@ void CameraWidget::setupUI()
         "    color: #666666;"
         "}";
     
-    startButton_->setStyleSheet(buttonStyle);
-    stopButton_->setStyleSheet(buttonStyle);
-    showButton_->setStyleSheet(buttonStyle);
-    undockButton_->setStyleSheet(buttonStyle);
-    startButton_->setMaximumHeight(24);
-    stopButton_->setMaximumHeight(24);
-    showButton_->setMaximumHeight(24);
-    undockButton_->setMaximumHeight(24);
-    // singleGrabButton_->setStyleSheet(buttonStyle);
+    for (QPushButton *button : {startButton_, showButton_, stopButton_, undockButton_}) {
+        button->setStyleSheet(buttonStyle);
+        button->setFixedHeight(20);
+    }
     
-    controlLayout->addWidget(startButton_, 0, 0);
-    controlLayout->addWidget(showButton_, 0, 1);
-    controlLayout->addWidget(stopButton_, 0, 2);
-    controlLayout->addWidget(undockButton_, 0, 3);
-    // controlLayout->addWidget(singleGrabButton_, 1, 0, 1, 2);
-    
-    // Status label
     statusLabel_ = new QLabel("Status: Stopped", this);
-    statusLabel_->setMaximumHeight(20);
-    statusLabel_->setStyleSheet(
-        "QLabel {"
-        "    background-color: #1e1e1e;"
-        "    color: #ff8800;"
-        "    border: 1px solid #555555;"
-        "    border-radius: 2px;"
-        "    padding: 2px 5px;"
-        "    font-size: 9pt;"
-        "    font-weight: bold;"
-        "}"
-    );
+    statusLabel_->setFixedHeight(20);
+    statusLabel_->setStyleSheet(statusStyle("#ff8800"));
     
-    // Image display area
-    QGroupBox *imageGroup = new QGroupBox("Image Display", this);
-    imageGroup->setStyleSheet(controlGroup->styleSheet());
+    QHBoxLayout *controlLayout = new QHBoxLayout();
+    controlLayout->setSpacing(2);
+    controlLayout->setContentsMargins(0, 0, 0, 0);
+    controlLayout->addWidget(startButton_);
+    controlLayout->addWidget(showButton_);
+    controlLayout->addWidget(stopButton_);
+    controlLayout->addWidget(undockButton_);
+    controlLayout->addStretch(1);
+    vidre::ICamera *camera = runtimeInstance_ ? runtimeInstance_->getCamera() : nullptr;
+    if (camera && (camera->triggerInSet || camera->triggerOutSet)) {
+        QString triggerText = "TRIGGER IN";
+        QString triggerColor = "#33aaff";
+        if (camera->triggerOutSet) {
+            triggerText = camera->triggerInSet ? "TRIGGER IN + OUT" : "TRIGGER OUT";
+            triggerColor = "#cc66ff";
+        }
+        QLabel *triggerLabel = new QLabel(triggerText, this);
+        triggerLabel->setFixedHeight(20);
+        triggerLabel->setStyleSheet(QString(
+            "QLabel {"
+            "    background-color: %1;"
+            "    color: #1e1e1e;"
+            "    border-radius: 2px;"
+            "    padding: 1px 5px;"
+            "    font-size: 8pt;"
+            "    font-weight: bold;"
+            "}").arg(triggerColor));
+        controlLayout->addWidget(triggerLabel);
+    }
+    controlLayout->addWidget(statusLabel_);
     
-    QVBoxLayout *imageLayout = new QVBoxLayout(imageGroup);
-    imageLayout->setSpacing(1);
-    imageLayout->setContentsMargins(2, 4, 2, 2);
     imageLabel_ = new QLabel("No image", this);
     imageLabel_->setMinimumSize(320, 240);
+    imageLabel_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageLabel_->setAlignment(Qt::AlignCenter);
     imageLabel_->setStyleSheet(
         "QLabel {"
@@ -142,38 +140,43 @@ void CameraWidget::setupUI()
         "    border: 1px solid #555555;"
         "}"
     );
-    imageLayout->addWidget(imageLabel_);
+    imageLabel_->installEventFilter(this);
     
-    // Info label
-    infoLabel_ = new QLabel("Camera Information", this);
-    infoLabel_->setMaximumHeight(70);
-    infoLabel_->setStyleSheet(
-        "QLabel {"
+    infoText_ = new QPlainTextEdit(this);
+    infoText_->setReadOnly(true);
+    infoText_->setMinimumHeight(24);
+    infoText_->setStyleSheet(
+        "QPlainTextEdit {"
         "    background-color: #1e1e1e;"
         "    color: #888888;"
         "    border: 1px solid #555555;"
         "    border-radius: 2px;"
-        "    padding: 3px 4px;"
         "    font-family: 'Consolas', 'Monaco', monospace;"
         "    font-size: 8pt;"
         "}"
     );
     
-    mainLayout->addWidget(controlGroup, 0);
-    mainLayout->addWidget(statusLabel_, 0);
-    mainLayout->addWidget(imageGroup, 1);
-    mainLayout->addWidget(infoLabel_, 0);
+    QSplitter *splitter = new QSplitter(Qt::Vertical, this);
+    splitter->setHandleWidth(4);
+    splitter->setStyleSheet("QSplitter::handle { background-color: #3c3f41; }");
+    splitter->addWidget(imageLabel_);
+    splitter->addWidget(infoText_);
+    splitter->setCollapsible(0, false);
+    splitter->setCollapsible(1, true);
+    splitter->setStretchFactor(0, 1);
+    splitter->setStretchFactor(1, 0);
+    splitter->setSizes({10000, 48});
+    
+    mainLayout->addLayout(controlLayout, 0);
+    mainLayout->addWidget(splitter, 1);
     
     setLayout(mainLayout);
     
-    // Connect signals
     connect(startButton_, &QPushButton::clicked, this, &CameraWidget::onStartClicked);
     connect(stopButton_, &QPushButton::clicked, this, &CameraWidget::onStopClicked);
     connect(showButton_, &QPushButton::clicked, this, &CameraWidget::onShowClicked);
     connect(undockButton_, &QPushButton::clicked, this, &CameraWidget::onToggleDockClicked);
-    // connect(singleGrabButton_, &QPushButton::clicked, this, &CameraWidget::onSingleGrabClicked);
     
-    // Set dark background
     setStyleSheet("CameraWidget { background-color: #2b2b2b; }");
 }
 
@@ -187,17 +190,7 @@ void CameraWidget::updateStatus()
     
     if (isRunning) {
         statusLabel_->setText("Status: Running");
-        statusLabel_->setStyleSheet(
-            "QLabel {"
-            "    background-color: #1e1e1e;"
-            "    color: #00cc00;"
-            "    border: 1px solid #555555;"
-            "    border-radius: 2px;"
-            "    padding: 2px 5px;"
-            "    font-size: 9pt;"
-            "    font-weight: bold;"
-            "}"
-        );
+        statusLabel_->setStyleSheet(statusStyle("#00cc00"));
         startButton_->setEnabled(false);
         showButton_->setEnabled(false);
         stopButton_->setEnabled(true);
@@ -209,17 +202,7 @@ void CameraWidget::updateStatus()
         // singleGrabButton_->setEnabled(false);
     } else {
         statusLabel_->setText("Status: Stopped");
-        statusLabel_->setStyleSheet(
-            "QLabel {"
-            "    background-color: #1e1e1e;"
-            "    color: #ff8800;"
-            "    border: 1px solid #555555;"
-            "    border-radius: 2px;"
-            "    padding: 2px 5px;"
-            "    font-size: 9pt;"
-            "    font-weight: bold;"
-            "}"
-        );
+        statusLabel_->setStyleSheet(statusStyle("#ff8800"));
         startButton_->setEnabled(true);
         showButton_->setEnabled(true);
         stopButton_->setEnabled(false);
@@ -260,6 +243,14 @@ void CameraWidget::updateInfoDisplay()
     
     info += QString("Status: %1\n").arg(statusStr);
     
+    vidre::ICamera *camera = runtimeInstance_->getCamera();
+    if (camera && camera->triggerInSet) {
+        info += "Trigger: IN\n";
+    }
+    if (camera && camera->triggerOutSet) {
+        info += "Trigger: OUT\n";
+    }
+    
     bool isActive = (status != vidre::RecordingStatus::Stopped);
     if (isActive) {
         info += QString("Frames Displayed: %1\n").arg(frameCount_);
@@ -272,7 +263,10 @@ void CameraWidget::updateInfoDisplay()
     
     info += QString("Last Update: %1").arg(QDateTime::currentDateTime().toString("hh:mm:ss"));
     
-    infoLabel_->setText(info);
+    QScrollBar *scrollBar = infoText_->verticalScrollBar();
+    const int scrollPosition = scrollBar->value();
+    infoText_->setPlainText(info);
+    scrollBar->setValue(scrollPosition);
 }
 
 void CameraWidget::onStartClicked()
@@ -374,11 +368,8 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
         return; // Unsupported format
     }
     
-    // Scale to fit the label while maintaining aspect ratio
-    QPixmap pixmap = QPixmap::fromImage(image);
-    QPixmap scaled = pixmap.scaled(imageLabel_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    
-    imageLabel_->setPixmap(scaled);
+    lastPixmap_ = QPixmap::fromImage(image);
+    showScaledFrame();
     
     if (unpacked_buffer) {
         delete[] unpacked_buffer;
@@ -387,17 +378,34 @@ void CameraWidget::displayFrame(const uint8_t* imageData, uint64_t width, uint64
     frameCount_++;
 }
 
+void CameraWidget::showScaledFrame()
+{
+    if (lastPixmap_.isNull()) {
+        return;
+    }
+    imageLabel_->setPixmap(lastPixmap_.scaled(imageLabel_->contentsRect().size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
+
+bool CameraWidget::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == imageLabel_ && event->type() == QEvent::Resize) {
+        showScaledFrame();
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 void CameraWidget::onToggleDockClicked()
 {
     QMdiSubWindow *subWindow = qobject_cast<QMdiSubWindow*>(parentWidget());
     
     if (subWindow) {
         subWindow->setWidget(nullptr);
-        subWindow->hide();
-        
+        subWindow->deleteLater();
+
         setParent(nullptr);
         setWindowTitle(cameraName_);
         setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+        setAttribute(Qt::WA_DeleteOnClose, true);
         
         QScreen *screen = QGuiApplication::primaryScreen();
         if (screen) {
@@ -441,11 +449,12 @@ void CameraWidget::onToggleDockClicked()
             subWindow->setWidget(this);
             subWindow->setWindowTitle(cameraName_);
             subWindow->setAttribute(Qt::WA_DeleteOnClose);
-            subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-            
+            subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
+
             mdiArea->addSubWindow(subWindow);
-            
+
             hide();
+            setAttribute(Qt::WA_DeleteOnClose, false);
             setParent(subWindow);
             setWindowFlags(Qt::Widget);
             
@@ -460,6 +469,7 @@ void CameraWidget::onToggleDockClicked()
 
 void CameraWidget::closeEvent(QCloseEvent *event)
 {
+    frameTimer_->stop();
     emit windowClosed(cameraName_);
     event->accept();
 }

@@ -1,6 +1,9 @@
 // #include "pylon_api_loader.hpp"
 #include <camera/pylon/pylon_camera.hpp>
 
+#include <stdexcept>
+#include <string>
+
 namespace vidre {
     // class CSampleImageEventHandler : public Pylon::CImageEventHandler {
     // public:
@@ -302,38 +305,46 @@ namespace vidre {
     
     void PylonCamera::SetTriggerIn(unsigned int line) {
         std::cout << "In: " << GetSerialNumber() << std::endl;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
+        try {
+            GenApi::INodeMap &nodemap = GetGenAPINodeMap();
 
-        Pylon::CEnumParameter triggerSelector(nodemap, "TriggerSelector");
-        triggerSelector.SetValue("FrameStart");
-        
-        Pylon::CEnumParameter triggerMode(nodemap, "TriggerMode");
-        triggerMode.SetValue("On");
+            Pylon::CEnumParameter triggerSelector(nodemap, "TriggerSelector");
+            triggerSelector.SetValue("FrameStart");
+            
+            Pylon::CEnumParameter triggerMode(nodemap, "TriggerMode");
+            triggerMode.SetValue("On");
 
-        Pylon::CEnumParameter triggerSource(nodemap, "TriggerSource");
-        triggerSource.SetValue((std::string("Line") + std::to_string(line)).c_str());
+            Pylon::CEnumParameter triggerSource(nodemap, "TriggerSource");
+            triggerSource.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
-        Pylon::CEnumParameter triggerActivation(nodemap, "TriggerActivation");
-        triggerActivation.SetValue("FallingEdge");
+            Pylon::CEnumParameter triggerActivation(nodemap, "TriggerActivation");
+            triggerActivation.SetValue("FallingEdge");
 
-        Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
+            Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
+            lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
-        Pylon::CEnumParameter lineMode(nodemap, "LineMode");
-        lineMode.SetValue("Input");
+            Pylon::CEnumParameter lineMode(nodemap, "LineMode");
+            lineMode.SetValue("Input");
+        } catch (const Pylon::GenericException &e) {
+            throw std::runtime_error(std::string("Pylon: ") + e.GetDescription());
+        }
     }
     void PylonCamera::SetTriggerOut(unsigned int line) {
         std::cout << "Out: " << GetSerialNumber() << std::endl;
-        GenApi::INodeMap &nodemap = GetGenAPINodeMap();
+        try {
+            GenApi::INodeMap &nodemap = GetGenAPINodeMap();
 
-        Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
-        lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
+            Pylon::CEnumParameter lineSelector(nodemap, "LineSelector");
+            lineSelector.SetValue((std::string("Line") + std::to_string(line)).c_str());
 
-        Pylon::CEnumParameter lineMode(nodemap, "LineMode");
-        lineMode.SetValue("Output");
+            Pylon::CEnumParameter lineMode(nodemap, "LineMode");
+            lineMode.SetValue("Output");
 
-        Pylon::CEnumParameter lineSource(nodemap, "LineSource");
-        lineSource.SetValue("ExposureActive");
+            Pylon::CEnumParameter lineSource(nodemap, "LineSource");
+            lineSource.SetValue("ExposureActive");
+        } catch (const Pylon::GenericException &e) {
+            throw std::runtime_error(std::string("Pylon: ") + e.GetDescription());
+        }
     }
 
     bool PylonCamera::LoadConfiguration(std::string filepath) {

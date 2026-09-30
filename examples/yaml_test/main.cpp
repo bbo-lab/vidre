@@ -103,10 +103,24 @@ std::unique_ptr<vidre::ICamera> LoadCamera(YAML::Node cameraNode) {
 
     // camera->SaveConfiguration("./" + cameraNode["serial"].as<std::string>());
     if (cameraNode["trigger_in"]) {
-        camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
+        try {
+            camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
+            camera->triggerInSet = true;
+        } catch (const std::exception& e) {
+            std::cout << "WARNING: Trigger in could not be set: " << e.what() << std::endl;
+        } catch (...) {
+            std::cout << "WARNING: Trigger in could not be set" << std::endl;
+        }
     }
     if (cameraNode["trigger_out"]) {
-        camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
+        try {
+            camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
+            camera->triggerOutSet = true;
+        } catch (const std::exception& e) {
+            std::cout << "WARNING: Trigger out could not be set: " << e.what() << std::endl;
+        } catch (...) {
+            std::cout << "WARNING: Trigger out could not be set" << std::endl;
+        }
     }
 
     return camera;

@@ -338,7 +338,7 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
         subWindow->setWidget(cameraWidget);
         subWindow->setWindowTitle(deviceName);
         subWindow->setAttribute(Qt::WA_DeleteOnClose);
-        subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+        subWindow->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
         
         mdiArea_->addSubWindow(subWindow);
         
@@ -348,9 +348,6 @@ void MainWindow::onDeviceDoubleClicked(const QString& deviceName)
                 this, &MainWindow::onCameraWindowClosed);
         connect(cameraWidget, &CameraWidget::windowActivated,
                 this, &MainWindow::onCameraWindowActivated);
-        connect(subWindow, &QMdiSubWindow::destroyed, [this, deviceName]() {
-            onCameraWindowClosed(deviceName);
-        });
         
         subWindow->show();
         mdiArea_->setActiveSubWindow(subWindow);
@@ -522,12 +519,29 @@ std::unique_ptr<vidre::ICamera> MainWindow::loadCamera(const std::string& camera
         }
     }
     
-    // Set trigger settings
+    // Set trigger settings; a failed trigger is logged and the camera is still used
+    const QString name = QString::fromStdString(cameraName);
     if (cameraNode["trigger_in"]) {
-        camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
+        try {
+            camera->SetTriggerIn(cameraNode["trigger_in"].as<int>());
+            camera->triggerInSet = true;
+            logMessage(QString("Trigger in set for %1").arg(name));
+        } catch (const std::exception& e) {
+            logMessage(QString("WARNING: Trigger in could not be set for %1: %2").arg(name, e.what()));
+        } catch (...) {
+            logMessage(QString("WARNING: Trigger in could not be set for %1").arg(name));
+        }
     }
     if (cameraNode["trigger_out"]) {
-        camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
+        try {
+            camera->SetTriggerOut(cameraNode["trigger_out"].as<int>());
+            camera->triggerOutSet = true;
+            logMessage(QString("Trigger out set for %1").arg(name));
+        } catch (const std::exception& e) {
+            logMessage(QString("WARNING: Trigger out could not be set for %1: %2").arg(name, e.what()));
+        } catch (...) {
+            logMessage(QString("WARNING: Trigger out could not be set for %1").arg(name));
+        }
     }
     
     return camera;

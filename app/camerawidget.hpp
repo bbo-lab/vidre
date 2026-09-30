@@ -6,7 +6,9 @@
 #include <QLabel>
 #include <QGroupBox>
 #include <QVBoxLayout>
-#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QPlainTextEdit>
+#include <QSplitter>
 #include <QTimer>
 #include <QImage>
 #include <QPixmap>
@@ -41,6 +43,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
     void onStartClicked();
@@ -62,13 +65,15 @@ private:
     QPushButton *undockButton_;
     QLabel *statusLabel_;
     QLabel *imageLabel_;
-    QLabel *infoLabel_;
+    QPlainTextEdit *infoText_;
     QTimer *frameTimer_;
-    
+    QPixmap lastPixmap_;
+
     int64_t lastFrameID_;
     int frameCount_;
-    
+
     void setupUI();
+    void showScaledFrame();
     void updateInfoDisplay();
     void displayFrame(const uint8_t* imageData, uint64_t width, uint64_t height, uint64_t bitsPerPixel, uint64_t frameBytes);
 };
