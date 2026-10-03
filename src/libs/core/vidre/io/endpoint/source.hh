@@ -195,10 +195,6 @@ namespace vidre {
         protected:
             status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
             status detach(const endpoint::sink *ptr) override;
-
-        private:
-            friend class io::sink;
-            friend class io::endpoint;
         };
 
         ///@}

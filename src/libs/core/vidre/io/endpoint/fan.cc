@@ -20,6 +20,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fan.hh"
+#include "vidre/log.hh"
+
 #include <memory>
 
 using namespace vidre;
@@ -30,14 +32,11 @@ io::fan::out::~out() {
     unlink();
 }
 
-io::result io::fan::out::put(shared<packet> p) {
-    // FIXME this raises the question how a return value for push is sensible...
-
+status io::fan::out::put(shared<packet> p) {
     for (auto &branch : branches_right_)
         branch->queue(p);
 
-    // FIXME
-    return {};
+    return status::ok;
 }
 
 bool io::fan::out::isready(endpoint::dir direction) const noexcept {
@@ -71,9 +70,9 @@ status io::fan::out::unlink() {
     }
 
     for (auto &branch : branches_right_) {
-        if (branch->unlink() == status::bad)
-            // FIXME maybe this should be an exception, if we leave here, the whole graph will be left dangling
-            return status::bad;
+        if (branch->unlink() == status::bad) {
+            log::error() << "Failed to unlink branch\n";  // FIXME better information
+        }
     }
     branches_right_.clear();
 
@@ -107,11 +106,11 @@ status io::fan::out::detach(const endpoint::sink *ptr) {
 status io::fan::out::branch::queue(shared<packet> pkt) {
     std::lock_guard<std::mutex> lock(queue_mutex_);
     queue_.emplace(std::move(pkt));
-    
+
     // FIXME queue_depth logic
 
     notify();
-    
+
     return status::ok;
 }
 
@@ -122,11 +121,25 @@ shared<io::packet> io::fan::out::branch::get() {
 
     auto pkt = std::move(queue_.front());
     queue_.pop();
-    
+
     return pkt;
 }
 
 status io::fan::out::branch::unlink() {
-    // FIXME
-    return status::bad;
+    if (!source_follower_)  // not connected
+        return status::ok;
+
+    // log::trace tr;
+    // tr << "unlinking branch from fan-out...\n";
+
+    // auto retval = source_follower_->detach(this);
+    // if (retval == status::bad) {
+    //     tr << "failed to detach sink\n";
+    //     return status::bad;
+    // }
+
+    // retval = detach(source_follower_.get());
+    // tr << retval << ".\n";
+
+    // return retval;
 }

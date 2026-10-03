@@ -27,13 +27,13 @@ io::channel::~channel() {
     unlink();
 }
 
-io::result io::channel::put(shared<packet> p) {
-    io::result retval = invalid<offset_type>;
+status io::channel::put(shared<packet> p) {
     if (source_follower_) {
-        retval = source_follower_->put(p);
-        stats_.update(p, retval);
+        // FIXME stats_.update(p);
+        return source_follower_->put(p);
     }
-    return retval;
+
+    return status::bad;
 }
 
 status io::channel::unlink() {

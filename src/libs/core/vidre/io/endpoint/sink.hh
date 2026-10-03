@@ -85,7 +85,7 @@ namespace vidre {
             }
 
         public:
-            /** Transfer data from a memory view.
+            /** Write data from a memory view.
              * @param v Memory view containing the data to write.
              * @returns Number of bytes actually written (@c invalid for write failure).
              * */
@@ -103,7 +103,7 @@ namespace vidre {
             /** Transfer a data of type @c T.
              * @tparam T Type of the value to write.
              * @param v Value to write (in binary form).
-             * @returns Number of bytes actually written (@c invalid for write failure).
+             * @returns Status of the write operation.
              * */
             template <typename T>
             requires (not std::derived_from<T, memory::view> && std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>)
@@ -116,7 +116,7 @@ namespace vidre {
              * @tparam T Type of the array elements.
              * @tparam N Number of elements in the array.
              * @param arr The array to write (in binary form).
-             * @returns Number of bytes actually written (@c invalid for write failure).
+             * @returns Status of the write operation.
              * */
             template <typename T, size_t N>
             requires std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>
@@ -127,9 +127,9 @@ namespace vidre {
 
             /** Push a data packet.
              * @param p Shared pointer to the packet to write.
-             * @returns Number of bytes actually written (@c invalid for write failure).
+             * @returns Status of the write operation.
              * */
-            result put(shared<packet> p) override {
+            status put(shared<packet> p) override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 
@@ -156,10 +156,6 @@ namespace vidre {
         protected:
             status attach(shared<endpoint::source> src, cap::flag_type cap) override;
             status detach(const endpoint::source *ptr) override;
-
-        private:
-            friend class io::source;
-            friend class io::endpoint;
         };
 
         ///@}

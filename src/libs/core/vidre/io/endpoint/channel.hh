@@ -72,7 +72,7 @@ namespace vidre {
 
             /** Default implementation for the push (i.e. transform) method.
              * */
-            result put(shared<packet> p) override;
+            status put(shared<packet> p) override;
 
         public:
             size_type queue_depth() const noexcept override {

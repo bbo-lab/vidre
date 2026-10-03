@@ -74,7 +74,7 @@ namespace vidre {
                     };
                 }
 
-                result put(shared<packet> p) override;
+                status put(shared<packet> p) override;
 
                 /** Unlink this fan-out endpoint from all connected branches and sources.
                  * @note This operation will attempt to disconnect all branches and sources

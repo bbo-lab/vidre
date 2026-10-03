@@ -273,10 +273,10 @@ namespace vidre {
              *       the packet succeeded, which is no indication of actual delivery).
              *
              * @param p The packet to store.
-             * @returns Number of bytes actually written (@c invalid for write failure).
+             * @returns Status of the write operation.
              * @see endpoint::sink
              * */
-            virtual result put(shared<packet> p) {
+            virtual status put(shared<packet> p) {
                 throw exception::internal() << "endpoint does not implement sink interface";
             }
 
@@ -286,7 +286,7 @@ namespace vidre {
              *       local retrieval (fans, for example, will only indicate if a packet
              *       is available for pulling, which is no indication of actual delivery).
              *
-             * @returns Shared pointer to the retrieved packet.
+             * @returns Shared pointer to the retrieved packet (nullptr if no packet is available).
              * @see endpoint::source
              * */
             virtual shared<packet> get() {
@@ -493,8 +493,7 @@ namespace vidre {
 
         private:
             friend class endpoint;
-            friend class sink;
-            friend class io::sink;
+            friend class endpoint::sink;
         };
 
         /** Sink endpoint role.
@@ -538,8 +537,7 @@ namespace vidre {
 
         private:
             friend class endpoint;
-            friend class source;
-            friend class io::source;
+            friend class endpoint::source;
         };
 
         ///@cond
