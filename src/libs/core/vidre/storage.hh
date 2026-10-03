@@ -43,6 +43,8 @@
  * @defgroup api-core-storage-raw Raw data file
  * @defgroup api-core-storage-details Implementation details
  * @}
+ *
+ * @todo see https://chatgpt.com/c/6abe9858-98b4-83eb-95f1-34c473bc31e7
  * */
 
 #include <vidre/core/config.hh>

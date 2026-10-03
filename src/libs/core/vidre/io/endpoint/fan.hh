@@ -69,9 +69,8 @@ namespace vidre {
             public:
                 cap getcap() const noexcept override {
                     return {
-                        .source = {},  //
-                        .sink = {}     //
-                        // FIXME
+                        .source = cap::packet | cap::push | cap::pull | cap::nonblock,  //
+                        .sink = cap::packet | cap::event | cap::multi                   //
                     };
                 }
 
