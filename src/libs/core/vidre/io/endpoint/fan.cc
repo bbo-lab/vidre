@@ -183,6 +183,7 @@ bool io::fan::out::branch::source_step() {
     if (retval != status::ok) {
         if (retval.error() == std::errc::operation_canceled)
             return false;
+        log::debug() << std::make_error_condition(retval.error()).message() << "\n";
     }
     else {
         // FIXME need to use queue_depth logic

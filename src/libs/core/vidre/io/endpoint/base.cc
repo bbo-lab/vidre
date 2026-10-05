@@ -79,10 +79,12 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
         throw exception::internal() << "endpoint passed as second argument is null";
 
     cap::flag_type src_cap = src->getcap().source;
-    log::debug() << "connecting with src_cap: " << std::format("{}", src_cap) << log::endl;
+    log::debug() << "connecting '" << src->tag() << "' to '" << snk->tag() << "'\n";
+    
+    log::debug() << "    src_cap: " << std::format("{}", src_cap) << log::endl;
 
     cap::flag_type snk_cap = snk->getcap().sink;
-    log::debug() << "                snk_cap: " << std::format("{}", snk_cap) << log::endl;
+    log::debug() << "    snk_cap: " << std::format("{}", snk_cap) << log::endl;
     
     // sanity checks
     if (!src_cap)

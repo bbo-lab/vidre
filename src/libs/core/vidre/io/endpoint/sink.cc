@@ -38,7 +38,7 @@ status io::sink::unlink() {
     tr << "unlinking sink...\n";
 
     auto retval = endpoint::detach(sink_predecessor_, this);
-    if (retval == status::bad) {    
+    if (retval == status::bad) {
         tr << "failed to detach source\n";
         return status::bad;
     }
@@ -121,11 +121,13 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
         if (retval == status::bad) {
             if (retval.error() == std::errc::operation_canceled)
                 break;
+            log::debug() << std::make_error_condition(retval.error()).message() << "\n";
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
             continue;
         }
 
         // FIXME this logic needs to use source_->queue_depth()
-        
+
         for (size_type i = 0; i < *retval; ++i)
             put(std::static_pointer_cast<io::source>(sink_predecessor_)->get());
     }
