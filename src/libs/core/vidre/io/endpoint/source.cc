@@ -20,7 +20,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "source.hh"
-#include "sink.hh"
 #include "vidre/log.hh"
 #include "vidre/util/debug.hh"
 
@@ -38,7 +37,7 @@ status io::source::unlink() {
     log::trace tr;
     tr << "unlinking source...\n";
 
-    auto retval = source_follower_->detach(this);
+    auto retval = endpoint::detach(source_follower_, this);
     if (retval == status::bad) {
         tr << "failed to detach sink\n";
         return status::bad;
@@ -53,6 +52,8 @@ status io::source::unlink() {
 status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     if (source_follower_)  // already connected
         return status::bad;
+
+    log::debug() << "attaching source to sink with cap: " << std::format("{}", cap) << "\n";
 
     // store fields, clear stats
     cap_.source = cap;
@@ -117,7 +118,8 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     // event loop
     log::debug() << "source_handler: running...\n";
     while (not scope.isterminated()) {
-        source_step();
+        if (not source_step())
+            break;
     }
 
     log::debug() << "source_handler: finished.\n";

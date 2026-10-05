@@ -43,7 +43,7 @@ namespace vidre {
         /** Endpoint.
          *
          * This represents a generic endpoint in the I/O system, which can be a
-         * source, sink, channel, fan-in, or fan-out. Also, any device that 
+         * source, sink, channel, fan-in, or fan-out. Also, any device that
          * represents a data producer or consumer within the I/O system.
          * can—and in fact is—represented as an endpoint.
          *
@@ -175,8 +175,8 @@ namespace vidre {
                             };
                             ```
 
-                            Then you don't have to overload `stashed - committed` with two meanings. In particular, you can define a useful accounting
-                            relationship such as:
+                            Then you don't have to overload `stashed - committed` with two meanings. In particular, you can define a
+                        useful accounting relationship such as:
 
                             ```text
                             stashed = committed + errors + pending
@@ -190,12 +190,14 @@ namespace vidre {
 
                             assuming every failed packet increments `errors` exactly once and is no longer pending.
 
-                            That also gives the monitor three immediately understandable quantities: **accepted work, successfully completed work, failed
-                            work**. I like this more than trying to encode failure indirectly in the other two counters.
+                            That also gives the monitor three immediately understandable quantities: **accepted work, successfully
+                        completed work, failed work**. I like this more than trying to encode failure indirectly in the other two
+                        counters.
 
 
-                        @todo need to rethink - for a device, if the camera fails to capture a frame, how should that be reflected in the statistics? Do we have to increment stashed and errors, or is there a better way to account for failed captures?
-                        Also, there's an "errors" field a level higher (see below)
+                        @todo need to rethink - for a device, if the camera fails to capture a frame, how should that be reflected
+                        in the statistics? Do we have to increment stashed and errors, or is there a better way to account for
+                        failed captures? Also, there's an "errors" field a level higher (see below)
                         */
                         return stashed - committed - errors;
                     }
@@ -241,11 +243,22 @@ namespace vidre {
             /** Disconnect an endpoint.
              * @param ep The endpoint to disconnect.
              * @returns The status of the disconnection operation.
+             *
              * @note This method is synonymous with calling `unlink()` on the endpoint.
+             *
              * */
             static status disconnect(shared<io::endpoint> ep) {
                 return ep->unlink();
             }
+
+        protected:
+            /** Helper for calling detach on source endpoints.
+             * */
+            static status detach(shared<endpoint::source> src, const endpoint::sink *snk);
+
+            /** Helper for calling detach on sink endpoints.
+             * */
+            static status detach(shared<endpoint::sink> snk, const endpoint::source *src);
 
         public:
             endpoint() = default;
@@ -549,6 +562,15 @@ namespace vidre {
             retval |= to_underlying(type::fanin) * !!static_cast<bool>(source & flag_type::multi);
             return static_cast<type>(retval);
         }
+
+        inline status endpoint::detach(shared<endpoint::source> src, const endpoint::sink *snk) {
+            return src->detach(snk);
+        }
+
+        inline status endpoint::detach(shared<endpoint::sink> snk, const endpoint::source *src) {
+            return snk->detach(src);
+        }
+
         ///@endcond
 
         ///@}

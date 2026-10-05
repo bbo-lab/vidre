@@ -37,7 +37,7 @@ status io::sink::unlink() {
     log::trace tr;
     tr << "unlinking sink...\n";
 
-    auto retval = std::static_pointer_cast<io::source>(sink_predecessor_)->detach(this);
+    auto retval = endpoint::detach(sink_predecessor_, this);
     if (retval == status::bad) {    
         tr << "failed to detach source\n";
         return status::bad;
@@ -53,6 +53,8 @@ status sink::attach(shared<endpoint::source> src, cap::flag_type cap) {
     if (sink_predecessor_)  // already connected
         return status::bad;
 
+    log::debug() << "attaching sink to source with cap: " << std::format("{}", cap) << "\n";
+
     // store fields, clear stats
     cap_.sink = cap;
     clearstats();
@@ -65,7 +67,7 @@ status sink::attach(shared<endpoint::source> src, cap::flag_type cap) {
         // start handler
         sink_task_ = task::make(this, &sink::sink_handler, std::chrono::milliseconds(1));
         sink_task_->on_terminate([src = sink_predecessor_]() {
-            std::static_pointer_cast<io::source>(src)->source_event_.cancel();
+            std::static_pointer_cast<io::source>(src)->cancel();
         });
     }
 
@@ -123,6 +125,7 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
         }
 
         // FIXME this logic needs to use source_->queue_depth()
+        
         for (size_type i = 0; i < *retval; ++i)
             put(std::static_pointer_cast<io::source>(sink_predecessor_)->get());
     }

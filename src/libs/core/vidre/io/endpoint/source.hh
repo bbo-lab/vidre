@@ -149,6 +149,14 @@ namespace vidre {
             [[nodiscard]] event::result_type wait(std::chrono::milliseconds timeout) {
                 return source_event_.wait(timeout);
             }
+            
+            /** Cancel the source event.
+             * This method cancels any ongoing wait operations on the source event.
+             * */
+            void cancel() noexcept {
+                // FIXME currently public, consider making it protected
+                source_event_.cancel();
+            }
 
         protected:
             /** Notify the sink, that a packet is available for pulling.
@@ -181,8 +189,9 @@ namespace vidre {
              * @note The implementation has to take into account the source capabilities!
              * @see endpoint::getcap()
              * */
-            virtual void source_step() {
+            virtual bool source_step() {
                 std::this_thread::yield();
+                return true;
             }
 
             /** Default thread handler.

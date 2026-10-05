@@ -33,8 +33,10 @@ io::fan::out::~out() {
 }
 
 status io::fan::out::put(shared<packet> p) {
+    log::debug() << "queueing packet to fan-out branches\n";
+
     for (auto &branch : branches_right_)
-        branch->queue(p);
+        branch->put(p);
 
     return status::ok;
 }
@@ -62,21 +64,26 @@ status io::fan::out::unlink() {
     if (not sink_predecessor_ and branches_right_.empty())  // not connected
         return status::ok;
 
+    status retval = status::ok;
     if (sink_predecessor_) {
-        if (sink_predecessor_->unlink() == status::bad)
-            return status::bad;
+        if (sink_predecessor_->unlink() == status::bad) {
+            // TODO we need a better thought-through strategy for unlink failures
+            log::error() << "failed to unlink source from fan-out\n";
+            retval = status::bad;
+        }
 
         sink_predecessor_.reset();
     }
 
     for (auto &branch : branches_right_) {
         if (branch->unlink() == status::bad) {
-            log::error() << "Failed to unlink branch\n";  // FIXME better information
+            retval = status::bad;
+            log::error() << "failed to unlink branch from fan-out\n";
         }
     }
     branches_right_.clear();
 
-    return status::ok;
+    return retval;
 }
 
 status io::fan::out::attach(shared<endpoint::sink> src, cap::flag_type cap) {
@@ -103,9 +110,13 @@ status io::fan::out::detach(const endpoint::sink *ptr) {
 
 // === fan::out::branch =======================================================
 
-status io::fan::out::branch::queue(shared<packet> pkt) {
-    std::lock_guard<std::mutex> lock(queue_mutex_);
-    queue_.emplace(std::move(pkt));
+status io::fan::out::branch::put(shared<packet> pkt) {
+    log::debug() << "queueing branch packet\n";
+
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex_);
+        queue_.emplace(std::move(pkt));
+    }
 
     // FIXME queue_depth logic
 
@@ -116,6 +127,7 @@ status io::fan::out::branch::queue(shared<packet> pkt) {
 
 shared<io::packet> io::fan::out::branch::get() {
     std::lock_guard<std::mutex> lock(queue_mutex_);
+
     if (queue_.empty())
         return {};
 
@@ -129,17 +141,55 @@ status io::fan::out::branch::unlink() {
     if (!source_follower_)  // not connected
         return status::ok;
 
-    // log::trace tr;
-    // tr << "unlinking branch from fan-out...\n";
+    log::trace tr;
+    tr << "unlinking branch from fan-out...\n";
 
-    // auto retval = source_follower_->detach(this);
-    // if (retval == status::bad) {
-    //     tr << "failed to detach sink\n";
-    //     return status::bad;
-    // }
+    auto retval = endpoint::detach(source_follower_, this);
+    if (retval == status::bad) {
+        tr << "failed to detach sink\n";
+        return status::bad;
+    }
 
-    // retval = detach(source_follower_.get());
-    // tr << retval << ".\n";
+    retval = detach(source_follower_.get());
+    tr << retval << ".\n";
 
-    // return retval;
+    return retval;
+}
+
+status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type cap) {
+    if (source_follower_)  // already connected
+        return status::bad;
+
+    log::debug() << "attaching sink to branch with cap: " << std::format("{}", cap) << "\n";
+
+    // store fields, clear stats
+    cap_.source = cap;
+    clearstats();
+
+    // attach sink
+    source_follower_ = other;
+
+    // start handler
+    source_event_.reset();
+    if (cap & endpoint::cap::push) {
+        source_task_ = task::make(this, &branch::source_handler, std::chrono::milliseconds(1));
+    }
+
+    return status::ok;
+}
+
+bool io::fan::out::branch::source_step() {
+    auto retval = wait();
+    if (retval != status::ok) {
+        if (retval.error() == std::errc::operation_canceled)
+            return false;
+    }
+    else {
+        // FIXME need to use queue_depth logic
+
+        while (not queue_.empty())  // FIXME this is read without locking
+            source_follower_->put(get());
+    }
+
+    return true;
 }

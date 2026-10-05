@@ -67,12 +67,7 @@ namespace vidre {
                 std::vector<shared<branch>> branches_right_{};  ///< The list of branches connected to this fan-out endpoint.
 
             public:
-                cap getcap() const noexcept override {
-                    return {
-                        .source = cap::packet | cap::push | cap::pull | cap::nonblock,  //
-                        .sink = cap::packet | cap::event | cap::multi                   //
-                    };
-                }
+                cap getcap() const noexcept override;
 
                 status put(shared<packet> p) override;
 
@@ -88,13 +83,8 @@ namespace vidre {
                 bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
             protected:
-                status attach(shared<endpoint::source> src, cap::flag_type cap) override {
-                    return sink::attach(std::move(src), cap);
-                }
-
-                status detach(const endpoint::source *ptr) override {
-                    return sink::detach(ptr);
-                }
+                using sink::attach;
+                using sink::detach;
 
                 status attach(shared<endpoint::sink> src, cap::flag_type cap) override;
                 status detach(const endpoint::sink *ptr) override;
@@ -122,16 +112,8 @@ namespace vidre {
                 std::queue<shared<packet>> queue_{};
                 std::mutex queue_mutex_{};
 
-            protected:
-                status queue(shared<packet> pkt);
-
             public:
-                cap getcap() const noexcept override {
-                    return {
-                        .source = {}
-                        // FIXME
-                    };
-                }
+                cap getcap() const noexcept override;
 
                 shared<packet> get() override;
 
@@ -143,9 +125,35 @@ namespace vidre {
                     return 0;
                 }
 
+                status put(shared<packet> p) override; // FIXME this is currently public for log::output
+
+            protected:
+                bool source_step() override;
+
+                using io::source::source_handler;
+
+                status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
+                status detach(const endpoint::sink *ptr) override {
+                    return parent_.detach(ptr);
+                }
+
             private:
                 friend class out;
             };
+
+            inline endpoint::cap fan::out::getcap() const noexcept {
+                return {
+                    .source = cap::packet | cap::push | cap::event | cap::multi,  // (branch)
+                    .sink = cap::packet | cap::push | cap::event | cap::nonblock  //
+                };
+            }
+
+            inline endpoint::cap fan::out::branch::getcap() const noexcept {
+                return {
+                    .source = cap::packet | cap::push | cap::event,  // (see fan::out)
+                    .sink = {}                                       // (we're a part of fan::out)
+                };
+            }
 
             ///@}
 

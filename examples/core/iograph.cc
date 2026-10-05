@@ -28,7 +28,7 @@ public:
     }
 
 protected:
-    void source_step() override {
+    bool source_step() override {
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
@@ -40,6 +40,8 @@ protected:
             notify();
             // FIXME stats_
         }
+
+        return true;
     }
 };
 
@@ -106,7 +108,7 @@ int main(int argc, char *argv[]) {
     log::trace::pattern("*");
 
     auto inp = io::endpoint::make<sensor>();
-    auto chp = io::endpoint::make<io::channel>();
+    auto chp = io::endpoint::make<io::fan::out>();
     auto outp = io::endpoint::make<store>();
 
     inp->settag("input");

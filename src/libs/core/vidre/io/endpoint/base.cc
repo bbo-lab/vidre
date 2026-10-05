@@ -20,6 +20,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "base.hh"
+#include "vidre/log.hh"
 
 using namespace vidre;
 using namespace vidre::io;
@@ -78,8 +79,11 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
         throw exception::internal() << "endpoint passed as second argument is null";
 
     cap::flag_type src_cap = src->getcap().source;
-    cap::flag_type snk_cap = snk->getcap().sink;
+    log::debug() << "connecting with src_cap: " << std::format("{}", src_cap) << log::endl;
 
+    cap::flag_type snk_cap = snk->getcap().sink;
+    log::debug() << "                snk_cap: " << std::format("{}", snk_cap) << log::endl;
+    
     // sanity checks
     if (!src_cap)
         throw exception::internal() << "endpoint passed as first argument has no capabilities";
@@ -119,4 +123,3 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
 
     return status::ok;
 }
-
