@@ -63,8 +63,8 @@ namespace vidre {
              *
              * */
             class VIDRE_UVC_VISIBILITY camera
-                : public virtual device::camera
-                , public virtual io::source {
+                : public device::camera
+                , public io::source {
             public:
                 struct enumerator;
 

@@ -43,7 +43,7 @@ namespace vidre {
          * the acquisition of video frames.
          *
          * */
-        class VIDRE_DEVICE_VISIBILITY camera : public virtual device::base {
+        class VIDRE_DEVICE_VISIBILITY camera : public device::base {
         public:
             /** Common options.
              * These options must be supported by all camera implementations.

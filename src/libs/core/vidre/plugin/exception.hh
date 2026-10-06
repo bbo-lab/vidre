@@ -37,7 +37,7 @@ namespace vidre {
 
         /** General plugin exception.
          * */
-        class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception {
+        class VIDRE_CORE_VISIBILITY exception : public vidre::exception {
         public:
             exception(const std::source_location location = std::source_location::current()) : vidre::exception(location) {}
 

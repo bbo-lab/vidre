@@ -42,7 +42,7 @@ namespace vidre {
          *
          * Derived classes need to implement at least:
          * @code
-         * class VISIBILITY derived_sink : public virtual io::sink {
+         * class VISIBILITY derived_sink : public io::sink {
          * public:
          *      virtual ~derived_sink();
          *
@@ -60,7 +60,7 @@ namespace vidre {
          *
          * @see @ref example/core/iograph.cc
          * */
-        class VIDRE_CORE_VISIBILITY sink : public virtual endpoint::sink {
+        class VIDRE_CORE_VISIBILITY sink : public endpoint::sink {
         public:
             sink() = default;
 

@@ -59,7 +59,7 @@ struct array_wrapper : std::array<T, N> {
 #include <vidre/io/endpoint.hh>
 using namespace vidre;
 
-class memory_sink : public virtual io::sink {
+class memory_sink : public io::sink {
 public:
     memory_sink() = default;
     virtual ~memory_sink() = default;

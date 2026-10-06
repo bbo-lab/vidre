@@ -323,7 +323,7 @@ namespace vidre {
 
             /** Device id info.
              * */
-            class VIDRE_DEVICE_VISIBILITY id : public virtual error::info {
+            class VIDRE_DEVICE_VISIBILITY id : public error::info {
             public:
                 id() noexcept {}
                 virtual ~id() {}
@@ -357,7 +357,7 @@ namespace vidre {
 
             /** Device name info.
              * */
-            class VIDRE_DEVICE_VISIBILITY name : public virtual error::info {
+            class VIDRE_DEVICE_VISIBILITY name : public error::info {
             public:
                 name() noexcept {}
                 virtual ~name() {}
@@ -393,7 +393,7 @@ namespace vidre {
 
         /** Device exception.
          * */
-        class VIDRE_CORE_VISIBILITY exception : public virtual vidre::exception::runtime {
+        class VIDRE_CORE_VISIBILITY exception : public vidre::exception::runtime {
         public:
             exception(const std::source_location &src = std::source_location::current()) noexcept
                 : vidre::exception::runtime(src) {}

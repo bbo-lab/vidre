@@ -512,7 +512,7 @@ namespace vidre {
          * buffering.
          *
          * */
-        class VIDRE_CORE_VISIBILITY file::sink : public virtual io::sink {
+        class VIDRE_CORE_VISIBILITY file::sink : public io::sink {
         public:
             /** Open mode.
              * */
@@ -620,7 +620,7 @@ namespace vidre {
          *
          *
          * */
-        class VIDRE_CORE_VISIBILITY file::source : public virtual io::source {
+        class VIDRE_CORE_VISIBILITY file::source : public io::source {
         public:
             source() = default;
 

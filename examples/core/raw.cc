@@ -35,7 +35,7 @@ namespace fixed {
 
 namespace variable {
     //! [dynamic-elements]
-    struct __vidre_packed__ index : public virtual raw::element::dynamic {
+    struct __vidre_packed__ index : public raw::element::dynamic {
         uint64_t counter{};
 
         index() noexcept : raw::element::dynamic(raw::major::video, raw::video::index, sizeof(raw::prefix) + sizeof(counter)) {}
@@ -46,7 +46,7 @@ namespace variable {
         }
     };
 
-    struct __vidre_packed__ geometry : public virtual raw::element::dynamic {
+    struct __vidre_packed__ geometry : public raw::element::dynamic {
         video::geometry content{};
 
         geometry() noexcept
@@ -58,7 +58,7 @@ namespace variable {
         }
     };
 
-    struct __vidre_packed__ timestamp : public virtual raw::element::dynamic {
+    struct __vidre_packed__ timestamp : public raw::element::dynamic {
         video::timestamp content{};
 
         timestamp() noexcept
@@ -70,7 +70,7 @@ namespace variable {
         }
     };
 
-    struct header : public virtual raw::element::sequence {
+    struct header : public raw::element::sequence {
         variable::index *index{};
         variable::geometry *geometry{};
         variable::timestamp *camera{};

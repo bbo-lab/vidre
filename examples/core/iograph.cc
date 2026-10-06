@@ -3,10 +3,11 @@
 #include <vidre/io.hh>
 #include <vidre/memory/base.hh>
 #include <vidre/log.hh>
+#include <vidre/util/debug.hh>
 
 using namespace vidre;
 
-class sensor : public virtual io::source {
+class sensor : public io::source {
 public:
     sensor() = default;
     virtual ~sensor() = default;
@@ -29,7 +30,10 @@ public:
 
 protected:
     bool source_step() override {
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        if (debug::attached())
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        else
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
         packet_ = io::packet::make<io::packet::value>(chrono::isodate::now());
 
         if (cap_.source & cap::push) {
@@ -45,7 +49,7 @@ protected:
     }
 };
 
-class store : public virtual io::sink {
+class store : public io::sink {
 public:
     static void hexdump(memory::view view) {
         const auto *p = static_cast<const std::uint8_t *>(view.data());
@@ -108,7 +112,7 @@ int main(int argc, char *argv[]) {
     log::trace::pattern("*");
 
     auto inp = io::endpoint::make<sensor>();
-    auto chp = io::endpoint::make<io::fan::out>();
+    auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
 
     inp->settag("input");
@@ -118,11 +122,17 @@ int main(int argc, char *argv[]) {
     io::endpoint::connect(chp, outp);
     io::endpoint::connect(inp, chp);
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    if (debug::attached())
+        std::this_thread::sleep_for(std::chrono::seconds(60));
+    else
+        std::this_thread::sleep_for(std::chrono::seconds(1));
 
     chp->unlink();
 
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    if (debug::attached())
+        std::this_thread::sleep_for(std::chrono::seconds(60));
+    else
+        std::this_thread::sleep_for(std::chrono::seconds(3));
 
     outp->unlink();
     inp->unlink();

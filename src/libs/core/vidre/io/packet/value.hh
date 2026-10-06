@@ -53,7 +53,7 @@ namespace vidre {
          *
          * @todo Need to check if non-owning binary type handling is correct.
          * */
-        class VIDRE_CORE_VISIBILITY packet::value : public virtual io::packet {
+        class VIDRE_CORE_VISIBILITY packet::value : public io::packet {
         public:
             /** Plain data types.
              * */

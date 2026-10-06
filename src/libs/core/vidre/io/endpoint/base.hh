@@ -411,7 +411,12 @@ namespace vidre {
             }
 
             /** Unlink this endpoint.
-             * This method disconnects the endpoint from any connected sources or sinks.
+             *
+             * This method disconnects the endpoint from any connected sources and/or sinks. 
+             * With the exception of `io::channel`, that reconnects the source with the sink,
+             * multi-point endpoints will leave connected sources and sinks dangling!
+             *
+             * @returns Status of the unlink operation. `status::ok` if successful, `status::bad` otherwise.
              * */
             virtual status unlink() = 0;
 
@@ -504,6 +509,13 @@ namespace vidre {
              * */
             virtual status detach(const endpoint::sink *ptr) = 0;
 
+            /** Get (new) branch for a fan-out connection.
+             * @returns The branch endpoint for the fan-out connection.
+             * */
+            virtual shared<endpoint::source> branch_source() {
+                throw exception::internal() << "branch_source() must be overridden by fan-out sources";
+            }
+
         private:
             friend class endpoint;
             friend class endpoint::sink;
@@ -547,6 +559,13 @@ namespace vidre {
              *          `status::bad` on failure (e.g. when still active).
              * */
             virtual status detach(const endpoint::source *ptr) = 0;
+
+            /** Get (new) branch for a fan-in connection.
+             * @returns The branch endpoint for the fan-in connection.
+             * */
+            virtual shared<endpoint::sink> branch_sink() {
+                throw exception::internal() << "branch_sink() must be overridden by fan-in sinks";
+            }
 
         private:
             friend class endpoint;

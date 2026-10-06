@@ -33,8 +33,6 @@ io::fan::out::~out() {
 }
 
 status io::fan::out::put(shared<packet> p) {
-    log::debug() << "queueing packet to fan-out branches\n";
-
     for (auto &branch : branches_right_)
         branch->put(p);
 
@@ -87,21 +85,21 @@ status io::fan::out::unlink() {
 }
 
 status io::fan::out::attach(shared<endpoint::sink> src, cap::flag_type cap) {
+    throw exception::internal() << "a fan::out must not be attached directly";
+    return status::bad;
+}
+
+shared<io::endpoint::source> io::fan::out::branch_source() {
     shared<out::branch> branch = endpoint::make<out::branch>(*this);
-
-    auto retval = branch->attach(std::move(src), cap);
-    if (retval == status::ok)
-        branches_right_.emplace_back(std::move(branch));
-
-    return retval;
+    branches_right_.push_back(branch);
+    return branch;
 }
 
 status io::fan::out::detach(const endpoint::sink *ptr) {
     for (auto &branch : branches_right_) {
         if (branch->source_follower_.get() == ptr) {
-            auto retval = branch->detach(ptr);
             branches_right_.erase(std::remove(branches_right_.begin(), branches_right_.end(), branch), branches_right_.end());
-            return retval;
+            return status::ok;
         }
     }
 
@@ -111,8 +109,6 @@ status io::fan::out::detach(const endpoint::sink *ptr) {
 // === fan::out::branch =======================================================
 
 status io::fan::out::branch::put(shared<packet> pkt) {
-    log::debug() << "queueing branch packet\n";
-
     {
         std::lock_guard<std::mutex> lock(queue_mutex_);
         queue_.emplace(std::move(pkt));
@@ -160,8 +156,6 @@ status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type
     if (source_follower_)  // already connected
         return status::bad;
 
-    log::debug() << "attaching sink to branch with cap: " << std::format("{}", cap) << "\n";
-
     // store fields, clear stats
     cap_.source = cap;
     clearstats();
@@ -178,12 +172,16 @@ status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type
     return status::ok;
 }
 
+status io::fan::out::branch::detach(const endpoint::sink *ptr) {
+    return parent_.detach(ptr);
+}
+    
 bool io::fan::out::branch::source_step() {
     auto retval = wait();
     if (retval != status::ok) {
         if (retval.error() == std::errc::operation_canceled)
             return false;
-        log::debug() << std::make_error_condition(retval.error()).message() << "\n";
+        log::debug() << "!!! " << std::make_error_condition(retval.error()).message() << "\n";
     }
     else {
         // FIXME need to use queue_depth logic

@@ -197,7 +197,7 @@ namespace vidre {
          * @note In contrast to other packets, the log packet is not "groupable",
          *       instead, the minor packet type indicates the log level.
          * */
-        class VIDRE_CORE_VISIBILITY packet : public virtual io::packet {
+        class VIDRE_CORE_VISIBILITY packet : public io::packet {
         protected:
             chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
                                                                      /// @see chrono::reference
@@ -258,7 +258,7 @@ namespace vidre {
          *
          * @see io::source
          * */
-        class VIDRE_CORE_VISIBILITY output : public virtual io::source {
+        class VIDRE_CORE_VISIBILITY output : public io::source {
         public:
             /** Global maximum threshold level for log messages.
              * This threshold determines the maximum log level that will be processed.

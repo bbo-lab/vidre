@@ -80,12 +80,12 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
 
     cap::flag_type src_cap = src->getcap().source;
     log::debug() << "connecting '" << src->tag() << "' to '" << snk->tag() << "'\n";
-    
+
     log::debug() << "    src_cap: " << std::format("{}", src_cap) << log::endl;
 
     cap::flag_type snk_cap = snk->getcap().sink;
     log::debug() << "    snk_cap: " << std::format("{}", snk_cap) << log::endl;
-    
+
     // sanity checks
     if (!src_cap)
         throw exception::internal() << "endpoint passed as first argument has no capabilities";
@@ -94,7 +94,7 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
 
     // we only deal with packet-based endpoints
     if (!(src_cap & endpoint::cap::packet) || !(snk_cap & endpoint::cap::packet))
-        return status::bad;
+        throw exception::internal() << "endpoint capabilities are not packet-based";
 
     src_cap &= ~cap::chunk;
     snk_cap &= ~cap::chunk;
@@ -110,8 +110,16 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
     }
     else {
         // FIXME if src does push and snk only event, we can install an adapter (based on channel) by default
+        // FIXME that's actually rather an implementation error, isn't it?
+        log::error() << "incompatible capabilities between source '" << src->tag() << "' and sink '" << snk->tag() << "'\n";
         return status::bad;
     }
+
+    // handle "multi" capability for sink and source
+    if (snk_cap & cap::multi)
+        snk = snk->branch_sink();
+    if (src_cap & cap::multi)
+        src = src->branch_source();
 
     // connect sink
     if (snk->attach(src, snk_cap) == status::bad) {

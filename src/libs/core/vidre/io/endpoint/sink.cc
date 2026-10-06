@@ -121,7 +121,7 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
         if (retval == status::bad) {
             if (retval.error() == std::errc::operation_canceled)
                 break;
-            log::debug() << std::make_error_condition(retval.error()).message() << "\n";
+            log::debug() << "!!! " << std::make_error_condition(retval.error()).message() << "\n";
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             continue;
         }

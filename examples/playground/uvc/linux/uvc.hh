@@ -44,7 +44,7 @@ namespace vidre {
     use https://libuvc.github.io/libuvc/
     */
 
-    class uvc : public virtual device::camera {
+    class uvc : public device::camera {
     public:
         struct enumerator {
             device::list<device::camera> find() noexcept;

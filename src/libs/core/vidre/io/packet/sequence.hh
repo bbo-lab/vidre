@@ -37,7 +37,7 @@ namespace vidre {
 
         /** Sequence of packets.
          * */
-        class VIDRE_CORE_VISIBILITY packet::sequence : public virtual packet {
+        class VIDRE_CORE_VISIBILITY packet::sequence : public packet {
         public:
             using list_type = std::vector<shared<packet>>;
 

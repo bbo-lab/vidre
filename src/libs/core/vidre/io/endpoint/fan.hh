@@ -88,6 +88,7 @@ namespace vidre {
 
                 status attach(shared<endpoint::sink> src, cap::flag_type cap) override;
                 status detach(const endpoint::sink *ptr) override;
+                shared<endpoint::source> branch_source() override;
             };
 
             /** Branch of a fan-out endpoint.
@@ -125,7 +126,7 @@ namespace vidre {
                     return 0;
                 }
 
-                status put(shared<packet> p) override; // FIXME this is currently public for log::output
+                status put(shared<packet> p) override;  // FIXME this is currently public for log::output
 
             protected:
                 bool source_step() override;
@@ -133,9 +134,7 @@ namespace vidre {
                 using io::source::source_handler;
 
                 status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
-                status detach(const endpoint::sink *ptr) override {
-                    return parent_.detach(ptr);
-                }
+                status detach(const endpoint::sink *ptr) override;
 
             private:
                 friend class out;

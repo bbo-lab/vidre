@@ -105,6 +105,10 @@ namespace vidre {
         std::string tag(const T *obj) {
             return std::format("⟨{}@{:08x}⟩", demangle(typeid(T).name()), object_id(obj));
         }
+
+        /** Check if we're attached to a debugger.
+         * */
+        bool attached() noexcept;
 #else
         constexpr inline std::uint32_t object_id(const void *) noexcept {
             return {};
@@ -113,6 +117,10 @@ namespace vidre {
         template <fixed_string>
         constexpr std::string tag(const void *) {
             return {};
+        }
+
+        constexpr inline bool attached() noexcept {
+            return false;
         }
 #endif
 
