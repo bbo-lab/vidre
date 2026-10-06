@@ -72,7 +72,7 @@ settings::json endpoint::cap::setup() const {
     return retval;
 }
 
-status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> snk) {
+status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> snk, const settings::json &config) {
     if (not src.get())
         throw exception::internal() << "endpoint passed as first argument is null";
     if (not snk.get())
@@ -118,8 +118,11 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
     // handle "multi" capability for sink and source
     if (snk_cap & cap::multi)
         snk = snk->branch_sink();
+    snk->setup(config);
+
     if (src_cap & cap::multi)
         src = src->branch_source();
+    src->setup(config);
 
     // connect sink
     if (snk->attach(src, snk_cap) == status::bad) {

@@ -111,31 +111,34 @@ int main(int argc, char *argv[]) {
     log::debug() << "Testing datachain...\n" << std::format("{}", io::endpoint::cap::pull) << "\n";
     log::trace::pattern("*");
 
-    auto inp = io::endpoint::make<sensor>();
-    auto chp = io::endpoint::make<io::channel>();
+    // auto inp = io::endpoint::make<sensor>();
+    // auto chp = io::endpoint::make<io::channel>();
     auto outp = io::endpoint::make<store>();
 
-    inp->settag("input");
-    chp->settag("channel");
-    outp->settag("output");
+    io::endpoint::connect(log::output, outp, {{"log", {{"threshold", "status"}}}});
 
-    io::endpoint::connect(chp, outp);
-    io::endpoint::connect(inp, chp);
+    log::notice() << "This is a notice message.\n";
+    // inp->settag("input");
+    // chp->settag("channel");
+    // outp->settag("output");
 
-    if (debug::attached())
-        std::this_thread::sleep_for(std::chrono::seconds(60));
-    else
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+    // io::endpoint::connect(chp, outp);
+    // io::endpoint::connect(inp, chp);
 
-    chp->unlink();
+    // if (debug::attached())
+    //     std::this_thread::sleep_for(std::chrono::seconds(60));
+    // else
+    //     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    if (debug::attached())
-        std::this_thread::sleep_for(std::chrono::seconds(60));
-    else
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+    // chp->unlink();
+
+    // if (debug::attached())
+    //     std::this_thread::sleep_for(std::chrono::seconds(60));
+    // else
+    //     std::this_thread::sleep_for(std::chrono::seconds(3));
 
     outp->unlink();
-    inp->unlink();
+    // inp->unlink();
 
     return 0;
 }

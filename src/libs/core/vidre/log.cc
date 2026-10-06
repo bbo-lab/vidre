@@ -25,6 +25,7 @@
 #include "io/file.hh"
 
 #include <algorithm>
+#include <memory>
 
 using namespace std::literals::string_view_literals;
 using namespace vidre;
@@ -35,14 +36,56 @@ static io::packet::registry<log::packet>                        //
                         static_cast<uint16_t>(log::level_max)});
 
 #if defined(DEBUG)
-log::level vidre::log::output::maxthreshold = log::level::trace;
+log::level vidre::log::source::maxthreshold = log::level::trace;
 #elif defined(NDEBUG)
-log::level vidre::log::output::maxthreshold = log::level::notice;
+log::level vidre::log::source::maxthreshold = log::level::notice;
 #else
-log::level vidre::log::output::maxthreshold = log::level::status;
+log::level vidre::log::source::maxthreshold = log::level::status;
 #endif
 
-shared<log::output> vidre::log::source = io::endpoint::make<log::output>();
+shared<log::source> vidre::log::output = io::endpoint::make<log::source>();
+
+// levels =====================================================================
+static struct {
+    const char *name;
+    log::level level;
+    const char *brief;
+} setup_levels[] = {
+    {"fatal", log::level::fatal, "System is in an unusable state and the program will terminate."},                //
+    {"alert", log::level::alert, "Immediate user interaction is required, usually when data corruption occurs."},  //
+    {"critical", log::level::critical, "A critical error, such as hardware failure."},                             //
+    {"error", log::level::error, "An application error occurred."},                                                //
+    {"warning", log::level::warning, "Warning level, which may hint to future failure."},                          //
+    {"user", log::level::user, "A user-level message."},                                                           //
+    {"notice", log::level::notice, "A noteworthy condition occurred."},                                            //
+    {"status", log::level::status, "A status message."},                                                           //
+    {"info", log::level::info, "A purely informational message."},                                                 //
+    {"debug", log::level::debug, "Debugging information."},                                                        //
+    {"trace", log::level::trace, "Tracing."},                                                                      //
+};
+
+static constexpr int level_invalid = std::numeric_limits<int>::min();
+static std::optional<std::array<std::string_view, 3>> split_option(const std::string_view option) {
+    std::array<std::string_view, 3> result;
+
+    size_t i = 0;
+    for (const auto part : std::views::split(option, ":"sv)) {
+        if (i == 3)
+            return std::nullopt;
+
+        result[i++] = std::string_view(part);
+    }
+
+    return result;
+}
+
+static int tolevel(const std::string_view &str) {
+    for (size_t i = 0; i < size_of(setup_levels); ++i) {
+        if (str == setup_levels[i].name)
+            return static_cast<int>(setup_levels[i].level);
+    }
+    return level_invalid;
+}
 
 // io::standard::error ========================================================
 struct style_tag {
@@ -135,7 +178,7 @@ void vidre_log_emit_standard(log::level lvl, const std::string &msg, unsigned in
     }
 }
 
-void log::handler::emit() noexcept {
+void log::message::emit() noexcept {
     // empty log messages are ignored
     if (msg_->message.empty())
         return;
@@ -150,31 +193,57 @@ void log::handler::emit() noexcept {
 #endif
 
     // emit packet
-    log::source->queue(std::move(msg_));
+    log::output->put(std::move(msg_));
 }
 
-void log::output::queue(shared<packet> msg) noexcept {
-    // FIXME
+status log::source::put(shared<io::packet> p) {
+    auto lptr = std::static_pointer_cast<log::packet>(p);
+    if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(log::source::maxthreshold))
+        return vidre::status::ok;
+
+    for (auto &branch : branches_out_) {
+        auto bptr = std::static_pointer_cast<log::source::branch>(branch);
+        if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(bptr->threshold))
+            continue;
+        branch->put(p);
+    }
+
+    return vidre::status::ok;
 }
 
-status log::output::unlink() {
-    // FIXME
-    return {};
+shared<io::endpoint::source> log::source::branch_source() {
+    shared<log::source::branch> branch = endpoint::make<log::source::branch>(*this);
+    branch->threshold = log::source::maxthreshold;
+
+    branches_out_.push_back(branch);
+
+    return branch;
 }
 
-status log::output::attach(shared<endpoint::sink> other, cap::flag_type cap) {
-    // FIXME
-    return {};
-}
+void log::source::branch::setup(const settings::json &config) {
+    if (config.empty())
+        return;
 
-status log::output::detach(const endpoint::sink *snk) {
-    // FIXME
-    return {};
-}
+    if (config.contains("log")) {
+        auto log_config = config["log"];
+        if (log_config.empty() || !log_config.is_object())
+            return;
 
-shared<io::endpoint::source> log::output::branch_source() {
-    // FIXME
-    return {};
+        std::string threshold = log_config.value("threshold", "");
+        if (!threshold.empty()) {
+            auto lvl = tolevel(threshold);
+            if (lvl != level_invalid)
+                this->threshold = static_cast<log::level>(lvl);
+        }
+
+        std::string style = log_config.value("style", "plain");
+        if (style == "plain")
+            this->style = log::style::plain;
+        else if (style == "tagged")
+            this->style = log::style::tagged;
+        else if (style == "color")
+            this->style = log::style::color;
+    }
 }
 
 #if defined(DEBUG)
@@ -195,8 +264,8 @@ void vidre::log::trace::pattern(std::string_view wild) {
     }
 }
 
-log::trace::trace(std::source_location source) noexcept : log::handler{log::level::trace}, follow_{stack.size()} {
-    if (log::output::maxthreshold < msg_->getlevel())
+log::trace::trace(std::source_location source) noexcept : log::message{log::level::trace}, follow_{stack.size()} {
+    if (log::source::maxthreshold < msg_->getlevel())
         return;
 
     if (not follow_ and not std::regex_match(source.file_name(), match))
@@ -231,14 +300,14 @@ void log::trace::emit(bool last) noexcept {
 
     // emit packet
     write(message_);
-    log::source->queue(std::move(msg_));
+    log::output->put(std::move(msg_));
     if (not last)
         msg_ = packet::make(level::trace, 0);
 #endif
 }
 
 void log::trace::emit(const std::string_view &txt) noexcept {
-    if (log::output::maxthreshold < msg_->getlevel())
+    if (log::source::maxthreshold < msg_->getlevel())
         return;
 
     if (follow_ == 0)
@@ -254,47 +323,6 @@ void log::trace::emit(const std::string_view &txt) noexcept {
     emit();
 
     message_ = txt.substr(eol + 1);
-}
-
-static struct {
-    const char *name;
-    log::level level;
-    const char *brief;
-} setup_levels[] = {
-    {"fatal", log::level::fatal, "System is in an unusable state and the program will terminate."},                //
-    {"alert", log::level::alert, "Immediate user interaction is required, usually when data corruption occurs."},  //
-    {"critical", log::level::critical, "A critical error, such as hardware failure."},                             //
-    {"error", log::level::error, "An application error occurred."},                                                //
-    {"warning", log::level::warning, "Warning level, which may hint to future failure."},                          //
-    {"user", log::level::user, "A user-level message."},                                                           //
-    {"notice", log::level::notice, "A noteworthy condition occurred."},                                            //
-    {"status", log::level::status, "A status message."},                                                           //
-    {"info", log::level::info, "A purely informational message."},                                                 //
-    {"debug", log::level::debug, "Debugging information."},                                                        //
-    {"trace", log::level::trace, "Tracing."},                                                                      //
-};
-
-static constexpr int level_invalid = std::numeric_limits<int>::min();
-static std::optional<std::array<std::string_view, 3>> split_option(const std::string_view option) {
-    std::array<std::string_view, 3> result;
-
-    size_t i = 0;
-    for (const auto part : std::views::split(option, ":"sv)) {
-        if (i == 3)
-            return std::nullopt;
-
-        result[i++] = std::string_view(part);
-    }
-
-    return result;
-}
-
-static int tolevel(const std::string_view &str) {
-    for (size_t i = 0; i < size_of(setup_levels); ++i) {
-        if (str == setup_levels[i].name)
-            return static_cast<int>(setup_levels[i].level);
-    }
-    return level_invalid;
 }
 
 void log::setup(const std::string &def) {

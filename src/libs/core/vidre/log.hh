@@ -193,6 +193,19 @@ namespace vidre {
          * */
         constexpr static std::string_view indent_s = {"    ", 4};
 
+        /** Output style.
+         * */
+        struct style {
+            /** Style enumeration.
+             * */
+            enum type : uint8_t {
+                packet,  ///< Log binary packets.
+                plain,   ///< Plain, undecorated output.
+                tagged,  ///< As the name suggests (i.e. first line tag, following lines indented).
+                color    ///< Colored output (uses terminal escape sequences).
+            };
+        };
+
         /** Log-message packet.
          * @note In contrast to other packets, the log packet is not "groupable",
          *       instead, the minor packet type indicates the log level.
@@ -248,7 +261,7 @@ namespace vidre {
             }
 
         private:
-            friend class handler;
+            friend class message;
         };
 
         /** Log message output.
@@ -258,7 +271,7 @@ namespace vidre {
          *
          * @see io::source
          * */
-        class VIDRE_CORE_VISIBILITY output : public io::endpoint::source {
+        class VIDRE_CORE_VISIBILITY source : public io::fan::out {
         public:
             /** Global maximum threshold level for log messages.
              * This threshold determines the maximum log level that will be processed.
@@ -272,33 +285,61 @@ namespace vidre {
             class branch;
 
         public:
-            output() = default;
+            source() = default;
 
-            output(const output &) = delete;
-            output &operator=(const output &) = delete;
-            output(output &&) = delete;
-            output &operator=(output &&) = delete;
+            source(const source &) = delete;
+            source &operator=(const source &) = delete;
+            source(source &&) = delete;
+            source &operator=(source &&) = delete;
 
-            virtual ~output() = default;
-
-        protected:
-            void queue(shared<packet> msg) noexcept;
+            virtual ~source() = default;
 
         public:
             cap getcap() const noexcept override {
-                return {cap::packet | cap::multi, {}};
+                return {
+                    .source = cap::packet | cap::push | cap::event | cap::multi,  // (branch)
+                    .sink = cap::packet | cap::push | cap::nonblock               //
+                };
             }
 
-            status unlink() override;
-
         protected:
-            status attach(shared<endpoint::sink> other, cap::flag_type cap) override;
-            status detach(const endpoint::sink *snk) override;
             shared<endpoint::source> branch_source() override;
 
+            status put(shared<io::packet> p) override;
+
         private:
-            friend class handler;
+            friend class message;
             friend class trace;
+        };
+
+        /** Log message branch.
+         * This class represents a branch of the log message source, allowing for
+         * individual configuration of log thresholds and output styles.
+         * */
+        class VIDRE_CORE_VISIBILITY source::branch : public io::fan::out::branch {
+        public:
+            branch(log::source &parent) : io::fan::out::branch(&parent) {}
+            branch(log::source *parent) : io::fan::out::branch(parent) {}
+
+            branch(const branch &) = delete;
+            branch &operator=(const branch &) = delete;
+            branch(branch &&) = delete;
+            branch &operator=(branch &&) = delete;
+
+            virtual ~branch() {
+                unlink();
+            }
+
+        protected:
+            log::level threshold = static_cast<log::level>(level_default);  ///< Maximum log level for this branch.
+            style::type style = style::plain;  ///< Output style for this branch (only relevant for chunked output).
+
+        public:
+            // FIXME document and describe settings
+            void setup(const settings::json &config) override;
+
+        private:
+            friend class log::source;
         };
 
         ///@}
@@ -318,7 +359,7 @@ namespace vidre {
             { t(outs) } -> std::same_as<Stream &>;
         };
 
-        /** Log message handler.
+        /** Message logger.
          *
          * This class handles all log messages. For readability it is recommended to use
          * the individual implementations (see @c log::fatal, etc.).
@@ -336,23 +377,23 @@ namespace vidre {
          *
          * @note The log message (or packet, respectively) is emitted when log object goes out of scope.
          * */
-        class VIDRE_CORE_VISIBILITY handler {
+        class VIDRE_CORE_VISIBILITY message {
         public:
-            handler() = delete;
+            message() = delete;
 
-            handler(const handler &) = delete;
-            handler &operator=(const handler &) = delete;
-            handler(handler &&) = delete;
-            handler &operator=(handler &&) = delete;
+            message(const message &) = delete;
+            message &operator=(const message &) = delete;
+            message(message &&) = delete;
+            message &operator=(message &&) = delete;
 
-            ~handler() {
+            ~message() {
                 emit();
             }
 
             /** Constructor.
              * @param lvl The log level.
              * */
-            handler(level lvl) noexcept : msg_{packet::make(lvl, 0)} {};
+            message(level lvl) noexcept : msg_{packet::make(lvl, 0)} {};
 
         protected:
             shared<packet> msg_{};  ///< Log message packet.
@@ -372,20 +413,20 @@ namespace vidre {
             }
 
         public:
-            handler &operator<<(const std::string_view &msg) noexcept {
+            message &operator<<(const std::string_view &msg) noexcept {
                 write(msg);
                 return *this;
             }
 
             template <typename T>
-            requires functor<handler, T>
-            handler &operator<<(T &&fn) noexcept {
+            requires functor<message, T>
+            message &operator<<(T &&fn) noexcept {
                 return fn(*this);
             }
 
             template <typename V>
             requires (not std::is_convertible_v<V, std::string_view> and std::formattable<std::remove_cvref_t<V>, char>)
-            handler &operator<<(const V &value) noexcept {
+            message &operator<<(const V &value) noexcept {
                 msg_->message += std::format("{}", value);
                 return *this;
             }
@@ -394,9 +435,9 @@ namespace vidre {
         /** Helper for log-level classes.
          * @ingroup api-core-log-details */
 #define VIDRE_CORE_LOG_IMPL(T)                       \
-    class VIDRE_CORE_VISIBILITY T : public handler { \
+    class VIDRE_CORE_VISIBILITY T : public message { \
     public:                                          \
-        T() noexcept : handler(level::T) {}          \
+        T() noexcept : message(level::T) {}          \
     };
 
         /** Null sink.
@@ -418,15 +459,15 @@ namespace vidre {
 
         /** Log message source.
          * */
-        extern shared<output> source;
+        extern shared<source> output;
 
         /** Fatal log message.
          * @note
          *      The destructor here calls @c std::terminate.
          * */
-        class VIDRE_CORE_VISIBILITY fatal : public handler {
+        class VIDRE_CORE_VISIBILITY fatal : public message {
         public:
-            fatal() noexcept : handler(log::level::fatal) {}
+            fatal() noexcept : message(log::level::fatal) {}
             [[noreturn]] ~fatal() {
                 std::terminate();
             }
@@ -481,7 +522,7 @@ namespace vidre {
          *
          * @see pattern()
          * */
-        class VIDRE_CORE_VISIBILITY trace : public handler {
+        class VIDRE_CORE_VISIBILITY trace : public message {
         protected:
             /**@internal Internal stack when tracing.
              * */
@@ -566,18 +607,6 @@ namespace vidre {
         void setup(const std::string &def);
 
         ///@}
-
-        // /** Output style.
-        //  * */
-        // struct style {
-        //     /** Style enumeration.
-        //      * */
-        //     enum type : uint8_t {
-        //         plain,   ///< Plain, undecorated output.
-        //         tagged,  ///< As the name suggests (i.e. first line tag, following lines indented).
-        //         color    ///< Colored output (uses terminal escape sequences).
-        //     };
-        // };
 
     }  // namespace log
 

@@ -238,7 +238,7 @@ namespace vidre {
 
             /** Connect source to sink.
              * */
-            static status connect(shared<endpoint::source> src, shared<endpoint::sink> snk);
+            static status connect(shared<endpoint::source> src, shared<endpoint::sink> snk, const settings::json &config = {});
 
             /** Disconnect an endpoint.
              * @param ep The endpoint to disconnect.
@@ -389,6 +389,8 @@ namespace vidre {
 
             /** Setup endpoint.
              * @param config JSON configuration object for this endpoint.
+             *
+             * @note Implementations must ignore settings not relevant to this endpoint. 
              *
              * @see `setup() const`
              * */

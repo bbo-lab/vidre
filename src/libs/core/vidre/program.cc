@@ -289,7 +289,7 @@ std::string program::argument::parser::help() {
 
     retval += "\n\nUsage:\n";
 
-    retval += "\n    ";
+    retval += "    ";
     retval += program_invocation_path.filename();
     retval += " [options]";
 
@@ -336,7 +336,7 @@ std::string program::argument::parser::help() {
         }
     }
 
-    retval += "\nOptions:\n";
+    retval += "\n\nOptions:\n";
 
     for (size_t i = 0; i < opt_->size; ++i) {
         auto &opt = opt_->args[i];

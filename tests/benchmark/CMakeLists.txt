@@ -34,3 +34,13 @@ vidre_test(modulo EXCLUDE
                 Vidre::Core
 )
 
+vidre_test(packetio EXCLUDE
+    SOURCES 
+        packetio.cc
+        packetio/zero.hh packetio/zero.cc
+    BUILD
+        LINK_LIBRARIES 
+            PRIVATE 
+                Vidre::Core
+)
+

@@ -96,7 +96,8 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY out::branch : public io::source {
             public:
-                branch(fan::out &parent) : parent_(parent) {}
+                branch(fan::out &parent) : parent_(&parent) {}
+                branch(fan::out *parent) : parent_(parent) {}
 
                 branch(const branch &) = delete;
                 branch &operator=(const branch &) = delete;
@@ -108,7 +109,7 @@ namespace vidre {
                 }
 
             private:
-                fan::out &parent_;
+                fan::out *parent_;
 
             protected:
                 std::queue<shared<packet>> queue_{};
@@ -122,8 +123,8 @@ namespace vidre {
                 status unlink() override;
 
                 size_type queue_depth() const noexcept override {
-                    if (parent_.sink_predecessor_)
-                        return std::static_pointer_cast<io::source>(parent_.sink_predecessor_)->queue_depth();
+                    if (parent_->sink_predecessor_)
+                        return std::static_pointer_cast<io::source>(parent_->sink_predecessor_)->queue_depth();
                     return 0;
                 }
 

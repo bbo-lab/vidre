@@ -173,7 +173,7 @@ status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type
 }
 
 status io::fan::out::branch::detach(const endpoint::sink *ptr) {
-    return parent_.detach(ptr);
+    return parent_->detach(ptr);
 }
     
 bool io::fan::out::branch::source_step() {
