@@ -258,7 +258,7 @@ namespace vidre {
          *
          * @see io::source
          * */
-        class VIDRE_CORE_VISIBILITY output : public io::source {
+        class VIDRE_CORE_VISIBILITY output : public io::endpoint::source {
         public:
             /** Global maximum threshold level for log messages.
              * This threshold determines the maximum log level that will be processed.
@@ -268,6 +268,8 @@ namespace vidre {
              * the default is `level::notice`, otherwise it is `level::status`.
              * */
             static log::level maxthreshold;
+
+            class branch;
 
         public:
             output() = default;
@@ -287,9 +289,12 @@ namespace vidre {
                 return {cap::packet | cap::multi, {}};
             }
 
+            status unlink() override;
+
         protected:
             status attach(shared<endpoint::sink> other, cap::flag_type cap) override;
             status detach(const endpoint::sink *snk) override;
+            shared<endpoint::source> branch_source() override;
 
         private:
             friend class handler;

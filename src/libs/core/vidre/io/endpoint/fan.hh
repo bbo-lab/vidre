@@ -64,7 +64,7 @@ namespace vidre {
                 virtual ~out();
 
             protected:
-                std::vector<shared<branch>> branches_right_{};  ///< The list of branches connected to this fan-out endpoint.
+                std::vector<shared<branch>> branches_out_{};  ///< The list of branches connected to this fan-out endpoint.
 
             public:
                 cap getcap() const noexcept override;
@@ -96,7 +96,6 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY out::branch : public io::source {
             public:
-            public:
                 branch(fan::out &parent) : parent_(parent) {}
 
                 branch(const branch &) = delete;
@@ -104,7 +103,9 @@ namespace vidre {
                 branch(branch &&) = delete;
                 branch &operator=(branch &&) = delete;
 
-                virtual ~branch() {}
+                virtual ~branch() {
+                    unlink();
+                }
 
             private:
                 fan::out &parent_;
@@ -140,6 +141,7 @@ namespace vidre {
                 friend class out;
             };
 
+            ///@cond
             inline endpoint::cap fan::out::getcap() const noexcept {
                 return {
                     .source = cap::packet | cap::push | cap::event | cap::multi,  // (branch)
@@ -153,6 +155,82 @@ namespace vidre {
                     .sink = {}                                       // (we're a part of fan::out)
                 };
             }
+            ///@endcond
+
+#if 0
+            /** Fan-in endpoint.
+             * This class represents an input endpoint that can fan in data from many sources to one sink.
+             * */
+            class VIDRE_CORE_VISIBILITY in
+                : public endpoint::sink
+                , public io::source {
+            public:
+                class branch;
+
+            public:
+                in() = default;
+
+                in(const in &) = delete;
+                in &operator=(const in &) = delete;
+                in(in &&) = delete;
+                in &operator=(in &&) = delete;
+
+                virtual ~in();
+
+            protected:
+                std::vector<shared<branch>> branches_in_{};  ///< The list of branches connected to this fan-in endpoint.
+
+            public:
+                cap getcap() const noexcept override;
+
+                shared<packet> get() override;
+
+                /** Unlink this fan-in endpoint from all connected branches and sources.
+                 * @note This operation will attempt to disconnect all branches and sources
+                 *       associated with this fan-in endpoint. In contrast to io::channel,
+                 *       it will not automatically reconnect the source to any sink.
+                 *
+                 * @return status indicating success or failure of the unlink operation.
+                 * */
+                status unlink() override;
+
+                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+
+            protected:
+                using source::attach;
+                using source::detach;
+
+                status attach(shared<endpoint::source> src, cap::flag_type cap) override;
+                status detach(const endpoint::source *ptr) override;
+                shared<endpoint::sink> branch_sink() override;
+            };
+
+            /** Branch of a fan-in endpoint.
+             * */
+            class VIDRE_CORE_VISIBILITY in::branch : public io::sink {
+            public:
+                branch(fan::in &child) : child_(child) {}
+
+                branch(const branch &) = delete;
+                branch &operator=(const branch &) = delete;
+                branch(branch &&) = delete;
+                branch &operator=(branch &&) = delete;
+
+                virtual ~branch() {
+                    unlink();
+                }
+
+            protected:
+                std::queue<shared<packet>> queue_{};
+                std::mutex queue_mutex_{};
+
+            public:
+
+
+            private:
+                fan::in &child_;
+            };
+#endif
 
             ///@}
 

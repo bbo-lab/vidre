@@ -157,12 +157,22 @@ void log::output::queue(shared<packet> msg) noexcept {
     // FIXME
 }
 
+status log::output::unlink() {
+    // FIXME
+    return {};
+}
+
 status log::output::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     // FIXME
     return {};
 }
 
 status log::output::detach(const endpoint::sink *snk) {
+    // FIXME
+    return {};
+}
+
+shared<io::endpoint::source> log::output::branch_source() {
     // FIXME
     return {};
 }

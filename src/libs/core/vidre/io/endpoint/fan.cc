@@ -33,14 +33,14 @@ io::fan::out::~out() {
 }
 
 status io::fan::out::put(shared<packet> p) {
-    for (auto &branch : branches_right_)
+    for (auto &branch : branches_out_)
         branch->put(p);
 
     return status::ok;
 }
 
 bool io::fan::out::isready(endpoint::dir direction) const noexcept {
-    if (!sink_predecessor_ or branches_right_.empty())
+    if (!sink_predecessor_ or branches_out_.empty())
         return false;
 
     if (!!(direction & endpoint::dir::source)) {
@@ -49,7 +49,7 @@ bool io::fan::out::isready(endpoint::dir direction) const noexcept {
     }
 
     if (!!(direction & endpoint::dir::sink)) {
-        for (const auto &branch : branches_right_) {
+        for (const auto &branch : branches_out_) {
             if (not branch->isready(endpoint::dir::sink))
                 return false;
         }
@@ -59,7 +59,7 @@ bool io::fan::out::isready(endpoint::dir direction) const noexcept {
 }
 
 status io::fan::out::unlink() {
-    if (not sink_predecessor_ and branches_right_.empty())  // not connected
+    if (not sink_predecessor_ and branches_out_.empty())  // not connected
         return status::ok;
 
     status retval = status::ok;
@@ -73,13 +73,13 @@ status io::fan::out::unlink() {
         sink_predecessor_.reset();
     }
 
-    for (auto &branch : branches_right_) {
+    for (auto &branch : branches_out_) {
         if (branch->unlink() == status::bad) {
             retval = status::bad;
             log::error() << "failed to unlink branch from fan-out\n";
         }
     }
-    branches_right_.clear();
+    branches_out_.clear();
 
     return retval;
 }
@@ -91,14 +91,14 @@ status io::fan::out::attach(shared<endpoint::sink> src, cap::flag_type cap) {
 
 shared<io::endpoint::source> io::fan::out::branch_source() {
     shared<out::branch> branch = endpoint::make<out::branch>(*this);
-    branches_right_.push_back(branch);
+    branches_out_.push_back(branch);
     return branch;
 }
 
 status io::fan::out::detach(const endpoint::sink *ptr) {
-    for (auto &branch : branches_right_) {
+    for (auto &branch : branches_out_) {
         if (branch->source_follower_.get() == ptr) {
-            branches_right_.erase(std::remove(branches_right_.begin(), branches_right_.end(), branch), branches_right_.end());
+            branches_out_.erase(std::remove(branches_out_.begin(), branches_out_.end(), branch), branches_out_.end());
             return status::ok;
         }
     }
@@ -192,3 +192,11 @@ bool io::fan::out::branch::source_step() {
 
     return true;
 }
+
+// === fan::out ===============================================================
+
+
+
+// === fan::out::branch =======================================================
+
+
