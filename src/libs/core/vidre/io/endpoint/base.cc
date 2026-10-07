@@ -96,7 +96,7 @@ status endpoint::connect(shared<endpoint::source> src, shared<endpoint::sink> sn
     if (!(src_cap & endpoint::cap::packet) || !(snk_cap & endpoint::cap::packet))
         throw exception::internal() << "endpoint capabilities are not packet-based";
 
-    src_cap &= ~cap::chunk;
+    src_cap &= ~cap::chunk; // FIXME sources, such as log::endpoint, may support packet to chunk conversion (with style)
     snk_cap &= ~cap::chunk;
 
     // select mode (preferred mode is, that the source pushes if it can)

@@ -22,6 +22,7 @@
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_FAN_HH
 #define VIDRE_CORE_IO_TYPES_FAN_HH
+#include <string>
 #pragma once
 
 #include <vidre/core/config.hh>
@@ -31,6 +32,7 @@
 
 #include <queue>
 #include <mutex>
+#include <shared_mutex>
 
 namespace vidre {
 
@@ -65,6 +67,7 @@ namespace vidre {
 
             protected:
                 std::vector<shared<branch>> branches_out_{};  ///< The list of branches connected to this fan-out endpoint.
+                // FIXME we need a std::shared_mutex for put(), see fan::in
 
             public:
                 cap getcap() const noexcept override;
@@ -158,7 +161,6 @@ namespace vidre {
             }
             ///@endcond
 
-#if 0
             /** Fan-in endpoint.
              * This class represents an input endpoint that can fan in data from many sources to one sink.
              * */
@@ -180,6 +182,8 @@ namespace vidre {
 
             protected:
                 std::vector<shared<branch>> branches_in_{};  ///< The list of branches connected to this fan-in endpoint.
+                std::shared_mutex branches_in_mutex_{};      ///< Mutex to protect access to branches_in_.
+                std::size_t round_robin_{};                  ///< Index for round-robin selection among branches.
 
             public:
                 cap getcap() const noexcept override;
@@ -197,6 +201,12 @@ namespace vidre {
 
                 bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
+                // size_type queue_depth() const noexcept override {
+                //     if (parent_->sink_predecessor_)
+                //         return std::static_pointer_cast<io::source>(parent_->sink_predecessor_)->queue_depth();
+                //     return 0;
+                // }
+
             protected:
                 using source::attach;
                 using source::detach;
@@ -210,7 +220,8 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY in::branch : public io::sink {
             public:
-                branch(fan::in &child) : child_(child) {}
+                branch(fan::in &child) : child_(&child) {}
+                branch(fan::in *child) : child_(child) {}
 
                 branch(const branch &) = delete;
                 branch &operator=(const branch &) = delete;
@@ -226,12 +237,27 @@ namespace vidre {
                 std::mutex queue_mutex_{};
 
             public:
-
+                cap getcap() const noexcept override;
 
             private:
-                fan::in &child_;
+                fan::in *child_;
             };
-#endif
+
+            ///@cond
+            inline endpoint::cap fan::in::getcap() const noexcept {
+                return {
+                    .source = cap::packet | cap::push | cap::event | cap::multi,  // (branch)
+                    .sink = cap::packet | cap::push | cap::event | cap::nonblock  //
+                };
+            }
+
+            inline endpoint::cap fan::in::branch::getcap() const noexcept {
+                return {
+                    .source = cap::packet | cap::push | cap::event,  // (see fan::in)
+                    .sink = {}                                       // (we're a part of fan::in)
+                };
+            }
+            ///@endcond
 
             ///@}
 

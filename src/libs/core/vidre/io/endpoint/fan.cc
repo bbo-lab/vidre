@@ -27,6 +27,7 @@
 using namespace vidre;
 
 // === fan::out ===============================================================
+#pragma region fan::out
 
 io::fan::out::~out() {
     unlink();
@@ -105,9 +106,10 @@ status io::fan::out::detach(const endpoint::sink *ptr) {
 
     return status::bad;
 }
+#pragma endregion
 
 // === fan::out::branch =======================================================
-
+#pragma region fan::out::branch
 status io::fan::out::branch::put(shared<packet> pkt) {
     {
         std::lock_guard<std::mutex> lock(queue_mutex_);
@@ -175,7 +177,7 @@ status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type
 status io::fan::out::branch::detach(const endpoint::sink *ptr) {
     return parent_->detach(ptr);
 }
-    
+
 bool io::fan::out::branch::source_step() {
     auto retval = wait();
     if (retval != status::ok) {
@@ -192,11 +194,54 @@ bool io::fan::out::branch::source_step() {
 
     return true;
 }
+#pragma endregion
 
-// === fan::out ===============================================================
+// === fan::in ================================================================
+#pragma region fan::in
 
+io::fan::in::~in() {
+    unlink();
+}
 
+shared<io::packet> io::fan::in::get() {
+    // Implement the logic to retrieve a packet from the fan-in endpoint.
+    // This is a placeholder implementation and should be replaced with actual logic.
+    return {};
+}
 
-// === fan::out::branch =======================================================
+status io::fan::in::unlink() {
+    // Implement the logic to unlink the fan-in endpoint from all connected branches and sources.
+    // This is a placeholder implementation and should be replaced with actual logic.
+    return status::ok;
+}
 
+bool io::fan::in::isready(endpoint::dir direction) const noexcept {
+    // Implement the logic to check if the fan-in endpoint is ready.
+    // This is a placeholder implementation and should be replaced with actual logic.
+    return false;
+}
 
+status io::fan::in::attach(shared<endpoint::source> src, cap::flag_type cap) {
+    // Implement the logic to attach a source to the fan-in endpoint.
+    // This is a placeholder implementation and should be replaced with actual logic.
+    return status::ok;
+}
+
+status io::fan::in::detach(const endpoint::source *ptr) {
+    // Implement the logic to detach a source from the fan-in endpoint.
+    // This is a placeholder implementation and should be replaced with actual logic.
+    return status::ok;
+}
+
+shared<io::endpoint::sink> io::fan::in::branch_sink() {
+    // Implement the logic to retrieve the branch sink associated with the fan-in endpoint.
+    // This is a placeholder implementation and should be replaced with actual logic.
+    return {};
+}
+
+#pragma endregion
+
+// === fan::in::branch ========================================================
+#pragma region fan::in::branch
+
+#pragma endregion

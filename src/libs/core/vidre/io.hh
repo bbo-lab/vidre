@@ -61,6 +61,9 @@
  * @defgroup api-core-io-details    Implementation details
  * @}
  *
+ * @todo 
+ * - implement queue_depth handling
+ * - endpoint::stats needs some affection
  * */
 
  /**@addtogroup api-core-io-details
