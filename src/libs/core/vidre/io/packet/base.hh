@@ -33,6 +33,8 @@
 
 #include <functional>
 #include <bit>
+#include <shared_mutex>
+#include <queue>
 
 #include <ankerl/unordered_dense.h>
 
@@ -92,6 +94,8 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY packet {
         public:
+            class queue;
+
             /** Major type of a packet.
              * */
             enum class major : uint16_t {
@@ -295,6 +299,121 @@ namespace vidre {
 
         private:
             friend struct factory;
+        };
+
+        /** Queue for packets.
+         *
+         * This class provides a thread-safe queue for managing packets. It ensures
+         * that multiple threads can safely add and remove packets without causing data
+         * races or inconsistencies.
+         *
+         * In addition, it provides mechanisms to control the maximum depth of the queue,
+         * allowing for both fixed and dynamic queue sizes.
+         *
+         * @see setdepth()
+         * */
+        class VIDRE_CORE_VISIBILITY packet::queue {
+        public:
+            /** Dynamic queue size indicator.
+             * */
+            constexpr static size_type dynamic = size_type(-1);
+
+        public:
+            queue(size_type d = dynamic) noexcept : depth_(d + (d == 0) * dynamic) {}
+
+            queue(const queue &) = delete;
+            queue &operator=(const queue &) = delete;
+            queue(queue &&) = delete;
+            queue &operator=(queue &&) = delete;
+
+        protected:
+            std::queue<shared<packet>> queue_{};  ///< The underlying queue storing the packets.
+            mutable std::shared_mutex mutex_{};   ///< Mutex to protect access to the queue.
+            size_type depth_{dynamic};            ///< Maximum size of the queue, dynamic if not fixed.
+
+        public:
+            /** Maximum depth of the queue.
+             * @see setdepth()
+             * */
+            size_type depth() const noexcept {
+                return depth_;
+            }
+
+            /** Set maximum depth of the queue.
+             *
+             * Devices, such as cameras, do not typically reallocate space for data packets
+             * once allocated during device setup. This means, that packets may be overwritten
+             * when the device produces new packets. This queue must, therefore, never hold
+             * "dirty" (ie. overwritten) packets.
+             *
+             * @note The depth of the queue must be set before usage.
+             *
+             * @param d The new maximum depth (0 is understood as equivalent to the `dynamic` indicator).
+             * @see push()
+             * */
+            void setdepth(size_type d) noexcept {
+                depth_ = (d == 0) ? dynamic : d;
+            }
+
+            /** Number of queued packets.
+             * */
+            size_type size() const noexcept {
+                std::shared_lock lock(mutex_);
+                return queue_.size();
+            }
+
+            /** Check if the queue is empty.
+             * */
+            bool empty() const noexcept {
+                std::shared_lock lock(mutex_);
+                return queue_.empty();
+            }
+
+            /** Access the front packet in the queue.
+             * @returns The packet at the front of the queue, or nullptr if the queue is empty.
+             * */
+            shared<packet> front() const noexcept {
+                std::shared_lock lock(mutex_);
+                if (!queue_.empty())
+                    return queue_.front();
+                return nullptr;
+            }
+
+            /** Push a packet into the queue.
+             * @param p The packet to be added to the queue.
+             * @returns `true` if the packet was successfully added to the queue,
+             *          `false` if a packet had to be dropped (see `setdepth()`).
+             * */
+            bool push(shared<packet> p) {
+                std::unique_lock lock(mutex_);
+                if (queue_.size() < depth_) [[likely]]
+                    queue_.push(std::move(p));
+                else {
+                    if (depth_ == 1) {
+                        queue_.front() = std::move(p);
+                    }
+                    else {
+                        queue_.pop();
+                        queue_.push(std::move(p));
+                    }
+                    return false;
+                }
+
+                return true;
+            }
+
+            /** Pop the front packet from the queue.
+             * */
+            shared<packet> pop() {
+                std::unique_lock lock(mutex_);
+
+                if (queue_.empty())
+                    return nullptr;
+
+                auto p = std::move(queue_.front());
+                queue_.pop();
+                return p;
+            }
         };
 
         ///@}

@@ -331,8 +331,8 @@ namespace vidre {
             }
 
         protected:
-            log::level threshold = static_cast<log::level>(level_default);  ///< Maximum log level for this branch.
-            style::type style = style::plain;  ///< Output style for this branch (only relevant for chunked output).
+            log::level threshold_ = static_cast<log::level>(level_default);  ///< Maximum log level for this branch.
+            style::type style_ = style::plain;  ///< Output style for this branch (only relevant for chunked output).
 
         public:
             // FIXME document and describe settings

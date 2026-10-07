@@ -203,7 +203,7 @@ status log::source::put(shared<io::packet> p) {
 
     for (auto &branch : branches_out_) {
         auto bptr = std::static_pointer_cast<log::source::branch>(branch);
-        if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(bptr->threshold))
+        if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(bptr->threshold_))
             continue;
         branch->put(p);
     }
@@ -213,7 +213,7 @@ status log::source::put(shared<io::packet> p) {
 
 shared<io::endpoint::source> log::source::branch_source() {
     shared<log::source::branch> branch = endpoint::make<log::source::branch>(*this);
-    branch->threshold = log::source::maxthreshold;
+    branch->threshold_ = log::source::maxthreshold;
 
     branches_out_.push_back(branch);
 
@@ -233,16 +233,16 @@ void log::source::branch::setup(const settings::json &config) {
         if (!threshold.empty()) {
             auto lvl = tolevel(threshold);
             if (lvl != level_invalid)
-                this->threshold = static_cast<log::level>(lvl);
+                this->threshold_ = static_cast<log::level>(lvl);
         }
 
         std::string style = log_config.value("style", "plain");
         if (style == "plain")
-            this->style = log::style::plain;
+            this->style_ = log::style::plain;
         else if (style == "tagged")
-            this->style = log::style::tagged;
+            this->style_ = log::style::tagged;
         else if (style == "color")
-            this->style = log::style::color;
+            this->style_ = log::style::color;
     }
 }
 

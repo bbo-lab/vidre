@@ -22,15 +22,14 @@
 /// @file
 #ifndef VIDRE_CORE_IO_TYPES_FAN_HH
 #define VIDRE_CORE_IO_TYPES_FAN_HH
-#include <string>
 #pragma once
 
 #include <vidre/core/config.hh>
+#include <vidre/io/packet/base.hh>
 #include <vidre/io/endpoint/base.hh>
 #include <vidre/io/endpoint/source.hh>
 #include <vidre/io/endpoint/sink.hh>
 
-#include <queue>
 #include <mutex>
 #include <shared_mutex>
 
@@ -79,7 +78,7 @@ namespace vidre {
                  *       associated with this fan-out endpoint. In contrast to io::channel,
                  *       it will not automatically reconnect the source to any sink.
                  *
-                 * @return status indicating success or failure of the unlink operation.
+                 * @returns status indicating success or failure of the unlink operation.
                  * */
                 status unlink() override;
 
@@ -115,8 +114,7 @@ namespace vidre {
                 fan::out *parent_;
 
             protected:
-                std::queue<shared<packet>> queue_{};
-                std::mutex queue_mutex_{};
+                packet::queue queue_{};
 
             public:
                 cap getcap() const noexcept override;
@@ -222,8 +220,8 @@ namespace vidre {
              * */
             class VIDRE_CORE_VISIBILITY in::branch : public io::sink {
             public:
-                branch(fan::in &child) : child_(&child) {}
-                branch(fan::in *child) : child_(child) {}
+                branch(fan::in &child) : parent_(&child) {}
+                branch(fan::in *child) : parent_(child) {}
 
                 branch(const branch &) = delete;
                 branch &operator=(const branch &) = delete;
@@ -235,7 +233,7 @@ namespace vidre {
                 }
 
             private:
-                fan::in *child_;
+                fan::in *parent_;
 
             protected:
                 std::queue<shared<packet>> queue_{};
