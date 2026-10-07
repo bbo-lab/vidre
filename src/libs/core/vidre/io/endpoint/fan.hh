@@ -67,7 +67,7 @@ namespace vidre {
 
             protected:
                 std::vector<shared<branch>> branches_out_{};  ///< The list of branches connected to this fan-out endpoint.
-                // FIXME we need a std::shared_mutex for put(), see fan::in
+                mutable std::mutex branches_out_mutex_{};     ///< Mutex to protect access to the branches_out_ vector.
 
             public:
                 cap getcap() const noexcept override;
@@ -131,6 +131,8 @@ namespace vidre {
                     return 0;
                 }
 
+                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+
                 status put(shared<packet> p) override;  // FIXME this is currently public for log::output
 
             protected:
@@ -181,9 +183,9 @@ namespace vidre {
                 virtual ~in();
 
             protected:
-                std::vector<shared<branch>> branches_in_{};  ///< The list of branches connected to this fan-in endpoint.
-                std::shared_mutex branches_in_mutex_{};      ///< Mutex to protect access to branches_in_.
-                std::size_t round_robin_{};                  ///< Index for round-robin selection among branches.
+                std::vector<shared<branch>> branches_in_{};      ///< The list of branches connected to this fan-in endpoint.
+                mutable std::shared_mutex branches_in_mutex_{};  ///< Mutex to protect access to branches_in_.
+                std::size_t round_robin_{};                      ///< Index for round-robin selection among branches.
 
             public:
                 cap getcap() const noexcept override;
@@ -232,29 +234,52 @@ namespace vidre {
                     unlink();
                 }
 
+            private:
+                fan::in *child_;
+
             protected:
                 std::queue<shared<packet>> queue_{};
                 std::mutex queue_mutex_{};
 
+            protected:
+                shared<packet> pop() {
+                    std::lock_guard lock(queue_mutex_);
+
+                    if (queue_.empty())
+                        return {};
+
+                    auto pkt = std::move(queue_.front());
+                    queue_.pop();
+
+                    return pkt;
+                }
+
             public:
                 cap getcap() const noexcept override;
+                status put(shared<packet> p) override;
+                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+                status unlink() override;
+
+            protected:
+                status attach(shared<endpoint::source> src, cap::flag_type cap) override;
+                status detach(const endpoint::source *ptr) override;
 
             private:
-                fan::in *child_;
+                friend class in;
             };
 
             ///@cond
             inline endpoint::cap fan::in::getcap() const noexcept {
                 return {
-                    .source = cap::packet | cap::push | cap::event | cap::multi,  // (branch)
-                    .sink = cap::packet | cap::push | cap::event | cap::nonblock  //
+                    .source = cap::packet | cap::push | cap::event,            //
+                    .sink = cap::packet | cap::push | cap::event | cap::multi  // (branch)
                 };
             }
 
             inline endpoint::cap fan::in::branch::getcap() const noexcept {
                 return {
-                    .source = cap::packet | cap::push | cap::event,  // (see fan::in)
-                    .sink = {}                                       // (we're a part of fan::in)
+                    .source = {},                                  // (we're a part of fan::in)
+                    .sink = cap::packet | cap::push | cap::event,  // (see fan::in)
                 };
             }
             ///@endcond
