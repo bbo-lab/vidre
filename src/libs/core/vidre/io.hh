@@ -62,9 +62,11 @@
  * @}
  *
  * @todo 
- * - implement queue_depth handling
+ * - implement queue_depth handling (and rename method to "retention()")
  * - endpoint::stats needs some affection
  * - check isready() implementations: are all handling dir::any correctly?
+ * - need to make sure, that get()/pull() always transmit valid packets
+ *   (esp. queued packets must not just "disappear" into nirvana; may have a default "error" packet?)
  * */
 
  /**@addtogroup api-core-io-details

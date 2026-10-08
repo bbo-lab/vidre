@@ -20,6 +20,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fan.hh"
+#include "vidre/io/endpoint/source.hh"
 #include "vidre/log.hh"
 
 #include <memory>
@@ -135,8 +136,14 @@ shared<io::packet> io::fan::out::branch::get() {
 }
 
 bool io::fan::out::branch::isready(endpoint::dir direction) const noexcept {
+    if (!!(direction & endpoint::dir::sink)) {
+        if (!source_follower_)
+            return false;
+    }
+
     if (!!(direction & endpoint::dir::source))
-        return parent_->isready(direction);
+        return parent_->isready(endpoint::dir::source);
+
     return true;
 }
 
@@ -212,14 +219,16 @@ shared<io::packet> io::fan::in::get() {
     auto n = branches_in_.size();
     if (n == 0)
         return {};
-    if (n > round_robin_)
+    if (n >= round_robin_)
         round_robin_ = 0;
 
-    auto pkt = branches_in_.at(round_robin_)->pop();
-    if (!pkt)
-        return {};
+    auto branch = branches_in_.at(round_robin_);
+    if (!branch)
+        throw exception::internal() << "branch is null";
 
-    round_robin_++;
+    auto pkt = branch->pop();
+    if (pkt)
+        round_robin_++;
     return pkt;
 }
 
@@ -262,13 +271,13 @@ bool io::fan::in::isready(endpoint::dir direction) const noexcept {
         return false;
 
     if (!!(direction & endpoint::dir::sink)) {
-        if (not source_follower_->isready(endpoint::dir::source))
+        if (not source_follower_->isready(endpoint::dir::sink))
             return false;
     }
 
     if (!!(direction & endpoint::dir::source)) {
         for (const auto &branch : branches_in_.snapshot()) {
-            if (not branch->isready(endpoint::dir::sink))
+            if (not branch->isready(endpoint::dir::source))
                 return false;
         }
     }
@@ -312,11 +321,14 @@ status io::fan::in::branch::put(shared<io::packet> p) {
 }
 
 bool io::fan::in::branch::isready(io::endpoint::dir direction) const noexcept {
-    if (!!(direction & endpoint::dir::source))
-        FIXME;
+    if (!!(direction & endpoint::dir::source)) {
+        if (!sink_predecessor_)
+            return false;
+    }
 
     if (!!(direction & endpoint::dir::sink))
-        return parent_->isready(direction);
+        return parent_->isready(endpoint::dir::sink);
+
     return true;
 }
 
@@ -351,7 +363,6 @@ status io::fan::in::branch::attach(shared<io::endpoint::source> src, cap::flag_t
     sink_predecessor_ = src;
 
     // start handler
-    sink_predecessor_.reset();
     if (cap & endpoint::cap::push) {
         sink_task_ = task::make(this, &branch::sink_handler, std::chrono::milliseconds(1));
     }
