@@ -31,6 +31,7 @@
 #include <vidre/io/types.hh>
 
 #include <format>
+#include <shared_mutex>
 
 namespace vidre {
 
@@ -54,6 +55,9 @@ namespace vidre {
             // forward declarations
             class source;
             class sink;
+
+            template <typename T>
+            class sequence;
 
             /** Syntactic sugar for std::make_shared<T>.
              * @tparam T The type of the endpoint to create, which must be derived from `endpoint`.
@@ -390,7 +394,7 @@ namespace vidre {
             /** Setup endpoint.
              * @param config JSON configuration object for this endpoint.
              *
-             * @note Implementations must ignore settings not relevant to this endpoint. 
+             * @note Implementations must ignore settings not relevant to this endpoint.
              *
              * @see `setup() const`
              * */
@@ -414,7 +418,7 @@ namespace vidre {
 
             /** Unlink this endpoint.
              *
-             * This method disconnects the endpoint from any connected sources and/or sinks. 
+             * This method disconnects the endpoint from any connected sources and/or sinks.
              * With the exception of `io::channel`, that reconnects the source with the sink,
              * multi-point endpoints will leave connected sources and sinks dangling!
              *
@@ -594,6 +598,114 @@ namespace vidre {
 
         ///@endcond
 
+        /** Thread-safe sequence of endpoints.
+         * FIXME
+         * */
+        template <typename T>
+        class endpoint::sequence {
+        public:
+            using value_type = shared<T>;
+            using list_type = std::vector<value_type>;
+            using size_type = typename list_type::size_type;
+
+        public:
+            sequence() = default;
+
+        protected:
+            std::vector<value_type> items_{};
+            mutable std::shared_mutex mutex_{};
+
+        public:
+            /** Get number of stored endpoints.
+             * */
+            size_type size() const {
+                std::shared_lock lock(mutex_);
+                return items_.size();
+            }
+
+            /** Check if empty.
+             * */
+            bool empty() const {
+                std::shared_lock lock(mutex_);
+                return items_.empty();
+            }
+
+            /** Get item at position `i`.
+             * */
+            value_type at(size_type i) const {
+                std::shared_lock lock(mutex_);
+
+                if (i >= items_.size())
+                    return {};
+
+                return items_[i];
+            }
+
+            /** Get first entry (nullptr if empty).
+             * */
+            value_type front() const {
+                return at(0);
+            }
+
+            /** Get last entry (nullptr if empty).
+             * */
+            value_type back() const {
+                std::shared_lock lock(mutex_);
+
+                auto last = items_.size();
+                if (last == 0)
+                    return {};
+
+                return items_[last - 1];
+            }
+
+            /** Clear all entries.
+             * */
+            void clear() {
+                std::unique_lock lock(mutex_);
+                items_.clear();
+            }
+
+            /** Create a temporary copy of the stored items ("snapshot").
+             * This method can be used to avoid constant locking/unlocking
+             * when all elements must be accessed.
+             *
+             * Example:
+             * @code
+             * for (auto &branch : branches_.snapshot())
+             *     branch->put(pkt);
+             * @endcode
+             *
+             * */
+            list_type snapshot() const {
+                std::shared_lock lock(mutex_);
+                return items_;
+            }
+
+            /** Append an item to the sequence.
+             * */
+            void append(value_type item) {
+                std::unique_lock lock(mutex_);
+                items_.push_back(std::move(item));
+            }
+
+            /** Remove item by pointer.
+             * @returns `true` on successful removal, `false` otherwise (i.e. it was not found).
+             * */
+            bool remove(const T *ptr) {
+                std::unique_lock lock(mutex_);
+
+                auto it = std::find_if(items_.begin(), items_.end(), [ptr](const auto &branch) {
+                    return branch.get() == ptr;
+                });
+
+                if (it == items_.end())
+                    return false;
+
+                items_.erase(it);
+                return true;
+            }
+        };
         ///@}
 
     }  // namespace io

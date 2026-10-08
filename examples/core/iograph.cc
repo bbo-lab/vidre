@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     log::trace::pattern("*");
 
     auto inp = io::endpoint::make<sensor>();
-    auto chp = io::endpoint::make<io::fan::out>();
+    auto chp = io::endpoint::make<io::fan::in>();
     auto outp = io::endpoint::make<store>();
 
     inp->settag("input");

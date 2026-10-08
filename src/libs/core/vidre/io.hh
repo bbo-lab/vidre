@@ -64,6 +64,7 @@
  * @todo 
  * - implement queue_depth handling
  * - endpoint::stats needs some affection
+ * - check isready() implementations: are all handling dir::any correctly?
  * */
 
  /**@addtogroup api-core-io-details

@@ -35,15 +35,13 @@ io::fan::out::~out() {
 }
 
 status io::fan::out::put(shared<packet> p) {
-    std::lock_guard lock(branches_out_mutex_);
-    for (auto &branch : branches_out_)
+    for (auto &branch : branches_out_.snapshot())
         branch->put(p);
 
     return status::ok;
 }
 
 bool io::fan::out::isready(endpoint::dir direction) const noexcept {
-    std::lock_guard lock(branches_out_mutex_);
     if (!sink_predecessor_ or branches_out_.empty())
         return false;
 
@@ -53,7 +51,7 @@ bool io::fan::out::isready(endpoint::dir direction) const noexcept {
     }
 
     if (!!(direction & endpoint::dir::sink)) {
-        for (const auto &branch : branches_out_) {
+        for (const auto &branch : branches_out_.snapshot()) {
             if (not branch->isready(endpoint::dir::sink))
                 return false;
         }
@@ -63,8 +61,6 @@ bool io::fan::out::isready(endpoint::dir direction) const noexcept {
 }
 
 status io::fan::out::unlink() {
-    std::lock_guard lock(branches_out_mutex_);
-
     // check if connected at all
     if (not sink_predecessor_ and branches_out_.empty())
         return status::ok;
@@ -100,15 +96,13 @@ status io::fan::out::unlink() {
 }
 
 status io::fan::out::attach(shared<endpoint::sink> src, cap::flag_type cap) {
-    std::lock_guard lock(branches_out_mutex_);
     throw exception::internal() << "a fan::out must not be attached directly";
     return status::bad;
 }
 
 shared<io::endpoint::source> io::fan::out::branch_source() {
-    std::lock_guard lock(branches_out_mutex_);
     shared<out::branch> branch = endpoint::make<out::branch>(*this);
-    branches_out_.push_back(branch);
+    branches_out_.append(branch);
     return branch;
 }
 
@@ -116,9 +110,9 @@ status io::fan::out::detach(const endpoint::sink *ptr) {
     // no lock here!
 
     // find the branch corresponding to the given sink pointer, and remove it from the list if found
-    for (auto &branch : branches_out_) {  // FIXME maybe use reverse iteration?
+    for (auto &branch : branches_out_.snapshot()) {
         if (branch->source_follower_.get() == ptr) {
-            branches_out_.erase(std::remove(branches_out_.begin(), branches_out_.end(), branch), branches_out_.end());
+            branches_out_.remove(branch.get());
             return status::ok;
         }
     }
@@ -141,7 +135,9 @@ shared<io::packet> io::fan::out::branch::get() {
 }
 
 bool io::fan::out::branch::isready(endpoint::dir direction) const noexcept {
-    return parent_->isready(direction);
+    if (!!(direction & endpoint::dir::source))
+        return parent_->isready(direction);
+    return true;
 }
 
 status io::fan::out::branch::unlink() {
@@ -213,14 +209,13 @@ io::fan::in::~in() {
 }
 
 shared<io::packet> io::fan::in::get() {
-    std::shared_lock lock(branches_in_mutex_);
     auto n = branches_in_.size();
     if (n == 0)
         return {};
     if (n > round_robin_)
         round_robin_ = 0;
 
-    auto pkt = branches_in_[round_robin_]->pop();
+    auto pkt = branches_in_.at(round_robin_)->pop();
     if (!pkt)
         return {};
 
@@ -229,7 +224,6 @@ shared<io::packet> io::fan::in::get() {
 }
 
 status io::fan::in::unlink() {
-    std::unique_lock lock(branches_in_mutex_);
     if (!source_follower_ && branches_in_.empty())
         return status::ok;
 
@@ -264,20 +258,16 @@ status io::fan::in::unlink() {
 }
 
 bool io::fan::in::isready(endpoint::dir direction) const noexcept {
-    {
-        std::shared_lock lock(branches_in_mutex_);
-        if (!source_follower_ or branches_in_.empty())
-            return false;
-    }
+    if (!source_follower_ or branches_in_.empty())
+        return false;
 
-    if (!!(direction & endpoint::dir::source)) {
+    if (!!(direction & endpoint::dir::sink)) {
         if (not source_follower_->isready(endpoint::dir::source))
             return false;
     }
 
-    if (!!(direction & endpoint::dir::sink)) {
-        std::shared_lock lock(branches_in_mutex_);
-        for (const auto &branch : branches_in_) {
+    if (!!(direction & endpoint::dir::source)) {
+        for (const auto &branch : branches_in_.snapshot()) {
             if (not branch->isready(endpoint::dir::sink))
                 return false;
         }
@@ -293,9 +283,9 @@ status io::fan::in::attach(shared<endpoint::source> src, cap::flag_type cap) {
 
 status io::fan::in::detach(const endpoint::source *ptr) {
     // locked in unlink()!
-    for (auto &branch : branches_in_) {
+    for (auto &branch : branches_in_.snapshot()) {
         if (branch->sink_predecessor_.get() == ptr) {
-            branches_in_.erase(std::remove(branches_in_.begin(), branches_in_.end(), branch), branches_in_.end());
+            branches_in_.remove(branch.get());
             return status::ok;
         }
     }
@@ -305,10 +295,7 @@ status io::fan::in::detach(const endpoint::source *ptr) {
 
 shared<io::endpoint::sink> io::fan::in::branch_sink() {
     shared<in::branch> branch = endpoint::make<in::branch>(*this);
-    {
-        std::unique_lock lock(branches_in_mutex_);
-        branches_in_.push_back(branch);
-    }
+    branches_in_.append(branch);
     return branch;
 }
 
@@ -318,21 +305,19 @@ shared<io::endpoint::sink> io::fan::in::branch_sink() {
 #pragma region fan::in::branch
 
 status io::fan::in::branch::put(shared<io::packet> p) {
-    {
-        std::lock_guard lock(queue_mutex_);
-
-        // FIXME implement queue_depth logic
-
-        queue_.push(std::move(p));
-    }
-
+    queue_.push(p);
     parent_->notify();
 
     return status::ok;
 }
 
 bool io::fan::in::branch::isready(io::endpoint::dir direction) const noexcept {
-    return parent_->isready(direction);
+    if (!!(direction & endpoint::dir::source))
+        FIXME;
+
+    if (!!(direction & endpoint::dir::sink))
+        return parent_->isready(direction);
+    return true;
 }
 
 status io::fan::in::branch::unlink() {

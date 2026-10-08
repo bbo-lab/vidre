@@ -201,7 +201,7 @@ status log::source::put(shared<io::packet> p) {
     if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(log::source::maxthreshold))
         return vidre::status::ok;
 
-    for (auto &branch : branches_out_) {
+    for (auto &branch : branches_out_.snapshot()) {
         auto bptr = std::static_pointer_cast<log::source::branch>(branch);
         if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(bptr->threshold_))
             continue;
@@ -215,7 +215,7 @@ shared<io::endpoint::source> log::source::branch_source() {
     shared<log::source::branch> branch = endpoint::make<log::source::branch>(*this);
     branch->threshold_ = log::source::maxthreshold;
 
-    branches_out_.push_back(branch);
+    branches_out_.append(branch);
 
     return branch;
 }

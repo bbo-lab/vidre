@@ -30,9 +30,6 @@
 #include <vidre/io/endpoint/source.hh>
 #include <vidre/io/endpoint/sink.hh>
 
-#include <mutex>
-#include <shared_mutex>
-
 namespace vidre {
 
     namespace io {
@@ -65,8 +62,7 @@ namespace vidre {
                 virtual ~out();
 
             protected:
-                std::vector<shared<branch>> branches_out_{};  ///< The list of branches connected to this fan-out endpoint.
-                mutable std::mutex branches_out_mutex_{};     ///< Mutex to protect access to the branches_out_ vector.
+                endpoint::sequence<branch> branches_out_{};  ///< The list of branches connected to this fan-out endpoint.
 
             public:
                 cap getcap() const noexcept override;
@@ -181,8 +177,7 @@ namespace vidre {
                 virtual ~in();
 
             protected:
-                std::vector<shared<branch>> branches_in_{};      ///< The list of branches connected to this fan-in endpoint.
-                mutable std::shared_mutex branches_in_mutex_{};  ///< Mutex to protect access to branches_in_.
+                endpoint::sequence<branch> branches_in_{};      ///< The list of branches connected to this fan-in endpoint.
                 std::size_t round_robin_{};                      ///< Index for round-robin selection among branches.
 
             public:
@@ -236,20 +231,14 @@ namespace vidre {
                 fan::in *parent_;
 
             protected:
-                std::queue<shared<packet>> queue_{};
-                std::mutex queue_mutex_{};
+                packet::queue queue_{};
 
             protected:
                 shared<packet> pop() {
-                    std::lock_guard lock(queue_mutex_);
-
                     if (queue_.empty())
                         return {};
 
-                    auto pkt = std::move(queue_.front());
-                    queue_.pop();
-
-                    return pkt;
+                    return queue_.pop();
                 }
 
             public:
