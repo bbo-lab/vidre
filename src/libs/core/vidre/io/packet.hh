@@ -54,16 +54,17 @@
  *
  * @see @ref vidre::storage::raw
  * @{
- * @namespace vidre::io::packet Packet-based I/O types.
  * @defgroup api-core-io-packet-base        Basic packet types
- * @defgroup api-core-io-packet-util        Basic packet utilities
- * @defgroup api-core-io-packet-factory     Packet factory mechanisms
+ * @defgroup api-core-io-packet-util        Utilities
+ * @defgroup api-core-io-packet-factory     Packet registration
+ * @defgroup api-core-io-packet-object      Objects and values
+ * @defgroup api-core-io-packet-manifest    Manifest packets
  * @}
  * */
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
+#include <vidre/io/packet/util.hh>
 #include <vidre/io/packet/value.hh>
-#include <vidre/io/packet/sequence.hh>
 #include <vidre/io/packet/object.hh>
 #include <vidre/io/packet/factory.hh>
 

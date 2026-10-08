@@ -24,6 +24,12 @@
 #define VIDRE_CORE_IO_PACKET_MANIFEST_HH
 #pragma once
 
+/**@addtogroup api-core-io-packet-manifest
+ * @brief Manifest (ie. stream description) packets.
+ * @details
+ * @fileinfo
+ */
+ 
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
 
@@ -31,7 +37,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-packet
+        /**@addtogroup api-core-io-packet-manifest
          * */
         ///@{
 

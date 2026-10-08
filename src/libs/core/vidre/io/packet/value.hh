@@ -36,7 +36,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-packet
+        /**@addtogroup api-core-io-packet-object
          * */
         ///@{
 

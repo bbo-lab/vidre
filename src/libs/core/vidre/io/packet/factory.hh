@@ -24,6 +24,12 @@
 #define VIDRE_CORE_IO_PACKET_FACTORY_HH
 #pragma once
 
+/**@addtogroup api-core-io-packet-factory
+ * @brief Packet registry and factory for creating packet instances.
+ * @details
+ * @fileinfo
+ */
+
 #include <vidre/core/config.hh>
 #include <vidre/util/endian.hh>
 #include <vidre/io/packet/base.hh>
@@ -114,7 +120,7 @@ namespace vidre {
 
         ///@}
 
-        /**@addtogroup api-core-io-packet
+        /**@addtogroup api-core-io-packet-factory
          * */
         ///@{
 

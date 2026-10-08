@@ -69,18 +69,18 @@ vidre_library(vidrecore SHARED
             vidre/settings/yaml.hh 
         vidre/io.hh vidre/io.cc
             vidre/io/types.hh vidre/io/types.cc
+            vidre/io/packet.hh vidre/io/packet.cc
+                vidre/io/packet/base.hh vidre/io/packet/base.cc
+                vidre/io/packet/util.hh vidre/io/packet/util.cc
+                vidre/io/packet/value.hh vidre/io/packet/value.cc
+                vidre/io/packet/object.hh vidre/io/packet/object.cc
+                vidre/io/packet/factory.hh vidre/io/packet/factory.cc
             vidre/io/endpoint.hh vidre/io/endpoint.cc
                 vidre/io/endpoint/base.hh vidre/io/endpoint/base.cc
                 vidre/io/endpoint/source.hh vidre/io/endpoint/source.cc
                 vidre/io/endpoint/sink.hh vidre/io/endpoint/sink.cc
                 vidre/io/endpoint/channel.hh vidre/io/endpoint/channel.cc
                 vidre/io/endpoint/fan.hh vidre/io/endpoint/fan.cc
-            vidre/io/packet.hh vidre/io/packet.cc
-                vidre/io/packet/base.hh vidre/io/packet/base.cc
-                vidre/io/packet/factory.hh vidre/io/packet/factory.cc
-                vidre/io/packet/value.hh vidre/io/packet/value.cc
-                vidre/io/packet/sequence.hh vidre/io/packet/sequence.cc
-                vidre/io/packet/object.hh vidre/io/packet/object.cc
             vidre/io/file.hh vidre/io/file.cc
             # vidre/io/monitor.hh vidre/io/monitor.cc
         vidre/storage.hh vidre/storage.cc

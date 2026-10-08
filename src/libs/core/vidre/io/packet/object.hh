@@ -24,6 +24,12 @@
 #define VIDRE_CORE_IO_PACKET_OBJECT_HH
 #pragma once
 
+ /**@addtogroup api-core-io-packet-object
+ * @brief Value and object (key-value pair) packets.
+ * @details
+ * @fileinfo
+ */
+
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
 #include <vidre/io/packet/value.hh>
@@ -32,7 +38,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-packet
+        /**@addtogroup api-core-io-packet-object
          * */
         ///@{
 
