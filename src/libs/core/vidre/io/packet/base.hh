@@ -24,6 +24,18 @@
 #define VIDRE_CORE_IO_PACKET_BASE_HH
 #pragma once
 
+/**@addtogroup api-core-io-packet-base
+ * @brief Basic packet types.
+ * @details
+ * @fileinfo
+ */
+
+ /**@addtogroup api-core-io-packet-util
+ * @brief Basic packet utilities.
+ * @details
+ * @fileinfo
+ */
+
 #include <vidre/core/config.hh>
 #include <vidre/cpp/shared.hh>
 #include <vidre/util/uuid.hh>
@@ -89,8 +101,6 @@ namespace vidre {
          * used for dispatching to the appropriate handler. The actual content
          * of the packet is determined by the major and minor types, and may be
          * further specified by the stream ID (e.g., for multiplexed streams).
-         *
-         * @todo need a stream ID registry (0 is reserved for unassigned streams, such as log)
          * */
         class VIDRE_CORE_VISIBILITY packet {
         public:
@@ -300,6 +310,12 @@ namespace vidre {
         private:
             friend struct factory;
         };
+
+        ///@}
+
+        /**@addtogroup api-core-io-packet-util
+         * @{
+         * */
 
         /** Queue for packets.
          *

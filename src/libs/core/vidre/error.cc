@@ -46,7 +46,7 @@ error::detail::store::pointer error::detail::store::allocate(size_t n) noexcept 
     // set "entry"
     auto *e = reinterpret_cast<entry *>(ptr);
     *e = {&mem_[used_], n};
-    if ((e->next->data() - mem_) <= VIDRE_EXCEPTION_STORE)
+    if ((e->next->data() - mem_) <= static_cast<std::ptrdiff_t>(VIDRE_EXCEPTION_STORE))
         *(e->next) = {};
 
     return ptr + sizeof(entry);
@@ -59,7 +59,7 @@ void error::detail::store::deallocate(pointer ptr) noexcept {
 
     if (cptr < mem_)
         goto dealloc_failed;
-    if ((cptr - mem_) >= used_)
+    if ((cptr - mem_) >= static_cast<std::ptrdiff_t>(used_))
         goto dealloc_failed;
     if (not used_)
         goto dealloc_failed;

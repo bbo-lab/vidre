@@ -100,10 +100,10 @@ namespace vidre {
                 memory::copy(view, hdr);
 
                 if (from != std::endian::native) {
-                    endian::byteswap_inplace(hdr.type.major, from);
-                    endian::byteswap_inplace(hdr.type.minor, from);
-                    endian::byteswap_inplace(hdr.stream, from);
-                    endian::byteswap_inplace(hdr.length, from);
+                    hdr.type.major = endian::byteswap(hdr.type.major, from);
+                    hdr.type.minor = endian::byteswap(hdr.type.minor, from);
+                    hdr.stream = endian::byteswap(hdr.stream, from);
+                    hdr.length = endian::byteswap(hdr.length, from);
                 }
 
                 auto pkt = factory::make(hdr);

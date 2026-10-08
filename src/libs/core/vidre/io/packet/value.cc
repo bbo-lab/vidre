@@ -244,15 +244,15 @@ settings::json io::packet::value::to_json() const {
         case minor::timestamp: {
             settings::json node;
             auto value = std::get<chrono::timestamp>(value_);
-            node["sec"] = value.sec;
-            node["nsec"] = value.nsec;
+            node["sec"] = uint64_t(value.sec);
+            node["nsec"] = uint64_t(value.nsec);
             return node;
         }
         case minor::utctime: {
             settings::json node;
             auto value = std::get<chrono::utcstamp>(value_);
-            node["sec"] = value.sec;
-            node["nsec"] = value.nsec;
+            node["sec"] = uint64_t(value.sec);
+            node["nsec"] = uint64_t(value.nsec);
             return node;
         }
     }

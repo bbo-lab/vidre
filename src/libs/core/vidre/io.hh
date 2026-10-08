@@ -25,7 +25,7 @@
 #pragma once
 
 /**@addtogroup api-core-io
- * @brief Data packets and general I/O related functionality.
+ * @brief Chunk and packet based I/O functionality.
  * @details
  * @fileinfo
  *
@@ -67,6 +67,8 @@
  * - check isready() implementations: are all handling dir::any correctly?
  * - need to make sure, that get()/pull() always transmit valid packets
  *   (esp. queued packets must not just "disappear" into nirvana; may have a default "error" packet?)
+ * - implement an io::catalogue, which could also handle stream IDs
+ * - there was also the idea of "switchboard" for routing packets between endpoints.
  * */
 
  /**@addtogroup api-core-io-details

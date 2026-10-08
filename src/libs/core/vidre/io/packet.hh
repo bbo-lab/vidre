@@ -43,9 +43,10 @@
  * - the length of the data packet, followed by
  * - the value, or content, respectively.
  *
- * A JSON document, might, for example, be represented by an `packet::major::object`,
- * consisting of a sequence of a key-value pairs, consisting of a `packet::plain::string`
- * and a value (such as a packet::plain::number).
+ * A JSON document, might, for example, be represented by an `packet::object` (major 
+ * `packet::major::object` and minor `packet::minor::group`),consisting of a sequence 
+ *  of a key-value pairs, consisting of a `packet::plain::string` and a value (such 
+ * as a packet::plain::number).
  *
  * The framework implements structures preferrably in a way, that would allow to
  * store these byte-wise in a file (cf. `storage::raw::magic`) but also takes into
@@ -54,6 +55,9 @@
  * @see @ref vidre::storage::raw
  * @{
  * @namespace vidre::io::packet Packet-based I/O types.
+ * @defgroup api-core-io-packet-base        Basic packet types
+ * @defgroup api-core-io-packet-util        Basic packet utilities
+ * @defgroup api-core-io-packet-factory     Packet factory mechanisms
  * @}
  * */
 #include <vidre/core/config.hh>

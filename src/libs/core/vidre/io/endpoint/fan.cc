@@ -20,11 +20,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "fan.hh"
-#include "vidre/io/endpoint/source.hh"
 #include "vidre/log.hh"
 
 #include <memory>
-#include <mutex>
 
 using namespace vidre;
 
