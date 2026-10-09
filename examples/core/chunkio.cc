@@ -10,6 +10,8 @@ using namespace vidre;
 #define MiB (1024ULL * kiB)
 #define GiB (1024ULL * MiB)
 
+namespace examples {
+
 //! [create-dummy-file]
 std::filesystem::path create_dummy_file() {
     std::filesystem::path p = "/tmp/vidre.example.io.dat";
@@ -90,6 +92,10 @@ void copy_source_to_sink_route() {
 }
 //! [copy-source-to-sink-route]
 
+}  // namespace examples
+
+using namespace examples;
+
 int main(int argc, const char **argv) {
     try {
         copy_source_to_sink_manual();
@@ -101,7 +107,7 @@ int main(int argc, const char **argv) {
     return 0;
 }
 
-/**@example examples/core/io.cc
+/**@example examples/core/chunkio.cc
  * @details
  *
  * FIXME

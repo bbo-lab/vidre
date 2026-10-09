@@ -291,6 +291,9 @@ namespace vidre {
             virtual void absorb(memory::view view, std::endian endian = std::endian::native);
 
             /** Convert to JSON (if applicable).
+             * This method has to be overridden by value-type packets (i.e., packet::value,
+             * packet::sequence, and packet::object) and packets, that are used in the 
+             * `io::manifest` to provide a JSON representation.
              * */
             virtual settings::json to_json() const {
                 return {};

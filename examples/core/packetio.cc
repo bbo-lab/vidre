@@ -3,66 +3,74 @@
 
 using namespace vidre;
 
-/* A "hearbeat" packet.
- */
-//! [simple-packet]
-class heartbeat : public io::packet {
-public:
-    static constexpr uint16_t major = 0xFEED;  // our major number (user implementation)
-    static constexpr uint16_t minor = 0x0001;  // avoiding "0" for group packets
+namespace examples {
 
-public:
-    heartbeat();
-    heartbeat(const header &hdr_) noexcept : packet{hdr_} {}
+    //! [simple-packet]
+    /* A "hearbeat" packet.
+     * This packet represents a simple heartbeat message containing a computer time-stamp.
+     */
+    class heartbeat : public io::packet {
+    public:
+        static constexpr uint16_t major = 0xFEED;  // our major number (user implementation)
+        static constexpr uint16_t minor = 0x0001;  // avoiding "0" for group packets
 
-    virtual ~heartbeat() {}
+    public:
+        heartbeat() = default;
+        heartbeat(const header &hdr_) noexcept : packet{hdr_} {}
 
-protected:
-    chrono::timestamp cts_{};  ///< Computer time-stamp of the last heartbeat.
+        virtual ~heartbeat() {}  // can be omitted
 
-public:
-    io::result emit(io::sink &f) override;
-    void absorb(memory::view view, std::endian endian = std::endian::native) override;
-};
+    protected:
+        chrono::timestamp cts_{};  // Computer time-stamp of the last heartbeat.
 
-heartbeat::heartbeat() : cts_{chrono::timestamp::now()} {
-    // static size, no "finalize()" needed
-    hdr.length = sizeof(chrono::timestamp);
-}
+    public:
+        void finalize() noexcept override;
+        io::result emit(io::sink &f) override;
+        void absorb(memory::view view, std::endian endian = std::endian::native) override;
+    };
 
-io::result heartbeat::emit(io::sink &f) {
-    return f.put(cts_);  // padding omitted, as the data is a multiple of `io::alignment`
-}
-
-void heartbeat::absorb(memory::view view, std::endian endian) {
-    // check validity
-    if (view.size() < size())
-        throw exception::runtime() << "packet data is truncated";
-
-    // copy data
-    memory::view ts_view = view + sizeof(header);
-    cts_ = *reinterpret_cast<const chrono::timestamp *>(ts_view.data());
-
-    // convert endiannes if necessary
-    if (endian != std::endian::native) {
-        cts_.sec = endian::byteswap(cts_.sec, endian);
-        cts_.nsec = endian::byteswap(cts_.nsec, endian);
+    void heartbeat::finalize() noexcept {
+        // for fixed-size packets, this length could also be set in the constructors
+        hdr.length = sizeof(chrono::timestamp);
     }
-}
-//! [simple-packet]
 
-//! [simple-packet-registry]
-static io::packet::registry<heartbeat>  //
-    packet_factory_heartbeat(heartbeat::major, heartbeat::minor);
-//! [simple-packet-registry]
+    io::result heartbeat::emit(io::sink &f) {
+        return f.put(cts_)  // data is streamed in binary form
+               + pad(f);    // padding can be omitted if already aligned
+    }
 
-//! [simple-source]
-class heartbeat_source : public io::source {
-public:
-    heartbeat_source() = default;
-    virtual ~heartbeat_source() {}
-};
-//! [simple-source]
+    void heartbeat::absorb(memory::view view, std::endian endian) {
+        // check validity
+        if (view.size() < size())
+            throw exception::runtime() << "packet data is truncated";
+
+        // copy data
+        memory::copy(view + sizeof(header), cts_);
+
+        // convert endiannes if necessary
+        if (endian != std::endian::native) {
+            cts_.sec = endian::byteswap(cts_.sec, endian);
+            cts_.nsec = endian::byteswap(cts_.nsec, endian);
+        }
+    }
+    //! [simple-packet]
+
+    //! [simple-packet-registry]
+    static io::packet::registry<heartbeat>  //
+        packet_factory_heartbeat(heartbeat::major, heartbeat::minor);
+    //! [simple-packet-registry]
+
+    //! [simple-source]
+    class heartbeat_source : public io::source {
+    public:
+        heartbeat_source() = default;
+        virtual ~heartbeat_source() {}
+    };
+    //! [simple-source]
+
+}  // namespace examples
+
+using namespace examples;
 
 int main(int argc, char *argv[]) {
     return 0;

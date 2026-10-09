@@ -38,7 +38,7 @@ namespace vidre {
 
     namespace detail {
 
-        /**@addtogroup api-core-util-thread-details
+        /**@addtogroup api-core-thread-details
          * */
         ///@{
 
@@ -210,7 +210,7 @@ namespace vidre {
 
     }  // namespace detail
 
-    /**@addtogroup api-core-util-thread
+    /**@addtogroup api-core-thread-schedule
      * */
     ///@{
 
