@@ -1,10 +1,10 @@
-find_package(Doxygen)
+find_package(Doxygen 1.18)
 
 if(Doxygen_FOUND)
 
     FetchContent_Declare(doxygen-awesome-css QUIET
         GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
-        GIT_TAG        v2.4.2
+        GIT_TAG        v2.5.0
         GIT_PROGRESS   ON
         GIT_SHALLOW    ON
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen-awesome-css"

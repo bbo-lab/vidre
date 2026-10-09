@@ -54,16 +54,14 @@
  *
  * @see @ref vidre::storage::raw
  * @{
- * @defgroup api-core-io-packet-base        Basic packet types
- * @defgroup api-core-io-packet-util        Utilities
+ * @defgroup api-core-io-packet-base        Basic functionality
  * @defgroup api-core-io-packet-factory     Packet registration
- * @defgroup api-core-io-packet-object      Object-like types
- * @defgroup api-core-io-packet-manifest    Stream configuration
+ * @defgroup api-core-io-packet-value       Value-like packets
+ * @defgroup api-core-io-packet-manifest    Stream description
  * @}
  * */
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
-#include <vidre/io/packet/util.hh>
 #include <vidre/io/packet/value.hh>
 #include <vidre/io/packet/object.hh>
 #include <vidre/io/packet/sequence.hh>

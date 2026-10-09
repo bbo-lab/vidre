@@ -229,7 +229,7 @@ namespace vidre {
                              to_underlying(lvl), stream, sizeof(timestamp))
                 , timestamp{chrono::timestamp::now()} {
                 message.reserve(256);  // pre-allocate some space for the message to avoid frequent reallocations
-                update();
+                finalize();
             }
 
             packet(const header &hdr_) noexcept : io::packet(hdr_) {
@@ -241,7 +241,7 @@ namespace vidre {
                 return std::make_shared<packet>(std::forward<Args>(args)...);
             }
 
-            void update() noexcept override {
+            void finalize() noexcept override {
                 hdr.length = sizeof(timestamp) + message.size();
             }
 

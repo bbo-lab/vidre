@@ -36,7 +36,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-packet-object
+        /**@addtogroup api-core-io-packet-value
          * */
         ///@{
 
@@ -140,7 +140,7 @@ namespace vidre {
             value_type value_;
 
         public:
-            void update() noexcept override;
+            void finalize() noexcept override;
             result emit(io::sink &f) override;
             void absorb(memory::view view, std::endian endian = std::endian::native) override;
             settings::json to_json() const override;

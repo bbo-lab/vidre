@@ -28,9 +28,9 @@ static io::packet::registry<io::packet::object>  //
     packet_factory_b(io::packet::major::object,  //
                      io::packet::minor::group);
 
-void io::packet::object::update() noexcept {
-    key_->update();
-    value_->update();
+void io::packet::object::finalize() noexcept {
+    key_->finalize();
+    value_->finalize();
     hdr.length = key_->size() + value_->size();
 }
 

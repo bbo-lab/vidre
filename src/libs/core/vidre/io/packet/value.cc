@@ -37,7 +37,7 @@ static io::packet::registry<io::packet::value>            //
                      {io::packet::value::minor::isodate,  //
                       io::packet::value::minor::utctime});
 
-void io::packet::value::update() noexcept {
+void io::packet::value::finalize() noexcept {
     switch (static_cast<minor>(hdr.type.minor)) {
         case minor::nil:
             hdr.length = 0;

@@ -26,7 +26,6 @@
 
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
-#include <vidre/io/packet/util.hh>
 #include <vidre/io/endpoint/base.hh>
 #include <vidre/io/endpoint/source.hh>
 #include <vidre/io/endpoint/sink.hh>

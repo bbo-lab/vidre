@@ -1,6 +1,58 @@
 #include <vidre/io.hh>
+#include <vidre/util/chrono.hh>
 
 using namespace vidre;
+
+//! [simple-packet]
+class heartbeat : public io::packet {
+public:
+    heartbeat();
+    virtual ~heartbeat() {}
+
+protected:
+    chrono::timestamp cts_;  ///< Computer time-stamp of the last heartbeat.
+
+public:
+    io::result emit(io::sink &f) override;
+    void absorb(memory::view view, std::endian endian = std::endian::native) override;
+};
+
+heartbeat::heartbeat() : cts_{chrono::timestamp::now()} {
+    // static size, no "finalize()" needed
+    hdr.length = sizeof(chrono::timestamp);
+}
+
+io::result heartbeat::emit(io::sink &f) {
+    return f.put(cts_);  // padding omitted, as the data is a multiple of `io::alignment`
+}
+
+void heartbeat::absorb(memory::view view, std::endian endian) {
+    // check validity
+    if (view.size() < size())
+        throw exception::runtime() << "packet data is truncated";
+
+    // copy data
+    memory::view ts_view = view + sizeof(header);
+    cts_ = *reinterpret_cast<const chrono::timestamp *>(ts_view.data());
+
+    // convert endiannes if necessary
+    if (endian != std::endian::native) {
+        cts_.sec = endian::byteswap(cts_.sec, endian);
+        cts_.nsec = endian::byteswap(cts_.nsec, endian);
+    }
+}
+//! [simple-packet]
+
+//! [simple-packet-registry]
+//! [simple-packet-registry]
+
+//! [simple-source]
+class heartbeat_source : public io::source {
+public:
+    heartbeat_source() = default;
+    virtual ~heartbeat_source() {}
+};
+//! [simple-source]
 
 int main(int argc, char *argv[]) {
     return 0;

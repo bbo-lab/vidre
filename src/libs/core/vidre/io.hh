@@ -69,6 +69,7 @@
  *   (esp. queued packets must not just "disappear" into nirvana; may have a default "error" packet?)
  * - implement an io::catalogue, which could also handle stream IDs
  * - there was also the idea of "switchboard" for routing packets between endpoints.
+ * - each packet::absorb() method checks size constraints and throws an exception if the provided memory view is too small, can this be checked before calling absorb()?
  * */
 
  /**@addtogroup api-core-io-details

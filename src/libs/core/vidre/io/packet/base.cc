@@ -29,7 +29,7 @@ using namespace vidre::io;
 io::result packet::emit(io::sink &f) {
     static_assert(sizeof(header) == 16);
 
-    update();
+    finalize();
     return f.put(memory::view{hdr});
 }
 

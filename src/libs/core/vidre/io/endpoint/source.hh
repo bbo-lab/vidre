@@ -44,7 +44,8 @@ namespace vidre {
          * Packet based sources implement a task loop that either pushes packets directly
          * to a sink, or use an event to notify that sink of data availability.
          *
-         * @see @ref example/core/iograph.cc
+         * Example:
+         * @snippet examples/core/packetio.cc simple-packet-source
          * */
         class VIDRE_CORE_VISIBILITY source : public endpoint::source {
         public:
@@ -149,7 +150,7 @@ namespace vidre {
             [[nodiscard]] event::result_type wait(std::chrono::milliseconds timeout) {
                 return source_event_.wait(timeout);
             }
-            
+
             /** Cancel the source event.
              * This method cancels any ongoing wait operations on the source event.
              * */

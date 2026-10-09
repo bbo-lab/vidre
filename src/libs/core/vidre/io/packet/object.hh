@@ -24,11 +24,20 @@
 #define VIDRE_CORE_IO_PACKET_OBJECT_HH
 #pragma once
 
- /**@addtogroup api-core-io-packet-object
- * @brief Value and object (key-value pair) packets.
+ /**@addtogroup api-core-io-packet-value
+ * @brief Packets representing values, sequences, and objects (key-value pairs).
  * @details
  * @fileinfo
- */
+ *
+ * To enable structured data that can be represented by packets, for exmample,
+ * to form a manifest, three types of packets are used: 
+ * - `packet::value`,
+ * - `packet::sequence`, and
+ * - `packet::object`.
+ * These packets allow for the construction of complex, hierarchical data structures 
+ * within the VidRe framework - corrolary to JSON-like data structures.
+ *
+ * */
 
 #include <vidre/core/config.hh>
 #include <vidre/io/packet/base.hh>
@@ -38,7 +47,7 @@ namespace vidre {
 
     namespace io {
 
-        /**@addtogroup api-core-io-packet-object
+        /**@addtogroup api-core-io-packet-value
          * */
         ///@{
 
@@ -70,7 +79,7 @@ namespace vidre {
             value_type value_;
 
         public:
-            void update() noexcept override;
+            void finalize() noexcept override;
             result emit(io::sink &f) override;
             void absorb(memory::view view, std::endian endian = std::endian::native) override;
             settings::json to_json() const override;

@@ -28,10 +28,10 @@ static io::packet::registry<io::packet::sequence>        //
     packet_factory_b(io::packet::major::sequence,        //
                      io::packet::minor::group);
 
-void io::packet::sequence::update() noexcept {
+void io::packet::sequence::finalize() noexcept {
     hdr.length = 0;
     for (auto &pkt : packets_) {
-        pkt->update();
+        pkt->finalize();
         hdr.length += pkt->size();
     }
 }
