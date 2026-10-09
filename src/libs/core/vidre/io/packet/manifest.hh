@@ -25,7 +25,7 @@
 #pragma once
 
 /**@addtogroup api-core-io-packet-manifest
- * @brief Manifest (ie. stream description) packets.
+ * @brief Stream description packets.
  * @details
  * @fileinfo
  */

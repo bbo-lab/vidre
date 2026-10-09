@@ -50,8 +50,8 @@
     <inheritancegraph visible="yes"/>
     <collaborationgraph visible="yes"/>
     <detaileddescription title=""/>
+      <nestedclasses visible="no" title=""/>
     <memberdecl>
-      <nestedclasses visible="yes" title=""/>
       <publictypes title=""/>
       <services title=""/>
       <interfaces title=""/>

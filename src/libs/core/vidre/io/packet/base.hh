@@ -25,7 +25,7 @@
 #pragma once
 
 /**@addtogroup api-core-io-packet-base
- * @brief Basic packet types.
+ * @brief Fundamental types defining packet identity, structure, and representation.
  * @details
  * @fileinfo
  */
