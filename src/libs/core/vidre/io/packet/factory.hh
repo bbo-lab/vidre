@@ -128,7 +128,8 @@ namespace vidre {
          * This helper struct simplifies the registration of packet types with the factory.
          * It supports registering individual minor types as well as ranges of minor types.
          *
-         * @todo Maybe it's worth (considering the typing effort) to take this class out of "factory" (and call it "registry")...?
+         * @snippet example/core/packetio.c simple-packet-registry
+         * @see `io::packet`
          * */
         template <typename T>
         struct packet::registry {

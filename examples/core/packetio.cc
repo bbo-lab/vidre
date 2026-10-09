@@ -3,14 +3,22 @@
 
 using namespace vidre;
 
+/* A "hearbeat" packet.
+ */
 //! [simple-packet]
 class heartbeat : public io::packet {
 public:
+    static constexpr uint16_t major = 0xFEED;  // our major number (user implementation)
+    static constexpr uint16_t minor = 0x0001;  // avoiding "0" for group packets
+
+public:
     heartbeat();
+    heartbeat(const header &hdr_) noexcept : packet{hdr_} {}
+
     virtual ~heartbeat() {}
 
 protected:
-    chrono::timestamp cts_;  ///< Computer time-stamp of the last heartbeat.
+    chrono::timestamp cts_{};  ///< Computer time-stamp of the last heartbeat.
 
 public:
     io::result emit(io::sink &f) override;
@@ -44,6 +52,8 @@ void heartbeat::absorb(memory::view view, std::endian endian) {
 //! [simple-packet]
 
 //! [simple-packet-registry]
+static io::packet::registry<heartbeat>  //
+    packet_factory_heartbeat(heartbeat::major, heartbeat::minor);
 //! [simple-packet-registry]
 
 //! [simple-source]

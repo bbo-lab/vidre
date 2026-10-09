@@ -81,6 +81,7 @@ namespace vidre {
         inline constexpr size_t alignment = 8;
 
         /** Major/minor packet code concept.
+         * @todo this should accept any const integral value that fits
          * */
         template <typename T>
         concept packet_code =
