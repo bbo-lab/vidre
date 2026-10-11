@@ -272,7 +272,7 @@ namespace vidre {
          * @pre destination.size() >= sizeof(T)
          * */
         template <typename T>
-        requires std::is_trivially_copyable_v<T>
+        requires (std::is_trivially_copyable_v<T> and not area_or_view<T>)
         inline size_type copy(const T &source, area destination) noexcept {
             assert(destination.size() >= sizeof(T) && "destination area is too small for the source type");
             std::memcpy(destination.data(), &source, sizeof(T));

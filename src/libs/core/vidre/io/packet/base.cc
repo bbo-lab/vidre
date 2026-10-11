@@ -21,10 +21,11 @@
  */
 #include "base.hh"
 #include "vidre/io/endpoint/sink.hh"
-#include "vidre/util/endian.hh"
 
 using namespace vidre;
 using namespace vidre::io;
+
+shared<packet> vidre::io::packet::nil = packet::make<packet>();
 
 io::result packet::emit(io::sink &f) {
     static_assert(sizeof(header) == 16);

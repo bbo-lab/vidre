@@ -54,16 +54,16 @@ namespace vidre {
         class VIDRE_DEVICE_VISIBILITY state {
         public:
             enum flag : uint32_t {
-                undefined = 0,        ///< Device is in an undefined state.
-                available = 1 << 0,   ///< Device is available.
-                disabled = 1 << 1,    ///< Device is disabled (possibly due to unrecoverable issues).
-                error = 1 << 2,       ///< Device experienced issues.
-                connected = 1 << 3,   ///< Device is connected to VidRe.
-                configured = 1 << 4,  ///< Device is configured and ready to be started.
-                running = 1 << 5,     ///< Device is active.
+                undefined = 0,       ///< Device is in an undefined state.
+                available = 1 << 0,  ///< Device is available.
+                disabled = 1 << 1,   ///< Device is disabled (possibly due to unrecoverable issues).
+                error = 1 << 2,      ///< Device experienced issues.
+                connected = 1 << 3,  ///< Device is connected to VidRe.
+                ready = 1 << 4,      ///< Device is configured and ready to be started.
+                running = 1 << 5,    ///< Device is active.
             };
 
-            template<typename T>
+            template <typename T>
             static constexpr bool compatible_v = std::derived_from<T, state> or std::derived_from<T, state::flag>;
 
             state() noexcept : flags_(flag::undefined) {}
@@ -75,7 +75,7 @@ namespace vidre {
         public:
             operator bool() const noexcept {
                 return flags_ != static_cast<uint32_t>(flag::undefined);
-            }   
+            }
 
             bool operator!() const noexcept {
                 return flags_ == static_cast<uint32_t>(flag::undefined);
@@ -83,7 +83,7 @@ namespace vidre {
 
             bool operator==(flag f) const noexcept {
                 return flags_ == static_cast<uint32_t>(f);
-            }   
+            }
 
             bool operator==(state s) const noexcept {
                 return flags_ == s.flags_;
@@ -112,35 +112,35 @@ namespace vidre {
                 flags_ = static_cast<uint32_t>(flag::undefined);
                 return *this;
             }
-          
+
             state &operator&=(flag f) noexcept {
                 flags_ &= static_cast<uint32_t>(f);
                 return *this;
-            }   
+            }
 
             state &operator&=(const state &f) noexcept {
                 flags_ &= f.flags_;
                 return *this;
-            }   
+            }
 
             state &operator|=(flag f) noexcept {
                 flags_ |= static_cast<uint32_t>(f);
                 return *this;
-            }   
+            }
 
             state &operator|=(const state &f) noexcept {
                 flags_ |= f.flags_;
                 return *this;
-            }   
+            }
         };
 
         ///@cond
-        template<class LHS, class RHS>
+        template <class LHS, class RHS>
         requires (state::compatible_v<LHS> && state::compatible_v<RHS>)
         inline LHS operator|(LHS lhs, RHS rhs) noexcept {
             return (lhs |= rhs);
         }
-        template<class LHS, class RHS>
+        template <class LHS, class RHS>
         requires (state::compatible_v<LHS> && state::compatible_v<RHS>)
         inline LHS operator&(LHS lhs, RHS rhs) noexcept {
             return (lhs &= rhs);

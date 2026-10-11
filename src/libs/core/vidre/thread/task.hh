@@ -51,12 +51,47 @@ namespace vidre {
      * */
     class VIDRE_CORE_VISIBILITY task {
     public:
-        ///@todo need to pull in "std::thread_self::*"
-        using id = std::thread::id;
+        using id = std::thread::id;  ///< The type representing the thread ID.
 
+        /** A helper struct representing the current thread itself. */
         struct VIDRE_CORE_VISIBILITY self {
-            auto id() {
+            /** Get the ID of the current thread.
+             * @returns The ID of the current thread.
+             * */
+            static auto id() {
                 return std::this_thread::get_id();
+            }
+
+            /** Yield the execution of the current thread to allow other threads to run. */
+            static void yield() {
+                std::this_thread::yield();
+            }
+
+            /** Sleep the current thread for the specified duration.
+             * @tparam Rep The type representing the number of ticks.
+             * @tparam Period The type representing the tick period.
+             * @param t The duration for which the thread should sleep.
+             * */
+            template <typename Rep, typename Period>
+            static void sleep_for(const std::chrono::duration<Rep, Period> &t) {
+                std::this_thread::sleep_for(t);
+            }
+
+            /** Sleep the current thread for the specified number of microseconds.
+             * @param us The number of microseconds for which the thread should sleep.
+             * */
+            static void sleep_us(unsigned us) {
+                std::this_thread::sleep_for(std::chrono::microseconds(us));
+            }
+
+            /** Sleep the current thread until the specified time point.
+             * @tparam Clock The clock type used for the time point.
+             * @tparam Duration The duration type used for the time point.
+             * @param t The time point until which the thread should sleep.
+             * */
+            template <typename Clock, typename Duration>
+            static void sleep_until(const std::chrono::time_point<Clock, Duration> &t) {
+                std::this_thread::sleep_until(t);
             }
         };
 
@@ -91,8 +126,8 @@ namespace vidre {
          * @param args The arguments to be passed to the member function.
          * @returns A shared pointer to the created task instance.
          * @note The first argument of the member function must be a `task::shared` pointer to the task instance itself which is
-         * automatically passed by the `make()` method. This allows the member function to manage its own lifetime and access the
-         * task's state.
+         * automatically passed by the `make()` method. This allows the member function to manage its own lifetime and access
+         * the task's state.
          * */
         template <typename Class, typename F, typename... Args>
         requires std::is_invocable_v<F, Class *, shared<task>, Args...>

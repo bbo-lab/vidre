@@ -97,11 +97,14 @@ namespace vidre {
          * used for dispatching to the appropriate handler. The actual content
          * of the packet is determined by the major and minor types, and may be
          * further specified by the stream ID (e.g., for multiplexed streams).
-         * 
+         *
          * Example:
          * @snippet examples/core/packetio.cc simple-packet
          * */
         class VIDRE_CORE_VISIBILITY packet {
+        public:
+            static shared<packet> nil;  ///< The "nil" packet.
+
         public:
             /** Major type of a packet.
              * */
@@ -167,6 +170,17 @@ namespace vidre {
 
                 constexpr bool operator==(const id &other) const noexcept {
                     return major == other.major && minor == other.minor;
+                }
+
+                /** Compare the packet ID with a major packet code.
+                 * @tparam T The major packet code to compare with.
+                 * @param lhs The packet ID.
+                 * @param rhs The major packet code.
+                 * @return True if the major packet code of the ID matches the given code, false otherwise.
+                 * */
+                template <packet_code T>
+                friend constexpr bool operator==(const id &lhs, T rhs) noexcept {
+                    return lhs.major == static_cast<uint16_t>(rhs);
                 }
             };
 
@@ -248,6 +262,20 @@ namespace vidre {
                 return hdr;
             }
 
+            /** Get packet ID.
+             * @return The ID of the packet.
+             * */
+            constexpr id getid() const noexcept {
+                return hdr.type;
+            }
+
+            /** Get packet major.
+             * @return The major code of the packet.
+             * */
+            constexpr major getmajor() const noexcept {
+                return static_cast<major>(hdr.type.major);
+            }
+
             /** Finalize packet for delivery.
              *
              * This method is intended to be overridden by derived packet types
@@ -292,7 +320,7 @@ namespace vidre {
 
             /** Convert to JSON (if applicable).
              * This method has to be overridden by value-type packets (i.e., packet::value,
-             * packet::sequence, and packet::object) and packets, that are used in the 
+             * packet::sequence, and packet::object) and packets, that are used in the
              * `io::manifest` to provide a JSON representation.
              * */
             virtual settings::json to_json() const {

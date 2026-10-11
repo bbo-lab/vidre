@@ -88,19 +88,19 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.io",
+            "name": "example.core.cacheio",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.io",
+            "program": "${workspaceFolder}/build/bin/example.core.cacheio",
             "args": [  ],
             "environment": [],
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.iograph",
+            "name": "example.core.packetio",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.iograph",
+            "program": "${workspaceFolder}/build/bin/example.core.packetio",
             "args": [  ],
             "environment": [],
             "cwd": "${workspaceFolder}"

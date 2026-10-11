@@ -154,7 +154,7 @@ TEST_CASE("packet.hh", "[vidre/io]") {
         seq.add(io::packet::make<io::packet::value>(42));
         seq.add(io::packet::make<io::packet::value>(std::string("hello world")));
         seq.add(io::packet::make<io::packet::value>(uuid::make()));
-        seq.add(io::packet::make<io::packet::value>(chrono::utcstamp::now()));
+        seq.add(io::packet::make<io::packet::value>(chrono::utctime::now()));
         seq.add(io::packet::make<io::packet::value>(chrono::isodate::now()));
         seq.add(io::packet::make<io::packet::object>("key","value"));
         seq.emit(sink);

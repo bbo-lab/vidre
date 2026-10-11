@@ -83,7 +83,7 @@ namespace vidre {
                                             uuid,               // uuid
                                             chrono::isodate,    // isodate
                                             chrono::timestamp,  // timestamp
-                                            chrono::utcstamp    // utctime
+                                            chrono::utctime     // utctime
                                             >;
 
             ///@todo JSON and Lua have a "nil" - this needs to be represented in the framework
@@ -131,10 +131,10 @@ namespace vidre {
             value(const chrono::timestamp &v, uint16_t stream = 0)
                 : packet{packet::major::value, minor::timestamp, stream, sizeof(chrono::timestamp)}, value_{v} {}
 
-            value(const chrono::utcstamp &v, uint16_t stream = 0)
-                : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utcstamp)}, value_{v} {}
+            value(const chrono::utctime &v, uint16_t stream = 0)
+                : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utctime)}, value_{v} {}
             value(const chrono::clock::time_point &v, uint16_t stream = 0)
-                : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utcstamp)}, value_{chrono::utcstamp(v)} {}
+                : packet{packet::major::value, minor::utctime, stream, sizeof(chrono::utctime)}, value_{chrono::utctime(v)} {}
 
         protected:
             value_type value_;

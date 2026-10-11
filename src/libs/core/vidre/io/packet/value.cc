@@ -70,7 +70,7 @@ void io::packet::value::finalize() noexcept {
             hdr.length = sizeof(chrono::timestamp);
             break;
         case minor::utctime:
-            hdr.length = sizeof(chrono::utcstamp);
+            hdr.length = sizeof(chrono::utctime);
             break;
     }
 }
@@ -127,7 +127,7 @@ io::result io::packet::value::emit(io::sink &f) {
             break;
         }
         case minor::utctime: {
-            auto v = std::get<chrono::utcstamp>(value_);
+            auto v = std::get<chrono::utctime>(value_);
             retval += f.put(static_cast<memory::view>(v));
             break;
         }
@@ -205,7 +205,7 @@ void io::packet::value::absorb(memory::view view, std::endian endian) {
         }
         case minor::utctime: {
             memory::view utctime_view = view + sizeof(header);
-            chrono::utcstamp v;
+            chrono::utctime v;
             memory::copy(utctime_view, v);
             if (endian != std::endian::native) {
                 v.sec = endian::byteswap(v.sec, endian);
@@ -250,7 +250,7 @@ settings::json io::packet::value::to_json() const {
         }
         case minor::utctime: {
             settings::json node;
-            auto value = std::get<chrono::utcstamp>(value_);
+            auto value = std::get<chrono::utctime>(value_);
             node["sec"] = uint64_t(value.sec);
             node["nsec"] = uint64_t(value.nsec);
             return node;

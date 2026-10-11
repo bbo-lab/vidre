@@ -65,11 +65,14 @@
  * - implement queue_depth handling (and rename method to "retention()")
  * - endpoint::stats needs some affection
  * - check isready() implementations: are all handling dir::any correctly?
- * - need to make sure, that get()/pull() always transmit valid packets
- *   (esp. queued packets must not just "disappear" into nirvana; may have a default "error" packet?)
- * - implement an io::catalogue, which could also handle stream IDs
+ * - need to make sure, that get()/pull() always transmits valid packets
+ *   (esp. queued packets must not just "disappear" into nirvana; maybe have a default "error" packet?) -> see packet::nil
+ * - implement an io::catalog, which could also handle stream IDs
  * - there was also the idea of "switchboard" for routing packets between endpoints.
- * - each packet::absorb() method checks size constraints and throws an exception if the provided memory view is too small, can this be checked before calling absorb()?
+ * - each packet::absorb() method checks size constraints and throws an exception if the provided 
+ *   memory view is too small, can this be checked before calling absorb ()?
+ * - add setup for endpoint::connect (let one select pull/push)
+ * - switchboard etal: have packet major 0 be a control packet (e.g. for start stop etc.)
  * */
 
  /**@addtogroup api-core-io-details

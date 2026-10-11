@@ -29,7 +29,10 @@
  * @details
  * @fileinfo
  *
- * @todo should be cpp/chrono.hh? or even <vidre/chrono.hh>?
+ * Vidre, in general, uses UTC as the standard time reference, accompanied by a monotonic
+ * clock for timestamping data. Here we provide utilities, based on the standard C++ chrono
+ * library, to work with both UTC and monotonic time points.
+ *
  * */
 
 #include <vidre/core/config.hh>
@@ -57,15 +60,22 @@ namespace vidre {
 
         /** Convert UTC to local clock time.
          * */
-        inline auto local_clock(const clock::time_point &t) noexcept {
+        inline auto local(const clock::time_point &t) noexcept {
             return std::chrono::zoned_time{std::chrono::current_zone(), clock::to_sys(t)};
         }
 
         /** Monotonic clock.
+         *
+         * The "monotonic" clock is used for measuring intervals and durations accurately,
+         * independent of changes to the system clock.
+         *
+         * @see chrono::timestamp
+         * @see chrono::reference
          * */
         using monotonic = std::chrono::steady_clock;
 
         /** Representation of a "timestamp".
+         *
          * Timestamps are represented as a combination of seconds and nanoseconds,
          * allowing for high-resolution time measurements. The `now()` function
          * provides a convenient way to obtain the current time as a timestamp,
@@ -75,6 +85,8 @@ namespace vidre {
          * @note Timestamps do NOT necessarily represent wall-clock time, but
          *       rather a monotonic time point that is useful for measuring intervals
          *       and durations.
+         *
+         * @see chrono::reference
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY timestamp {
             uint64_t sec{};   ///< Seconds.
@@ -82,6 +94,12 @@ namespace vidre {
 
             operator memory::view() const noexcept {
                 return {sizeof(timestamp), reinterpret_cast<const uint8_t *>(&sec)};
+            }
+
+            /** Get system representation as a monotonic time-point.
+             * */
+            operator monotonic::time_point() const noexcept {
+                return monotonic::time_point{std::chrono::seconds{sec} + std::chrono::nanoseconds{nsec}};
             }
 
             /** Get current time as a timestamp.
@@ -97,31 +115,37 @@ namespace vidre {
                         static_cast<uint64_t>(nsec.count())};
             }
 
-            /** Convert to UTC.
+            /** Get the corresponding UTC time related to the given reference.
              * @see chrono::reference
              * */
             clock::time_point to_utc(const reference &) const noexcept;
 
-            bool operator<=>(const timestamp &) const noexcept = default;
+            /** Compare two timestamps.
+             * @returns A comparison result indicating the ordering of the timestamps.
+             * */
+            auto operator<=>(const timestamp &) const noexcept = default;
         };
 
-        /** UTC timestamp.
+        /** UTC time.
          *
-         * The `utcstamp` struct represents a point in time in Coordinated Universal Time (UTC),
-         * with both seconds and nanoseconds precision.
+         * This struct represents UTC time as seconds and nanoseconds, using a binary 
+         * representation analogous to POSIX timespec, suitable for serialization.
+         *
+         * @note The official UTC epoch is 1 January 1972. The underlying [`std::chrono::utc_clock`](https://en.cppreference.com/cpp/chrono/utc_clock) 
+         *       uses 1 January 1970 instead to be consistent with the POSIX time.
          *
          * */
-        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY utcstamp {
-            int64_t sec{};    ///< Seconds.
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY utctime {
+            int64_t sec{};    ///< Seconds (since epoch, UTC).
             uint64_t nsec{};  ///< Nanoseconds past the current second.
 
-            utcstamp() = default;
-            utcstamp(const utcstamp &) = default;
-            utcstamp &operator=(const utcstamp &) = default;
-            utcstamp(utcstamp &&) = default;
-            utcstamp &operator=(utcstamp &&) = default;
+            utctime() = default;
+            utctime(const utctime &) = default;
+            utctime &operator=(const utctime &) = default;
+            utctime(utctime &&) = default;
+            utctime &operator=(utctime &&) = default;
 
-            utcstamp(const clock::time_point &tp) noexcept {
+            utctime(const clock::time_point &tp) noexcept {
                 auto sec_ = std::chrono::time_point_cast<std::chrono::seconds>(tp);
                 auto nsec_ = std::chrono::duration_cast<std::chrono::nanoseconds>(tp - sec_);
 
@@ -130,31 +154,34 @@ namespace vidre {
             }
 
             operator memory::view() const noexcept {
-                return {sizeof(utcstamp), reinterpret_cast<const uint8_t *>(&sec)};
+                return {sizeof(utctime), reinterpret_cast<const uint8_t *>(&sec)};
             }
 
             /** Get the current UTC timestamp.
              */
-            static utcstamp now() noexcept {
+            static utctime now() noexcept {
                 return clock::now();
             }
 
-            /** Implicit conversion to timepoint.
+            /** Get system representation as a time point.
              * */
             operator clock::time_point() const noexcept {
                 return clock::time_point(std::chrono::seconds(sec) + std::chrono::nanoseconds(nsec));
             }
 
-            bool operator<=>(const utcstamp &) const noexcept = default;
+            bool operator<=>(const utctime &) const noexcept = default;
         };
 
-        /** Representation of an ISO 8601 date.
+        /** Representation of an ISO 8601 date (UTC).
+         *
+         * @note The textual representation follows the fixed ISO 8601 format "YYYYMMDDTHHMMSS.SSSSSSZ".
+         *
          * */
         struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY isodate {
             char iso[32]{};  ///< ISO 8601 date string ("YYYYMMDDTHHMMSS.SSSSSSZ", padded).
 
             operator std::string_view() const noexcept {
-                return std::string_view(iso, sizeof("YYYYMMDDTHHMMSS.SSSSSSZ")-1);
+                return std::string_view(iso, sizeof("YYYYMMDDTHHMMSS.SSSSSSZ") - 1);
             }
 
             operator memory::view() const noexcept {
@@ -165,7 +192,6 @@ namespace vidre {
              * @returns An ISO 8601 date string representing the current time in UTC.
              * */
             static isodate make(clock::time_point tp) noexcept;
-
 
             /** Now.
              * @returns The current time as an ISO 8601 date string.
@@ -181,42 +207,68 @@ namespace vidre {
             /** Get the time point represented by this ISO 8601 date string.
              * @returns A time point corresponding to the ISO 8601 date string.
              * */
-            clock::time_point time() const noexcept {
+            operator clock::time_point() const noexcept {
                 return parse(iso);
             }
 
-            // bool operator<=>(const isodate &other) const noexcept {
-            //     return time() <=> other.time();
-            // }
-
-            bool operator==(const isodate &other) const noexcept {
-                return time() == other.time();
+            /** Comparison.
+             * @param other The other ISO 8601 date to compare with.
+             * @returns The result of the three-way comparison between this and the other ISO 8601 date.
+             * */
+            auto operator<=>(const isodate &other) const noexcept {
+                return static_cast<clock::time_point>(*this) <=> static_cast<clock::time_point>(other);
             }
         };
 
         /** Clock reference.
          *
-         * The `reference` class provides a reference point for converting between
-         * different time representations, such as timestamps and UTC wall time.
+         * This class, storing both, wall UTC time and monotonic time, establishes
+         * a relationship between these two time domains on the _local_ machine. 
+         *
+         * It should be noted that this reference also allows aligning time measurments
+         * from different machines, assuming their clocks are reasonably synchronized,
+         * though for precise alignment, additional synchronization mechanisms may be 
+         * required.
          *
          * */
         class VIDRE_CORE_VISIBILITY reference {
         public:
             reference() = default;
-            reference(const reference &) = delete;
-            reference &operator=(const reference &) = delete;
+
+            reference(const reference &) = default;
+            reference &operator=(const reference &) = default;
             reference(reference &&) = default;
             reference &operator=(reference &&) = default;
 
-            reference(isodate date, timestamp ts) noexcept : clock_(date.parse(date.iso)), monotonic_(clock_ - ts.to_utc(*this)) {}
+            reference(clock::time_point clock, monotonic::time_point monotonic) noexcept : clock_(clock), monotonic_(monotonic) {}
+            reference(utctime utc, timestamp ts) noexcept : clock_(utc), monotonic_(ts) {}
+            reference(isodate iso, timestamp ts) noexcept : clock_(iso), monotonic_(ts) {}
 
             ~reference() = default;
 
         protected:
-            clock::time_point clock_ = clock::now();              ///< Reference point for UTC time.
-            monotonic::time_point monotonic_ = monotonic::now();  ///< Reference point for monotonic time.
+            clock::time_point clock_{};          ///< Reference point for UTC time.
+            monotonic::time_point monotonic_{};  ///< Reference point for monotonic time.
 
         public:
+            /** "Set" the reference clock.
+             *
+             * This sets the reference clock to the current time.
+             *
+             * */
+            void set() noexcept {
+                clock_ = clock::now();
+                monotonic_ = monotonic::now();
+            }
+
+            operator clock::time_point() const noexcept {
+                return clock_;
+            }
+
+            operator monotonic::time_point() const noexcept {
+                return monotonic_;
+            }
+
             /** Get the reference clock.
              * @tparam T The clock type to return (either `chrono::clock` or `chrono::monotonic`).
              * @returns The reference clock of the specified type.
