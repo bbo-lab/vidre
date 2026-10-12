@@ -293,17 +293,14 @@ void log::trace::emit(bool last) noexcept {
     if (last && (message_.end()[-1] != '\n'))
         message_ += '\n';
 
-#if defined(DEBUG)
     // emit the log message using the standard output function
     vidre_log_emit_standard(static_cast<log::level>(level::trace), message_, follow_ - 1);
-#endif
 
     // emit packet
     write(message_);
     log::output->put(std::move(msg_));
     if (not last)
         msg_ = packet::make(level::trace, 0);
-#endif
 }
 
 void log::trace::emit(const std::string_view &txt) noexcept {
@@ -324,6 +321,7 @@ void log::trace::emit(const std::string_view &txt) noexcept {
 
     message_ = txt.substr(eol + 1);
 }
+#endif
 
 void log::setup(const std::string &def) {
     if (def == "help") {

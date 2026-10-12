@@ -114,8 +114,8 @@ namespace vidre {
             return {};
         }
 
-        template <fixed_string>
-        constexpr std::string tag(const void *) {
+        template <class T>
+        constexpr std::string tag(const T *) {
             return {};
         }
 
