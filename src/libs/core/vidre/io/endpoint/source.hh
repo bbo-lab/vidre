@@ -151,15 +151,15 @@ namespace vidre {
                 return source_event_.wait(timeout);
             }
 
+        protected:
             /** Cancel the source event.
              * This method cancels any ongoing wait operations on the source event.
+             *
+             * @param timeout   A grace period in milliseconds to wait for the cancellation to complete (default: 100 ms).
+             * @return `status::ok` if the cancellation was successful, `status::bad` otherwise.
              * */
-            void cancel() noexcept {
-                // FIXME currently public, consider making it protected
-                source_event_.cancel();
-            }
+            status cancel(unsigned timeout = 100) noexcept;
 
-        protected:
             /** Notify the sink, that a packet is available for pulling.
              * @param count The number of packets available for pulling.
              * */
@@ -205,6 +205,9 @@ namespace vidre {
         protected:
             status attach(shared<endpoint::sink> snk, cap::flag_type cap) override;
             status detach(const endpoint::sink *ptr) override;
+
+        private:
+            friend class io::sink;
         };
 
         ///@}

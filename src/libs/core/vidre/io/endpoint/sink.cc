@@ -28,6 +28,13 @@ using namespace vidre::io;
 
 sink::~sink() {
     unlink();
+
+    if (sink_task_) {
+        if (sink_task_->isrunning())
+            sink_task_->terminate();
+
+        sink_task_->join();
+    }
 }
 
 status io::sink::unlink() {

@@ -75,7 +75,6 @@ namespace vidre {
          * @note This struct, under Linux, abstracts the eventfd mechanism. On
          *       other platforms, the behavior is simulated.
          *
-         * @todo cancel() may block forever if the notifier is allowed to send signals...
          * */
         struct VIDRE_CORE_VISIBILITY event {
             using value_type = uint64_t;             ///< Type of the notification count.
@@ -167,29 +166,32 @@ namespace vidre {
 
             /** Cancel the event.
              *
-             * This function waits until the event queue is empty before cancelling.
-             * Any current waiter is woken and current or future calls to wait()
-             * return `std::errc::operation_canceled`.
+             * This method attempts to cancel the event. If the event queue is not empty, it returns
+             * `status::bad`. Otherwise, it sets the cancelled flag and notifies the waiter.
              *
-             * @note Cancellation is persistent.
-             */
-            void cancel() noexcept {
+             * Cancellation is permanent until the event is reset.
+             *
+             * @returns status::ok if the event was successfully cancelled, status::bad if the event queue was not empty.
+             * */
+            status cancel() noexcept {
                 // wait for queue to be empty (if necessary) before cancelling
-                while (!empty())
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                if (!empty())
+                    return status::bad;
 
                 // set cancelled flag and notify any waiters
                 if (cancelled_.exchange(true, std::memory_order_acq_rel))
-                    return;
+                    return status::ok;
 
                 notify();
+                // FIXME return value is ignored, should we at least log it?
+                return status::ok;
             }
 
             /** Reset event to its initial state.
              * */
             void reset() noexcept {
                 if (!empty())
-                    ::read(handle, nullptr, 0);
+                    read();
 
                 cancelled_.store(false, std::memory_order_release);
             }
@@ -305,20 +307,21 @@ namespace vidre {
                 return count;
             }
 
-            void cancel() noexcept {
+            status cancel() noexcept {
                 std::unique_lock lock(mutex_);
 
-                condition_.wait(lock, [&] {
-                    return count_ == 0;
-                });
+                if (count_ != 0)
+                    return status::bad;
 
                 if (cancelled_)
-                    return;
+                    return status::ok;
 
                 cancelled_ = true;
 
                 lock.unlock();
                 condition_.notify_all();
+
+                return status::ok;
             }
 #endif
         };
@@ -379,14 +382,15 @@ namespace vidre {
 
         /** Cancel the event.
          *
-         * This function waits until the event queue is empty before cancelling.
-         * Any current waiter is woken and current or future calls to wait()
-         * return `std::errc::operation_canceled`.
+         * This method attempts to cancel the event. If the event queue is not empty, it returns
+         * `status::bad`. Otherwise, it sets the cancelled flag and notifies the waiter.
          *
-         * @note Cancellation is persistent.
-         */
-        void cancel() noexcept {
-            impl_.cancel();
+         * Cancellation is permanent until the event is reset.
+         *
+         * @returns status::ok if the event was successfully cancelled, status::bad if the event queue was not empty.
+         * */
+        [[nodiscard]] status cancel() noexcept {
+            return impl_.cancel();
         }
 
         /** Reset event to its initial state.

@@ -287,7 +287,9 @@ namespace vidre {
          * shared<event> event_;
          * shared<task> t;
          * t->on_terminate([ev = event_]() {
-         *     ev->cancel();
+         *     if (ev->cancel() == status::bad) {
+         *         // handle cancellation failure here...
+         *     }
          * });
          * @endcode
          *

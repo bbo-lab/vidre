@@ -148,8 +148,8 @@ namespace examples {
 
         // install "cancellation" handler
         log::debug() << "pacemaker: preparing...\n";
-        self->on_terminate([ev = &source_event_]() {
-            ev->cancel();
+        self->on_terminate([this]() {
+            this->cancel();
         });
 
         // event loop for generating heartbeat packets

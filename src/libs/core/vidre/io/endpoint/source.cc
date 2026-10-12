@@ -28,6 +28,13 @@ using namespace vidre::io;
 
 source::~source() {
     unlink();
+
+    if (source_task_) {
+        if (source_task_->isrunning())
+            source_task_->terminate();
+
+        source_task_->join();
+    }
 }
 
 status io::source::unlink() {
@@ -97,6 +104,25 @@ status source::detach(const endpoint::sink *ptr) {
     return status::ok;
 }
 
+status source::cancel(unsigned timeout) noexcept {
+    auto retval = source_event_.cancel();
+
+    // grace-period if the event couldn't be cancelled immediately
+    while ((retval == status::bad) && (timeout > 0)) {
+        task::self::sleep_us(1000);
+        timeout--;
+        retval = source_event_.cancel();
+    }
+
+    if (retval == status::bad) {
+        source_event_.reset();
+        return source_event_.cancel();
+    }
+
+    // event was successfully cancelled
+    return status::ok;
+}
+
 void source::source_handler(shared<task> self, std::chrono::milliseconds pause) {
     task::scope scope(self);
     log::debug() << "source_handler: started...\n";
@@ -111,8 +137,8 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
 
     // prepare
     log::debug() << "source_handler: preparing...\n";
-    self->on_terminate([ev = &source_event_]() {
-        ev->cancel();
+    self->on_terminate([this]() {
+        this->cancel();
     });
 
     // event loop
