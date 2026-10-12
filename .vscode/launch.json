@@ -106,15 +106,6 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "example.core.cache",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/example.core.cache",
-            "args": [  ],
-            "environment": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
             "name": "example.core.event",
             "type": "cppdbg",
             "request": "launch",

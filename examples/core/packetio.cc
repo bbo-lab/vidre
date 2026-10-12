@@ -1,5 +1,6 @@
 #include <vidre/io.hh>
 #include <vidre/util/chrono.hh>
+#include <vidre/log.hh>
 
 #include <random>
 
@@ -135,6 +136,7 @@ namespace examples {
 
     void pacemaker::source_handler(shared<task> self, std::chrono::milliseconds pause) {
         task::scope scope(self);
+        log::debug() << "pacemaker: started...\n";
 
         // wait for connection
         while (!source_follower_ or not source_follower_->isready()) {
@@ -145,11 +147,13 @@ namespace examples {
         }
 
         // install "cancellation" handler
+        log::debug() << "pacemaker: preparing...\n";
         self->on_terminate([ev = &source_event_]() {
             ev->cancel();
         });
 
         // event loop for generating heartbeat packets
+        log::debug() << "pacemaker: running...\n";
         auto next = chrono::monotonic::now();
         while (not self->isterminated()) {
             next += 1s;
@@ -162,6 +166,8 @@ namespace examples {
 
             task::self::sleep_until(next);
         }
+        
+        log::debug() << "pacemaker: finished.\n";
     }
     //! [simple-source]
 
