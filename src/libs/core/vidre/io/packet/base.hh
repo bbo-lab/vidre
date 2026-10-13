@@ -109,27 +109,29 @@ namespace vidre {
             /** Major type of a packet.
              * */
             enum class major : uint16_t {
-                undefined = 0x0000,
-
-                // basic types (usually representable also in JSON format)
-                value = 0x0001,     ///< Plain data (see `io::packet::value`).
-                sequence = 0x0002,  ///< Sequence of values (see `io::packet::sequence`).
-                object = 0x0003,    ///< Structured data (see `io::packet::object`).
-
+                control = 0x0000,   ///< Control packets (see FIXME).
+                                    //
+                                    // === basic types
+                system = 0x0001,    ///< System packets (see FIXME).
+                value = 0x0002,     ///< Plain data (see `io::packet::value`).
+                sequence = 0x0003,  ///< Sequence of values (see `io::packet::sequence`).
+                object = 0x0004,    ///< Structured data (see `io::packet::object`).
+                                    //
                 manifest = 0x000F,  ///< Manifest data (see `io::manifest`).
-
-                // standard types
-                video = 0x0010,   ///< Video data (see @ref FIXME).
-                audio = 0x0020,   ///< Audio data (see @ref FIXME).
-                sensor = 0x0030,  ///< Sensor data, e.g. temperature (see @ref FIXME).
-
-                log = 0x8080,  ///< Log message (see `log::packet`).
-
-                // user types
-                user = 0xF000,  ///< User-defined packet types (see @ref FIXME).
+                                    //
+                                    // === standard types
+                video = 0x0010,     ///< Video data (see @ref FIXME).
+                audio = 0x0020,     ///< Audio data (see @ref FIXME).
+                sensor = 0x0030,    ///< Sensor data, e.g. temperature (see @ref FIXME).
+                                    //
+                log = 0x8080,       ///< Log message (see `log::packet`).
+                                    //
+                                    // === user types
+                user = 0xF000,      ///< User-defined packet types (see @ref FIXME).
             };
 
             /** Minor type of a packet.
+             * FIXME
              * @note For every major type, the minor type '0x0000' is reserved for
              *       the group (one prominent exception is the log packet, which does
              *       not follow this scheme—[«Ausnahmen bestätigen die
