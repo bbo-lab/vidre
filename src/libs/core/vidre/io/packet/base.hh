@@ -76,19 +76,116 @@ namespace vidre {
          * */
         ///@{
 
+        /** VidRe's magic number.
+         * The magic number is expected to be written as byte sequence, therefore,
+         * also giving information about the endianness of a transmission.
+         *
+         * @see `io::proto`
+         * */
+        static constexpr uint64_t magic = 0x4F424265'52646956;  ///< File magic ("VidReBBO").
+
         /** Default byte alignment.
          * */
         inline constexpr size_t alignment = 8;
 
+        /** Version layout.
+         * */
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY version_info {
+            uint32_t major{};
+            uint32_t minor{};
+
+            auto operator<=>(const version_info &) const = default;
+        };
+
+        /** Current version.
+         * */
+        static constexpr version_info version = {1, 0};
+
+        /** Protocol identification header.
+         *
+         * This header is used to identify the protocol version and endianness
+         * of a file or a transmission. It serves as initial bootstrap mechanism
+         * for subsequent parsing and interpretation of the file or transmission.
+         *
+         * In that, it provides the package magic for file storage, and, as well,
+         * protocol identification when sent via network or pipes.
+         *
+         * */
+        struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY proto {
+            uint64_t magic = vidre::io::magic;          ///< File or transmission magic number.
+            version_info version = vidre::io::version;  ///< File or transmission version.
+
+            /** Create proto object from a memory view.
+             * */
+            static proto make(memory::view view) {
+                proto p;
+                if (view.size() < sizeof(proto))
+                    throw exception::runtime() << "view too small for proto header";
+                memory::copy(view, p);
+
+                if (!p.valid())
+                    throw exception::runtime() << "invalid proto header";
+
+                if (!p.compatible())
+                    throw exception::runtime() << "incompatible proto version";
+
+                if (p.endian() != std::endian::native) {
+                    p.version.major = std::byteswap(p.version.major);
+                    p.version.minor = std::byteswap(p.version.minor);
+                }
+
+                return p;
+            }
+
+            /** Check if valid.
+             * */
+            bool valid() const noexcept {
+                return (magic == vidre::io::magic) || (magic == std::byteswap(vidre::io::magic));
+            }
+
+            /** Check if version is compatible.
+             * */
+            bool compatible() const noexcept {
+                return (version.major == vidre::io::version.major) && (version.minor <= vidre::io::version.minor);
+            }
+
+            /** Detect the endianness from the magic number.
+             * */
+            std::endian endian() const noexcept {
+                if (magic == vidre::io::magic)
+                    return std::endian::native;
+                else
+                    return (std::endian::native == std::endian::little)  //
+                               ? std::endian::big
+                               : std::endian::little;
+            }
+        };
+
         /** Major/minor packet code concept.
-         * @todo this should accept any const integral value that fits
+         * The concept ensures that a type can be used as a major or minor packet code.
+         * @see code_cast<T>
          * */
         template <typename T>
-        concept packet_code =
-            (std::unsigned_integral<std::remove_cvref_t<T>> && !std::same_as<std::remove_cvref_t<T>, bool> &&
-             sizeof(std::remove_cvref_t<T>) <= sizeof(uint16_t)) ||
-            (std::is_enum_v<std::remove_cvref_t<T>> && std::unsigned_integral<std::underlying_type_t<std::remove_cvref_t<T>>> &&
-             sizeof(std::underlying_type_t<std::remove_cvref_t<T>>) <= sizeof(uint16_t));
+        concept packet_code = std::integral<std::remove_cvref_t<T>> ||              //
+                              (std::is_enum_v<std::remove_cvref_t<T>> &&            //
+                               std::same_as<                                        //
+                                   std::underlying_type_t<std::remove_cvref_t<T>>,  //
+                                   uint8_t>);
+
+        /** Cast a packet code to its underlying uint8_t representation.
+         * @tparam T The type of the packet code.
+         * @param value The packet code value to cast.
+         * @return The underlying uint8_t representation of the packet code.
+         * */
+        template <packet_code T>
+        constexpr uint8_t code_cast(T value) {
+            if constexpr (not std::is_enum_v<std::remove_cvref_t<T>>) {
+                if (!std::in_range<uint8_t>(value))
+                    throw exception::logic() << "packet code exceeds uint8_t range";
+            }
+
+            return static_cast<uint8_t>(value);
+        }
 
         /** Stream packets.
          *
@@ -103,31 +200,33 @@ namespace vidre {
          * */
         class VIDRE_CORE_VISIBILITY packet {
         public:
-            static shared<packet> nil;  ///< The "nil" packet.
+            /** The "nil" packet.
+             * This nil packet represents an empty or uninitialized packet, but is
+             * also used instead of nullptr during shared<packet> operations.
+             * */
+            static shared<packet> nil;
 
         public:
             /** Major type of a packet.
              * */
-            enum class major : uint16_t {
-                control = 0x0000,   ///< Control packets (see FIXME).
-                                    //
-                                    // === basic types
-                system = 0x0001,    ///< System packets (see FIXME).
-                value = 0x0002,     ///< Plain data (see `io::packet::value`).
-                sequence = 0x0003,  ///< Sequence of values (see `io::packet::sequence`).
-                object = 0x0004,    ///< Structured data (see `io::packet::object`).
-                                    //
-                manifest = 0x000F,  ///< Manifest data (see `io::manifest`).
-                                    //
-                                    // === standard types
-                video = 0x0010,     ///< Video data (see @ref FIXME).
-                audio = 0x0020,     ///< Audio data (see @ref FIXME).
-                sensor = 0x0030,    ///< Sensor data, e.g. temperature (see @ref FIXME).
-                                    //
-                log = 0x8080,       ///< Log message (see `log::packet`).
-                                    //
-                                    // === user types
-                user = 0xF000,      ///< User-defined packet types (see @ref FIXME).
+            enum class major : uint8_t {
+                control = 0x00,   ///< Control packets, not intended for storage (see FIXME).
+                log = 0x01,       ///< Log message (see `log::packet`).
+                generic = 0x02,   ///< Generic packets (see FIXME).
+                                  //
+                                  // Configuration data (JSON-like):
+                value = 0x08,     ///< Plain data (see `io::packet::value`).
+                sequence = 0x09,  ///< Sequence of values (see `io::packet::sequence`).
+                object = 0x0A,    ///< Structured data (see `io::packet::object`).
+                manifest = 0x0F,  ///< Manifest data (see `io::manifest`).
+                                  //
+                                  // Device data:
+                video = 0x10,     ///< Video data (see @ref FIXME).
+                audio = 0x20,     ///< Audio data (see @ref FIXME).
+                sensor = 0x30,    ///< Sensor data, e.g. IMU, temperature (see @ref FIXME).
+                                  //
+                                  // === user types
+                user = 0xA0,      ///< User-defined packet types (range 0xA0-0xFF, see @ref FIXME).
             };
 
             /** Minor type of a packet.
@@ -137,20 +236,19 @@ namespace vidre {
              *       not follow this scheme—[«Ausnahmen bestätigen die
              * Regel»](https://en.wikipedia.org/wiki/Exception_that_proves_the_rule)).
              * */
-            enum class minor : uint16_t {
-                group = 0x0000,  ///< Grouped packet.
+            enum class minor : uint8_t {
+                nil = 0x00,  ///< The "nil".
             };
 
             /** Packet ID.
              * */
             struct __vidre_packed__(4) VIDRE_CORE_VISIBILITY id {
-                uint16_t major{};  ///< Major packet type.
-                uint16_t minor{};  ///< Sub-type.
+                uint8_t major{};  ///< Major packet type.
+                uint8_t minor{};  ///< Sub-type.
 
                 constexpr id() = default;
                 template <packet_code Major, packet_code Minor>
-                constexpr id(Major major_, Minor minor_)
-                    : major(static_cast<uint16_t>(major_)), minor(static_cast<uint16_t>(minor_)) {}
+                constexpr id(Major major_, Minor minor_) : major(code_cast(major_)), minor(code_cast(minor_)) {}
 
                 /** Hash function (FNV).
                  * @note: The stream ID is ignored in the hash calculation,

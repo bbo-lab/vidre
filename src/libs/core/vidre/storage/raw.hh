@@ -110,6 +110,9 @@ namespace vidre {
              * */
             static constexpr std::size_t alignment = 8U;
 
+
+            // FIXME the following are in io/packet/base.hh (part of the protocol! now)
+
             /** File magic number.
              * The magic number is expected to be written as byte sequence, therefore,
              * also giving information about the endianness of the file.
