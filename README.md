@@ -4,7 +4,6 @@
 
 Video recording software for scientific purposes.
 
-**Status**: planning
 
 
 
