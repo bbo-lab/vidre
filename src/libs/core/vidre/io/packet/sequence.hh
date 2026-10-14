@@ -49,7 +49,7 @@ namespace vidre {
 
             virtual ~sequence() = default;
 
-            sequence(uint16_t stream = 0) noexcept : io::packet{packet::major::sequence, packet::minor::group, stream, 0} {}
+            sequence(uint16_t stream = 0) noexcept : io::packet{packet::major::sequence, 0, stream, 0} {}
 
         protected:
             list_type packets_{};  ///< Sequence of packets contained within this sequence.

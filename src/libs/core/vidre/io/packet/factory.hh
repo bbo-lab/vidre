@@ -35,10 +35,21 @@
 #include <vidre/io/packet/base.hh>
 
 #include <ankerl/unordered_dense.h>
+#include <array>
 
 namespace vidre {
 
     namespace io {
+
+        namespace details {
+
+            /**@addtogroup api-core-io-details
+             * */
+            ///@{
+
+            ///@}
+
+        }  // namespace details
 
         /**@addtogroup api-core-io-details
          * */
@@ -47,76 +58,76 @@ namespace vidre {
         /** Factory class for creating packet instances.
          * FIXME
          * */
-        struct VIDRE_CORE_VISIBILITY packet::factory {
-            /** Function type for creating packet instances.
-             * @param header The header of the packet to create.
-             * @return A shared pointer to the created packet instance.
-             * */
-            using make_type = shared<io::packet> (*)(packet::header);
+        // struct VIDRE_CORE_VISIBILITY packet::factory {
+        //     /** Function type for creating packet instances.
+        //      * @param header The header of the packet to create.
+        //      * @return A shared pointer to the created packet instance.
+        //      * */
+        //     using make_type = shared<io::packet> (*)(packet::header);
 
-            /** Type alias for the map storing packet creation functions.
-             **/
-            using map_type = ankerl::unordered_dense::map<io::packet::id, make_type, std::hash<io::packet::id>>;
+        //     /** Type alias for the map storing packet creation functions.
+        //      **/
+        //     using map_type = ankerl::unordered_dense::map<io::packet::id, make_type, std::hash<io::packet::id>>;
 
-            /** Get internal registry.
-             * @return A reference to the internal map storing packet creation functions.
-             * */
-            static auto &registry() {
-                static map_type map;
-                return map;
-            }
+        //     /** Get internal registry.
+        //      * @return A reference to the internal map storing packet creation functions.
+        //      * */
+        //     static auto &registry() {
+        //         static map_type map;
+        //         return map;
+        //     }
 
-            /** Add a packet type to the factory.
-             * @tparam T The packet type to add.
-             * @param id The identifier for the packet type.
-             * @throws exception::logic if the packet type is already registered.
-             * */
-            template <typename T>
-            static void add(io::packet::id id) {
-                auto [it, inserted] = registry().emplace(id, [](packet::header hdr) -> shared<io::packet> {
-                    return make_shared<T>(hdr);
-                });
+        //     /** Add a packet type to the factory.
+        //      * @tparam T The packet type to add.
+        //      * @param id The identifier for the packet type.
+        //      * @throws exception::logic if the packet type is already registered.
+        //      * */
+        //     template <typename T>
+        //     static void add(io::packet::id id) {
+        //         auto [it, inserted] = registry().emplace(id, [](packet::header hdr) -> shared<io::packet> {
+        //             return make_shared<T>(hdr);
+        //         });
 
-                if (!inserted)
-                    throw exception::logic() << "packet type already registered";
-            }
+        //         if (!inserted)
+        //             throw exception::logic() << "packet type already registered";
+        //     }
 
-            /** Create a packet instance by its (normalized) header.
-             * @param hdr The header to pass to the packet constructor.
-             * @return A shared pointer to the created packet instance.
-             * @throws exception::logic if the packet type is not registered.
-             * */
-            static shared<io::packet> make(packet::header hdr) {
-                auto it = registry().find(hdr.type);
-                if (it == registry().end())
-                    throw exception::logic() << "packet type not registered";
-                return it->second(hdr);
-            }
+        //     /** Create a packet instance by its (normalized) header.
+        //      * @param hdr The header to pass to the packet constructor.
+        //      * @return A shared pointer to the created packet instance.
+        //      * @throws exception::logic if the packet type is not registered.
+        //      * */
+        //     static shared<io::packet> make(packet::header hdr) {
+        //         auto it = registry().find(hdr.type);
+        //         if (it == registry().end())
+        //             throw exception::logic() << "packet type not registered";
+        //         return it->second(hdr);
+        //     }
 
-            /** Create packet from memory view.
-             * @param view The memory view containing the packet data.
-             * @param from The endian format of the memory view (default: native).
-             * @return A shared pointer to the created packet instance.
-             * @throws exception::logic if the packet type is not registered.
-             * */
-            template <typename Packet = io::packet>
-            requires std::derived_from<Packet, io::packet>
-            static shared<Packet> make(memory::view view, std::endian from = std::endian::native) {
-                packet::header hdr;
-                memory::copy(view, hdr);
+        //     /** Create packet from memory view.
+        //      * @param view The memory view containing the packet data.
+        //      * @param from The endian format of the memory view (default: native).
+        //      * @return A shared pointer to the created packet instance.
+        //      * @throws exception::logic if the packet type is not registered.
+        //      * */
+        //     template <typename Packet = io::packet>
+        //     requires std::derived_from<Packet, io::packet>
+        //     static shared<Packet> make(memory::view view, std::endian from = std::endian::native) {
+        //         packet::header hdr;
+        //         memory::copy(view, hdr);
 
-                if (from != std::endian::native) {
-                    hdr.type.major = endian::byteswap(hdr.type.major, from);
-                    hdr.type.minor = endian::byteswap(hdr.type.minor, from);
-                    hdr.stream = endian::byteswap(hdr.stream, from);
-                    hdr.length = endian::byteswap(hdr.length, from);
-                }
+        //         if (from != std::endian::native) {
+        //             hdr.type.major = endian::byteswap(hdr.type.major, from);
+        //             hdr.type.minor = endian::byteswap(hdr.type.minor, from);
+        //             hdr.stream = endian::byteswap(hdr.stream, from);
+        //             hdr.length = endian::byteswap(hdr.length, from);
+        //         }
 
-                auto pkt = factory::make(hdr);
-                pkt->absorb(view, from);
-                return std::dynamic_pointer_cast<Packet>(pkt);
-            }
-        };
+        //         auto pkt = factory::make(hdr);
+        //         pkt->absorb(view, from);
+        //         return std::dynamic_pointer_cast<Packet>(pkt);
+        //     }
+        // };
 
         ///@}
 
@@ -146,10 +157,10 @@ namespace vidre {
              * */
             template <packet_code Major, packet_code... Minor>
             registry(Major major, Minor... minors) {
-                (                                                                                            //
-                    packet::factory::add<T>({static_cast<uint16_t>(major), static_cast<uint16_t>(minors)}),  //
-                    ...                                                                                      //
-                );
+                // (                                                                                            //
+                //     packet::factory::add<T>({static_cast<uint16_t>(major), static_cast<uint16_t>(minors)}),  //
+                //     ...                                                                                      //
+                // );
             }
 
             ///@internal
@@ -179,15 +190,15 @@ namespace vidre {
              * */
             template <packet_code Major>
             registry(Major major, range_type range) {
-                const auto first = range.first;
-                const auto last = range.last;
+                // const auto first = range.first;
+                // const auto last = range.last;
 
-                if (first > last)
-                    throw exception::logic() << "invalid packet registration range";
+                // if (first > last)
+                //     throw exception::logic() << "invalid packet registration range";
 
-                for (uint32_t minor = first; minor <= last; ++minor) {
-                    packet::factory::add<T>({static_cast<uint16_t>(major), static_cast<uint16_t>(minor)});
-                }
+                // for (uint32_t minor = first; minor <= last; ++minor) {
+                //     packet::factory::add<T>({static_cast<uint16_t>(major), static_cast<uint16_t>(minor)});
+                // }
             }
         };
 

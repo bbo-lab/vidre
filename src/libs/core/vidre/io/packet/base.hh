@@ -242,31 +242,13 @@ namespace vidre {
 
             /** Packet ID.
              * */
-            struct __vidre_packed__(4) VIDRE_CORE_VISIBILITY id {
+            struct __vidre_packed__(2) VIDRE_CORE_VISIBILITY id {
                 uint8_t major{};  ///< Major packet type.
                 uint8_t minor{};  ///< Sub-type.
 
                 constexpr id() = default;
                 template <packet_code Major, packet_code Minor>
                 constexpr id(Major major_, Minor minor_) : major(code_cast(major_)), minor(code_cast(minor_)) {}
-
-                /** Hash function (FNV).
-                 * @note: The stream ID is ignored in the hash calculation,
-                 *        as it is not part of the packet type.
-                 *
-                 * */
-                constexpr std::size_t hash() const noexcept {
-#if VIDRE_HOST_BITS(64)
-                    std::size_t result = 0xcbf29ce484222325;
-                    result = (result * 0x100000001B3) ^ major;
-                    result = (result * 0x100000001B3) ^ minor;
-#elif VIDRE_HOST_BITS(32)
-                    std::size_t result = 0x811C9DC5;
-                    result = (result * 0x01000193) ^ major;
-                    result = (result * 0x01000193) ^ minor;
-#endif
-                    return result;
-                }
 
                 constexpr bool operator==(const id &other) const noexcept {
                     return major == other.major && minor == other.minor;
@@ -291,6 +273,8 @@ namespace vidre {
                 uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
                 uint64_t length{};  ///< Size of the packet payload (excluding the header).
             };
+
+            static_assert(sizeof(header) == 16);
 
             /** Create a shared pointer to a new packet.
              * This method simplifies the creation of shared pointers to packets,
@@ -344,15 +328,6 @@ namespace vidre {
              * */
             constexpr size_t size() const noexcept {
                 return sizeof(header) + ((hdr.length + alignment - 1) & ~(alignment - 1));
-            }
-
-            /** Hash of the packet ID.
-             * @note: The stream ID is ignored in the hash calculation,
-             *        as it is not part of the packet type.
-             * This method is intended for use with the packet factory only.
-             * */
-            constexpr std::size_t hash() const noexcept {
-                return hdr.type.hash();
             }
 
             /** Get the packet header.
@@ -563,22 +538,5 @@ namespace vidre {
     }  // namespace io
 
 }  // namespace vidre
-
-///@cond
-namespace std {
-    template <>
-    struct hash<vidre::io::packet::id> {
-        size_t operator()(const vidre::io::packet::id &h) const noexcept {
-            return h.hash();
-        }
-    };
-    template <>
-    struct hash<vidre::io::packet> {
-        size_t operator()(const vidre::io::packet &b) const noexcept {
-            return b.hash();
-        }
-    };
-}  // namespace std
-///@endcond
 
 #endif  // VIDRE_CORE_IO_PACKET_BASE_HH

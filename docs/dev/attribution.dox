@@ -7,12 +7,14 @@ The [copyright holder](https://mpinb.mpg.de/) of this work is the:
 This work is published under the **GNU General Public License version 3** (or, 
 at your option, any later version).
 
-In addition to the copyright holder, contributing authors are credited wherever 
-appropriate. The framework is primarily developed by scientists for scientific purposes.
-Therefore, any type of contribution should be acknowledged.
+In addition to the copyright holder, contributing authors are credited wherever
+appropriate. The framework is primarily developed by scientists for scientific
+purposes. Therefore, contributions of any kind should be acknowledged.
 
-Both human and artificial contributions must be clearly indicated — either through 
-designated authorship or in the form of an acknowledgement.
+Contributions and assistance from both humans and artificial intelligence must 
+be clearly identified—through authorship for human contributors or through appropriate
+acknowledgements, including archived records of AI-assisted design and development
+(see docs/ai/README.md).
 
 <b>Example</b>:<br/>
 [vidre/util/shared.hh](https://github.com/bbo-lab/vidre/blob/main/src/libs/core/vidre/util/shared.hh)

@@ -26,7 +26,7 @@ using namespace vidre;
 
 static io::packet::registry<io::packet::sequence>        //
     packet_factory_b(io::packet::major::sequence,        //
-                     io::packet::minor::group);
+                     0);
 
 void io::packet::sequence::finalize() noexcept {
     hdr.length = 0;

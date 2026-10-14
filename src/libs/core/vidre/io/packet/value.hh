@@ -57,20 +57,20 @@ namespace vidre {
         public:
             /** Plain data types.
              * */
-            enum class minor : uint16_t {
-                // === 0x0000-0x000F reserved
-                nil = 0x0010,        ///< Nil value (no data).
-                boolean = 0x0011,    ///< Boolean value (true/false).
-                integer = 0x0012,    ///< 64-bit signed integer.
-                natural = 0x0013,    ///< 64-bit unsigned integer.
-                number = 0x0014,     ///< 64-bit floating-point value (double).
-                string = 0x0015,     ///< UTF-8 sequence (not! zero-terminated).
-                binary = 0x0016,     ///< Binary data (see @ref FIXME).
-                uuid = 0x0017,       ///< UUID (128-bit universally unique identifier).
-                                     // === 0x0018-0x001F reserved for future POD types.
-                isodate = 0x0020,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
-                timestamp = 0x0021,  ///< Timestamp.
-                utctime = 0x0022,    ///< UTC time.
+            enum class minor : uint8_t {
+                // === 0x00-0x0F reserved
+                nil = 0x10,      ///< Nil value (no data).
+                boolean = 0x11,  ///< Boolean value (true/false).
+                integer = 0x12,  ///< 64-bit signed integer.
+                natural = 0x13,  ///< 64-bit unsigned integer.
+                number = 0x14,   ///< 64-bit floating-point value (double).
+                string = 0x15,   ///< UTF-8 sequence (not! zero-terminated).
+                binary = 0x16,   ///< Binary data (see @ref FIXME).
+                uuid = 0x17,     ///< UUID (128-bit universally unique identifier).
+                // === 0x18-0x1F reserved for future POD types.
+                isodate = 0x20,    ///< ISO 8601 date ("YYYYMMDDTHHMMSS.SSSZ\0\0\0").
+                timestamp = 0x21,  ///< Timestamp.
+                utctime = 0x22,    ///< UTC time.
             };
 
             using value_type = std::variant<std::monostate,     // nil

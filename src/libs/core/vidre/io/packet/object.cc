@@ -26,7 +26,7 @@ using namespace vidre;
 
 static io::packet::registry<io::packet::object>  //
     packet_factory_b(io::packet::major::object,  //
-                     io::packet::minor::group);
+                     0);
 
 void io::packet::object::finalize() noexcept {
     key_->finalize();

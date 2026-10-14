@@ -67,9 +67,9 @@ namespace vidre {
 
             virtual ~object() = default;
 
-            object(uint16_t stream = 0) noexcept : io::packet{packet::major::object, packet::minor::group, stream, 0} {}
+            object(uint16_t stream = 0) noexcept : io::packet{packet::major::object, 0, stream, 0} {}
             object(packet::value &&k, packet::value &&v, uint16_t stream = 0) noexcept
-                : io::packet{packet::major::object, packet::minor::group, stream, 0} {
+                : io::packet{packet::major::object, 0, stream, 0} {
                 key_ = make_shared<packet::value>(std::move(k));
                 value_ = make_shared<packet::value>(std::move(v));
             }
