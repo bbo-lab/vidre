@@ -20,7 +20,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "object.hh"
-#include "factory.hh"
+#include "registry.hh"
 
 using namespace vidre;
 
@@ -47,9 +47,9 @@ void io::packet::object::absorb(memory::view view, std::endian endian) {
 
     memory::view it = view + sizeof(header);
 
-    key_ = io::packet::factory::make<packet::value>(it,endian);
+    key_ = io::packet::decode_as<packet::value>(it,endian);
     it += key_->size();
-    value_ = io::packet::factory::make<packet::value>(it,endian);
+    value_ = io::packet::decode_as<packet::value>(it,endian);
     it += value_->size();
 }
 

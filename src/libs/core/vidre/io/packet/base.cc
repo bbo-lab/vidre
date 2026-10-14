@@ -44,5 +44,5 @@ io::result packet::pad(io::sink &f) const {
 }
 
 void packet::absorb(memory::view view, std::endian endian) {
-    // nothing to be done here packet::factory has taken care of it
+    // nothing to be done here packet::decode has taken care of it
 }

@@ -91,10 +91,7 @@ TEST_CASE("types.hh", "[vidre/io]") {
 #include <vidre/io/packet.hh>
 
 shared<io::packet> memory_sink::parse() const {
-    io::packet::header hdr{};
-    memory::copy(view(), hdr);
-
-    auto pkt = io::packet::factory::make(hdr);
+    auto pkt = io::packet::decode(view());
     pkt->absorb(view());
     return pkt;
 }
@@ -163,7 +160,7 @@ TEST_CASE("packet.hh", "[vidre/io]") {
 
         // std::cout << seq.to_json() << std::endl;
 
-        shared<io::packet> reread = io::packet::factory::make(sink.view());
+        shared<io::packet> reread = io::packet::decode(sink.view());
         // std::cout << reread->to_json() << std::endl;
 
         REQUIRE(seq.to_json() == reread->to_json());

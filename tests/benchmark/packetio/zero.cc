@@ -25,7 +25,7 @@ using namespace vidre;
 using namespace vidre::io;
 
 shared<packet> zero::get() {
-    return packet::make<packet>(packet::major::control, packet::minor::group);
+    return packet::make<packet>(packet::major::control, packet::minor::nil);
 }
 
 bool zero::source_step() {

@@ -34,9 +34,9 @@ namespace examples {
      */
     class heartbeat : public io::packet {
     public:
-        static constexpr uint16_t major = 0xFEED;  // our major number (user implementation)
+        static constexpr uint8_t major = 0xFE;  // our major number (user implementation)
 
-        enum class minor : uint16_t {  // minor types
+        enum class minor : uint8_t {  // minor types
             undefined = 0x0000,
             systole = 0x0001
         };
@@ -163,7 +163,7 @@ namespace examples {
             auto pkt = io::packet::make<heartbeat>();
             packet_queue_.push(pkt);
             notify();
-
+            
             task::self::sleep_until(next);
         }
         
@@ -217,7 +217,7 @@ namespace examples {
 
     void store::inspect() {
         try {
-            auto pkt = io::packet::factory::make({static_cast<io::size_type>(len_), buf_});
+            auto pkt = io::packet::decode({static_cast<io::size_type>(len_), buf_});
             switch (pkt->getmajor()) {
                 case io::packet::major::log:
                     // FIXME

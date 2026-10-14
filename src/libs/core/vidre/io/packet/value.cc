@@ -20,7 +20,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "value.hh"
-#include "factory.hh"
+#include "registry.hh"
 #include "vidre/io/endpoint/sink.hh"
 #include "vidre/util/endian.hh"
 #include "vidre/memory/base.hh"

@@ -55,7 +55,7 @@
  * @see @ref vidre::storage::raw
  * @{
  * @defgroup api-core-io-packet-base        Basic functionality
- * @defgroup api-core-io-packet-factory     Packet registration
+ * @defgroup api-core-io-packet-registry    Packet registration
  * @defgroup api-core-io-packet-value       Value-like packets
  * @defgroup api-core-io-packet-manifest    Stream description
  * @}
@@ -65,6 +65,6 @@
 #include <vidre/io/packet/value.hh>
 #include <vidre/io/packet/object.hh>
 #include <vidre/io/packet/sequence.hh>
-#include <vidre/io/packet/factory.hh>
+#include <vidre/io/packet/registry.hh>
 
 #endif  // VIDRE_CORE_IO_PACKET_HH

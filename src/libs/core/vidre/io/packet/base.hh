@@ -37,12 +37,9 @@
 #include <vidre/io/types.hh>
 #include <vidre/settings/json.hh>
 
-#include <functional>
 #include <bit>
 #include <shared_mutex>
 #include <queue>
-
-#include <ankerl/unordered_dense.h>
 
 namespace vidre {
 
@@ -226,7 +223,9 @@ namespace vidre {
                 sensor = 0x30,    ///< Sensor data, e.g. IMU, temperature (see @ref FIXME).
                                   //
                                   // === user types
-                user = 0xA0,      ///< User-defined packet types (range 0xA0-0xFF, see @ref FIXME).
+                user = 0xA0,      ///< User-defined packet types (range 0xA0-0xFE, see @ref FIXME).
+                                  //
+                invalid = 0xFF,   ///< Invalid packet type (reserved for internal use).
             };
 
             /** Minor type of a packet.
@@ -270,7 +269,7 @@ namespace vidre {
              * */
             struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY header {
                 id type{};          ///< Packet ID.
-                uint32_t stream{};  ///< Stream ID (e.g., for multiplexed streams).
+                uint32_t stream{};  ///< Stream IDfactory (e.g., for multiplexed streams).
                 uint64_t length{};  ///< Size of the packet payload (excluding the header).
             };
 
@@ -302,6 +301,14 @@ namespace vidre {
             template <typename T>
             static auto make_static(T &obj) {
                 return shared<T>(&obj, foreign<T>{});
+            }
+
+            static shared<packet> decode(memory::view view, std::endian from = std::endian::native);
+
+            template <typename Packet = io::packet>
+            requires std::derived_from<Packet, io::packet>
+            static shared<Packet> decode_as(memory::view view, std::endian from = std::endian::native) {
+                return std::static_pointer_cast<Packet>(decode(view, from));
             }
 
         public:
@@ -404,8 +411,6 @@ namespace vidre {
 
         public:
             class queue;
-
-            struct factory;
 
             class value;
             class sequence;

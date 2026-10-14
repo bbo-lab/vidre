@@ -20,7 +20,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "sequence.hh"
-#include "factory.hh"
+#include "registry.hh"
 
 using namespace vidre;
 
@@ -51,7 +51,7 @@ void io::packet::sequence::absorb(memory::view view, std::endian endian) {
     memory::const_pointer end_it = view.begin() + size();
 
     while (it.begin() < end_it) {
-        auto pkt = io::packet::factory::make(it,endian);
+        auto pkt = io::packet::decode(it,endian);
         it += pkt->size();
         packets_.push_back(std::move(pkt));
     }

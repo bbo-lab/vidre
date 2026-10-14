@@ -171,9 +171,9 @@ namespace vidre {
         };
 
         ///@internal
-        constexpr static unsigned level_n = 11;                                      ///< Number of discernable log levels.
-        constexpr static unsigned level_min = to_underlying(level::fatal);           ///< Minimum log level (as integer).
-        constexpr static unsigned level_max = std::numeric_limits<uint16_t>::max();  ///< Maximum log level (as integer).
+        constexpr static unsigned level_n = 11;                             ///< Number of discernable log levels.
+        constexpr static unsigned level_min = to_underlying(level::fatal);  ///< Minimum log level (as integer).
+        constexpr static unsigned level_max = 254;                          ///< Maximum log level (as integer).
 #if defined(DOXYGEN)
         constexpr static unsigned level_default = defined_at_compile_time;  ///< Default log level.
 #elif defined(DEBUG)
