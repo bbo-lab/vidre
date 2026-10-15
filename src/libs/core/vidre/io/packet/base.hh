@@ -158,31 +158,19 @@ namespace vidre {
             }
         };
 
-        /** Major/minor packet code concept.
-         * The concept ensures that a type can be used as a major or minor packet code.
-         * @see code_cast<T>
+        /** Major/minor packet ID concept.
+         * 
+         * The concept ensures that @a T can be used as a partial packet ID 
+         * (either major or minor).
+         *
+         * @see packet::id::cast<T>
          * */
         template <typename T>
-        concept packet_code = std::integral<std::remove_cvref_t<T>> ||              //
-                              (std::is_enum_v<std::remove_cvref_t<T>> &&            //
-                               std::same_as<                                        //
-                                   std::underlying_type_t<std::remove_cvref_t<T>>,  //
-                                   uint8_t>);
-
-        /** Cast a packet code to its underlying uint8_t representation.
-         * @tparam T The type of the packet code.
-         * @param value The packet code value to cast.
-         * @return The underlying uint8_t representation of the packet code.
-         * */
-        template <packet_code T>
-        constexpr uint8_t code_cast(T value) {
-            if constexpr (not std::is_enum_v<std::remove_cvref_t<T>>) {
-                if (!std::in_range<uint8_t>(value))
-                    throw exception::logic() << "packet code exceeds uint8_t range";
-            }
-
-            return static_cast<uint8_t>(value);
-        }
+        concept compatible_id = std::integral<std::remove_cvref_t<T>> ||              //
+                                (std::is_enum_v<std::remove_cvref_t<T>> &&            //
+                                 std::same_as<                                        //
+                                     std::underlying_type_t<std::remove_cvref_t<T>>,  //
+                                     uint8_t>);
 
         /** Stream packets.
          *
@@ -228,44 +216,63 @@ namespace vidre {
                 invalid = 0xFF,   ///< Invalid packet type (reserved for internal use).
             };
 
-            /** Minor type of a packet.
-             * FIXME
-             * @note For every major type, the minor type '0x0000' is reserved for
-             *       the group (one prominent exception is the log packet, which does
-             *       not follow this scheme—[«Ausnahmen bestätigen die
-             * Regel»](https://en.wikipedia.org/wiki/Exception_that_proves_the_rule)).
-             * */
-            enum class minor : uint8_t {
-                nil = 0x00,  ///< The "nil".
-            };
-
-            /** Packet ID.
+            /** Packet identifier.
+             * 
+             * A packet is identified by its major and minor packet ID. Major IDs are
+             * defined in `io::packet::major` (with the option of having user-defined 
+             * major types), while the minor IDs are only defined in the respective 
+             * implementation of the major packet type.
+             *
              * */
             struct __vidre_packed__(2) VIDRE_CORE_VISIBILITY id {
-                uint8_t major{};  ///< Major packet type.
-                uint8_t minor{};  ///< Sub-type.
+                uint8_t major{};  ///< Major packet ID.
+                uint8_t minor{};  ///< Minor packet ID.
 
                 constexpr id() = default;
-                template <packet_code Major, packet_code Minor>
-                constexpr id(Major major_, Minor minor_) : major(code_cast(major_)), minor(code_cast(minor_)) {}
 
-                constexpr bool operator==(const id &other) const noexcept {
-                    return major == other.major && minor == other.minor;
+                template <compatible_id Major, compatible_id Minor>
+                constexpr id(Major major_, Minor minor_) : major(cast(major_)), minor(cast(minor_)) {}
+
+                /** Cast a partial packet ID to its underlying type representation (with range check).
+                 * @tparam T The type of the packet ID.
+                 * @param value The packet ID value to cast.
+                 * @return The underlying representation of the partial packet ID.
+                 * @see packet::major::invalid
+                 * */
+                template <compatible_id T>
+                static constexpr uint8_t cast(T value) {
+                    if constexpr (not std::is_enum_v<std::remove_cvref_t<T>>) {
+                        if (not std::in_range<uint8_t>(value))
+                            throw exception::logic() << "partial packet ID exceeds range";
+                    }
+
+                    return static_cast<uint8_t>(value);
                 }
 
-                /** Compare the packet ID with a major packet code.
+                /** Compare two packet identifiers for equality.
+                 * @param other The other packet identifier to compare with.
+                 * @return True if both the major and minor packet IDs are equal, false otherwise.
+                 * */
+                constexpr bool operator==(const id &other) const noexcept {
+                    return (major == other.major) && (minor == other.minor);
+                }
+
+                /** Compare the packet identifier with a major packet code.
                  * @tparam T The major packet code to compare with.
                  * @param lhs The packet ID.
                  * @param rhs The major packet code.
                  * @return True if the major packet code of the ID matches the given code, false otherwise.
                  * */
-                template <packet_code T>
+                template <compatible_id T>
                 friend constexpr bool operator==(const id &lhs, T rhs) noexcept {
-                    return lhs.major == static_cast<uint16_t>(rhs);
+                    return lhs.major == cast(rhs);
                 }
             };
 
             /** The packet header.
+             *
+             * FIXME mention TLV again, and the addition of streams...
+             *
              * */
             struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY header {
                 id type{};          ///< Packet ID.
@@ -289,11 +296,13 @@ namespace vidre {
             }
 
             /** Create a shared pointer to a static packet.
+             *
              * This method creates a shared pointer to a packet that is
              * statically allocated, meaning it does not manage the
              * lifetime of the packet. The provided deleter does nothing,
              * ensuring that the static packet is not deleted when the
              * shared pointer goes out of scope.
+             *
              * @tparam T The type of the packet.
              * @param obj The static packet object.
              * @return A shared pointer to the static packet.
@@ -303,11 +312,23 @@ namespace vidre {
                 return shared<T>(&obj, foreign<T>{});
             }
 
+            /** Decode a packet from a memory view.
+             * @param view The memory view containing the serialized packet data.
+             * @param from The endianness of the serialized data.
+             * @return A shared pointer to the decoded packet.
+             * */
             static shared<packet> decode(memory::view view, std::endian from = std::endian::native);
 
+            /** Decode a packet from a memory view as a specific packet type.
+             * @tparam Packet The type of the packet to decode as.
+             * @param view The memory view containing the serialized packet data.
+             * @param from The endianness of the serialized data.
+             * @return A shared pointer to the decoded packet of the specified type.
+             * */
             template <typename Packet = io::packet>
             requires std::derived_from<Packet, io::packet>
             static shared<Packet> decode_as(memory::view view, std::endian from = std::endian::native) {
+                // FIXME do we need to check if the decoded packet is actually of type Packet?
                 return std::static_pointer_cast<Packet>(decode(view, from));
             }
 
@@ -319,7 +340,7 @@ namespace vidre {
             packet &operator=(packet &&) = default;
 
             packet(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : hdr{type_, stream, length} {}
-            template <packet_code Major, packet_code Minor>
+            template <compatible_id Major, compatible_id Minor>
             packet(Major major, Minor minor, uint32_t stream = 0, uint64_t length = 0) noexcept
                 : hdr{{major, minor}, stream, length} {}
 

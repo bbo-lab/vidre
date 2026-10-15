@@ -32,7 +32,7 @@ std::array<uint8_t, 256> vidre::io::details::factory::index = [] {
 }();
 
 void vidre::io::details::factory::add(uint8_t major, uint8_t minor_from, uint8_t minor_to, make_type make) {
-    auto major_index = code_cast(major);
+    auto major_index = packet::id::cast(major);
 
     // get or create the bucket for the major index
     if (index[major_index] == 0xFF) {

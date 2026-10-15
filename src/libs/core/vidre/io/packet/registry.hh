@@ -70,9 +70,9 @@ namespace vidre {
                  * @param id The identifier for the packet type.
                  * @throws exception::logic if the packet type is already registered.
                  * */
-                template <typename T, packet_code Major, packet_code MinorFrom, packet_code MinorTo>
+                template <typename T, compatible_id Major, compatible_id MinorFrom, compatible_id MinorTo>
                 static void add(Major major, MinorFrom minor_from, MinorTo minor_to) {
-                    add(code_cast(major), code_cast(minor_from), code_cast(minor_to), [](packet::header hdr) -> shared<io::packet> {
+                    add(packet::id::cast(major), packet::id::cast(minor_from), packet::id::cast(minor_to), [](packet::header hdr) -> shared<io::packet> {
                         return packet::make<T>(hdr);
                     });
                 }
@@ -113,7 +113,7 @@ namespace vidre {
              * packet::registry<MyPacketType> reg(MAJOR_TYPE, MINOR_TYPE_1, MINOR_TYPE_2);
              * @endcode
              * */
-            template <packet_code Major, packet_code... Minor>
+            template <compatible_id Major, compatible_id... Minor>
             registry(Major major, Minor... minors) {
                 (                                                     //
                     details::factory::add<T>(major, minors, minors),  //
@@ -130,8 +130,8 @@ namespace vidre {
                 uint8_t last{};
 
                 range_type() = default;
-                template <packet_code Minor>
-                range_type(Minor first_, Minor last_) : first(code_cast(first_)), last(code_cast(last_)) {}
+                template <compatible_id Minor>
+                range_type(Minor first_, Minor last_) : first(packet::id::cast(first_)), last(packet::id::cast(last_)) {}
             };
 
             ///@endinternal
@@ -146,7 +146,7 @@ namespace vidre {
              * packet::registry<MyPacketType> reg(MAJOR_TYPE, {MINOR_START, MINOR_END});
              * @endcode
              * */
-            template <packet_code Major>
+            template <compatible_id Major>
             registry(Major major, range_type range) {
                 details::factory::add<T>(major, range.first, range.last);
             }
