@@ -353,6 +353,8 @@ status io::fan::in::branch::attach(shared<io::endpoint::source> src, cap::flag_t
     if (sink_predecessor_)  // already connected
         return status::bad;
 
+    log::debug() << "attaching fan-in branch to source with cap: " << std::format("{}", cap) << "\n";
+
     // store fields, clear stats
     cap_.source = cap;
     clearstats();
@@ -361,8 +363,11 @@ status io::fan::in::branch::attach(shared<io::endpoint::source> src, cap::flag_t
     sink_predecessor_ = src;
 
     // start handler
-    if (cap & endpoint::cap::push) {
+    if (cap & endpoint::cap::event) {
         sink_task_ = task::make(this, &branch::sink_handler, std::chrono::milliseconds(1));
+        sink_task_->on_terminate([src = sink_predecessor_]() {
+            std::static_pointer_cast<io::source>(src)->cancel();
+        });
     }
 
     return status::ok;

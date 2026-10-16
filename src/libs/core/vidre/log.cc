@@ -166,6 +166,9 @@ void vidre_log_emit_standard(style_tag sty, const std::string &msg, unsigned ind
 }
 
 void vidre_log_emit_standard(log::level lvl, const std::string &msg, unsigned indent) {
+    static std::mutex mtx{};
+    std::lock_guard<std::mutex> lock(mtx);
+
     auto level = to_underlying(lvl);
     if (level > log::level_max)
         level = log::level_max;

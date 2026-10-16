@@ -200,6 +200,9 @@ namespace examples {
         }
 
         status put(shared<io::packet> p) override {
+            if (!p) 
+                throw exception::logic() << "null packet passed to store";
+
             auto retval = p->emit(*this);
             // FIXME stats
 
@@ -263,10 +266,10 @@ int main(int argc, char *argv[]) {
     shared<examples::store> store = io::endpoint::make<examples::store>();
 
     // connect the endpoints
-    io::endpoint::connect(fan_in, store);
 
-    // io::endpoint::connect(log::output, fan_in);
+    io::endpoint::connect(log::output, fan_in);
     io::endpoint::connect(pacemaker, fan_in);
+    io::endpoint::connect(fan_in, store);
 
     // let the endpoints run for a while
     task::self::sleep_for(std::chrono::seconds(1));
@@ -280,6 +283,7 @@ int main(int argc, char *argv[]) {
     // disconnect the endpoints
     io::endpoint::disconnect(pacemaker);
     io::endpoint::disconnect(store);
+    io::endpoint::disconnect(fan_in);
 
     return 0;
 }

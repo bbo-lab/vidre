@@ -151,7 +151,7 @@ namespace vidre {
                 return source_event_.wait(timeout);
             }
 
-        protected:
+        // FIXME protected:
             /** Cancel the source event.
              * This method cancels any ongoing wait operations on the source event.
              *
@@ -160,6 +160,7 @@ namespace vidre {
              * */
             status cancel(unsigned timeout = 100) noexcept;
 
+        protected:
             /** Notify the sink, that a packet is available for pulling.
              * @param count The number of packets available for pulling.
              * */
