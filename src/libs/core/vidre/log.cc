@@ -220,7 +220,7 @@ status log::source::put(shared<io::packet> p) {
         auto bptr = std::static_pointer_cast<log::source::branch>(branch);
         if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(bptr->threshold_))
             continue;
-        branch->put(p);
+        branch->put(std::move(p));
     }
 
     return vidre::status::ok;

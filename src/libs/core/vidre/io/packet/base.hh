@@ -530,8 +530,11 @@ namespace vidre {
              * */
             bool push(shared<packet> p) {
                 std::unique_lock lock(mutex_);
-                if (queue_.size() < depth_) [[likely]]
+                if (queue_.size() < depth_) [[likely]] {
+                    if (!p)
+                        return false;
                     queue_.push(std::move(p));
+                }
                 else {
                     if (depth_ == 1) {
                         queue_.front() = std::move(p);

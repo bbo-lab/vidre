@@ -214,20 +214,23 @@ io::fan::in::~in() {
 }
 
 shared<io::packet> io::fan::in::get() {
-    auto n = branches_in_.size();
+    const auto n = branches_in_.size();
     if (n == 0)
         return {};
-    if (n >= round_robin_)
+
+    if (round_robin_ >= n)
         round_robin_ = 0;
 
-    auto branch = branches_in_.at(round_robin_);
-    if (!branch)
-        throw exception::internal() << "branch is null";
+    for (size_type i = 0; i < n; ++i) {
+        auto index = round_robin_++;
+        if (round_robin_ == n)
+            round_robin_ = 0;
 
-    auto pkt = branch->pop();
-    if (pkt)
-        round_robin_++;
-    return pkt;
+        if (auto pkt = branches_in_.at(index)->pop())
+            return pkt;
+    }
+
+    return {};
 }
 
 status io::fan::in::unlink() {
@@ -312,6 +315,10 @@ shared<io::endpoint::sink> io::fan::in::branch_sink() {
 #pragma region fan::in::branch
 
 status io::fan::in::branch::put(shared<io::packet> p) {
+    if (!p)
+        throw exception::internal() << "attempted to put a null packet into fan-in branch";
+    // return status::bad;
+
     queue_.push(p);
     parent_->notify();
 

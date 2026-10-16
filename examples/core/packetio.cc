@@ -260,10 +260,13 @@ int main(int argc, char *argv[]) {
 
     // create endpoints
     shared<examples::pacemaker> pacemaker = io::endpoint::make<examples::pacemaker>();
+    pacemaker->settag("pacemaker");
 
     shared<io::fan::in> fan_in = io::endpoint::make<io::fan::in>();
+    fan_in->settag("fan_in");
 
     shared<examples::store> store = io::endpoint::make<examples::store>();
+    store->settag("store");
 
     // connect the endpoints
 
