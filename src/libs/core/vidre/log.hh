@@ -211,7 +211,7 @@ namespace vidre {
          *       instead, the minor packet type indicates the log level.
          * */
         class VIDRE_CORE_VISIBILITY packet : public io::packet {
-        protected:
+        public:
             chrono::timestamp timestamp = chrono::timestamp::now();  ///< Timestamp.
                                                                      /// @see chrono::reference
             std::string message{};                                   ///< Log message (variable length).
@@ -251,6 +251,8 @@ namespace vidre {
                        + f.put({message.size(), reinterpret_cast<const uint8_t *>(message.data())})  //
                        + pad(f);
             }
+
+            void absorb(memory::view view, std::endian endian = std::endian::native) override;
 
             /** Get log level.
              * @returns The log level of this message.
@@ -485,6 +487,9 @@ namespace vidre {
         /** Warnings.
          * @see log::level::warning */
         VIDRE_CORE_LOG_IMPL(warning);
+        /** User note.
+         * @see log::level::user */
+        VIDRE_CORE_LOG_IMPL(user);
         /** Noteworthy condition.
          * @see log::level::notice */
         VIDRE_CORE_LOG_IMPL(notice);

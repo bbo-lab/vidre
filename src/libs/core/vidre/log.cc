@@ -196,6 +196,18 @@ void log::message::emit() noexcept {
     log::output->put(std::move(msg_));
 }
 
+void log::packet::absorb(memory::view view, std::endian endian) {
+    if (view.size() < size())
+        throw exception::runtime() << "packet data is truncated";
+
+    view += sizeof(header);
+    memory::copy(view, timestamp);
+
+    view += sizeof(timestamp);
+    message.resize(hdr.length - sizeof(timestamp)+1);
+    memory::copy(view, {message.size(), reinterpret_cast<uint8_t *>(message.data())});
+}
+
 status log::source::put(shared<io::packet> p) {
     auto lptr = std::static_pointer_cast<log::packet>(p);
     if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(log::source::maxthreshold))

@@ -159,8 +159,8 @@ namespace vidre {
         };
 
         /** Major/minor packet ID concept.
-         * 
-         * The concept ensures that @a T can be used as a partial packet ID 
+         *
+         * The concept ensures that @a T can be used as a partial packet ID
          * (either major or minor).
          *
          * @see packet::id::cast<T>
@@ -192,35 +192,11 @@ namespace vidre {
             static shared<packet> nil;
 
         public:
-            /** Major type of a packet.
-             * */
-            enum class major : uint8_t {
-                control = 0x00,   ///< Control packets, not intended for storage (see FIXME).
-                log = 0x01,       ///< Log message (see `log::packet`).
-                generic = 0x02,   ///< Generic packets (see FIXME).
-                                  //
-                                  // Configuration data (JSON-like):
-                value = 0x08,     ///< Plain data (see `io::packet::value`).
-                sequence = 0x09,  ///< Sequence of values (see `io::packet::sequence`).
-                object = 0x0A,    ///< Structured data (see `io::packet::object`).
-                manifest = 0x0F,  ///< Manifest data (see `io::manifest`).
-                                  //
-                                  // Device data:
-                video = 0x10,     ///< Video data (see @ref FIXME).
-                audio = 0x20,     ///< Audio data (see @ref FIXME).
-                sensor = 0x30,    ///< Sensor data, e.g. IMU, temperature (see @ref FIXME).
-                                  //
-                                  // === user types
-                user = 0xA0,      ///< User-defined packet types (range 0xA0-0xFE, see @ref FIXME).
-                                  //
-                invalid = 0xFF,   ///< Invalid packet type (reserved for internal use).
-            };
-
             /** Packet identifier.
-             * 
+             *
              * A packet is identified by its major and minor packet ID. Major IDs are
-             * defined in `io::packet::major` (with the option of having user-defined 
-             * major types), while the minor IDs are only defined in the respective 
+             * defined in `io::packet::major` (with the option of having user-defined
+             * major types), while the minor IDs are only defined in the respective
              * implementation of the major packet type.
              *
              * */
@@ -242,7 +218,7 @@ namespace vidre {
                 template <compatible_id T>
                 static constexpr uint8_t cast(T value) {
                     if constexpr (not std::is_enum_v<std::remove_cvref_t<T>>) {
-                        if (not std::in_range<uint8_t>(value))
+                        if (not std::in_range<uint8_t>(value) or (value > 254))
                             throw exception::logic() << "partial packet ID exceeds range";
                     }
 
@@ -271,7 +247,8 @@ namespace vidre {
 
             /** The packet header.
              *
-             * FIXME mention TLV again, and the addition of streams...
+             * The packet header contains the packet identifier, a stream ID, and 
+             * the length of the packet payload.
              *
              * */
             struct __vidre_packed__(8) VIDRE_CORE_VISIBILITY header {
@@ -281,6 +258,30 @@ namespace vidre {
             };
 
             static_assert(sizeof(header) == 16);
+
+            /** Major type of a packet.
+             * */
+            enum class major : uint8_t {
+                control = 0x00,   ///< Control packets, not intended for storage (see FIXME).
+                log = 0x01,       ///< Log message (see `log::packet`).
+                generic = 0x02,   ///< Generic packets (see FIXME).
+                                  //
+                                  // Configuration data (JSON-like):
+                value = 0x08,     ///< Plain data (see `io::packet::value`).
+                sequence = 0x09,  ///< Sequence of values (see `io::packet::sequence`).
+                object = 0x0A,    ///< Structured data (see `io::packet::object`).
+                manifest = 0x0F,  ///< Manifest data (see `io::manifest`).
+                                  //
+                                  // Device data:
+                video = 0x10,     ///< Video data (see @ref FIXME).
+                audio = 0x20,     ///< Audio data (see @ref FIXME).
+                sensor = 0x30,    ///< Sensor data, e.g. IMU, temperature (see @ref FIXME).
+                                  //
+                                  // === user types
+                user = 0xA0,      ///< User-defined packet types (range 0xA0-0xFE, see @ref FIXME).
+                                  //
+                invalid = 0xFF,   ///< Invalid packet type (reserved for internal use).
+            };
 
             /** Create a shared pointer to a new packet.
              * This method simplifies the creation of shared pointers to packets,

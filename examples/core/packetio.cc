@@ -5,6 +5,7 @@
 #include <random>
 
 #include <iostream>
+#include "vidre/io/endpoint/base.hh"
 
 using namespace vidre;
 using namespace std::chrono_literals;
@@ -34,7 +35,7 @@ namespace examples {
      */
     class heartbeat : public io::packet {
     public:
-        static constexpr uint8_t major = 0xFE;  // our major number (user implementation)
+        static constexpr uint8_t major = 0x88;  // our major number (user implementation)
 
         enum class minor : uint8_t {  // minor types
             undefined = 0x0000,
@@ -163,10 +164,10 @@ namespace examples {
             auto pkt = io::packet::make<heartbeat>();
             packet_queue_.push(pkt);
             notify();
-            
+
             task::self::sleep_until(next);
         }
-        
+
         log::debug() << "pacemaker: finished.\n";
     }
     //! [simple-source]
@@ -220,7 +221,9 @@ namespace examples {
             auto pkt = io::packet::decode({static_cast<io::size_type>(len_), buf_});
             switch (pkt->getmajor()) {
                 case io::packet::major::log:
-                    // FIXME
+                    std::cout << static_pointer_cast<log::packet>(pkt)->timestamp.to_utc(examples::heartbeat_reference)  //
+                              << std::format(" [{:2X}] ", (unsigned) static_pointer_cast<log::packet>(pkt)->getlevel()) //
+                              << static_pointer_cast<log::packet>(pkt)->message << std::endl;
                     break;
                 default: {  // user types
                     auto id = pkt->getid();
@@ -254,13 +257,25 @@ int main(int argc, char *argv[]) {
 
     // create endpoints
     shared<examples::pacemaker> pacemaker = io::endpoint::make<examples::pacemaker>();
+
+    shared<io::fan::in> fan_in = io::endpoint::make<io::fan::in>();
+
     shared<examples::store> store = io::endpoint::make<examples::store>();
 
     // connect the endpoints
-    io::endpoint::connect(pacemaker, store);
+    io::endpoint::connect(fan_in, store);
+
+    // io::endpoint::connect(log::output, fan_in);
+    io::endpoint::connect(pacemaker, fan_in);
 
     // let the endpoints run for a while
-    task::self::sleep_for(std::chrono::seconds(10));
+    task::self::sleep_for(std::chrono::seconds(1));
+    log::notice() << "1 second passed\n";
+    log::user() << "first message\n";
+    task::self::sleep_for(std::chrono::seconds(3));
+    log::notice() << "4 seconds passed\n";
+    log::debug() << "second message\n";
+    task::self::sleep_for(std::chrono::seconds(6));
 
     // disconnect the endpoints
     io::endpoint::disconnect(pacemaker);
