@@ -132,7 +132,7 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
         if (scope.isterminated())
             return;
 
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::this_thread::sleep_for(pause);
     }
 
     // prepare

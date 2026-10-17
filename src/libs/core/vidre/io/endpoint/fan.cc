@@ -303,6 +303,31 @@ status io::fan::in::detach(const endpoint::source *ptr) {
     return status::bad;
 }
 
+bool io::fan::in::source_step() {
+    if (cap_.source & cap::push) {
+        auto retval = source_event_.wait();
+        if (retval == status::bad) {
+            if (retval.error() == std::errc::operation_canceled)
+                return false;
+            log::debug() << "!!! " << std::make_error_condition(retval.error()).message() << "\n";
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            return true;
+        }
+
+        // FIXME do we have to consider queue_depth()
+
+        for (size_type i = 0; i < *retval; ++i)
+            std::static_pointer_cast<io::sink>(source_follower_)->put(get());
+    }
+    else if (cap_.source & cap::event) {
+        throw exception::internal() << "fan::in is not configured for event handling";
+    }
+    else
+       std::this_thread::yield();
+
+    return true;
+}
+
 shared<io::endpoint::sink> io::fan::in::branch_sink() {
     shared<in::branch> branch = endpoint::make<in::branch>(*this);
     branches_in_.append(branch);

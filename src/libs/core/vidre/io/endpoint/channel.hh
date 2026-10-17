@@ -101,10 +101,7 @@ namespace vidre {
             }
 
         protected:
-            // status attach(shared<io::source> src, cap::flag_type cap) override;
-            // status attach(shared<io::sink> src, cap::flag_type cap) override;
-            // status detach(const io::source *ptr) override;
-            // status detach(const io::sink *ptr) override;
+            bool source_step() override;
         };
 
         ///@}

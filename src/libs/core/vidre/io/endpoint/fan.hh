@@ -177,8 +177,8 @@ namespace vidre {
                 virtual ~in();
 
             protected:
-                endpoint::sequence<branch> branches_in_{};      ///< The list of branches connected to this fan-in endpoint.
-                std::size_t round_robin_{};                      ///< Index for round-robin selection among branches.
+                endpoint::sequence<branch> branches_in_{};  ///< The list of branches connected to this fan-in endpoint.
+                std::size_t round_robin_{};                 ///< Index for round-robin selection among branches.
 
             public:
                 cap getcap() const noexcept override;
@@ -208,6 +208,9 @@ namespace vidre {
 
                 status attach(shared<endpoint::source> src, cap::flag_type cap) override;
                 status detach(const endpoint::source *ptr) override;
+
+                bool source_step() override;
+
                 shared<endpoint::sink> branch_sink() override;
             };
 

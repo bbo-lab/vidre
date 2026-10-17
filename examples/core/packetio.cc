@@ -196,11 +196,11 @@ namespace examples {
 
     public:
         cap getcap() const noexcept override {
-            return {{}, cap::packet | cap::pull | cap::event};
+            return {{}, cap::packet | cap::pull};
         }
 
         status put(shared<io::packet> p) override {
-            if (!p) 
+            if (!p)
                 throw exception::logic() << "null packet passed to store";
 
             auto retval = p->emit(*this);
@@ -225,7 +225,7 @@ namespace examples {
             switch (pkt->getmajor()) {
                 case io::packet::major::log:
                     std::cout << static_pointer_cast<log::packet>(pkt)->timestamp.to_utc(examples::heartbeat_reference)  //
-                              << std::format(" [{:2X}] ", (unsigned) static_pointer_cast<log::packet>(pkt)->getlevel()) //
+                              << std::format(" [{:2X}] ", (unsigned)static_pointer_cast<log::packet>(pkt)->getlevel())   //
                               << static_pointer_cast<log::packet>(pkt)->message << std::endl;
                     break;
                 default: {  // user types
@@ -250,7 +250,34 @@ namespace examples {
     }
 
     //! [simple-filter]
-    // FIXME
+    // This is a simple filter example that demonstrates how to process packets
+    // before storing them: here, we simply pass all packets through without modification,
+    // except for log messages, where only user log messages are passed through.
+    class filter : public io::channel {
+    public:
+        filter() = default;
+        virtual ~filter() = default;
+
+    public:
+        status put(shared<io::packet> p) override;
+    };
+
+    status filter::put(shared<io::packet> p) {
+        if (p->getmajor() == io::packet::major::log) {
+            auto log_pkt = static_pointer_cast<log::packet>(p);
+            if (log_pkt->getlevel() != log::level::user) {
+                return status::ok;
+            }
+        }
+
+        if (source_follower_) {
+            // FIXME stats_.update(p);
+            return source_follower_->put(p);
+        }
+
+        return status::bad;
+    }
+
     //! [simple-filter]
 
 }  // namespace examples
@@ -265,6 +292,9 @@ int main(int argc, char *argv[]) {
     shared<io::fan::in> fan_in = io::endpoint::make<io::fan::in>();
     fan_in->settag("fan_in");
 
+    shared<examples::filter> filter = io::endpoint::make<examples::filter>();
+    filter->settag("filter");
+
     shared<examples::store> store = io::endpoint::make<examples::store>();
     store->settag("store");
 
@@ -272,7 +302,8 @@ int main(int argc, char *argv[]) {
 
     io::endpoint::connect(log::output, fan_in);
     io::endpoint::connect(pacemaker, fan_in);
-    io::endpoint::connect(fan_in, store);
+    io::endpoint::connect(fan_in, filter);
+    io::endpoint::connect(filter, store);
 
     // let the endpoints run for a while
     task::self::sleep_for(std::chrono::seconds(1));

@@ -151,7 +151,7 @@ namespace vidre {
              * @see endpoint::isactive()
              * @see sink_step()
              * */
-            void sink_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
+            virtual void sink_handler(shared<task> self, std::chrono::milliseconds pause = std::chrono::milliseconds(1));
 
         protected:
             status attach(shared<endpoint::source> src, cap::flag_type cap) override;

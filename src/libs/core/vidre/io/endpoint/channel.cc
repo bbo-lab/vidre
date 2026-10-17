@@ -20,6 +20,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "channel.hh"
+#include "vidre/log.hh"
 
 using namespace vidre;
 
@@ -62,18 +63,7 @@ status io::channel::unlink() {
     return status::ok;
 }
 
-// status io::channel::attach(shared<io::source> src, cap::flag_type cap) {
-//     throw exception::internal() << "method not implemented or capability erroneously advertised";
-// }
-
-// status io::channel::attach(shared<io::sink> src, cap::flag_type cap) {
-//     throw exception::internal() << "method not implemented or capability erroneously advertised";
-// }
-
-// status io::channel::detach(const io::source *ptr) {
-//     throw exception::internal() << "method not implemented or capability erroneously advertised";
-// }
-
-// status io::channel::detach(const io::sink *ptr) {
-//     throw exception::internal() << "method not implemented or capability erroneously advertised";
-// }
+bool io::channel::source_step() {
+    std::this_thread::yield();
+    return true;
+}
