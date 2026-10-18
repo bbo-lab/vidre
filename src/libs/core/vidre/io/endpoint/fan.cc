@@ -141,9 +141,13 @@ status io::fan::out::branch::put(shared<packet> pkt) {
     if (!pkt)
         throw exception::logic() << "invalid null packet encountered";
 
-    queue_.push(std::move(pkt));
-    notify();
-
+    if (cap_.source & endpoint::cap::push) {
+        source_follower_->put(pkt);
+    }
+    else {
+        queue_.push(std::move(pkt));
+        notify();
+    }
     return status::ok;
 }
 
@@ -379,6 +383,9 @@ status io::fan::in::branch::put(shared<io::packet> pkt) {
     if (!pkt)
         throw exception::logic() << "invalid null packet encountered";
 
+    if (cap_.sink & cap::push)
+        return parent_->put(std::move(pkt));
+    
     queue_.push(pkt);
     parent_->notify();
 

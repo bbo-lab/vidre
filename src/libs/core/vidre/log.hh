@@ -299,8 +299,8 @@ namespace vidre {
         public:
             cap getcap() const noexcept override {
                 return {
-                    .source = cap::packet | cap::push | cap::event | cap::multi | cap::task,  // (branch)
-                    .sink = cap::packet | cap::push | cap::nonblock                           //
+                    .source = cap::packet | cap::push | cap::multi,  // (branch)
+                    .sink = cap::packet | cap::push | cap::nonblock   //
                 };
             }
 

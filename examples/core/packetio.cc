@@ -290,6 +290,9 @@ namespace examples {
 int main(int argc, char *argv[]) {
     examples::heartbeat_reference.set();
 
+    log::notice() << "hello world\n";
+    log::user() << "first message\n";
+
     // create endpoints
     shared<examples::pacemaker> pacemaker = io::endpoint::make<examples::pacemaker>();
     pacemaker->settag("pacemaker");
@@ -320,7 +323,7 @@ int main(int argc, char *argv[]) {
     log::user() << "first message\n";
     task::self::sleep_for(std::chrono::seconds(3));
     log::user() << "second message\n";
-    task::self::sleep_for(std::chrono::seconds(6));
+    task::self::sleep_for(std::chrono::seconds(600));
 
     // disconnect the endpoints
     io::endpoint::disconnect(pacemaker);

@@ -207,20 +207,22 @@ void log::packet::absorb(memory::view view, std::endian endian) {
     memory::copy(view, timestamp);
 
     view += sizeof(timestamp);
-    message.resize(hdr.length - sizeof(timestamp)+1);
+    message.resize(hdr.length - sizeof(timestamp) + 1);
     memory::copy(view, {message.size(), reinterpret_cast<uint8_t *>(message.data())});
 }
 
-status log::source::put(shared<io::packet> p) {
-    auto lptr = std::static_pointer_cast<log::packet>(p);
-    if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(log::source::maxthreshold))
+status log::source::put(shared<io::packet> pkt) {
+    auto lptr = std::static_pointer_cast<log::packet>(pkt);
+    auto curlvl = static_cast<unsigned>(lptr->getlevel());
+
+    if (curlvl > static_cast<unsigned>(log::source::maxthreshold))
         return vidre::status::ok;
 
     for (auto &branch : branches_out_.snapshot()) {
         auto bptr = std::static_pointer_cast<log::source::branch>(branch);
-        if (static_cast<unsigned>(lptr->getlevel()) > static_cast<unsigned>(bptr->threshold_))
+        if (curlvl > static_cast<unsigned>(bptr->threshold_))
             continue;
-        branch->put(std::move(p));
+        branch->put(pkt);
     }
 
     return vidre::status::ok;
