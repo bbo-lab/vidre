@@ -129,7 +129,7 @@ namespace vidre {
              * @param p Shared pointer to the packet to write.
              * @returns Status of the write operation.
              * */
-            status put(shared<packet> p) override {
+            status put(shared<packet> pkt) override {
                 throw exception::internal() << "method not implemented or capability erroneously advertised";
             }
 

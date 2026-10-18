@@ -420,7 +420,12 @@ namespace vidre {
              *
              * This method prepares the endpoint for data transmission. It should be called
              * after the endpoint is fully linked. The default implementation does nothing
-             * and returns `status::ok`.
+             * and returns `status::ok`. 
+             *
+             * @note In `io::source`, `io::sinK` and derived classes, this method is responsible 
+             *       for setting up the necessary internal resources (for IO mostly the handler 
+             *       tasks). Inheritance, therefore, must ensure that the base class' `prepare()` 
+             *       method is called appropriately.
              *
              * @returns Status of the preparation operation. `status::ok` if successful 
              *          (including when already prepared), `status::bad` otherwise.

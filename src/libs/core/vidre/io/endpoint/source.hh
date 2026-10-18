@@ -171,16 +171,18 @@ namespace vidre {
             }
 
             /** Event step.
+             *
              * This method is called in a loop by the default thread handler to
              * process source events. A typical implementation would check for
              * available data and handle them accordingly, for example:
+             *
              * @code
              *     if (wait_for_data_available()) {
              *         // read data and assemble packet
              *         // ...
              *
              *         // store packet in output queue
-             *         output_queue_.push(packet);
+             *         output_queue_.put(packet);
              *
              *         // notify the sink that a new packet is available
              *         notify();
@@ -190,7 +192,9 @@ namespace vidre {
              *         // ...
              *     }
              * @endcode
+             *
              * @note The implementation has to take into account the source capabilities!
+             *
              * @see endpoint::getcap()
              * */
             virtual bool source_step() {

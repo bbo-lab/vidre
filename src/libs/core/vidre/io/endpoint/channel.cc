@@ -28,10 +28,13 @@ io::channel::~channel() {
     unlink();
 }
 
-status io::channel::put(shared<packet> p) {
+status io::channel::put(shared<packet> pkt) {
+    if (!pkt)
+        throw exception::logic() << "invalid null packet encountered";
+
     if (source_follower_) {
         // FIXME stats_.update(p);
-        return source_follower_->put(p);
+        return source_follower_->put(pkt);
     }
 
     return status::bad;

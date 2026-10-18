@@ -201,7 +201,7 @@ namespace examples {
 
         status put(shared<io::packet> p) override {
             if (!p)
-                throw exception::logic() << "null packet passed to store";
+                throw exception::logic() << "invalid null packet encountered";
 
             auto retval = p->emit(*this);
             // FIXME stats
@@ -265,6 +265,9 @@ namespace examples {
     };
 
     status filter::put(shared<io::packet> p) {
+        if (!p)
+            throw exception::logic() << "invalid null packet encountered";
+
         if (p->getmajor() == io::packet::major::log) {
             auto log_pkt = static_pointer_cast<log::packet>(p);
             if (log_pkt->getlevel() != log::level::user) {

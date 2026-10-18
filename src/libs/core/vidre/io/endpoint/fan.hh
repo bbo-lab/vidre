@@ -67,7 +67,7 @@ namespace vidre {
             public:
                 cap getcap() const noexcept override;
 
-                status put(shared<packet> p) override;
+                status put(shared<packet> pkt) override;
 
                 /** Unlink this fan-out endpoint from all connected branches and sources.
                  * @note This operation will attempt to disconnect all branches and sources
@@ -129,7 +129,9 @@ namespace vidre {
 
                 bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
-                status put(shared<packet> p) override;  // FIXME this is currently public for log::output
+                status put(shared<packet> pkt) override;  // FIXME this is currently public for log::output
+
+                status prepare() override;
 
             protected:
                 bool source_step() override;
@@ -250,9 +252,10 @@ namespace vidre {
 
             public:
                 cap getcap() const noexcept override;
-                status put(shared<packet> p) override;
+                status put(shared<packet> pkt) override;
                 bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override;
                 status unlink() override;
+                status prepare() override;
 
             protected:
                 status attach(shared<endpoint::source> src, cap::flag_type cap) override;

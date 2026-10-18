@@ -33,9 +33,12 @@ io::fan::out::~out() {
     unlink();
 }
 
-status io::fan::out::put(shared<packet> p) {
+status io::fan::out::put(shared<packet> pkt) {
+    if (!pkt)
+        throw exception::logic() << "invalid null packet encountered";
+
     for (auto &branch : branches_out_.snapshot())
-        branch->put(p);
+        branch->put(pkt);
 
     return status::ok;
 }
@@ -135,6 +138,9 @@ status io::fan::out::detach(const endpoint::sink *ptr) {
 // === fan::out::branch =======================================================
 #pragma region fan::out::branch
 status io::fan::out::branch::put(shared<packet> pkt) {
+    if (!pkt)
+        throw exception::logic() << "invalid null packet encountered";
+
     queue_.push(std::move(pkt));
     notify();
 
@@ -176,6 +182,22 @@ status io::fan::out::branch::unlink() {
     return retval;
 }
 
+status io::fan::out::branch::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    if (source_task_ && source_task_->isrunning())
+        return status::ok;
+
+    // start handler
+    source_event_.reset();
+    if (cap_.source & endpoint::cap::push) {
+        source_task_ = task::make(this, &branch::source_handler, std::chrono::milliseconds(1));
+    }
+
+    return status::ok;
+}
+
 status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     if (source_follower_)  // already connected
         return status::bad;
@@ -186,12 +208,6 @@ status io::fan::out::branch::attach(shared<endpoint::sink> other, cap::flag_type
 
     // attach sink
     source_follower_ = other;
-
-    // start handler
-    source_event_.reset();
-    if (cap & endpoint::cap::push) {
-        source_task_ = task::make(this, &branch::source_handler, std::chrono::milliseconds(1));
-    }
 
     return status::ok;
 }
@@ -256,7 +272,6 @@ status io::fan::in::prepare() {
 
     return source::prepare();
 }
-
 
 status io::fan::in::unlink() {
     if (!source_follower_ && branches_in_.empty())
@@ -360,12 +375,11 @@ shared<io::endpoint::sink> io::fan::in::branch_sink() {
 // === fan::in::branch ========================================================
 #pragma region fan::in::branch
 
-status io::fan::in::branch::put(shared<io::packet> p) {
-    if (!p)
-        throw exception::internal() << "attempted to put a null packet into fan-in branch";
-    // return status::bad;
+status io::fan::in::branch::put(shared<io::packet> pkt) {
+    if (!pkt)
+        throw exception::logic() << "invalid null packet encountered";
 
-    queue_.push(p);
+    queue_.push(pkt);
     parent_->notify();
 
     return status::ok;
@@ -402,6 +416,24 @@ status io::fan::in::branch::unlink() {
     return retval;
 }
 
+status io::fan::in::branch::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    if (sink_task_ && sink_task_->isrunning())
+        return status::ok;
+
+    // start handler
+    if (cap_.source & endpoint::cap::event) {
+        sink_task_ = task::make(this, &branch::sink_handler, std::chrono::milliseconds(1));
+        sink_task_->on_terminate([src = sink_predecessor_]() {
+            std::static_pointer_cast<io::source>(src)->cancel();
+        });
+    }
+
+    return status::ok;
+}
+
 status io::fan::in::branch::attach(shared<io::endpoint::source> src, cap::flag_type cap) {
     if (sink_predecessor_)  // already connected
         return status::bad;
@@ -414,14 +446,6 @@ status io::fan::in::branch::attach(shared<io::endpoint::source> src, cap::flag_t
 
     // attach sink
     sink_predecessor_ = src;
-
-    // start handler
-    if (cap & endpoint::cap::event) {
-        sink_task_ = task::make(this, &branch::sink_handler, std::chrono::milliseconds(1));
-        sink_task_->on_terminate([src = sink_predecessor_]() {
-            std::static_pointer_cast<io::source>(src)->cancel();
-        });
-    }
 
     return status::ok;
 }
