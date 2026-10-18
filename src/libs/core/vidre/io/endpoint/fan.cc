@@ -40,18 +40,18 @@ status io::fan::out::put(shared<packet> p) {
     return status::ok;
 }
 
-bool io::fan::out::isready(endpoint::dir direction) const noexcept {
+bool io::fan::out::islinked(endpoint::dir direction) const noexcept {
     if (!sink_predecessor_ or branches_out_.empty())
         return false;
 
     if (!!(direction & endpoint::dir::source)) {
-        if (not sink_predecessor_->isready(endpoint::dir::source))
+        if (not sink_predecessor_->islinked(endpoint::dir::source))
             return false;
     }
 
     if (!!(direction & endpoint::dir::sink)) {
         for (const auto &branch : branches_out_.snapshot()) {
-            if (not branch->isready(endpoint::dir::sink))
+            if (not branch->islinked(endpoint::dir::sink))
                 return false;
         }
     }
@@ -94,6 +94,18 @@ status io::fan::out::unlink() {
     return retval;
 }
 
+status io::fan::out::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    for (const auto &branch : branches_out_.snapshot()) {
+        if (branch->prepare() == status::bad)
+            return status::bad;
+    }
+
+    return sink::prepare();
+}
+
 status io::fan::out::attach(shared<endpoint::sink> src, cap::flag_type cap) {
     throw exception::internal() << "a fan::out must not be attached directly";
     return status::bad;
@@ -133,14 +145,14 @@ shared<io::packet> io::fan::out::branch::get() {
     return queue_.pop();
 }
 
-bool io::fan::out::branch::isready(endpoint::dir direction) const noexcept {
+bool io::fan::out::branch::islinked(endpoint::dir direction) const noexcept {
     if (!!(direction & endpoint::dir::sink)) {
         if (!source_follower_)
             return false;
     }
 
     if (!!(direction & endpoint::dir::source))
-        return parent_->isready(endpoint::dir::source);
+        return parent_->islinked(endpoint::dir::source);
 
     return true;
 }
@@ -233,6 +245,19 @@ shared<io::packet> io::fan::in::get() {
     return {};
 }
 
+status io::fan::in::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    for (const auto &branch : branches_in_.snapshot()) {
+        if (branch->prepare() == status::bad)
+            return status::bad;
+    }
+
+    return source::prepare();
+}
+
+
 status io::fan::in::unlink() {
     if (!source_follower_ && branches_in_.empty())
         return status::ok;
@@ -267,18 +292,18 @@ status io::fan::in::unlink() {
     return retval;
 }
 
-bool io::fan::in::isready(endpoint::dir direction) const noexcept {
+bool io::fan::in::islinked(endpoint::dir direction) const noexcept {
     if (!source_follower_ or branches_in_.empty())
         return false;
 
     if (!!(direction & endpoint::dir::sink)) {
-        if (not source_follower_->isready(endpoint::dir::sink))
+        if (not source_follower_->islinked(endpoint::dir::sink))
             return false;
     }
 
     if (!!(direction & endpoint::dir::source)) {
         for (const auto &branch : branches_in_.snapshot()) {
-            if (not branch->isready(endpoint::dir::source))
+            if (not branch->islinked(endpoint::dir::source))
                 return false;
         }
     }
@@ -346,14 +371,14 @@ status io::fan::in::branch::put(shared<io::packet> p) {
     return status::ok;
 }
 
-bool io::fan::in::branch::isready(io::endpoint::dir direction) const noexcept {
+bool io::fan::in::branch::islinked(io::endpoint::dir direction) const noexcept {
     if (!!(direction & endpoint::dir::source)) {
         if (!sink_predecessor_)
             return false;
     }
 
     if (!!(direction & endpoint::dir::sink))
-        return parent_->isready(endpoint::dir::sink);
+        return parent_->islinked(endpoint::dir::sink);
 
     return true;
 }

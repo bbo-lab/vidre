@@ -408,27 +408,39 @@ namespace vidre {
             }
 
             /** Setup endpoint.
-             * @param config JSON configuration object for this endpoint.
              *
              * @note Implementations must ignore settings not relevant to this endpoint.
              *
              * @see `setup() const`
+             * @param config JSON configuration object for this endpoint.
              * */
             virtual void setup(const settings::json &config) {}
 
-            /** Endpoint is ready for data transmission.
+            /** Prepare endpoint for data transmission.
              *
-             * Readiness indicates whether data can be transmitted in the specified
-             * direction. For regular I/O endpoints this generally requires the relevant
-             * connections to be established and the connected endpoints to be ready as
-             * well. Derived implementations may impose additional requirements; devices,
-             * for example, may become ready only after acquisition has been started.
+             * This method prepares the endpoint for data transmission. It should be called
+             * after the endpoint is fully linked. The default implementation does nothing
+             * and returns `status::ok`.
              *
-             * @param direction Direction for which readiness is queried.
-             * @returns @c true if the endpoint is ready in the specified direction,
+             * @returns Status of the preparation operation. `status::ok` if successful 
+             *          (including when already prepared), `status::bad` otherwise.
+             * */
+            virtual status prepare() {
+                return status::ok;
+            }
+
+            /** Endpoint is linked (i.e. locally fully connected).
+             *
+             * Linked status indicates whether the endpoint is locally fully connected in 
+             * all the specified directions. This does not, however, indicate the graph
+             * is fully connected. Note also, the endpoints need to use `prepare()` to
+             * be ready for data transmission after being fully linked.
+             *
+             * @param direction Direction for which linked status is queried.
+             * @returns @c true if the endpoint is linked in the specified direction,
              *          @c false otherwise.
              * */
-            virtual bool isready(dir direction = dir::any) const noexcept {
+            virtual bool islinked(dir direction = dir::any) const noexcept {
                 return false;
             }
 

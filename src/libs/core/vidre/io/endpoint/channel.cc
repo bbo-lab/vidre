@@ -37,6 +37,19 @@ status io::channel::put(shared<packet> p) {
     return status::bad;
 }
 
+status io::channel::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    if (sink::prepare() == status::bad)
+        return status::bad;
+
+    if (source::prepare() == status::bad)
+        return status::bad;
+
+    return status::ok;
+}
+
 status io::channel::unlink() {
     if (not sink_predecessor_ and not source_follower_)  // not connected
         return status::ok;

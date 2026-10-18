@@ -78,7 +78,9 @@ namespace vidre {
                  * */
                 status unlink() override;
 
-                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+                status prepare() override;
+
+                bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
             protected:
                 using sink::attach;
@@ -125,7 +127,7 @@ namespace vidre {
                     return 0;
                 }
 
-                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+                bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
                 status put(shared<packet> p) override;  // FIXME this is currently public for log::output
 
@@ -194,7 +196,9 @@ namespace vidre {
                  * */
                 status unlink() override;
 
-                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+                status prepare() override;
+
+                bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override;
 
                 // size_type queue_depth() const noexcept override {
                 //     if (parent_->sink_predecessor_)
@@ -247,7 +251,7 @@ namespace vidre {
             public:
                 cap getcap() const noexcept override;
                 status put(shared<packet> p) override;
-                bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override;
+                bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override;
                 status unlink() override;
 
             protected:

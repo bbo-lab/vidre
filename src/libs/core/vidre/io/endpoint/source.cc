@@ -56,6 +56,23 @@ status io::source::unlink() {
     return retval;
 }
 
+status source::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    if (source_task_ && source_task_->isrunning())
+        return status::ok;
+
+    // start handler
+    bool usetask = not issink(cap::multi) || not issource(cap::event);
+
+    source_event_.reset();
+    if (usetask)
+        source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
+
+    return status::ok;
+}
+
 status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     if (source_follower_)  // already connected
         return status::bad;
@@ -68,13 +85,6 @@ status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
 
     // attach sink
     source_follower_ = other;
-
-    // start handler
-    bool usetask = not issink(cap::multi) || not issource(cap::event);
-
-    source_event_.reset();
-    if (usetask)
-        source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
 
     return status::ok;
 }
@@ -131,7 +141,7 @@ void source::source_handler(shared<task> self, std::chrono::milliseconds pause) 
     log::debug() << "source_handler: started...\n";
 
     // wait for connection
-    while (!source_follower_ or not source_follower_->isready()) {
+    while (!source_follower_ or not source_follower_->islinked()) {
         if (scope.isterminated())
             return;
 

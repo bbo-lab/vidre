@@ -56,6 +56,25 @@ status io::sink::unlink() {
     return retval;
 }
 
+status sink::prepare() {
+    if (!islinked())
+        return status::bad;
+
+    if (sink_task_ && sink_task_->isrunning())
+        return status::ok;
+
+    // start event handler if needed
+    if (cap_.sink & cap::event) {
+        // start handler
+        sink_task_ = task::make(this, &sink::sink_handler, std::chrono::milliseconds(1));
+        sink_task_->on_terminate([src = sink_predecessor_]() {
+            std::static_pointer_cast<io::source>(src)->cancel();
+        });
+    }
+
+    return status::ok;
+}
+
 status sink::attach(shared<endpoint::source> src, cap::flag_type cap) {
     if (sink_predecessor_)  // already connected
         return status::bad;
@@ -68,15 +87,6 @@ status sink::attach(shared<endpoint::source> src, cap::flag_type cap) {
 
     // attach source
     sink_predecessor_ = src;
-
-    // start event handler if needed
-    if (cap & cap::event) {
-        // start handler
-        sink_task_ = task::make(this, &sink::sink_handler, std::chrono::milliseconds(1));
-        sink_task_->on_terminate([src = sink_predecessor_]() {
-            std::static_pointer_cast<io::source>(src)->cancel();
-        });
-    }
 
     return status::ok;
 }
@@ -114,7 +124,7 @@ void sink::sink_handler(shared<task> self, std::chrono::milliseconds pause) {
     log::debug() << "sink_handler: started...\n";
 
     // wait for connection
-    while (!sink_predecessor_ or not sink_predecessor_->isready()) {
+    while (!sink_predecessor_ or not sink_predecessor_->islinked()) {
         if (scope.isterminated())
             return;
 

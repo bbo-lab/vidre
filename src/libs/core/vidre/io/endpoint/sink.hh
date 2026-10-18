@@ -135,15 +135,17 @@ namespace vidre {
 
         public:
             status unlink() override;
-            bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
+            bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override {
                 if (!sink_predecessor_)
                     return false;
 
                 if (!!(direction & endpoint::dir::source))
-                    return sink_predecessor_->isready(endpoint::dir::source);
+                    return sink_predecessor_->islinked(endpoint::dir::source);
 
                 return true;
             }
+
+            status prepare() override;
 
         protected:
             /** Default thread handler.

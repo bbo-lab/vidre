@@ -140,7 +140,7 @@ namespace examples {
         log::debug() << "pacemaker: started...\n";
 
         // wait for connection
-        while (!source_follower_ or not source_follower_->isready()) {
+        while (!source_follower_ or not source_follower_->islinked()) {
             if (scope.isterminated())
                 return;
 
@@ -224,7 +224,9 @@ namespace examples {
             auto pkt = io::packet::decode({static_cast<io::size_type>(len_), buf_});
             switch (pkt->getmajor()) {
                 case io::packet::major::log:
-                    std::cout << static_pointer_cast<log::packet>(pkt)->timestamp.to_utc(examples::heartbeat_reference)  //
+                    std::cout << std::endl
+                              << "LOG       "                                                                            //
+                              << static_pointer_cast<log::packet>(pkt)->timestamp.to_utc(examples::heartbeat_reference)  //
                               << std::format(" [{:2X}] ", (unsigned)static_pointer_cast<log::packet>(pkt)->getlevel())   //
                               << static_pointer_cast<log::packet>(pkt)->message << std::endl;
                     break;
@@ -299,24 +301,28 @@ int main(int argc, char *argv[]) {
     store->settag("store");
 
     // connect the endpoints
-
     io::endpoint::connect(log::output, fan_in);
     io::endpoint::connect(pacemaker, fan_in);
     io::endpoint::connect(fan_in, filter);
     io::endpoint::connect(filter, store);
 
+    // prepare the endpoints
+    store->prepare();
+    filter->prepare();
+    fan_in->prepare();
+    pacemaker->prepare();
+
     // let the endpoints run for a while
     task::self::sleep_for(std::chrono::seconds(1));
-    log::notice() << "1 second passed\n";
     log::user() << "first message\n";
     task::self::sleep_for(std::chrono::seconds(3));
-    log::notice() << "4 seconds passed\n";
-    log::debug() << "second message\n";
+    log::user() << "second message\n";
     task::self::sleep_for(std::chrono::seconds(6));
 
     // disconnect the endpoints
     io::endpoint::disconnect(pacemaker);
     io::endpoint::disconnect(store);
+    io::endpoint::disconnect(filter);
     io::endpoint::disconnect(fan_in);
 
     return 0;

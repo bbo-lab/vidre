@@ -83,7 +83,7 @@ namespace vidre {
 
         public:
             status unlink() override;
-            bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
+            bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override {
                 if (!source_follower_)
                     return false;
 
@@ -92,13 +92,15 @@ namespace vidre {
 
                 auto retval = true;
                 if (!!(direction & endpoint::dir::sink))
-                    retval &= source_follower_->isready(endpoint::dir::sink);
+                    retval &= source_follower_->islinked(endpoint::dir::sink);
 
                 if (retval and !!(direction & endpoint::dir::source))
-                    retval &= sink_predecessor_->isready(endpoint::dir::source);
+                    retval &= sink_predecessor_->islinked(endpoint::dir::source);
 
                 return retval;
             }
+
+            status prepare() override;
 
         protected:
             bool source_step() override;

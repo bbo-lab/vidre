@@ -101,15 +101,17 @@ namespace vidre {
         public:
             status unlink() override;
 
-            bool isready(endpoint::dir direction = endpoint::dir::any) const noexcept override {
+            bool islinked(endpoint::dir direction = endpoint::dir::any) const noexcept override {
                 if (!source_follower_)
                     return false;
 
                 if (!!(direction & endpoint::dir::sink))
-                    return source_follower_->isready(endpoint::dir::sink);
+                    return source_follower_->islinked(endpoint::dir::sink);
 
                 return true;
             }
+
+            status prepare() override;
 
         public:
             /** Get the queue depth limit for this source.
