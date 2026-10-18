@@ -70,8 +70,11 @@ status source::attach(shared<endpoint::sink> other, cap::flag_type cap) {
     source_follower_ = other;
 
     // start handler
+    bool usetask = not issink(cap::multi) || not issource(cap::event);
+
     source_event_.reset();
-    source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
+    if (usetask)
+        source_task_ = task::make(this, &source::source_handler, std::chrono::milliseconds(1));
 
     return status::ok;
 }

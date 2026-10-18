@@ -108,22 +108,23 @@ namespace vidre {
                  * */
                 enum flag_type : uint32_t {
                     none = 0,
-                    any = 0xFFFF,  ///< Any mode or method (used as a wildcard).
 
                     // Transmission modes
                     chunk = 0x0001,   ///< Chunk mode (plain, binary data transmission).
                     packet = 0x0002,  ///< Packet mode (see `io::packet`).
 
                     // Connection capabilities
-                    push = 0x0010,      ///< Supporting push method (where source pushes data to sink).
-                    event = 0x0020,     ///< Supporting event-based transmission (sink may pull, event-driven).
-                    pull = 0x0020,      ///< Supporting pull method (sink pulls data from source, event-driven).
-                    nonblock = 0x0040,  ///< Source requires non-blocking push, sink support non-blocking mode.
-                    multi = 0x0080,     ///< Endpoint can be connected to multiple other endpoints (e.g., for broadcasting).
+                    push = 0x0010,   ///< Supporting push method (where source pushes data to sink).
+                    event = 0x0020,  ///< Supporting event-based transmission (sink may pull, event-driven).
+
+                    // Endpoint capabilities and requirements
+                    multi = 0x0100,  ///< Endpoint can be connected to multiple other endpoints (e.g., for broadcasting).
+                    task = 0x0200,   ///< Endpoint provides its own task context for operation.
 
                     // Behavioral flags for diagnostic purposes
-                    periodic = 0x0100,  ///< Endpoint generates periodic data.
-                    realtime = 0x0200,  ///< Time-critical, must not block (e.g., high-speed camera).
+                    nonblock = 0x1'0000,  ///< Source requires non-blocking push, sink support non-blocking mode.
+                    periodic = 0x2'0000,  ///< Endpoint generates periodic data.
+                    realtime = 0x4'0000,  ///< Time-critical, must not block (e.g., high-speed camera).
 
                     /**@todo The behavioral flags for diagnostic purposes might be extended in the future. They are mainly
                              intended for use with the IO monitor that observes and analyzes endpoint statistics which should
@@ -146,6 +147,21 @@ namespace vidre {
             private:
                 // Internal helper for setup() above.
                 settings::json setup(flag_type flgs) const;
+
+            public:
+                ///@cond
+                friend constexpr flag_type operator~(flag_type value) noexcept {
+                    return static_cast<flag_type>(~static_cast<uint32_t>(value));
+                }
+
+                friend constexpr flag_type operator|(flag_type lhs, flag_type rhs) noexcept {
+                    return static_cast<flag_type>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+                }
+
+                friend constexpr flag_type operator&(flag_type lhs, flag_type rhs) noexcept {
+                    return static_cast<flag_type>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+                }
+                ///@endcond
             };
 
             /** Endpoint statistics.
@@ -348,7 +364,7 @@ namespace vidre {
              * @returns @c true if the endpoint has the specified sink capability, @c false otherwise.
              * @note If `bit` is not specified, this method checks if the endpoint is a sink.
              * */
-            bool issink(cap::flag_type bit = cap::any) const noexcept {
+            bool issink(cap::flag_type bit = ~cap::none) const noexcept {
                 return cap_.sink & bit;
             }
 
@@ -357,7 +373,7 @@ namespace vidre {
              * @returns @c true if the endpoint has the specified source capability, @c false otherwise.
              * @note If `bit` is not specified, this method checks if the endpoint is a source.
              * */
-            bool issource(cap::flag_type bit = cap::any) const noexcept {
+            bool issource(cap::flag_type bit = ~cap::none) const noexcept {
                 return cap_.source & bit;
             }
 
@@ -451,15 +467,6 @@ namespace vidre {
             return m == endpoint::dir::local;
         }
 
-        inline constexpr endpoint::cap::flag_type operator|(endpoint::cap::flag_type lhs, endpoint::cap::flag_type rhs) {
-            return static_cast<endpoint::cap::flag_type>(to_underlying(lhs) | to_underlying(rhs));
-        }
-        inline constexpr endpoint::cap::flag_type operator&(endpoint::cap::flag_type lhs, endpoint::cap::flag_type rhs) {
-            return static_cast<endpoint::cap::flag_type>(to_underlying(lhs) & to_underlying(rhs));
-        }
-        inline constexpr endpoint::cap::flag_type operator~(endpoint::cap::flag_type m) {
-            return static_cast<endpoint::cap::flag_type>(~to_underlying(m));
-        }
         inline constexpr bool operator!(endpoint::cap::flag_type m) {
             return m == endpoint::cap::flag_type::none;
         }
@@ -733,8 +740,8 @@ namespace std {
 
             if (value & cap::push)
                 name += "push,";
-            if (value & cap::pull)
-                name += "pull,";
+            if (value & cap::event)
+                name += "event,";
             if (value & cap::nonblock)
                 name += "n";
             if (value & cap::multi)

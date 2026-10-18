@@ -196,7 +196,7 @@ namespace examples {
 
     public:
         cap getcap() const noexcept override {
-            return {{}, cap::packet | cap::pull};
+            return {{}, cap::packet | cap::event};
         }
 
         status put(shared<io::packet> p) override {
