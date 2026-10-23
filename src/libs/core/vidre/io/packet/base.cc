@@ -20,12 +20,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "base.hh"
+#include "registry.hh"
 #include "vidre/io/endpoint/sink.hh"
 
 using namespace vidre;
 using namespace vidre::io;
 
 shared<packet> vidre::io::packet::nil = packet::make<packet>();
+
+static io::packet::registry<io::packet>                 //
+    packet_factory_control(io::packet::major::control,  //
+                           0);
+
+static io::packet::registry<io::packet>                       //
+    packet_factory_control_flags(io::packet::major::control,  //
+                                 {0x80, 0xFE});
 
 io::result packet::emit(io::sink &f) {
     static_assert(sizeof(header) == 16);

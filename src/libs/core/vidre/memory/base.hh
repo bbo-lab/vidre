@@ -92,7 +92,7 @@ namespace vidre {
 
             view(size_type n, const char *ptr) noexcept : size_(n), data_(reinterpret_cast<const_pointer>(ptr)) {}
             template <std::size_t N>
-            view(const char (&arr)[N]) noexcept : size_(N - 1), data_(reinterpret_cast<const_pointer>(arr)) {}
+            view(const char (&arr)[N]) noexcept : size_(N), data_(reinterpret_cast<const_pointer>(arr)) {}
             view(const std::string_view &str) noexcept : size_(str.size()), data_(reinterpret_cast<const_pointer>(str.data())) {}
             view(const std::string &str) noexcept : size_(str.size()), data_(reinterpret_cast<const_pointer>(str.data())) {}
 

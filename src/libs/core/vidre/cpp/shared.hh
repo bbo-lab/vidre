@@ -69,6 +69,7 @@ namespace vidre {
     using shared = std::shared_ptr<T>;
 
     /** Deleter for "foreign" objects.
+     *
      * This is a no-op deleter intended for use with `std::shared_ptr` when managing
      * objects that should not be deleted by the `shared_ptr`. This is, for example,
      * the case when a device uses a ring buffer for data acquisition and passes

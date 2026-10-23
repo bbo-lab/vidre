@@ -123,13 +123,13 @@ namespace vidre {
                 if (!p.valid())
                     throw exception::runtime() << "invalid proto header";
 
-                if (!p.compatible())
-                    throw exception::runtime() << "incompatible proto version";
-
                 if (p.endian() != std::endian::native) {
                     p.version.major = std::byteswap(p.version.major);
                     p.version.minor = std::byteswap(p.version.minor);
                 }
+
+                if (!p.compatible())
+                    throw exception::runtime() << "incompatible proto version";
 
                 return p;
             }
@@ -247,7 +247,7 @@ namespace vidre {
 
             /** The packet header.
              *
-             * The packet header contains the packet identifier, a stream ID, and 
+             * The packet header contains the packet identifier, a stream ID, and
              * the length of the packet payload.
              *
              * */
@@ -255,6 +255,16 @@ namespace vidre {
                 id type{};          ///< Packet ID.
                 uint32_t stream{};  ///< Stream IDfactory (e.g., for multiplexed streams).
                 uint64_t length{};  ///< Size of the packet payload (excluding the header).
+
+                ///@internal
+                /** Equality (for debugging purposes).
+                 * @param other The other header to compare with.
+                 * @return True if the packet ID, stream ID, and payload length are all equal, false otherwise.
+                 * */
+                constexpr bool operator==(const header &other) const noexcept {
+                    return (type == other.type) && (stream == other.stream) && (length == other.length);
+                }
+                ///@endinternal
             };
 
             static_assert(sizeof(header) == 16);
@@ -291,7 +301,7 @@ namespace vidre {
              * @param args The arguments to forward to the packet constructor.
              * @return A shared pointer to the newly created packet.
              * */
-            template <typename T, typename... Args>
+            template <typename T = packet, typename... Args>
             static auto make(Args &&...args) {
                 return make_shared<T>(std::forward<Args>(args)...);
             }
@@ -314,6 +324,7 @@ namespace vidre {
             }
 
             /** Decode a packet from a memory view.
+             *
              * @param view The memory view containing the serialized packet data.
              * @param from The endianness of the serialized data.
              * @return A shared pointer to the decoded packet.
@@ -321,6 +332,7 @@ namespace vidre {
             static shared<packet> decode(memory::view view, std::endian from = std::endian::native);
 
             /** Decode a packet from a memory view as a specific packet type.
+             *
              * @tparam Packet The type of the packet to decode as.
              * @param view The memory view containing the serialized packet data.
              * @param from The endianness of the serialized data.
@@ -341,6 +353,7 @@ namespace vidre {
             packet &operator=(packet &&) = default;
 
             packet(id type_, uint32_t stream = 0, uint64_t length = 0) noexcept : hdr{type_, stream, length} {}
+
             template <compatible_id Major, compatible_id Minor>
             packet(Major major, Minor minor, uint32_t stream = 0, uint64_t length = 0) noexcept
                 : hdr{{major, minor}, stream, length} {}
@@ -529,10 +542,11 @@ namespace vidre {
              *          `false` if a packet had to be dropped (see `setdepth()`).
              * */
             bool push(shared<packet> p) {
+                if (!p)
+                    return false;
+                
                 std::unique_lock lock(mutex_);
                 if (queue_.size() < depth_) [[likely]] {
-                    if (!p)
-                        return false;
                     queue_.push(std::move(p));
                 }
                 else {
